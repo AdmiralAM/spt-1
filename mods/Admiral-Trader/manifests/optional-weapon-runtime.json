@@ -1,0 +1,514 @@
+{
+  "schemaVersion": 1,
+  "status": "verified-optional-runtime-input",
+  "requiredDependency": false,
+  "absenceBehavior": "Every assignment retains a native SPT weapon pool and the campaign graph remains complete.",
+  "sources": [
+    {
+      "name": "WTT Armory",
+      "guid": "com.wtt.armory",
+      "observedVersion": "2.0.5",
+      "dllSha256": "a323ee985d72dd2f9a185e88ba1dc4cf7e24cd3df3211867bca8b61a3b38653f"
+    },
+    {
+      "name": "WTT Content Backport",
+      "guid": "com.wtt.contentbackport",
+      "observedVersion": "2.0.1",
+      "dllSha256": "07cb5e7719d7897efbbb5ef0387cbaa26379ae1232a07d5470523a2e282c9462"
+    }
+  ],
+  "acceptedWeapons": [
+    {
+      "tpl": "669fca7f9ed4916116c76d5e",
+      "cloneTpl": "56dee2bdd2720bc8328b4567",
+      "name": "Browning Auto-5 12ga shotgun",
+      "nameRu": "Browning Auto-5 12ga shotgun",
+      "sourceFile": "WeaponAuto5.json",
+      "source": "WTT Armory",
+      "pool": "autoloading-shotguns"
+    },
+    {
+      "tpl": "6840ebf5b8687ba34f8dfbca",
+      "cloneTpl": "56dee2bdd2720bc8328b4567",
+      "name": "Browning Auto-5 12ga shotgun (Custom)",
+      "nameRu": "Browning Auto-5 12ga shotgun (Custom)",
+      "sourceFile": "WeaponAuto5.json",
+      "source": "WTT Armory",
+      "pool": "autoloading-shotguns"
+    },
+    {
+      "tpl": "686093d590c3dce07984c38a",
+      "cloneTpl": "5ac66d2e5acfc43b321d4b53",
+      "name": "KMZ AEK-973 7.62x39 assault rifle",
+      "nameRu": "KMZ AEK-973 7.62x39 assault rifle",
+      "sourceFile": "WeaponAEK.json",
+      "source": "WTT Armory",
+      "pool": "classic-ak-762"
+    },
+    {
+      "tpl": "69777201f57d45a2ec02aafc",
+      "cloneTpl": "5ac66d2e5acfc43b321d4b53",
+      "name": "Konstantinov SA-1 7.62x39 assault rifle",
+      "nameRu": "Konstantinov SA-1 7.62x39 assault rifle",
+      "sourceFile": "WeaponSA01.json",
+      "source": "WTT Armory",
+      "pool": "classic-ak-762"
+    },
+    {
+      "tpl": "68c23b960f579b9b5fe021e7",
+      "cloneTpl": "57dc2fa62459775949412633",
+      "name": "Simonov AG-042 5.45x39 assault rifle",
+      "nameRu": "Simonov AG-042 5.45x39 assault rifle",
+      "sourceFile": "WeaponAGSeries.json",
+      "source": "WTT Armory",
+      "pool": "compact-ak"
+    },
+    {
+      "tpl": "68cf56067ff6ceab0c2fd49e",
+      "cloneTpl": "57dc2fa62459775949412633",
+      "name": "Simonov AG-043 5.45x39 assault rifle",
+      "nameRu": "Simonov AG-043 5.45x39 assault rifle",
+      "sourceFile": "WeaponAGSeries.json",
+      "source": "WTT Armory",
+      "pool": "compact-ak"
+    },
+    {
+      "tpl": "69555be939fb0a1a6f0ad12e",
+      "cloneTpl": "5ac66d9b5acfc4001633997a",
+      "name": "ZiD A-545 5.45x39 assault rifle",
+      "nameRu": "ZiD A-545 5.45x39 assault rifle",
+      "sourceFile": "WeaponA545.json",
+      "source": "WTT Armory",
+      "pool": "compact-rifles"
+    },
+    {
+      "tpl": "68b7f4060a4536984f82cf4b",
+      "cloneTpl": "6193a720f8ee7e52e42109ed",
+      "name": "HK MK23 .45 ACP pistol",
+      "nameRu": "HK MK23 .45 ACP pistol",
+      "sourceFile": "WeaponMK23.json",
+      "source": "WTT Armory",
+      "pool": "forty-five-pistols"
+    },
+    {
+      "tpl": "6761b213607f9a6f79017d23",
+      "cloneTpl": "5a7828548dc32e5a9c28b516",
+      "name": "Serbu Super Shorty 12ga shotgun",
+      "nameRu": "Serbu Super Shorty 12ga shotgun",
+      "sourceFile": "WeaponSerbuSuperShorty.json",
+      "source": "WTT Armory",
+      "pool": "manual-shotguns"
+    },
+    {
+      "tpl": "687afda52dc9fd6c0e14c602",
+      "cloneTpl": "5fc3f2d5900b1d5091531e57",
+      "name": "CZ Scorpion EVO 3 A1 9x19 submachine gun",
+      "nameRu": "CZ Scorpion EVO 3 A1 9x19 submachine gun",
+      "sourceFile": "WeaponCZScorpion.json",
+      "source": "WTT Armory",
+      "pool": "modern-smg"
+    },
+    {
+      "tpl": "66a47e98c486ec9d1af3a4da",
+      "cloneTpl": "5c488a752e221602b412af63",
+      "name": "IWI Tavor X95 5.56x45mm assault rifle",
+      "nameRu": "IWI Tavor X95 5.56x45mm assault rifle",
+      "sourceFile": "WeaponX95.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "66a544c956621d3364f6085e",
+      "cloneTpl": "5c488a752e221602b412af63",
+      "name": "IWI Tavor X95 5.56x45 assault rifle (FDE)",
+      "nameRu": "IWI Tavor X95 5.56x45 assault rifle (FDE)",
+      "sourceFile": "WeaponX95.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "66a545898022784400d6c836",
+      "cloneTpl": "5c488a752e221602b412af63",
+      "name": "IWI Tavor X95 5.56x45 assault rifle (OD)",
+      "nameRu": "IWI Tavor X95 5.56x45 assault rifle (OD)",
+      "sourceFile": "WeaponX95.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "69066bef905ee9e06c462009",
+      "cloneTpl": "618428466ef05c2ce828f218",
+      "name": "Magpul Masada 5.56x45 assault rifle",
+      "nameRu": "Magpul Masada 5.56x45 assault rifle",
+      "sourceFile": "WeaponMasada.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "69161a1d649768162e8219ef",
+      "cloneTpl": "618428466ef05c2ce828f218",
+      "name": "Magpul Masada .300 Blackout assault rifle (Custom)",
+      "nameRu": "Magpul Masada .300 Blackout assault rifle (Custom)",
+      "sourceFile": "WeaponMasada.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "696ce75f73805e693401aba0",
+      "cloneTpl": "618428466ef05c2ce828f218",
+      "name": "FB Radom MSBS Grot M1 5.56x45 assault rifle",
+      "nameRu": "FB Radom MSBS Grot M1 5.56x45 assault rifle",
+      "sourceFile": "WeaponMSBS.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "696fe2ebcf7469bf3805173f",
+      "cloneTpl": "618428466ef05c2ce828f218",
+      "name": "FB Radom MSBS Grot M1 5.56x45 assault rifle (FDE)",
+      "nameRu": "FB Radom MSBS Grot M1 5.56x45 assault rifle (FDE)",
+      "sourceFile": "WeaponMSBS.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives"
+    },
+    {
+      "tpl": "6671ebcdd32bd95eb398e920",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Bofors Ak5C 5.56x45 assault rifle",
+      "nameRu": "Bofors Ak5C 5.56x45 assault rifle",
+      "sourceFile": "WeaponAK5C.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "66839591f4d0cba7b041b2af",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Patriot M4A1 5.56x45 carbine",
+      "nameRu": "Patriot M4A1 5.56x45 carbine",
+      "sourceFile": "WeaponPatriot.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "66ba249b102a9dd6040a6e7e",
+      "cloneTpl": "5bb2475ed4351e00853264e3",
+      "name": "IWI Carmel 5.56x45mm Assault Rifle",
+      "nameRu": "IWI Carmel 5.56x45mm Assault Rifle",
+      "sourceFile": "WeaponCarmel.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "66ba26a6925f9921573224c9",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "IWI Carmel 5.56x45mm Assault Rifle (FDE)",
+      "nameRu": "IWI Carmel 5.56x45mm Assault Rifle (FDE)",
+      "sourceFile": "WeaponCarmel.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "6761b213607f9a6f79017d40",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (Anodized Red)",
+      "nameRu": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (Anodized Red)",
+      "sourceFile": "WeaponWagesOfSin.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "676b4e2ff185a450a0b300b4",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle",
+      "nameRu": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle",
+      "sourceFile": "WeaponWagesOfSin.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "676c3cac01023283e5f6a562",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (FDE)",
+      "nameRu": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (FDE)",
+      "sourceFile": "WeaponWagesOfSin.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "682d3dd16900cb35564c8825",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Bofors Ak5D 5.56x45 assault rifle",
+      "nameRu": "Bofors Ak5D 5.56x45 assault rifle",
+      "sourceFile": "WeaponAK5C.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "682d460e951a926af552d764",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Bofors Ak5C 5.56x45 assault rifle (custom)",
+      "nameRu": "Bofors Ak5C 5.56x45 assault rifle (custom)",
+      "sourceFile": "WeaponAK5C.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "6920a431c8f2ed5000c540a0",
+      "cloneTpl": "623063e994fc3f7b302a9696",
+      "name": "HK XM8 5.56x45 assault rifle (FDE)",
+      "nameRu": "HK XM8 5.56x45 assault rifle (FDE)",
+      "sourceFile": "WeaponXM8.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "6920b28eabc4f9d229cb7e49",
+      "cloneTpl": "623063e994fc3f7b302a9696",
+      "name": "HK XM8 5.56x45 assault rifle",
+      "nameRu": "HK XM8 5.56x45 assault rifle",
+      "sourceFile": "WeaponXM8.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "6962f22fddc6698c6309b620",
+      "cloneTpl": "62e7c4fba689e8c9c50dfc38",
+      "name": "FN F2000 5.56x45 assault rifle",
+      "nameRu": "FN F2000 5.56x45 assault rifle",
+      "sourceFile": "WeaponF2000.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "6969867592a994a633084f70",
+      "cloneTpl": "62e7c4fba689e8c9c50dfc38",
+      "name": "FN F2000 5.56x45 assault rifle (FDE)",
+      "nameRu": "FN F2000 5.56x45 assault rifle (FDE)",
+      "sourceFile": "WeaponF2000.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "68a639748e1fe612970728e9",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Colt M16A1 5.56x45 assault rifle",
+      "nameRu": "Colt M16A1 5.56x45 assault rifle",
+      "sourceFile": "AssaultRifle_config.json",
+      "source": "WTT Content Backport",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "68a6399922b1e0bd360afe56",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Colt M16A2 5.56x45 assault rifle",
+      "nameRu": "Colt M16A2 5.56x45 assault rifle",
+      "sourceFile": "AssaultRifle_config.json",
+      "source": "WTT Content Backport",
+      "pool": "nato-service-rifles"
+    },
+    {
+      "tpl": "665fe0e865683281eb8e7ed6",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "Springfield Armory DS Prodigy 9x19 pistol",
+      "nameRu": "Springfield Armory DS Prodigy 9x19 pistol",
+      "sourceFile": "WeaponProdigy.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "6661012d16fbd2fb75408f87",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "CZ 75B 9x19mm Pistol",
+      "nameRu": "CZ 75B 9x19mm Pistol",
+      "sourceFile": "WeaponCZ75.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "675ceb83e25d80bc676e15a6",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "Springfield Armory DS Prodigy 9x19 pistol (FDE)",
+      "nameRu": "Springfield Armory DS Prodigy 9x19 pistol (FDE)",
+      "sourceFile": "WeaponProdigy.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "6761b213607f9a6f79017d52",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "Wilson Combat EDC X9 9x19 pistol",
+      "nameRu": "Wilson Combat EDC X9 9x19 pistol",
+      "sourceFile": "WeaponWilsonCombatEDCX9.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "67748ec2e6a045dc97e2f978",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "CZ 75B Omega 9x19mm Pistol",
+      "nameRu": "CZ 75B Omega 9x19mm Pistol",
+      "sourceFile": "WeaponCZ75.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "679f2453d1970258c1df3fce",
+      "cloneTpl": "5a7ae0c351dfba0017554310",
+      "name": "Hi-Point Model C-9 9x19 pistol",
+      "nameRu": "Hi-Point Model C-9 9x19 pistol",
+      "sourceFile": "WeaponC9.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "68452c3da87156b67d9ec538",
+      "cloneTpl": "5a7ae0c351dfba0017554310",
+      "name": "Staccato XC 9x19 pistol",
+      "nameRu": "Staccato XC 9x19 pistol",
+      "sourceFile": "WeaponStaccatoXC.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "684b257022b8260501141308",
+      "cloneTpl": "5a7ae0c351dfba0017554310",
+      "name": "Taran Tactical JW4 Pit Viper 9x19 pistol",
+      "nameRu": "Taran Tactical JW4 Pit Viper 9x19 pistol",
+      "sourceFile": "WeaponPitViper.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "684b64658c4c5f37f2c4e56a",
+      "cloneTpl": "5a7ae0c351dfba0017554310",
+      "name": "Taran Tactical JW4 Pit Viper 9x19 pistol (Stainless)",
+      "nameRu": "Taran Tactical JW4 Pit Viper 9x19 pistol (Stainless)",
+      "sourceFile": "WeaponPitViper.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "6868d249cdee524f8c0ba45f",
+      "cloneTpl": "5cadc190ae921500103bb3b6",
+      "name": "Beretta 92FS 9x19 pistol",
+      "nameRu": "Beretta 92FS 9x19 pistol",
+      "sourceFile": "Weapon92fs.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "68d40fb07130ef271f60991f",
+      "cloneTpl": "5448bd6b4bdc2dfc2f8b4569",
+      "name": "PMM-12 9x18 pistol",
+      "nameRu": "PMM-12 9x18 pistol",
+      "sourceFile": "WeaponPMM12.json",
+      "source": "WTT Armory",
+      "pool": "service-pistols"
+    },
+    {
+      "tpl": "67b05e25d83f07b7b587c0b5",
+      "cloneTpl": "5fc3e272f8b6a877a729eac5",
+      "name": "HK UMP 9x19mm submachine gun",
+      "nameRu": "HK UMP 9x19mm submachine gun",
+      "sourceFile": "WeaponUMP9.json",
+      "source": "WTT Armory",
+      "pool": "service-smg"
+    },
+    {
+      "tpl": "6958447bfc5cad58acf95c0f",
+      "cloneTpl": "5fc3e272f8b6a877a729eac5",
+      "name": "HK USC .45 ACP carbine",
+      "nameRu": "HK USC .45 ACP carbine",
+      "sourceFile": "WeaponUSC.json",
+      "source": "WTT Armory",
+      "pool": "service-smg"
+    },
+    {
+      "tpl": "0cb4a36dd2e587b46e813dbe",
+      "cloneTpl": "5ac4cd105acfc40016339859",
+      "name": "KMZ AEK-971 5.45x39 assault rifle",
+      "nameRu": "KMZ AEK-971 5.45x39 assault rifle",
+      "sourceFile": "WeaponAEK.json",
+      "source": "WTT Armory",
+      "pool": "starter-service-rifles"
+    },
+    {
+      "tpl": "678fe4a4906c7bd23722c71f",
+      "cloneTpl": "5ac4cd105acfc40016339859",
+      "name": "Kalashnikov AN-94 5.45x39 assault rifle",
+      "nameRu": "Kalashnikov AN-94 5.45x39 assault rifle",
+      "sourceFile": "WeaponAN94.json",
+      "source": "WTT Armory",
+      "pool": "starter-service-rifles"
+    },
+    {
+      "tpl": "679a6a534f3d279c99b135b9",
+      "cloneTpl": "5ac4cd105acfc40016339859",
+      "name": "Kalashnikov AN-94 5.45x39 \"Kirov's Custom\" assault rifle",
+      "nameRu": "Kalashnikov AN-94 5.45x39 \"Kirov's Custom\" assault rifle",
+      "sourceFile": "WeaponAN94.json",
+      "source": "WTT Armory",
+      "pool": "starter-service-rifles"
+    },
+    {
+      "tpl": "695ab544a219218449041700",
+      "cloneTpl": "5ac4cd105acfc40016339859",
+      "name": "Kalashnikov AK-107 5.45x39 Assault Rifle",
+      "nameRu": "Kalashnikov AK-107 5.45x39 Assault Rifle",
+      "sourceFile": "WeaponAK107.json",
+      "source": "WTT Armory",
+      "pool": "starter-service-rifles"
+    },
+    {
+      "tpl": "689166b6c2d6fa42e7044756",
+      "cloneTpl": "6499849fc93611967b034949",
+      "name": "Kalashnikov AK-308 7.62x51 assault rifle",
+      "nameRu": "Kalashnikov AK-308 7.62x51 assault rifle",
+      "sourceFile": "AssaultRifle_config.json",
+      "source": "WTT Content Backport",
+      "pool": "starter-service-rifles"
+    }
+  ],
+  "deferredWeapons": [
+    {
+      "tpl": "67f425638b8cbfdc0cd1b5f2",
+      "cloneTpl": "5c488a752e221602b412af63",
+      "name": "IWI Tavor X95 9x19 submachine gun",
+      "nameRu": "IWI Tavor X95 9x19 submachine gun",
+      "sourceFile": "WeaponX95.json",
+      "source": "WTT Armory",
+      "pool": "nato-alternatives",
+      "reason": "mechanical role differs from its cloned rifle template"
+    },
+    {
+      "tpl": "682d4820e48f3c573ec332b5",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Bofors Ak5G 5.56x45 light machine gun",
+      "nameRu": "Bofors Ak5G 5.56x45 light machine gun",
+      "sourceFile": "WeaponAK5C.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles",
+      "reason": "mechanical role differs from its cloned rifle template"
+    },
+    {
+      "tpl": "68e0002a0d6a4dab56810fbd",
+      "cloneTpl": "59d6088586f774275f37482f",
+      "name": "Valmet M78 7.62x51 light machine gun",
+      "nameRu": "Valmet M78 7.62x51 light machine gun",
+      "sourceFile": "WeaponM78.json",
+      "source": "WTT Armory",
+      "pool": "classic-ak-762",
+      "reason": "mechanical role differs from its cloned AK template"
+    },
+    {
+      "tpl": "690ebacfc047a9a9f1a98782",
+      "cloneTpl": "5447a9cd4bdc2dbd208b4567",
+      "name": "Colt RO991 9x19 submachine gun",
+      "nameRu": "Colt RO991 9x19 submachine gun",
+      "sourceFile": "WeaponRO991.json",
+      "source": "WTT Armory",
+      "pool": "nato-service-rifles",
+      "reason": "mechanical role differs from its cloned rifle template"
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "totalQuestCount": 72,
+  "newQuestCount": 29,
+  "weaponAssignments": 19,
+  "totalWeaponQuestCount": 40,
+  "weaponLaneQuestCounts": {
+    "A": 22,
+    "B": 18
+  },
+  "weaponGraphRoots": 2,
+  "groundZeroOperations": 4,
+  "equipmentAssignments": 6,
+  "maximumConcurrentWeaponAssignments": 2,
+  "optionalWeaponCount": 50,
+  "optionalWeaponsRequired": false,
+  "icebreaker": {
+    "reserved": false,
+    "runtimePublished": true,
+    "optionalQuestCount": 10,
+    "coreQuestCountWhenAbsent": 172,
+    "totalQuestCountWhenPresent": 182,
+    "manifest": "icebreaker-runtime.json"
+  },
+  "quests": [
+    {
+      "id": "738588764e9531bdb8ccfc5f",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 1,
+      "pool": "service-pistols"
+    },
+    {
+      "id": "7ec59fd018a4332dc9cc598e",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 2,
+      "pool": "compact-ak"
+    },
+    {
+      "id": "3ccca027eeebaf0a4dcfbb6f",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 3,
+      "pool": "manual-shotguns"
+    },
+    {
+      "id": "9a2efe4c869cd41beb667e29",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 4,
+      "pool": "early-smg"
+    },
+    {
+      "id": "5c7e60f203900e75aba3edc0",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 5,
+      "pool": "forty-five-pistols"
+    },
+    {
+      "id": "9620e5a3c17b30599df67730",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 6,
+      "pool": "service-smg"
+    },
+    {
+      "id": "de92651782ad58fce6457af9",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 7,
+      "pool": "automatic-pistols"
+    },
+    {
+      "id": "8722d67f966ff1605393222a",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 8,
+      "pool": "compact-pdw"
+    },
+    {
+      "id": "d7f67e37b0c244878aa685e0",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 9,
+      "pool": "autoloading-shotguns"
+    },
+    {
+      "id": "a006fa3e96a9c967eda0f716",
+      "kind": "weapon",
+      "lane": "A",
+      "order": 10,
+      "pool": "modern-smg"
+    },
+    {
+      "id": "eb93814dd020bdc131d526aa",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 1,
+      "pool": "starter-service-rifles"
+    },
+    {
+      "id": "551415adc72a84fa9e6bb571",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 2,
+      "pool": "civilian-ak"
+    },
+    {
+      "id": "96ef708ef07d2b7bd8214653",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 3,
+      "pool": "compact-rifles"
+    },
+    {
+      "id": "5a9a0bb3ffddd538e6fe3842",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 4,
+      "pool": "sks-hunter"
+    },
+    {
+      "id": "b15dc178e2982874350db164",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 5,
+      "pool": "classic-ak-545"
+    },
+    {
+      "id": "5d3a863ab1f890166c5d96ff",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 6,
+      "pool": "classic-ak-762"
+    },
+    {
+      "id": "80e2780458250c3aa00dbb35",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 7,
+      "pool": "nato-service-rifles"
+    },
+    {
+      "id": "fc14500bbc2900a04647083d",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 8,
+      "pool": "nato-alternatives"
+    },
+    {
+      "id": "3def8dacb60f04f15fc2271d",
+      "kind": "weapon",
+      "lane": "B",
+      "order": 9,
+      "pool": "battle-rifles"
+    },
+    {
+      "id": "02c07ee31821696597ceabef",
+      "kind": "operation",
+      "location": "Ground Zero"
+    },
+    {
+      "id": "3c6e085fc02f0597efdb5d5a",
+      "kind": "operation",
+      "location": "Ground Zero"
+    },
+    {
+      "id": "31ab6a69a8436df6b3834b0a",
+      "kind": "operation",
+      "location": "Ground Zero"
+    },
+    {
+      "id": "e520cec55b83621928e9e4ec",
+      "kind": "operation",
+      "location": "Ground Zero"
+    },
+    {
+      "id": "4a8f533e1ed458e83b41c01f",
+      "kind": "equipment",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Woods"
+      ]
+    },
+    {
+      "id": "4ab0b49478adb233ae900b33",
+      "kind": "equipment",
+      "locations": [
+        "Customs",
+        "Woods",
+        "Shoreline"
+      ]
+    },
+    {
+      "id": "ca33fab8b9cc5f5f5ad322c0",
+      "kind": "equipment",
+      "locations": [
+        "Woods",
+        "Shoreline",
+        "Interchange"
+      ]
+    },
+    {
+      "id": "9c35b3ac22ede1a5a79118bc",
+      "kind": "equipment",
+      "locations": [
+        "Shoreline",
+        "Interchange",
+        "Streets"
+      ]
+    },
+    {
+      "id": "ee813142de655daf2dedfebc",
+      "kind": "equipment",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ]
+    },
+    {
+      "id": "47480d824cea0b80917cafa5",
+      "kind": "equipment",
+      "locations": [
+        "Factory",
+        "Reserve",
+        "The Lab"
+      ]
+    }
+  ]
+}

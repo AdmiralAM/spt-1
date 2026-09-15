@@ -1,0 +1,275 @@
+{
+  "02c07ee31821696597ceabef": {
+    "cashReductionRub": 4000,
+    "name": "Револьвер Chiappa Rhino 200DS",
+    "reward": {
+      "value": 1,
+      "id": "0006a18f85b33361e210cdd7",
+      "type": "Item",
+      "target": "85463ac79e6811bf26344054",
+      "index": 3,
+      "items": [
+        {
+          "_id": "85463ac79e6811bf26344054",
+          "_tpl": "624c2e8614da335f1e034d8c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "42f133729ca2b19e488aaa4e",
+          "_tpl": "624c3074dbbd335e8e6becf3",
+          "parentId": "85463ac79e6811bf26344054",
+          "slotId": "mod_magazine",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "c9109286d147b443c05490d3",
+          "_tpl": "619f4d304c58466fe1228437",
+          "parentId": "85463ac79e6811bf26344054",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "bf0e158e71cc15d1a26de87a",
+          "_tpl": "619f4ab2d25cbd424731fb95",
+          "parentId": "85463ac79e6811bf26344054",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "3c6e085fc02f0597efdb5d5a": {
+    "cashReductionRub": 7000,
+    "name": "Пистолет Glock 19X",
+    "reward": {
+      "value": 1,
+      "id": "e204269b38b62049bcdee92c",
+      "type": "Item",
+      "target": "789bd0c9ac063e0d80ee6457",
+      "index": 3,
+      "items": [
+        {
+          "_id": "789bd0c9ac063e0d80ee6457",
+          "_tpl": "63088377b5cd696784087147",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "6168839a0756065c93be44d3",
+          "_tpl": "63076701a987397c0816d21b",
+          "parentId": "789bd0c9ac063e0d80ee6457",
+          "slotId": "mod_magazine",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "c953c7586b42d322bdb184ff",
+          "_tpl": "63075cc5962d0247b029dc2a",
+          "parentId": "789bd0c9ac063e0d80ee6457",
+          "slotId": "mod_reciever",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "6f669353451963f0717d9d6d",
+          "_tpl": "5a7d90eb159bd400165484f1",
+          "parentId": "c953c7586b42d322bdb184ff",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "016a7fa200e9d3f9233a425b",
+          "_tpl": "5a7d9122159bd4001438dbf4",
+          "parentId": "c953c7586b42d322bdb184ff",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "50eeda8c815d79cd7c50e7e1",
+          "_tpl": "5a7b4960e899ef197b331a2d",
+          "parentId": "789bd0c9ac063e0d80ee6457",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "1eec05b1f1c91f905d98ec66",
+          "_tpl": "630764fea987397c0816d219",
+          "parentId": "789bd0c9ac063e0d80ee6457",
+          "slotId": "mod_barrel",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "31ab6a69a8436df6b3834b0a": {
+    "cashReductionRub": 10000,
+    "name": "Пистолет-пулемёт HK MP5",
+    "reward": {
+      "value": 1,
+      "id": "0123251cfa3365990dd091d6",
+      "type": "Item",
+      "target": "2f53eb6f9e67e67f3e3cacb4",
+      "index": 3,
+      "items": [
+        {
+          "_id": "2f53eb6f9e67e67f3e3cacb4",
+          "_tpl": "5926bb2186f7744b1c6c6e60",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "17bad2d486cc6b28108d7586",
+          "_tpl": "5926f2e086f7745aae644231",
+          "parentId": "2f53eb6f9e67e67f3e3cacb4",
+          "slotId": "mod_reciever",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "cbe0bdf066fd8dfaeae84ab5",
+          "_tpl": "5926dad986f7741f82604363",
+          "parentId": "17bad2d486cc6b28108d7586",
+          "slotId": "mod_mount",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "2d49983802c052e65fd88d2a",
+          "_tpl": "570fd6c2d2720bc6458b457f",
+          "parentId": "cbe0bdf066fd8dfaeae84ab5",
+          "slotId": "mod_scope",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "cc0c72e1ce6bf05afd54d869",
+          "_tpl": "5926d33d86f77410de68ebc0",
+          "parentId": "17bad2d486cc6b28108d7586",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "1b270810d689421466aca28c",
+          "_tpl": "5926d40686f7740f152b6b7e",
+          "parentId": "17bad2d486cc6b28108d7586",
+          "slotId": "mod_stock",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "0320e451188b24f035d1f0ba",
+          "_tpl": "5926f34786f77469195bfe92",
+          "parentId": "17bad2d486cc6b28108d7586",
+          "slotId": "mod_handguard",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "097d1e16c7754aa40e6e2dd7",
+          "_tpl": "5926c32286f774616e42de99",
+          "parentId": "2f53eb6f9e67e67f3e3cacb4",
+          "slotId": "mod_charge",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "ae604f9598f8bd56e9132558",
+          "_tpl": "5926c3b286f774640d189b6b",
+          "parentId": "2f53eb6f9e67e67f3e3cacb4",
+          "slotId": "mod_magazine",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "e520cec55b83621928e9e4ec": {
+    "cashReductionRub": 12000,
+    "name": "Помповое ружьё MP-133",
+    "reward": {
+      "value": 1,
+      "id": "f0f855bc65307b4b8d22e24f",
+      "type": "Item",
+      "target": "0d072dbf8b70ee07ca3f0d3e",
+      "index": 3,
+      "items": [
+        {
+          "_id": "0d072dbf8b70ee07ca3f0d3e",
+          "_tpl": "54491c4f4bdc2db1078b4568",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "35e99a88651b002e1383cb95",
+          "_tpl": "56083a334bdc2dc8488b4571",
+          "parentId": "0d072dbf8b70ee07ca3f0d3e",
+          "slotId": "mod_stock",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "a38c15e5f4a6973b42649ded",
+          "_tpl": "5882163e24597758206fee8c",
+          "parentId": "0d072dbf8b70ee07ca3f0d3e",
+          "slotId": "mod_magazine",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "0bec267f3e6333b00c9fb825",
+          "_tpl": "55d45d3f4bdc2d972f8b456c",
+          "parentId": "0d072dbf8b70ee07ca3f0d3e",
+          "slotId": "mod_handguard",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        },
+        {
+          "_id": "eaf17928b24de254aedf8864",
+          "_tpl": "55d4491a4bdc2d882f8b456e",
+          "parentId": "0d072dbf8b70ee07ca3f0d3e",
+          "slotId": "mod_barrel",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  }
+}

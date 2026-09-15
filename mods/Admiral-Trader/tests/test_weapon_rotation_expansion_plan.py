@@ -69,7 +69,7 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
         self.assertEqual(0, candidates["stableCampaignChanges"]["dependencies"])
         self.assertEqual(0, candidates["compatibilityEvidence"]["crossModTemplateIdCollisions"])
         self.assertEqual(0, candidates["compatibilityEvidence"]["nativeTemplateIdCollisions"])
-        self.assertFalse(candidates["compatibilityEvidence"]["admiralRuntimeChangeRequired"])
+        self.assertTrue(candidates["compatibilityEvidence"]["admiralRuntimeChangeRequired"])
         self.assertFalse(candidates["compatibilityEvidence"]["economyContract"]["foreignTemplateMutationAllowed"])
 
 

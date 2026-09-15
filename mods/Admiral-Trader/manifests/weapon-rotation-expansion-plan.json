@@ -10,7 +10,8 @@
     "newAssignmentsRequired": 19,
     "currentRuntimeChangedByThisManifest": false,
     "existingQuestIdsRetained": true,
-    "maximumConcurrentWeaponAssignments": 2
+    "maximumConcurrentWeaponAssignments": 2,
+    "runtimeGraphRule": "The 19 expansion records are woven into the retained 21-record Arsenal graph, leaving exactly two roots across all 40 weapon quests."
   },
   "rules": {
     "nativeFallbackRequired": true,
@@ -127,7 +128,7 @@
   },
   "laneTuple": ["order","pool","levelBand","locations","semantics"],
   "wttArmory": {
-    "status": "awaiting-installed-content-inventory",
+    "status": "runtime-verified-optional",
     "requiredDependency": false,
     "rule": "Add a verified model to the closest mechanical pool or an optional side assignment; every core assignment retains a native SPT weapon.",
     "categoricallyDifferent": "Use a later optional assignment rather than mislabeling the model as an existing native class.",

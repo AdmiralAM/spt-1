@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "coreSignaturePresetRewards": 10,
+  "earlyCompleteWeaponRewardTrades": 4,
+  "nativeFieldSupportRewardTrades": 20,
+  "optionalBeltEquipmentRewardTrades": 32,
+  "directBeltProductRewardTrades": 16,
+  "additionalBeltPackCandidateRewardTrades": 16,
+  "requiredDependencies": false,
+  "policy": "Story operations progressively trade part of their rouble reward for practical native field-support equipment; early operations also use optional B&A&HB wrist, belt and head-band equipment while later contracts may award its small container catalogue; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
+  "absenceBehavior": "When a B&A&HB template is unavailable, no cash is removed and the core quest reward remains unchanged.",
+  "signatureFinales": [
+    {
+      "questId": "6d9fda8875aed2082b4da528",
+      "tpl": "5beed0f50db834001c062b12"
+    },
+    {
+      "questId": "bcf61611e9723c765e07a740",
+      "tpl": "59d6088586f774275f37482f"
+    },
+    {
+      "questId": "60df546a03bdc74ca45fb8ca",
+      "tpl": "5de652c31b7e3716273428be"
+    },
+    {
+      "questId": "181f902c56dab247a1f49d0c",
+      "tpl": "628b9c37a733087d0d7fe84b"
+    },
+    {
+      "questId": "70258f2cc084c335a0542207",
+      "tpl": "5aafa857e5b5b00018480968"
+    },
+    {
+      "questId": "6a24e1ca978938c1d4a8839f",
+      "tpl": "65268d8ecb944ff1e90ea385"
+    },
+    {
+      "questId": "0f650f5ba44bfd17404b7ad6",
+      "tpl": "6176aca650224f204c1da3fb"
+    },
+    {
+      "questId": "734ce8b802ca6a629387ca5b",
+      "tpl": "5447a9cd4bdc2dbd208b4567"
+    },
+    {
+      "questId": "df6c5b8f5660efd1b4c6d06c",
+      "tpl": "576165642459773c7a400233"
+    },
+    {
+      "questId": "680c47f4c9a0e7b884a95908",
+      "tpl": "6165ac306ef05c2ce828ef74"
+    }
+  ],
+  "earlyWeaponTrades": [
+    {
+      "questId": "02c07ee31821696597ceabef",
+      "tpl": "624c2e8614da335f1e034d8c",
+      "name": "Револьвер Chiappa Rhino 200DS",
+      "cashReductionRub": 4000
+    },
+    {
+      "questId": "3c6e085fc02f0597efdb5d5a",
+      "tpl": "63088377b5cd696784087147",
+      "name": "Пистолет Glock 19X",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "31ab6a69a8436df6b3834b0a",
+      "tpl": "5926bb2186f7744b1c6c6e60",
+      "name": "Пистолет-пулемёт HK MP5",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "e520cec55b83621928e9e4ec",
+      "tpl": "54491c4f4bdc2db1078b4568",
+      "name": "Помповое ружьё MP-133",
+      "cashReductionRub": 12000
+    }
+  ],
+  "beltEquipmentTrades": [
+    {
+      "questId": "4876c8bf7bb9677e3970b01c",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
+      "cashReductionRub": 6000
+    },
+    {
+      "questId": "70a745d426d2ba09157eb734",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "37475cbab1174e5619c16939",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "e74018c43dc3f47551445192",
+      "tpl": "68ac0000000000000000000f",
+      "name": "Утилитарная повязка B&A&HB",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "aef99c7f97ca615cf101a654",
+      "tpl": "68ac00000000000000000013",
+      "name": "Кейс для жетонов B&A&HB",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "77622ff3eda4de9587dd55d8",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
+      "cashReductionRub": 35000
+    },
+    {
+      "questId": "4a8f533e1ed458e83b41c01f",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
+      "cashReductionRub": 6000
+    },
+    {
+      "questId": "4ab0b49478adb233ae900b33",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "ca33fab8b9cc5f5f5ad322c0",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "9c35b3ac22ede1a5a79118bc",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "ee813142de655daf2dedfebc",
+      "tpl": "68ac0000000000000000000f",
+      "name": "Утилитарная повязка B&A&HB",
+      "cashReductionRub": 18000
+    },
+    {
+      "questId": "8dad0d354ac000b7bbf05b9a",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "56813681ae0690016376f163",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "208db81b5ce195bf0c176852",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "6574a072f763d0b09a553401",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "8b6f2b25ab2e91e0540761e3",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
+      "cashReductionRub": 22000
+    },
+    {
+      "questId": "41a41cb262ea084c1e110513",
+      "tpl": "12403f74773f49be6a2d84b7",
+      "name": "Малый медицинский подсумок",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "133aa723b4695a3d93de92f1",
+      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
+      "name": "Малый подсумок для боеприпасов",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "db220288bc8d5559a45feeb1",
+      "tpl": "669c10fa06c00c483c58537a",
+      "name": "Малый денежный ящик",
+      "cashReductionRub": 20000
+    },
+    {
+      "questId": "5d404ebd654de4efecef71d2",
+      "tpl": "6761b213607f9a6f79017aef",
+      "name": "Поясная сумка",
+      "cashReductionRub": 5000
+    },
+    {
+      "questId": "1b92e4cf212d895be4f70b2c",
+      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
+      "name": "Малый подсумок для боеприпасов",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "cba3374f11375c4e7eea9efe",
+      "tpl": "2eabd4da4ab194eb168e72d3",
+      "name": "Малое кольцо для ключей",
+      "cashReductionRub": 14000
+    },
+    {
+      "questId": "80c11744c2310e1bfe160a8b",
+      "tpl": "9543bbe8083934dc3b1b1330",
+      "name": "Малая сумка для инструментов",
+      "cashReductionRub": 9000
+    },
+    {
+      "questId": "42ff30bc152b8212dc15b20a",
+      "tpl": "c29f11b2e63a089916739c96",
+      "name": "Малый кожаный портфель",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "d737e3b990c371708db369f0",
+      "tpl": "12403f74773f49be6a2d84b7",
+      "name": "Малый медицинский подсумок",
+      "cashReductionRub": 14000
+    },
+    {
+      "questId": "9c438fa48f645044ddc75e8d",
+      "tpl": "6a3c0e9643138b61c8739586",
+      "name": "Малый кейс для бронеплит",
+      "cashReductionRub": 25000
+    },
+    {
+      "questId": "59a36c5ee68210f9154d94d0",
+      "tpl": "681d1395a5c2308fdcbcda92",
+      "name": "Кейс для обвесов",
+      "cashReductionRub": 24000
+    },
+    {
+      "questId": "59ca4829e098dfafa03888d2",
+      "tpl": "669c10fa06c00c483c58537a",
+      "name": "Малый денежный ящик",
+      "cashReductionRub": 5000
+    },
+    {
+      "questId": "5f62a924076e4b7c2320f2e8",
+      "tpl": "440de5d056825485a0cf3a19",
+      "name": "Малый подсумок для магазинов",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "ad9233f54a7132d905d6f29d",
+      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
+      "name": "Малый подсумок для боеприпасов",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "4ada822d634041a721b346d5",
+      "tpl": "681d1395a5c2308fdcbcda92",
+      "name": "Кейс для обвесов",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "2568ee0bfe2ee12f24d78f45",
+      "tpl": "440de5d056825485a0cf3a19",
+      "name": "Малый подсумок для магазинов",
+      "cashReductionRub": 11000
+    }
+  ],
+  "fieldSupportTrades": [
+    {
+      "questId": "e472a13c1478f7b9258522d3",
+      "tpl": "590c678286f77426c9660122",
+      "name": "Аптечка IFAK",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "bb49cbdbae242ffef21f95b7",
+      "tpl": "5b432b965acfc47a8774094e",
+      "name": "Активные наушники ГСШ-01",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "5fd9397fbc40a37c1abf3790",
+      "tpl": "544fb45d4bdc2dee738b4568",
+      "name": "Аптечка Salewa",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "1ca43f65c714ea7f9eec6e2a",
+      "tpl": "5e9dcf5986f7746c417435b3",
+      "name": "Рюкзак LBT-8005A Day Pack",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "5268717351b03068d3b68ecd",
+      "tpl": "60098ad7c2240c0fe85c570a",
+      "name": "Аптечка AFAK",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "e9de043a8379c87027f762b3",
+      "tpl": "5d02778e86f774203e7dedbe",
+      "name": "Хирургический набор CMS",
+      "cashReductionRub": 16000
+    },
+    {
+      "questId": "7486bc36905b338d72289ad6",
+      "tpl": "5aa2ba71e5b5b000137b758f",
+      "name": "Активные наушники MSA Sordin",
+      "cashReductionRub": 16000
+    },
+    {
+      "questId": "9bf1b7ad200b0f5f59e9cbbd",
+      "tpl": "5648a7494bdc2d9d488b4583",
+      "name": "Бронежилет PACA",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "78cc2b3208abba4015448a90",
+      "tpl": "5648a69d4bdc2ded0b8b457b",
+      "name": "Разгрузочный жилет BlackRock",
+      "cashReductionRub": 17000
+    },
+    {
+      "questId": "b69566c83e350e531fb4da63",
+      "tpl": "5c0e530286f7747fa1419862",
+      "name": "Препарат Пропитал",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "fcc999aeb0be8899307d5c11",
+      "tpl": "5d02797c86f774203f38e30a",
+      "name": "Набор Surv12",
+      "cashReductionRub": 22000
+    },
+    {
+      "questId": "0d712d3bafcc3a986f288d63",
+      "tpl": "590c657e86f77412b013051d",
+      "name": "Аптечка Grizzly",
+      "cashReductionRub": 25000
+    },
+    {
+      "questId": "6d91d7193725645fcda53ea9",
+      "tpl": "5e4bfc1586f774264f7582d3",
+      "name": "Шлем MSA Gallet TC 800",
+      "cashReductionRub": 22000
+    },
+    {
+      "questId": "0b7abaaa7f084765e7d5c623",
+      "tpl": "5aa2ba71e5b5b000137b758f",
+      "name": "Активные наушники MSA Sordin",
+      "cashReductionRub": 18000
+    },
+    {
+      "questId": "45a06f6c07f74caeb29f84a6",
+      "tpl": "545cdae64bdc2d39198b4568",
+      "name": "Рюкзак Camelbak Tri-Zip",
+      "cashReductionRub": 28000
+    },
+    {
+      "questId": "a4e4d8c99a667c66900d17ec",
+      "tpl": "5c0e533786f7747fa23f4d47",
+      "name": "Гемостатик Загустин",
+      "cashReductionRub": 18000
+    },
+    {
+      "questId": "bf3982de79ea3b1e90910200",
+      "tpl": "5c0e531d86f7747fa23f4d42",
+      "name": "Стимулятор SJ6",
+      "cashReductionRub": 35000
+    },
+    {
+      "questId": "9d429e2927fca0923a803cd4",
+      "tpl": "5d02797c86f774203f38e30a",
+      "name": "Набор Surv12",
+      "cashReductionRub": 24000
+    },
+    {
+      "questId": "3e217502dbe65fb4924d5d98",
+      "tpl": "590c657e86f77412b013051d",
+      "name": "Аптечка Grizzly",
+      "cashReductionRub": 26000
+    },
+    {
+      "questId": "97f0088fbb97e5376be4ddef",
+      "tpl": "5c0e534186f7747fa1419867",
+      "name": "Стимулятор eTG-c",
+      "cashReductionRub": 50000
+    }
+  ]
+}

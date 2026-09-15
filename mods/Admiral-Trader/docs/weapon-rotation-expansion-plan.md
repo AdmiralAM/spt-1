@@ -20,7 +20,7 @@ Later reuse changes the problem through faction, distance, day/night, suppressor
 
 ## Runtime boundary
 
-`manifests/weapon-rotation-expansion-plan.json` contains the exact SPT 4.1.5 template pools, both 20-step lanes, level bands, location pools, objective semantics and explicit exclusions. It is bound to the verified SPT 4.1.5 item-database hash.
+`manifests/weapon-rotation-expansion-plan.json` contains the exact SPT 4.1.5 template pools, both 20-step coverage lanes, level bands, location pools, objective semantics and explicit exclusions. Runtime preserves the established Arsenal IDs and weaves the 19 added records through them as two continuous 22/18 quest chains with exactly two roots. It is bound to the verified SPT 4.1.5 item-database hash.
 
 This step does not alter the current 43 runtime quests, rewards, prerequisites or assortment. Runtime materialization is one coherent later change: allocate the retained 21 quest IDs into the new sequence, author 19 new records, update descriptions and rewards, simulate concurrent availability, build the DLL and artifact, and run one full validation cycle.
 

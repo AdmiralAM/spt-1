@@ -70,9 +70,9 @@ Runtime graph and rewards remain unchanged by this planning document.
 
 ## Persistent loadout rotation
 
-Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The authored target is now 40 weapon assignments in two 20-step lanes. The exact SPT 4.1.5 pools, early-game gaps, exclusions, location bands and objective semantics are recorded in `docs/weapon-rotation-expansion-plan.md` and `manifests/weapon-rotation-expansion-plan.json`.
+Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The runtime contains 40 weapon quests in two continuous lanes. Preserving the 21 established Arsenal IDs and family sequences produces 22 close/support steps and 18 rifle/precision steps; the planning catalogue remains a balanced 20-by-20 coverage model. The exact SPT 4.1.5 pools, early-game gaps, exclusions, location bands and objective semantics are recorded in `docs/weapon-rotation-expansion-plan.md` and `manifests/weapon-rotation-expansion-plan.json`.
 
-Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
+Only two weapon assignments should normally be offered at once. The 19 expansion records are woven through the retained 21 Arsenal records as two independent authored chains, so the player has a minimum choice of raid setup without receiving four parallel weapon branches. Completing either assignment exposes the next assignment in that chain; level alone never exposes the complete weapon pool.
 
 The 43-quest stabilization pass applies that rule to the existing 21 Arsenal quests. Track A advances sidearms to shotguns, marksman/battle rifles and special weapons. Track B advances SMG/PDW to assault rifles and precision rifles. Each family still keeps its Qualification, Fieldwork and Munitions sequence, IDs, objectives and rewards. This changes five root prerequisites and reduces the Arsenal entry points from seven to two without removing content.
 
@@ -119,8 +119,33 @@ The expanded shop must contain a bounded signature weapon rack. Each selected we
 
 Ultimate Loot Editor is a separate optional research reference for Economy Admiral. It edits individual loose-loot spawn points and their item weights and persists map-specific JSON; Economy Admiral currently applies global map loot pressure. Any future compatibility work must establish deterministic ownership and ordering when both are installed. Ultimate Loot Editor is not a Trader dependency and its authored spawn-point data must not be absorbed into the storefront.
 
+## Late service milestone — Admiral insurance
+
+After campaign, reward and storefront content is complete, Admiral gains a late-progression insurance service before the final audit and stabilization gates. The service must use SPT's native insurance lifecycle and the existing Admiral trader ID. Its unlock point, eligible equipment, price, return window, loss/return behavior and messages must be authored as one coherent progression reward.
+
+This milestone must not add a second recovery engine, replace another trader's insurance globally, mutate profiles speculatively, or make Economy Admiral responsible for insurance ownership. Existing messages, standing and campaign progress must survive enable, upgrade, restart and clean removal paths.
+
 ## Optional content candidates
 
 WTT Armory, Icebreaker, RUAF / Black Division, and Pack 'n' Strap are recorded as later optional expansion candidates. They do not modify the stable campaign or current runtime scope until their installed content and exact IDs are inspected. WTT Armory may extend weapon rotations, rewards, and finite quest-gated stock; Icebreaker may supply optional map operations; RUAF / Black Division may supply rare optional combat targets without Admiral-owned spawn changes; Pack 'n' Strap may broaden equipment objectives, rewards, and unlocks after duplicate-storefront review.
 
 All four integrations must degrade cleanly when absent and cannot gate the core graph. ORBIT and Extra Lives are explicitly excluded from Trader runtime integration. The detailed admission contract is in `docs/optional-content-candidates.md` and `manifests/optional-content-candidates.json`.
+
+## Post-stable trial — qualification and requisition chains
+
+VAI-RLTP is retained as a research reference for two small original Admiral chains after the stable 0.3.0 scope. Its useful idea is the progression link between demonstrated equipment competence, themed procurement and finite trader unlocks. Its 430 generated single-condition mastery quests, 183 handover-only collector quests, extreme kill ladders, text, IDs, reward values and graph are not imported. VAI-RLTP is CC BY-NC-SA 3.0 material; these trials must be independently authored from the high-level concept rather than adapted from its quest records.
+
+The trial is bounded to two chains of three operations each:
+
+1. **Field certification**
+   - category qualification with a small weapon pool and moderate target count across several suitable locations;
+   - a field-specialization operation that changes the tactical problem through target, range, time or supporting equipment instead of repeating the same kills;
+   - a short capstone proving the capability against a bounded elite-target pool and unlocking one complete preset plus its practical magazine/ammunition support.
+2. **Operational requisition**
+   - recover or assemble a coherent field-service kit whose items share a real function;
+   - use the supplied equipment context in a distinct reconnaissance, recovery or route operation rather than submitting a second shopping list;
+   - complete the delivery/validation step and unlock one finite mission-support offer appropriate to that kit.
+
+Both chains remain optional side content, use new persistent Admiral quest IDs, enter through one suitable post-stable campaign milestone and never gate the 172-quest core graph, loyalty or essential stock. At most one trial step per chain may be offered at once. Rewards replace part of the ordinary cash envelope rather than stacking free value, and every unlock must correspond to the capability or supply package just proven.
+
+Before runtime implementation, the six-operation bundle must be reviewed together at the product level for titles, story purpose, objective variety, exact location pools, requirements, rewards and storefront unlocks. Admission requires that neither chain duplicates an existing Arsenal rotation, map story, Natalya operation or Icebreaker branch. If the trial does not add a new player decision, it is dropped rather than expanded into a mastery grind.

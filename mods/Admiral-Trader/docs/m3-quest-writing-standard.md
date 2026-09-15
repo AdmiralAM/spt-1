@@ -1,6 +1,6 @@
 # Admiral Trader — M3 Quest Writing Standard
 
-Status: **product/editorial authority only**. This document does not authorize runtime materialization and does not change the M1 -> M2 -> M3 milestone order in PR #328.
+Status: **historical M3 editorial foundation**. The materialized campaign and current acceptance authority are documented in `campaign-audit-172.md` and the root `README.md`.
 
 Runtime target: SPT 4.1.5. Historical SPT 4.1.3 proofs from PR #297 are research evidence only and must be revalidated where runtime semantics matter.
 

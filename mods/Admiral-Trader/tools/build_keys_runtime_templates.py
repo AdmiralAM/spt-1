@@ -9,6 +9,17 @@ from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
+QUEST_LOCATION_IDS = {
+    "any": "any",
+    "factory4_day": "55f2d3fd4bdc2d5f408b4567",
+    "bigmap": "56f40101d2720b2a4d8b45d6",
+    "woods": "5704e3c2d2720bac5b8b4567",
+    "interchange": "5714dbc024597771384a510d",
+    "shoreline": "5704e554d2720bac5b8b456e",
+    "rezervbase": "5704e5fad2720bc05b8b4567",
+    "lighthouse": "5704e4dad2720bb55b8b4567",
+    "laboratory": "5b0fc42d86f7744a585f9105",
+}
 QUEST_ICON = "/files/quest/icon/5a29222486f77456f50d09e7.jpg"
 
 
@@ -209,7 +220,7 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "image": QUEST_ICON,
         "instantComplete": False,
         "isKey": False,
-        "location": str(quest["map"]),
+        "location": QUEST_LOCATION_IDS[str(quest["map"]).lower()],
         "name": f"{qid} name",
         "note": f"{qid} note",
         "restartable": False,

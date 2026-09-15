@@ -1,0 +1,422 @@
+{
+  "e472a13c1478f7b9258522d3": {
+    "cashReductionRub": 7000,
+    "name": "Аптечка IFAK",
+    "reward": {
+      "value": 1,
+      "id": "1c3a7b6a03ee5c58169780d2",
+      "type": "Item",
+      "target": "cecc47536f7cd4fd0ebb59d6",
+      "index": 3,
+      "items": [
+        {
+          "_id": "cecc47536f7cd4fd0ebb59d6",
+          "_tpl": "590c678286f77426c9660122",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "bb49cbdbae242ffef21f95b7": {
+    "cashReductionRub": 7000,
+    "name": "Активные наушники ГСШ-01",
+    "reward": {
+      "value": 1,
+      "id": "0c13ecd6b42cb8155a86e4fc",
+      "type": "Item",
+      "target": "7f10a0624381ed25e041a945",
+      "index": 3,
+      "items": [
+        {
+          "_id": "7f10a0624381ed25e041a945",
+          "_tpl": "5b432b965acfc47a8774094e",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5fd9397fbc40a37c1abf3790": {
+    "cashReductionRub": 10000,
+    "name": "Аптечка Salewa",
+    "reward": {
+      "value": 1,
+      "id": "7580a6c00d6ff7583b6c0233",
+      "type": "Item",
+      "target": "75cb0947770d0381447d40ca",
+      "index": 3,
+      "items": [
+        {
+          "_id": "75cb0947770d0381447d40ca",
+          "_tpl": "544fb45d4bdc2dee738b4568",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "1ca43f65c714ea7f9eec6e2a": {
+    "cashReductionRub": 10000,
+    "name": "Рюкзак LBT-8005A Day Pack",
+    "reward": {
+      "value": 1,
+      "id": "72ff0bbb329480e4b6fbc7f8",
+      "type": "Item",
+      "target": "c1052d8f65c459ccb0d83fe5",
+      "index": 3,
+      "items": [
+        {
+          "_id": "c1052d8f65c459ccb0d83fe5",
+          "_tpl": "5e9dcf5986f7746c417435b3",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5268717351b03068d3b68ecd": {
+    "cashReductionRub": 15000,
+    "name": "Аптечка AFAK",
+    "reward": {
+      "value": 1,
+      "id": "23bbff019ef0562a4f7a961b",
+      "type": "Item",
+      "target": "e56420501171e0fee125cb8d",
+      "index": 3,
+      "items": [
+        {
+          "_id": "e56420501171e0fee125cb8d",
+          "_tpl": "60098ad7c2240c0fe85c570a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "e9de043a8379c87027f762b3": {
+    "cashReductionRub": 16000,
+    "name": "Хирургический набор CMS",
+    "reward": {
+      "value": 1,
+      "id": "14f77405832e4e6da58109a5",
+      "type": "Item",
+      "target": "7a086eb8251d382bda9138a3",
+      "index": 3,
+      "items": [
+        {
+          "_id": "7a086eb8251d382bda9138a3",
+          "_tpl": "5d02778e86f774203e7dedbe",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "7486bc36905b338d72289ad6": {
+    "cashReductionRub": 16000,
+    "name": "Активные наушники MSA Sordin",
+    "reward": {
+      "value": 1,
+      "id": "6818d149911fb24733a0b35e",
+      "type": "Item",
+      "target": "5391225ace0cd97405e9c540",
+      "index": 3,
+      "items": [
+        {
+          "_id": "5391225ace0cd97405e9c540",
+          "_tpl": "5aa2ba71e5b5b000137b758f",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "9bf1b7ad200b0f5f59e9cbbd": {
+    "cashReductionRub": 12000,
+    "name": "Бронежилет PACA",
+    "reward": {
+      "value": 1,
+      "id": "7caf65f3b46f87baae61b1d2",
+      "type": "Item",
+      "target": "2351ef779280f2317ce3d442",
+      "index": 3,
+      "items": [
+        {
+          "_id": "2351ef779280f2317ce3d442",
+          "_tpl": "5648a7494bdc2d9d488b4583",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "78cc2b3208abba4015448a90": {
+    "cashReductionRub": 17000,
+    "name": "Разгрузочный жилет BlackRock",
+    "reward": {
+      "value": 1,
+      "id": "2848e8ee4fd65cdc02ddb55f",
+      "type": "Item",
+      "target": "13a5da112a4e66a252c9c640",
+      "index": 3,
+      "items": [
+        {
+          "_id": "13a5da112a4e66a252c9c640",
+          "_tpl": "5648a69d4bdc2ded0b8b457b",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "b69566c83e350e531fb4da63": {
+    "cashReductionRub": 15000,
+    "name": "Препарат Пропитал",
+    "reward": {
+      "value": 1,
+      "id": "52355d5f5bbdc5bf079d5ac9",
+      "type": "Item",
+      "target": "62516338788e5b9d9b09cd07",
+      "index": 3,
+      "items": [
+        {
+          "_id": "62516338788e5b9d9b09cd07",
+          "_tpl": "5c0e530286f7747fa1419862",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "fcc999aeb0be8899307d5c11": {
+    "cashReductionRub": 22000,
+    "name": "Набор Surv12",
+    "reward": {
+      "value": 1,
+      "id": "223cbfb9f2411a8759fb385e",
+      "type": "Item",
+      "target": "dbafdf2a182193c939b6385f",
+      "index": 3,
+      "items": [
+        {
+          "_id": "dbafdf2a182193c939b6385f",
+          "_tpl": "5d02797c86f774203f38e30a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "0d712d3bafcc3a986f288d63": {
+    "cashReductionRub": 25000,
+    "name": "Аптечка Grizzly",
+    "reward": {
+      "value": 1,
+      "id": "64c88084fceee66b70c3517d",
+      "type": "Item",
+      "target": "7fd8240a539f6239db629ed2",
+      "index": 3,
+      "items": [
+        {
+          "_id": "7fd8240a539f6239db629ed2",
+          "_tpl": "590c657e86f77412b013051d",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "6d91d7193725645fcda53ea9": {
+    "cashReductionRub": 22000,
+    "name": "Шлем MSA Gallet TC 800",
+    "reward": {
+      "value": 1,
+      "id": "5b1f9c93dac9b007cc6b1556",
+      "type": "Item",
+      "target": "171aceb69d410686f8340035",
+      "index": 3,
+      "items": [
+        {
+          "_id": "171aceb69d410686f8340035",
+          "_tpl": "5e4bfc1586f774264f7582d3",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "0b7abaaa7f084765e7d5c623": {
+    "cashReductionRub": 18000,
+    "name": "Активные наушники MSA Sordin",
+    "reward": {
+      "value": 1,
+      "id": "53e3ae993cb97201bef35b8c",
+      "type": "Item",
+      "target": "30fece800e8b3b73915ec84a",
+      "index": 3,
+      "items": [
+        {
+          "_id": "30fece800e8b3b73915ec84a",
+          "_tpl": "5aa2ba71e5b5b000137b758f",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "45a06f6c07f74caeb29f84a6": {
+    "cashReductionRub": 28000,
+    "name": "Рюкзак Camelbak Tri-Zip",
+    "reward": {
+      "value": 1,
+      "id": "ea7a33e0656ce413498c03ed",
+      "type": "Item",
+      "target": "a8a88bf9b23e8f27ae694800",
+      "index": 3,
+      "items": [
+        {
+          "_id": "a8a88bf9b23e8f27ae694800",
+          "_tpl": "545cdae64bdc2d39198b4568",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "a4e4d8c99a667c66900d17ec": {
+    "cashReductionRub": 18000,
+    "name": "Гемостатик Загустин",
+    "reward": {
+      "value": 1,
+      "id": "44c6d852ddf89cfb79e4bc8a",
+      "type": "Item",
+      "target": "df875e371a26670c9538192e",
+      "index": 3,
+      "items": [
+        {
+          "_id": "df875e371a26670c9538192e",
+          "_tpl": "5c0e533786f7747fa23f4d47",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "bf3982de79ea3b1e90910200": {
+    "cashReductionRub": 35000,
+    "name": "Стимулятор SJ6",
+    "reward": {
+      "value": 1,
+      "id": "b75bddc341e7c2b61af3c54b",
+      "type": "Item",
+      "target": "72e8ad36cb65f479b3015c84",
+      "index": 3,
+      "items": [
+        {
+          "_id": "72e8ad36cb65f479b3015c84",
+          "_tpl": "5c0e531d86f7747fa23f4d42",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "9d429e2927fca0923a803cd4": {
+    "cashReductionRub": 24000,
+    "name": "Набор Surv12",
+    "reward": {
+      "value": 1,
+      "id": "b5e1ff79dbaa0ca74b9c224e",
+      "type": "Item",
+      "target": "df1aeb867002e70c6cead7b6",
+      "index": 3,
+      "items": [
+        {
+          "_id": "df1aeb867002e70c6cead7b6",
+          "_tpl": "5d02797c86f774203f38e30a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "3e217502dbe65fb4924d5d98": {
+    "cashReductionRub": 26000,
+    "name": "Аптечка Grizzly",
+    "reward": {
+      "value": 1,
+      "id": "3b0be393af4036d490b4c04b",
+      "type": "Item",
+      "target": "5c6fa1f69ddef6888113f167",
+      "index": 3,
+      "items": [
+        {
+          "_id": "5c6fa1f69ddef6888113f167",
+          "_tpl": "590c657e86f77412b013051d",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "97f0088fbb97e5376be4ddef": {
+    "cashReductionRub": 50000,
+    "name": "Стимулятор eTG-c",
+    "reward": {
+      "value": 1,
+      "id": "6a1cdbb5a5aac3c0d45fc8b9",
+      "type": "Item",
+      "target": "2e5a4f2b9a354b4efc22c0d9",
+      "index": 3,
+      "items": [
+        {
+          "_id": "2e5a4f2b9a354b4efc22c0d9",
+          "_tpl": "5c0e534186f7747fa1419867",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  }
+}

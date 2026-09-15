@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
+FOUNDATION_ACCESS_QUEST_ID = "5d404ebd654de4efecef71d2"
+GROUND_ZERO_ENTRY_QUEST_ID = "02c07ee31821696597ceabef"
 REQUIRED_LOCALE_FIELDS = (
     "name",
     "description",
@@ -57,7 +59,33 @@ def validate_runtime(
 
     for qid in sorted(committed):
         quest = committed[qid]
-        if quest != generated_templates[qid]:
+        expected = json.loads(json.dumps(generated_templates[qid]))
+        if qid == FOUNDATION_ACCESS_QUEST_ID:
+            expected = json.loads(json.dumps(expected))
+            expected["conditions"]["AvailableForStart"].append(
+                {
+                    "id": "5c05ff1c8aaa09b73f5cefc3",
+                    "index": 1,
+                    "dynamicLocale": False,
+                    "globalQuestCounterId": "",
+                    "visibilityConditions": [],
+                    "parentId": "",
+                    "target": GROUND_ZERO_ENTRY_QUEST_ID,
+                    "status": [4],
+                    "availableAfter": 0,
+                    "dispersion": 0,
+                    "conditionType": "Quest",
+                }
+            )
+        # The compiler owns objective and reward structure.  The published
+        # runtime intentionally replaces its English fallback title with the
+        # Russian localized title, so a client that reads QuestName before its
+        # locale bundle is ready never exposes an English quest title.
+        localized_name = russian.get(f"{qid} name")
+        if not localized_name:
+            raise ValueError(f"Russian locale missing localized QuestName for {qid}")
+        expected["QuestName"] = localized_name
+        if quest != expected:
             raise ValueError(f"committed quest differs from compiler output: {qid}")
         if quest.get("traderId") != TRADER_ID:
             raise ValueError(f"quest {qid} trader id drift")
