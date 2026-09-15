@@ -10,6 +10,7 @@ from typing import Any
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
 QUEST_LOCATION_IDS = {
+    "any": "any",
     "factory4_day": "55f2d3fd4bdc2d5f408b4567",
     "bigmap": "56f40101d2720b2a4d8b45d6",
     "woods": "5704e3c2d2720bac5b8b4567",
