@@ -168,6 +168,39 @@
         "effective retained-trader overlap"
       ],
       "fallback": "native equipment objectives and rewards remain unchanged"
+    },
+    {
+      "name": "SPTQuestLive",
+      "installed": false,
+      "sourceAudit": {
+        "repository": "Viper-9/SptQeustLive",
+        "version": "1.0.0",
+        "sptBaseline": "4.1.5",
+        "guid": "com.viper.sptquestlive",
+        "approximateVanillaQuestOverrides": 264,
+        "excludedQuestOwners": [
+          "Ref",
+          "Lightkeeper",
+          "BTR"
+        ],
+        "requiredRuntimeDependencies": [
+          "com.wtt.commonlib >=3.0.6",
+          "com.wtt.contentbackport 2.0.2"
+        ]
+      },
+      "roles": [
+        "quest-structure research reference",
+        "native-condition compatibility reference",
+        "Content Backport loot-placement reference",
+        "optional coexistence candidate"
+      ],
+      "requiredEvidence": [
+        "exact installed version and dependency versions",
+        "no Admiral quest ID or locale replacement",
+        "no Admiral prerequisite or quest-assort mutation",
+        "persistent trader and profile-safe combined startup"
+      ],
+      "fallback": "Admiral campaign and runtime remain unchanged when SPTQuestLive is absent"
     }
   ],
   "compatibilityEvidence": {

@@ -62,6 +62,12 @@ Candidate roles:
 
 Admission requires exact container template IDs, slot behavior, dimensions, capacity, restrictions, value, and the effective installed trader assortment. Items already sold appropriately elsewhere are not duplicated merely to fill Admiral's grid.
 
+## SPTQuestLive
+
+SPTQuestLive 1.0.0 is retained as a compatibility and research candidate. It overrides roughly 264 quests belonging to the vanilla traders and Fence, keeps the SPT progression structure, and selectively updates objectives, equipment, turn-ins, rewards, locales and Content Backport loot placement. It explicitly excludes Ref, Lightkeeper and BTR quests. Its current release targets SPT 4.1.5 and requires WTT CommonLib 3.0.6 plus Content Backport 2.0.2.
+
+Admiral does not import or override SPTQuestLive records and does not depend on its client or server assemblies. Useful material is limited to independently authored ideas for objective variety and to compatibility evidence for native quest-condition, locale and Content Backport patterns. Before coexistence is claimed, an installed exact-version smoke must prove that its broad vanilla overrides do not alter Admiral quest IDs, locales, prerequisite graph, quest-assort unlocks or persistent trader state. Absence of SPTQuestLive leaves the Admiral campaign unchanged.
+
 ## Explicit exclusions
 
 ORBIT and Extra Lives are not Trader integration candidates. Admiral must not detect them, reference their runtime IDs, reward their content, create quests for their mechanics, or declare either as a dependency.
