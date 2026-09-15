@@ -8,10 +8,12 @@ namespace SPTItemIntelligence
     // First reserve all FIR-only obligations, then spend unrestricted inventory.
     public sealed class ItemRequirementAllocation
     {
-        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir)
+        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir, int exactOwned = -1, int exactFirOwned = -1)
         {
             Owned = Math.Max(0, owned);
             OwnedFir = Math.Min(Owned, Math.Max(0, firOwned));
+            ExactOwned = exactOwned < 0 ? Owned : Math.Max(0, exactOwned);
+            ExactOwnedFir = exactFirOwned < 0 ? Math.Min(ExactOwned, OwnedFir) : Math.Min(ExactOwned, Math.Max(0, exactFirOwned));
             NowRequired = Math.Max(0, now);
             LaterRequired = Math.Max(0, later);
             HideoutRequired = Math.Max(0, hideout);
@@ -29,6 +31,8 @@ namespace SPTItemIntelligence
         }
         public int Owned { get; }
         public int OwnedFir { get; }
+        public int ExactOwned { get; }
+        public int ExactOwnedFir { get; }
         public int NowRequired { get; }
         public int LaterRequired { get; }
         public int HideoutRequired { get; }

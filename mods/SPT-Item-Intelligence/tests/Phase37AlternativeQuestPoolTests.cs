@@ -23,7 +23,8 @@ static class Phase37AlternativeQuestPoolTests
         };
         var emptyHideout = new Dictionary<string, object> { ["areas"] = Array.Empty<object>(), ["customAreas"] = Array.Empty<object>() };
         RequirementIndex any = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(new RequirementDataEnvelope(1, profile, quests, emptyHideout, Array.Empty<object>())));
-        Expect(any.Get("a").OwnedCount == 2 && any.Get("b").OwnedCount == 2, "both accepted variants see the same combined stock", ref assertions);
+        Expect(any.Get("a").OwnedCount == 1 && any.Get("b").OwnedCount == 1, "each accepted variant keeps its individual owned count", ref assertions);
+        Expect(any.Get("a").Allocation.Owned == 2 && any.Get("b").Allocation.Owned == 2, "only requirement coverage uses the shared eligible pool", ref assertions);
         Expect(any.Get("a").Allocation.Coverage == RequirementCoverage.Enough && any.Get("b").Allocation.Coverage == RequirementCoverage.Enough, "one can of each fulfills one shared two-item condition", ref assertions);
 
         ((object[])((Dictionary<string, object>)((Dictionary<string, object>)quests["q"])["conditions"])["AvailableForFinish"])[0] = Condition(true);

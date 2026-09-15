@@ -318,7 +318,7 @@ namespace SPTItemIntelligence
                 hover.KeepCount,
                 string.Empty,
                 FormatRequirementDetails(hover.RequirementDetails),
-                truth.OwnedFir,
+                truth.ExactOwnedFir,
                 truth.NowFirRequired,
                 truth.LaterFirRequired,
                 perSlot,
