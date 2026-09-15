@@ -127,7 +127,7 @@ namespace SPTItemIntelligence
             ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, renderColor);
             ApplyLight(Member(senseItem, "light"), preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
-                ApplyText(Member(senseItem, "typeText"), TwoLineText(policy, primary, stock), Color.white, secondary);
+                ApplyText(Member(senseItem, "typeText"), CompactText(policy, primary, stock), Color.white, secondary);
         }
 
         static IEnumerable<object> EnumerateSenseItemTree(object senseItem, object looseItem)
@@ -242,17 +242,12 @@ namespace SPTItemIntelligence
             return GameUiText.T("FUTURE", "ПОТОМ");
         }
 
-        static string StockText(SenseVisualPolicy policy)
+        static string CompactText(SenseVisualPolicy policy, Color category, Color stock)
         {
-            if (policy.Stock == SenseStockState.Complete) return GameUiText.T(" · ALL ✓", " · ВСЁ ✓");
-            if (policy.Stock == SenseStockState.NextCovered) return GameUiText.T(" · NEXT ✓", " · ЭТАП ✓");
-            return " · −" + policy.Remaining;
-        }
-
-        static string TwoLineText(SenseVisualPolicy policy, Color category, Color stock)
-        {
-            return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color>\n" +
-                   "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + StockText(policy).TrimStart(' ', '·') + "</color>";
+            if (policy.Stock == SenseStockState.Complete)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + Label(policy.Category) + "</color>";
+            return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color> " +
+                   "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">−" + policy.Remaining + "</color>";
         }
 
         static bool HasProtectedSenseVisual(object senseItem)

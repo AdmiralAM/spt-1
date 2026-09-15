@@ -64,6 +64,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
         Expect(adapter.Contains("\"Succeed\", \"Succeeded\", \"Success\", \"IsSuccess\"") &&
                adapter.Contains("if (status == null) return true"),
             "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
+        Expect(adapter.Contains("CompactText(policy, primary, stock)") &&
+               adapter.Contains("if (policy.Stock == SenseStockState.Complete)") &&
+               !adapter.Contains("ALL ✓") && !adapter.Contains("ВСЁ ✓") &&
+               !adapter.Contains(">\\n<"),
+            "Sense status stays on one compact line and colors the category itself when complete", ref assertions);
 
         return assertions;
     }
