@@ -64,9 +64,13 @@ def quest(slug,name,level,previous,finish,qtype="Elimination"):
     qid=hid("quest:"+slug)
     return qid,{"QuestName":name,"_id":qid,"canShowNotificationsInGame":True,"conditions":{"AvailableForFinish":[finish(qid)],"AvailableForStart":start(level,previous),"Fail":[]},"description":qid+" description","failMessageText":qid+" failMessageText","name":qid+" name","note":qid+" note","traderId":TRADER,"location":"any","image":"/files/quest/icon/5a27cafa86f77424e20615d6.jpg","type":qtype,"isKey":False,"restartable":False,"instantComplete":False,"secretQuest":False,"startedMessageText":qid+" startedMessageText","successMessageText":qid+" successMessageText","acceptPlayerMessage":qid+" acceptPlayerMessage","acceptanceAndFinishingSource":"eft","declinePlayerMessage":qid+" declinePlayerMessage","completePlayerMessage":qid+" completePlayerMessage","changeQuestMessageText":qid+" changeQuestMessageText","rewards":{"Started":[],"Success":reward(qid,level),"Fail":[]},"side":"Pmc","status":0,"progressSource":"eft","gameModes":[],"rankingModes":[],"arenaLocations":[]}
 
-def loc_condition(qid, locations, equipment=None):
+def loc_condition(qid, locations, equipment_groups=None, kill_target=None, kill_condition_id=None):
     rows=[]
-    if equipment: rows.append({"id":hid(qid+":gear"),"dynamicLocale":False,"conditionType":"Equipment","equipmentInclusive":[equipment],"equipmentExclusive":[],"IncludeNotEquippedItems":False})
+    if equipment_groups: rows.append({"id":hid(qid+":gear"),"dynamicLocale":False,"conditionType":"Equipment","equipmentInclusive":equipment_groups,"equipmentExclusive":[],"IncludeNotEquippedItems":False})
+    if kill_target:
+        kill_rows = kill(qid, [], [], kill_target)
+        if kill_condition_id: kill_rows[0]["id"] = kill_condition_id
+        rows += kill_rows
     rows += [{"id":hid(qid+":loc"),"dynamicLocale":False,"conditionType":"Location","target":locations},{"id":hid(qid+":exit"),"dynamicLocale":False,"conditionType":"ExitStatus","status":["Survived"]}]
     return rows
 
@@ -118,24 +122,33 @@ def main():
     gz=[("ground-zero-arrival","Operation: First Contact",1,2,"Savage"),("ground-zero-corridor","Operation: Open Corridor",3,4,"Savage"),("ground-zero-pressure","Operation: Contested Ground",5,2,"AnyPmc"),("ground-zero-exit","Operation: Exit Discipline",7,5,"Any")]
     for slug,name,level,count,target in gz:
         qid,q=quest(slug,name,level,prev,lambda qid,c=count,t=target:counter(qid,c,kill(qid,[],LOCATION_IDS["Ground Zero"],t)),"Elimination");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"operation","location":"Ground Zero"})
+        q["location"]="653e6760052c01c1c805532f"
         en.update(locale(qid,name,"",level,f"Eliminate {count} targets on Ground Zero"));ru.update(locale(qid,name,"",level,f"Устранить {count} целей на Эпицентре",True))
     # A staged non-weapon equipment chain.
     gear=[
-        ("light-rig","Loadout: Low Signature",6,["Ground Zero","Customs","Woods"],["5c0e722886f7740458316a57","5e4abc1f86f774069619fbaa"]),
-        ("field-headset","Loadout: Acoustic Cover",11,["Customs","Woods","Shoreline"],["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]),
-        ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]),
-        ("medium-armor","Loadout: Mobile Armor",21,["Shoreline","Interchange","Streets"],["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]),
-        ("cargo-rig","Loadout: Sustainment",26,["Reserve","Lighthouse","Streets"],["5df8a42886f77412640e2e75","5c0e9f2c86f77432297fe0a3"]),
-        ("heavy-kit","Loadout: Breach Weight",31,["Factory","Reserve","The Lab"],["5ca2151486f774244a3b8d30","5ca21c6986f77479963115a7"]),
+        # The opening assignment is logistics training, not a combat exam. Two
+        # groups require one common rig and one common backpack simultaneously.
+        ("light-rig","Loadout: First Field Kit",6,["Ground Zero","Customs","Woods"],[["572b7adb24597762ae139821","5e4abc1f86f774069619fbaa","6034d0230ca681766b6a0fb5"],["544a5cde4bdc2d39388b456b","56e33680d2720be2748b4576","56e335e4d2720b6c058b456d"]],1,None,None,"Use one allowed rig and one allowed backpack, then survive and extract from one listed map","Использовать одну разрешённую разгрузку и один разрешённый рюкзак, затем выжить и выйти с одной из указанных карт"),
+        ("field-headset","Loadout: Acoustic Cover",11,["Customs","Woods","Shoreline"],[["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]],4,"Any","f2b78c3ab062acd976bbe35c","Test the headset in combat: eliminate 4 targets and survive the same raid","Проверить наушники в бою: устранить 4 противников и выжить в том же рейде"),
+        ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],[["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]],5,"Any","9d78917164400742a5e2511d","Test the helmet under fire: eliminate 5 targets and survive the same raid","Проверить защиту головы в бою: устранить 5 противников и выжить в том же рейде"),
+        ("medium-armor","Loadout: Mobile Armor",21,["Shoreline","Interchange","Streets"],[["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]],2,"AnyPmc","3ac29a7f402bea66538246bc","Test the mobile armor: eliminate 2 PMCs and survive the same raid","Проверить подвижную броню: устранить 2 бойцов ЧВК и выжить в том же рейде"),
+        ("cargo-rig","Loadout: Sustainment",26,["Reserve","Lighthouse","Streets"],[["5df8a42886f77412640e2e75","5c0e9f2c86f77432297fe0a3"]],7,"Any","2a064ed77cf937cc6d423718","Complete a sustained combat patrol: eliminate 7 targets and survive the same raid","Провести длительный боевой выход: устранить 7 противников и выжить в том же рейде"),
+        ("heavy-kit","Loadout: Breach Weight",31,["Factory","Reserve","The Lab"],[["5ca2151486f774244a3b8d30","5ca21c6986f77479963115a7"]],3,"AnyPmc","81c019d78a77aa67046c0c16","Test the heavy assault load: eliminate 3 PMCs and survive the same raid","Проверить тяжёлый штурмовой комплект: устранить 3 бойцов ЧВК и выжить в том же рейде"),
     ]
     prev=None
-    for slug,name,level,locations,items in gear:
+    for slug,name,level,locations,equipment_groups,count,target,kill_condition_id,task_en,task_ru in gear:
         runtime_locations=[runtime_id for location_name in locations for runtime_id in LOCATION_IDS[location_name]]
-        location_text=", ".join(locations)
-        qid,q=quest(slug,name,level,prev,lambda qid,l=runtime_locations,i=items:counter(qid,1,loc_condition(qid,l,i),"Exploration",True),"Exploration");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","locations":locations})
-        en_detail=f"Eligible equipment: {item_list(items,'en')}."
-        ru_detail=f"Допуск по снаряжению:\n- {item_list(items,'ru')}."
-        en.update(locale(qid,name,en_detail,level,"Use the allowed equipment and survive one listed map"));ru.update(locale(qid,name,ru_detail,level,"Использовать разрешённый комплект и выжить на одной из указанных карт",True))
+        qtype="Elimination" if target else "Exploration"
+        qid,q=quest(slug,name,level,prev,lambda qid,l=runtime_locations,g=equipment_groups,c=count,t=target,k=kill_condition_id,qt=qtype:counter(qid,c,loc_condition(qid,l,g,t,k),qt,True),qtype)
+        if slug == "light-rig":
+            reward_id=hid(qid+":starter-pack")
+            q["rewards"]["Success"].append({"value":1,"id":reward_id,"type":"Item","target":reward_id,"index":3,"items":[{"_id":reward_id,"_tpl":"5e9dcf5986f7746c417435b3","upd":{"StackObjectsCount":1}}]})
+        prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","locations":locations})
+        rendered_en=[item_list(group,'en') for group in equipment_groups]
+        rendered_ru=[item_list(group,'ru') for group in equipment_groups]
+        en_detail="Eligible equipment:\n" + "\n".join(f"- choose one from: {group}." for group in rendered_en) + f"\nTask: {task_en}."
+        ru_detail="Допуск по снаряжению:\n" + "\n".join(f"- выбрать один предмет: {group}." for group in rendered_ru) + f"\nЗадача: {task_ru}."
+        en.update(locale(qid,name,en_detail,level,task_en));ru.update(locale(qid,name,ru_detail,level,task_ru,True))
     qdir=ROOT/"db/quests"
     lane_lengths={}
     for lane in ("A", "B"):

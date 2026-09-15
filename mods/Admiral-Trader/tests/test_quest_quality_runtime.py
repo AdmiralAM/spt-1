@@ -97,9 +97,26 @@ class QuestQualityRuntimeTests(unittest.TestCase):
             self.assertEqual(quest["QuestName"], title)
             self.assertRegex(title, r"[А-Яа-яЁё]")
 
-    def test_equipment_qualifications_require_combat_and_explain_exact_gear(self):
+    def test_opening_equipment_qualification_is_accessible_logistics(self):
+        qid = "4a8f533e1ed458e83b41c01f"
+        by_id = {quest["_id"]: quest for quest in self.quests}
+        quest = by_id[qid]
+        counter = quest["conditions"]["AvailableForFinish"][0]
+        nested = counter["counter"]["conditions"]
+        self.assertEqual(counter["type"], "Exploration")
+        self.assertEqual(counter["value"], 1)
+        self.assertTrue(counter["oneSessionOnly"])
+        self.assertNotIn("Kills", {row["conditionType"] for row in nested})
+        equipment = next(row for row in nested if row["conditionType"] == "Equipment")
+        self.assertEqual(len(equipment["equipmentInclusive"]), 2)
+        self.assertEqual({len(group) for group in equipment["equipmentInclusive"]}, {3})
+        reward_tpls = {item["_tpl"] for reward in quest["rewards"]["Success"] for item in reward.get("items", [])}
+        self.assertIn("5e9dcf5986f7746c417435b3", reward_tpls)
+        self.assertIn("Задача:", self.locales["ru"][qid + " description"])
+
+    def test_later_equipment_qualifications_require_combat_and_explain_exact_gear(self):
         ids = {
-            "4a8f533e1ed458e83b41c01f", "4ab0b49478adb233ae900b33",
+            "4ab0b49478adb233ae900b33",
             "ca33fab8b9cc5f5f5ad322c0", "9c35b3ac22ede1a5a79118bc",
             "ee813142de655daf2dedfebc", "47480d824cea0b80917cafa5",
         }
