@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SPTItemIntelligence
 {
@@ -59,6 +60,56 @@ namespace SPTItemIntelligence
             ItemNeedIcon icon = first == ItemNeedReason.ActiveQuest ? ItemNeedIcon.Quest :
                 first == ItemNeedReason.Hideout ? ItemNeedIcon.Hideout : ItemNeedIcon.FutureQuest;
             return new SenseVisualPolicy(icon, first, second, stock, allocation.Missing);
+        }
+    }
+
+    public static class SenseContainerPolicyEngine
+    {
+        public static SenseVisualPolicy Combine(IEnumerable<SenseVisualPolicy> candidates)
+        {
+            SenseVisualPolicy bestUnmet = null;
+            SenseVisualPolicy bestComplete = null;
+            if (candidates != null)
+            {
+                foreach (SenseVisualPolicy candidate in candidates)
+                {
+                    if (candidate == null || !candidate.HasItemIntelligence) continue;
+                    if (candidate.Stock == SenseStockState.Complete)
+                    {
+                        if (bestComplete == null || CategoryRank(candidate.Category) < CategoryRank(bestComplete.Category))
+                            bestComplete = candidate;
+                        continue;
+                    }
+                    if (bestUnmet == null || IsStronger(candidate, bestUnmet)) bestUnmet = candidate;
+                }
+            }
+            return bestUnmet ?? bestComplete ??
+                new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0);
+        }
+
+        static bool IsStronger(SenseVisualPolicy candidate, SenseVisualPolicy current)
+        {
+            int category = CategoryRank(candidate.Category).CompareTo(CategoryRank(current.Category));
+            if (category != 0) return category < 0;
+            int stock = StockRank(candidate.Stock).CompareTo(StockRank(current.Stock));
+            if (stock != 0) return stock < 0;
+            return candidate.Remaining > current.Remaining;
+        }
+
+        static int CategoryRank(ItemNeedReason reason)
+        {
+            if (reason == ItemNeedReason.ActiveQuest) return 0;
+            if (reason == ItemNeedReason.Hideout) return 1;
+            if (reason == ItemNeedReason.FutureQuest) return 2;
+            return 3;
+        }
+
+        static int StockRank(SenseStockState stock)
+        {
+            if (stock == SenseStockState.Missing) return 0;
+            if (stock == SenseStockState.Partial) return 1;
+            if (stock == SenseStockState.NextCovered) return 2;
+            return 3;
         }
     }
 

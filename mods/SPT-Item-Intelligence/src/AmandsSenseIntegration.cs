@@ -83,25 +83,29 @@ namespace SPTItemIntelligence
             ItemPresentationIndex index = store.Current;
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");
-            string templateId = Text(Member(item, "TemplateId", "Tpl"));
             string itemId = Text(Member(item, "Id", "ID"));
-            int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
-            bool fir = Flag(Member(item, "SpawnedInSession"));
             if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId) && raidChanged != null) raidChanged();
 
-            ItemPresentationState state = index.Get(templateId);
-            ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
-            ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
-            SenseRequirementPresentation presentation = SenseRequirementMapper.Map(decision);
-            SenseVisualPolicy policy = SenseVisualPolicyEngine.Evaluate(decision.Allocation);
+            List<SenseVisualPolicy> candidates = new List<SenseVisualPolicy>();
+            foreach (object contained in EnumerateItemTree(item))
+            {
+                string templateId = Text(Member(contained, "TemplateId", "Tpl"));
+                if (templateId.Length == 0) continue;
+                bool fir = Flag(Member(contained, "SpawnedInSession"));
+                ItemPresentationState state = index.Get(templateId);
+                ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
+                ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
+                candidates.Add(SenseVisualPolicyEngine.Evaluate(decision.Allocation));
+            }
+            SenseVisualPolicy policy = SenseContainerPolicyEngine.Combine(candidates);
             if (!policy.HasItemIntelligence) return;
 
             Color primary = settings.GetSenseColor(policy.Category);
             Color stock = settings.GetSenseStockColor(policy.Stock);
-            bool preserveIcon = HasProtectedSenseVisual(senseItem);
+            bool preserveIcon = HasProtectedSenseVisual(senseItem) && policy.Stock != SenseStockState.Complete;
             if (!preserveIcon) SetField(senseItem, "color", primary);
-            Color secondary = presentation.OutlineReason == ItemNeedReason.None || !settings.SenseSecondaryOutline
-                ? primary : settings.GetSenseColor(presentation.OutlineReason);
+            Color secondary = policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
+                ? primary : settings.GetSenseColor(policy.SecondaryCategory);
             SetField(senseItem, "outlineColor", secondary);
 
             object sprite = preserveIcon ? Member(senseItem, "sprite") : FindSenseSprite(senseItem.GetType().Assembly, IconFile(policy.Icon));
@@ -111,7 +115,60 @@ namespace SPTItemIntelligence
             ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, renderColor);
             ApplyLight(Member(senseItem, "light"), preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
-                ApplyText(Member(senseItem, "typeText"), Label(policy.Category) + StockText(policy), stock, secondary);
+                ApplyText(Member(senseItem, "typeText"), TwoLineText(policy, primary, stock), Color.white, secondary);
+        }
+
+        static IEnumerable<object> EnumerateItemTree(object root)
+        {
+            if (root == null) yield break;
+            Queue<object> pending = new Queue<object>();
+            HashSet<object> seen = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            pending.Enqueue(root);
+            while (pending.Count > 0 && seen.Count < 512)
+            {
+                object item = pending.Dequeue();
+                if (item == null || !seen.Add(item)) continue;
+                yield return item;
+                EnqueueItems(InvokeEnumerable(item, "GetAllItems"), pending);
+                EnqueueItems(Member(item, "Children", "AllItems", "Items"), pending);
+                EnqueueContained(Member(item, "Grids"), pending);
+                EnqueueContained(Member(item, "Slots"), pending);
+                EnqueueContained(Member(item, "Cartridges"), pending);
+                EnqueueContained(Member(item, "Chambers"), pending);
+            }
+        }
+
+        static void EnqueueContained(object containers, Queue<object> pending)
+        {
+            IEnumerable values = containers as IEnumerable;
+            if (values == null || containers is string) return;
+            foreach (object container in values)
+            {
+                if (container == null) continue;
+                object contained = Member(container, "ContainedItem", "Item");
+                if (contained != null) pending.Enqueue(contained);
+                EnqueueItems(Member(container, "Items", "Children"), pending);
+            }
+        }
+
+        static void EnqueueItems(object values, Queue<object> pending)
+        {
+            IEnumerable enumerable = values as IEnumerable;
+            if (enumerable == null || values is string) return;
+            foreach (object value in enumerable) if (value != null) pending.Enqueue(value);
+        }
+
+        static object InvokeEnumerable(object target, string name)
+        {
+            if (target == null) return null;
+            for (Type type = target.GetType(); type != null; type = type.BaseType)
+            {
+                MethodInfo method = type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+                    BindingFlags.DeclaredOnly, null, Type.EmptyTypes, null);
+                if (method == null) continue;
+                try { return method.Invoke(target, null); } catch { return null; }
+            }
+            return null;
         }
 
         void RecordPickup(object senseItem, object eventArgs)
@@ -147,6 +204,12 @@ namespace SPTItemIntelligence
             if (policy.Stock == SenseStockState.Complete) return GameUiText.T(" · ALL ✓", " · ВСЁ ✓");
             if (policy.Stock == SenseStockState.NextCovered) return GameUiText.T(" · NEXT ✓", " · ЭТАП ✓");
             return " · −" + policy.Remaining;
+        }
+
+        static string TwoLineText(SenseVisualPolicy policy, Color category, Color stock)
+        {
+            return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color>\n" +
+                   "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + StockText(policy).TrimStart(' ', '·') + "</color>";
         }
 
         static bool HasProtectedSenseVisual(object senseItem)
@@ -283,6 +346,13 @@ namespace SPTItemIntelligence
             harmony = null;
             IsInstalled = false;
             ResetRaid();
+        }
+
+        sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            internal static readonly ReferenceEqualityComparer Instance = new ReferenceEqualityComparer();
+            public new bool Equals(object left, object right) { return ReferenceEquals(left, right); }
+            public int GetHashCode(object value) { return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(value); }
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SPTItemIntelligence;
 
 static class Phase38SenseVisualPolicyTests
@@ -17,7 +18,16 @@ static class Phase38SenseVisualPolicyTests
         SenseVisualPolicy complete = SenseVisualPolicyEngine.Evaluate(new ItemRequirementAllocation(5, 0, 2, 3, 0, 0, 0));
         Expect(complete.Stock == SenseStockState.Complete, "bright-green state means all demand covered", ref assertions);
         Expect(!complete.ShouldReplaceIcon(true) && complete.ShouldReplaceIcon(false),
-            "wishlist/value/category icons owned by Sense are preserved", ref assertions);
+            "base policy leaves runtime ownership choice explicit", ref assertions);
+        SenseVisualPolicy containerNeeded = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy> { complete, missing });
+        Expect(containerNeeded.Stock == SenseStockState.Missing && containerNeeded.Category == ItemNeedReason.ActiveQuest,
+            "one unmet contained item overrides completed container contents", ref assertions);
+        SenseVisualPolicy containerComplete = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy> { complete });
+        Expect(containerComplete.Stock == SenseStockState.Complete && containerComplete.HasItemIntelligence,
+            "a container with only completed tracked contents remains visibly green", ref assertions);
+        SenseVisualPolicy irrelevantContainer = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy>());
+        Expect(!irrelevantContainer.HasItemIntelligence,
+            "a container without tracked contents remains owned by native Sense", ref assertions);
         return assertions;
     }
     static void Expect(bool value, string message, ref int assertions) { assertions++; if (!value) throw new InvalidOperationException("Phase 38 assertion failed: " + message); }
