@@ -51,6 +51,12 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Amands Sense is not a build dependency and remains optional", ref assertions);
         Expect(!adapter.Contains("File.Write") && !adapter.Contains("Items.json") && !adapter.Contains("Sense.cfg"),
             "the integration never rewrites Sense files or user configuration", ref assertions);
+        Expect(adapter.Contains("Member(item, \"Containers\")") && adapter.Contains("\"ContainedItems\"") &&
+               adapter.Contains("foreach (object picked in EnumerateItemTree(item))"),
+            "Sense integration traverses EFT containers for both markers and picked-item accounting", ref assertions);
+        Expect(adapter.Contains("\"Succeed\", \"Succeeded\", \"Success\", \"IsSuccess\"") &&
+               adapter.Contains("if (status == null) return true"),
+            "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
 
         return assertions;
     }

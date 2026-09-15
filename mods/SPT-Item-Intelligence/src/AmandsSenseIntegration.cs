@@ -18,6 +18,7 @@ namespace SPTItemIntelligence
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
+        int pickupObservedReported;
 
         public AmandsSenseIntegration(ItemIntelligenceUiSettings settings, ItemPresentationStore store,
             Action<string> logInfo, Action<string> logWarning,
@@ -131,6 +132,7 @@ namespace SPTItemIntelligence
                 yield return item;
                 EnqueueItems(InvokeEnumerable(item, "GetAllItems"), pending);
                 EnqueueItems(Member(item, "Children", "AllItems", "Items"), pending);
+                EnqueueContained(Member(item, "Containers"), pending);
                 EnqueueContained(Member(item, "Grids"), pending);
                 EnqueueContained(Member(item, "Slots"), pending);
                 EnqueueContained(Member(item, "Cartridges"), pending);
@@ -147,7 +149,7 @@ namespace SPTItemIntelligence
                 if (container == null) continue;
                 object contained = Member(container, "ContainedItem", "Item");
                 if (contained != null) pending.Enqueue(contained);
-                EnqueueItems(Member(container, "Items", "Children"), pending);
+                EnqueueItems(Member(container, "Items", "ContainedItems", "Children"), pending);
             }
         }
 
@@ -175,13 +177,22 @@ namespace SPTItemIntelligence
         {
             if (!settings.SenseIntegration || !IsSuccess(eventArgs)) return;
             object item = Member(Member(senseItem, "observedLootItem"), "Item");
-            string id = Text(Member(item, "Id", "ID"));
-            string template = Text(Member(item, "TemplateId", "Tpl"));
-            if (id.Length == 0 || template.Length == 0) return;
-            int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
-            bool fir = Flag(Member(item, "SpawnedInSession"));
-            if (ledger.Observe(id, template, stack, fir) && raidChanged != null) raidChanged();
-            pickedItemIds.Add(id);
+            bool changed = false;
+            int observed = 0;
+            foreach (object picked in EnumerateItemTree(item))
+            {
+                string id = Text(Member(picked, "Id", "ID"));
+                string template = Text(Member(picked, "TemplateId", "Tpl"));
+                if (id.Length == 0 || template.Length == 0) continue;
+                int stack = Math.Max(1, Number(Member(picked, "StackObjectsCount"), 1));
+                bool fir = Flag(Member(picked, "SpawnedInSession"));
+                changed |= ledger.Observe(id, template, stack, fir);
+                pickedItemIds.Add(id);
+                observed++;
+            }
+            if (changed && raidChanged != null) raidChanged();
+            if (observed > 0 && System.Threading.Interlocked.Exchange(ref pickupObservedReported, 1) == 0 && logInfo != null)
+                logInfo("Item Intelligence raid inventory pickup tracking active; item tree records=" + observed + ".");
         }
 
         void ResetRaid()
@@ -267,10 +278,18 @@ namespace SPTItemIntelligence
 
         static bool IsSuccess(object args)
         {
+            if (args == null) return true;
+            object success = Member(args, "Succeed", "Succeeded", "Success", "IsSuccess");
+            if (success != null) return Flag(success);
+            object failed = Member(args, "Failed", "Failure", "IsFailed");
+            if (failed != null && Flag(failed)) return false;
             object status = Member(args, "Status");
-            if (status == null) return false;
+            if (status == null) return true;
             string text = status.ToString();
-            return string.Equals(text, "Succeed", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase) || Number(status, -1) == 1;
+            return string.Equals(text, "Succeed", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(text, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase) ||
+                   Number(status, -1) == 1;
         }
 
         static object Member(object source, params string[] names)
