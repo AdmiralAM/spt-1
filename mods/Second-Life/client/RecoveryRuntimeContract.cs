@@ -112,10 +112,10 @@ namespace Admiral.SecondLife.Client
             FieldInfo realBodyParts = healthHelper.GetField("RealBodyParts", BindingFlags.Static | BindingFlags.Public);
             FieldInfo healthSettings = globalConfiguration.GetField("Health", BindingFlags.Instance | BindingFlags.Public);
             PropertyInfo allRealPlayerItems = inventory.GetProperty("AllRealPlayerItems", BindingFlags.Instance | BindingFlags.Public);
-            FieldInfo corpsePlayerBody = corpse.GetField("PlayerBody", BindingFlags.Instance | BindingFlags.Public);
+            FieldInfo corpsePlayerBody = corpse.GetField("PlayerBody", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             MethodInfo updatePlayerRenders = playerBody.GetMethod(
                 "UpdatePlayerRenders",
-                BindingFlags.Instance | BindingFlags.Public,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null,
                 new[] { pointOfView, FindType("EFT.EPlayerSide") },
                 null);
