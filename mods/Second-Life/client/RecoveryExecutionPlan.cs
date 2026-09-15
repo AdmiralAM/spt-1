@@ -11,6 +11,7 @@ namespace Admiral.SecondLife.Client
         readonly RecoveryRuntimeContract contract;
         readonly object localGame;
         readonly object originalPlayer;
+        readonly object originalCorpse;
         readonly object originalOwner;
         readonly IDictionary players;
         readonly Delegate playerFactory;
@@ -26,6 +27,7 @@ namespace Admiral.SecondLife.Client
             RecoveryRuntimeContract contract,
             object localGame,
             object originalPlayer,
+            object originalCorpse,
             object originalOwner,
             IDictionary players,
             Delegate playerFactory,
@@ -41,6 +43,7 @@ namespace Admiral.SecondLife.Client
             this.contract = contract;
             this.localGame = localGame;
             this.originalPlayer = originalPlayer;
+            this.originalCorpse = originalCorpse;
             this.originalOwner = originalOwner;
             this.players = players;
             this.playerFactory = playerFactory;
@@ -157,14 +160,17 @@ namespace Admiral.SecondLife.Client
                 ValidateAttachment(gameWorld, newPlayer);
                 RefreshDynamicMapsPlayerMarker();
                 Trace(stage, gameWorld, newPlayer);
+                trace?.Invoke("Recovery trace: retained first-life corpse; " + DescribeCorpseState());
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
-                // EFT adds Corpse to the original player's own GameObject. Do not
-                // deactivate that object after handoff or the corpse disappears
-                // with it. Player.Dispose preserves PlayerBody when Corpse exists.
-                try { DisposeStrict(originalPlayer); }
-                catch (Exception exception) { trace?.Invoke("Recovery trace: original-player disposal warning: " + Unwrap(exception).Message); }
+                // The corpse and the dead Player share one GameObject. Player.Dispose
+                // invokes OnPlayerDeadOrUnspawn and disposes the composite subscription
+                // set; during an active raid those downstream cleanups can retire the
+                // corpse object even though PlayerBody itself is conditionally retained.
+                // The old player is already dead, unregistered, camera-less and no
+                // longer referenced by LocalGame. Keep it as the native corpse owner
+                // until normal world teardown instead of finalizing it mid-raid.
             }
             catch (Exception exception)
             {
@@ -243,6 +249,19 @@ namespace Admiral.SecondLife.Client
             {
                 return "state-unavailable=" + exception.Message;
             }
+        }
+
+        string DescribeCorpseState()
+        {
+            object corpseObject = ReadProperty(originalCorpse, "gameObject");
+            object playerObject = ReadProperty(originalPlayer, "gameObject");
+            object activeSelf = ReadProperty(corpseObject, "activeSelf");
+            object activeInHierarchy = ReadProperty(corpseObject, "activeInHierarchy");
+            return "captured=" + (originalCorpse != null) +
+                ", playerFieldMatch=" + ReferenceEquals(ReadField(originalPlayer, "Corpse"), originalCorpse) +
+                ", sharedGameObject=" + ReferenceEquals(corpseObject, playerObject) +
+                ", activeSelf=" + (activeSelf?.ToString() ?? "unknown") +
+                ", activeInHierarchy=" + (activeInHierarchy?.ToString() ?? "unknown");
         }
 
         static string ReferenceName(object value, object originalPlayer, object newPlayer)

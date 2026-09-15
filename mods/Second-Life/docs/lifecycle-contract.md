@@ -81,9 +81,15 @@ The local-game player dictionary entry is replaced by its captured key rather
 than by an assumed profile key. This prevents a disposed first-life player from
 remaining as a second cleanup entry. If Dynamic Maps is loaded, its existing
 main-player provider is refreshed once after the replacement is committed.
-The first-life player component is disposed without deactivating its GameObject:
-native `Corpse.CreateCorpse` attaches the corpse component to that same object,
-and deactivation would hide the recovered player's original body.
+The first-life player component is retained until normal world teardown without
+deactivating or disposing it: native `Corpse.CreateCorpse` attaches the corpse
+component to that same object, while `Player.Dispose()` invokes the shared
+`OnPlayerDeadOrUnspawn` and composite cleanup paths. During an active raid those
+paths may retire the corpse even though the player body is conditionally kept.
+Before the replacement is exposed, the dead first-life player is removed from
+the world registry, local-game ownership, input owner and camera, so retaining
+it preserves only the native corpse lifetime rather than a second controllable
+player.
 
 Before detaching the original player, the replacement equipment tree is passed
 through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This

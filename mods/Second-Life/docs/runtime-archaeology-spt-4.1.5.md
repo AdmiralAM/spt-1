@@ -147,9 +147,12 @@ dictionary, camera and `Spawn()` binding sequence used during initial startup.
 Before invoking `_playerFactory` again, the dead local player must be removed
 from `GameWorld`: `Player.Init(...)` registers the new player, and
 `GameWorld.RegisterPlayer(...)` keys the alive-player tables by profile ID.
-After successful replacement, `Player.Dispose()` unregisters and cleans up the
-old player while retaining its separately created corpse and corpse-owned
-equipment root.
+After successful replacement, the old player must not be disposed during the
+active raid. The corpse is a component on the same GameObject, and
+`Player.Dispose()` invokes shared dead/unspawn callbacks and composite cleanup
+that can retire that object. The old player is instead left dead, unregistered,
+camera-less and detached from local-game ownership until normal world teardown,
+preserving the corpse and corpse-owned equipment root.
 
 ## Remaining physical proof
 

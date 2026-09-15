@@ -68,6 +68,7 @@ namespace Admiral.SecondLife.Client
                 contract,
                 localGame,
                 originalPlayer,
+                corpse,
                 originalOwner,
                 players,
                 playerFactory,
