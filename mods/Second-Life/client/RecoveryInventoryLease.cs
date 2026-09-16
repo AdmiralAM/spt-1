@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 
 namespace Admiral.SecondLife.Client
@@ -14,6 +16,7 @@ namespace Admiral.SecondLife.Client
         readonly object recoveryInventory;
         readonly System.Collections.Generic.List<SlotTransfer> protectedTransfers;
         readonly int preservedFastAccessCount;
+        readonly string preservedFastAccessSummary;
         bool applied;
 
         RecoveryInventoryLease(
@@ -23,6 +26,7 @@ namespace Admiral.SecondLife.Client
             object recoveryInventory,
             System.Collections.Generic.List<SlotTransfer> protectedTransfers,
             int preservedFastAccessCount,
+            string preservedFastAccessSummary,
             string corpseEquipmentRootId,
             string recoveryEquipmentRootId)
         {
@@ -32,6 +36,7 @@ namespace Admiral.SecondLife.Client
             this.recoveryInventory = recoveryInventory;
             this.protectedTransfers = protectedTransfers;
             this.preservedFastAccessCount = preservedFastAccessCount;
+            this.preservedFastAccessSummary = preservedFastAccessSummary;
             CorpseEquipmentRootId = corpseEquipmentRootId;
             RecoveryEquipmentRootId = recoveryEquipmentRootId;
         }
@@ -43,6 +48,7 @@ namespace Admiral.SecondLife.Client
             ? "none"
             : string.Join(",", protectedTransfers.Select(transfer => transfer.SlotName));
         internal int PreservedFastAccessCount => preservedFastAccessCount;
+        internal string PreservedFastAccessSummary => preservedFastAccessSummary;
 
         internal bool TryAttachArmament(RuntimeArmament armament, out string failure)
         {
@@ -112,6 +118,7 @@ namespace Admiral.SecondLife.Client
             var protectedTransfers = PrepareProtectedTransfers(originalEquipment, recoveryEquipment);
             object recoveryInventory;
             int preservedFastAccessCount;
+            string preservedFastAccessSummary;
             int temporarilyMoved = 0;
             try
             {
@@ -128,7 +135,8 @@ namespace Admiral.SecondLife.Client
                     originalInventory,
                     recoveryEquipment,
                     protectedTransfers,
-                    out preservedFastAccessCount);
+                    out preservedFastAccessCount,
+                    out preservedFastAccessSummary);
                 recoveryInventory = contract.InventoryConstructor.Invoke(inventoryArguments);
             }
             finally
@@ -146,6 +154,7 @@ namespace Admiral.SecondLife.Client
                 recoveryInventory,
                 protectedTransfers,
                 preservedFastAccessCount,
+                preservedFastAccessSummary,
                 corpseRootId,
                 recoveryRootId);
             return true;
@@ -187,10 +196,16 @@ namespace Admiral.SecondLife.Client
             object inventory,
             object recoveryEquipment,
             System.Collections.Generic.List<SlotTransfer> protectedTransfers,
-            out int preservedFastAccessCount)
+            out int preservedFastAccessCount,
+            out string preservedFastAccessSummary)
         {
             ParameterInfo[] parameters = contract.InventoryConstructor.GetParameters();
-            object fastAccessIds = CopyFastAccessIds(inventory, parameters[7].ParameterType, protectedTransfers, out preservedFastAccessCount);
+            object fastAccessIds = CopyFastAccessIds(
+                inventory,
+                parameters[7].ParameterType,
+                protectedTransfers,
+                out preservedFastAccessCount,
+                out preservedFastAccessSummary);
             return new[]
             {
                 recoveryEquipment,
@@ -311,15 +326,37 @@ namespace Admiral.SecondLife.Client
 
             internal bool Contains(object candidate)
             {
-                if (ReferenceEquals(item, candidate)) return true;
-                MethodInfo getAllVisibleItems = item.GetType().GetMethod(
-                    "GetAllVisibleItems",
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (!(getAllVisibleItems?.Invoke(item, null) is IEnumerable descendants)) return false;
-                foreach (object descendant in descendants)
-                    if (ReferenceEquals(descendant, candidate)) return true;
+                if (candidate == null) return false;
+                var pending = new Stack<object>();
+                var visited = new HashSet<object>(ReferenceComparer.Instance);
+                pending.Push(item);
+                while (pending.Count > 0)
+                {
+                    object current = pending.Pop();
+                    if (current == null || !visited.Add(current)) continue;
+                    if (ReferenceEquals(current, candidate)) return true;
+
+                    object containers = AccessTools.Property(current.GetType(), "Containers")?.GetValue(current, null);
+                    if (!(containers is IEnumerable enumerableContainers)) continue;
+                    foreach (object container in enumerableContainers)
+                    {
+                        object children = container == null
+                            ? null
+                            : AccessTools.Property(container.GetType(), "Items")?.GetValue(container, null);
+                        if (!(children is IEnumerable enumerableChildren)) continue;
+                        foreach (object child in enumerableChildren)
+                            if (child != null) pending.Push(child);
+                    }
+                }
                 return false;
             }
+        }
+
+        sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            internal static readonly ReferenceComparer Instance = new ReferenceComparer();
+            public new bool Equals(object left, object right) => ReferenceEquals(left, right);
+            public int GetHashCode(object value) => RuntimeHelpers.GetHashCode(value);
         }
 
         static object FindGridAddress(object compound, object item)
@@ -352,16 +389,22 @@ namespace Admiral.SecondLife.Client
             object inventory,
             Type dictionaryType,
             System.Collections.Generic.List<SlotTransfer> protectedTransfers,
-            out int preservedCount)
+            out int preservedCount,
+            out string preservedSummary)
         {
             object copy = Activator.CreateInstance(dictionaryType);
             preservedCount = 0;
+            var preservedBindings = new List<string>();
             object fastAccess = ReadField(inventory, "FastAccess");
             var boundItems = ReadField(fastAccess, "BoundItems") as IDictionary;
             MethodInfo add = dictionaryType.GetMethod("Add");
             Type mongoId = dictionaryType.GetGenericArguments()[1];
             ConstructorInfo mongoIdConstructor = mongoId.GetConstructor(new[] { typeof(string) });
-            if (boundItems == null || add == null || mongoIdConstructor == null) return copy;
+            if (boundItems == null || add == null || mongoIdConstructor == null)
+            {
+                preservedSummary = "none";
+                return copy;
+            }
 
             foreach (DictionaryEntry binding in boundItems)
             {
@@ -371,7 +414,9 @@ namespace Admiral.SecondLife.Client
                 if (string.IsNullOrWhiteSpace(id)) continue;
                 add.Invoke(copy, new[] { binding.Key, mongoIdConstructor.Invoke(new object[] { id }) });
                 preservedCount++;
+                preservedBindings.Add(binding.Key + "=" + id);
             }
+            preservedSummary = preservedBindings.Count == 0 ? "none" : string.Join(",", preservedBindings);
             return copy;
         }
 

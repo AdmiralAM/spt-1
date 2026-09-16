@@ -98,7 +98,9 @@ namespace Admiral.SecondLife.Client
             {
                 Trace(stage, gameWorld, newPlayer);
                 trace?.Invoke("Recovery trace: protected transfers=" + inventoryLease.ProtectedTransferSummary);
-                trace?.Invoke("Recovery trace: preserved fast-access bindings=" + inventoryLease.PreservedFastAccessCount);
+                trace?.Invoke(
+                    "Recovery trace: preserved fast-access bindings=" + inventoryLease.PreservedFastAccessCount +
+                    " [" + inventoryLease.PreservedFastAccessSummary + "]");
                 playerDictionaryKey = ResolvePlayerDictionaryKey();
                 stage = "recovery-assets-load";
                 await LoadRecoveryAssets();
