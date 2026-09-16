@@ -50,6 +50,8 @@ static class Phase33RaidRequirementLedgerTests
         string scanner = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "RaidInventoryRuntimeScanner.cs"));
         Expect(scanner.Contains("if (!raidActive && ledger.IsRaidSessionActive)") && scanner.Contains("ledger.Reset();"),
             "leaving GameWorld clears raid-only counts before stash presentation", ref assertions);
+        Expect(scanner.Contains("ItemAccessorsByType") && scanner.Contains("GetAccessors(item.GetType())"),
+            "raid inventory scanning caches EFT item member access instead of rediscovering reflection fields per item", ref assertions);
         return assertions;
     }
 

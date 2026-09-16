@@ -37,6 +37,11 @@ static class Phase36RaidInventoryTooltipTests
         Expect(sink.Contains("if (pinnedView != null || Volatile.Read(ref hoveredView) != null)") &&
                sink.Contains("RaidInventoryRefreshRequested?.Invoke();"),
             "an inspected item refreshes raid inventory without reopening the inventory window", ref assertions);
+        string plugin = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "Plugin.cs"));
+        Expect(plugin.Contains("WaitForSecondsRealtime(.15f)") &&
+               plugin.Contains("RaidInventoryMinimumScanSeconds = .35f") &&
+               plugin.Contains("now - lastRaidInventoryScanAt < RaidInventoryMinimumScanSeconds"),
+            "view bursts coalesce into one snapshot refresh and visible raid scans are rate limited", ref assertions);
         return assertions;
     }
 

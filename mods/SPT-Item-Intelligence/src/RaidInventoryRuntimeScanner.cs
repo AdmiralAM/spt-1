@@ -8,6 +8,7 @@ namespace SPTItemIntelligence
     public sealed class RaidInventoryRuntimeScanner
     {
         readonly Action<string> logInfo;
+        static readonly Dictionary<Type, ItemAccessors> ItemAccessorsByType = new Dictionary<Type, ItemAccessors>();
         int confirmed;
         public RaidInventoryRuntimeScanner(Action<string> logInfo = null) { this.logInfo = logInfo; }
 
@@ -57,14 +58,71 @@ namespace SPTItemIntelligence
             if (items == null) return false;
             foreach (object item in items)
             {
-                string id = Text(Member(item, "Id", "ID"));
-                string template = Text(Member(item, "TemplateId", "Tpl"));
+                if (item == null) continue;
+                ItemAccessors accessors = GetAccessors(item.GetType());
+                string id = Text(accessors.GetId(item));
+                string template = Text(accessors.GetTemplate(item));
                 if (id.Length == 0 || template.Length == 0) continue;
-                int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
-                bool fir = Flag(Member(item, "SpawnedInSession"));
+                int stack = Math.Max(1, Number(accessors.GetStack(item), 1));
+                bool fir = Flag(accessors.GetFoundInRaid(item));
                 result.Add(new RaidInventoryItemSnapshot(id, template, stack, fir));
             }
             return true;
+        }
+
+        static ItemAccessors GetAccessors(Type type)
+        {
+            ItemAccessors result;
+            if (ItemAccessorsByType.TryGetValue(type, out result)) return result;
+            result = new ItemAccessors(type);
+            ItemAccessorsByType[type] = result;
+            return result;
+        }
+
+        sealed class ItemAccessors
+        {
+            readonly MemberInfo id;
+            readonly MemberInfo template;
+            readonly MemberInfo stack;
+            readonly MemberInfo foundInRaid;
+
+            internal ItemAccessors(Type type)
+            {
+                id = Find(type, "Id", "ID");
+                template = Find(type, "TemplateId", "Tpl");
+                stack = Find(type, "StackObjectsCount");
+                foundInRaid = Find(type, "SpawnedInSession");
+            }
+
+            internal object GetId(object item) { return Get(id, item); }
+            internal object GetTemplate(object item) { return Get(template, item); }
+            internal object GetStack(object item) { return Get(stack, item); }
+            internal object GetFoundInRaid(object item) { return Get(foundInRaid, item); }
+
+            static MemberInfo Find(Type type, params string[] names)
+            {
+                for (Type current = type; current != null; current = current.BaseType)
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        PropertyInfo property = current.GetProperty(names[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                        if (property != null && property.GetIndexParameters().Length == 0) return property;
+                        FieldInfo field = current.GetField(names[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                        if (field != null) return field;
+                    }
+                return null;
+            }
+
+            static object Get(MemberInfo member, object item)
+            {
+                try
+                {
+                    PropertyInfo property = member as PropertyInfo;
+                    if (property != null) return property.GetValue(item, null);
+                    FieldInfo field = member as FieldInfo;
+                    return field == null ? null : field.GetValue(item);
+                }
+                catch { return null; }
+            }
         }
 
         static Type FindType(string fullName)

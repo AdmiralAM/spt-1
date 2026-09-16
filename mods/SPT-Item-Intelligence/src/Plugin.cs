@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
+using UnityEngine;
 
 namespace SPTItemIntelligence
 {
@@ -22,7 +24,9 @@ namespace SPTItemIntelligence
         readonly object loadLock = new object();
         readonly RaidRequirementLedger raidLedger = new RaidRequirementLedger();
         RaidInventoryRuntimeScanner raidInventoryScanner;
-        int lastRaidInventoryScanFrame = -1;
+        Coroutine inventoryRefreshCoroutine;
+        float lastRaidInventoryScanAt = float.NegativeInfinity;
+        const float RaidInventoryMinimumScanSeconds = .35f;
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -132,8 +136,18 @@ namespace SPTItemIntelligence
         void RefreshInventorySession()
         {
             if (uiSettings == null || !uiSettings.Modules.AnyConsumer) return;
-            if (dataTask != null && !dataTask.IsCompleted) return;
-            StartDataLoad();
+            if (inventoryRefreshCoroutine != null) return;
+            inventoryRefreshCoroutine = StartCoroutine(RefreshInventorySessionAfterBurst());
+        }
+
+        IEnumerator RefreshInventorySessionAfterBurst()
+        {
+            // Item views are initialized in bursts. One delayed refresh keeps the profile snapshot
+            // current without beginning a network/projector pass for every cell in a new window.
+            yield return new WaitForSecondsRealtime(.15f);
+            inventoryRefreshCoroutine = null;
+            if (uiSettings == null || !uiSettings.Modules.AnyConsumer) yield break;
+            if (dataTask == null || dataTask.IsCompleted) StartDataLoad();
         }
 
         void CaptureRaidBaseline()
@@ -143,9 +157,9 @@ namespace SPTItemIntelligence
 
         void RefreshRaidInventory()
         {
-            int frame = UnityEngine.Time.frameCount;
-            if (frame == lastRaidInventoryScanFrame) return;
-            lastRaidInventoryScanFrame = frame;
+            float now = Time.realtimeSinceStartup;
+            if (now - lastRaidInventoryScanAt < RaidInventoryMinimumScanSeconds) return;
+            lastRaidInventoryScanAt = now;
             if (raidInventoryScanner != null && raidInventoryScanner.Refresh(raidLedger) && hoverSink != null) hoverSink.Invalidate();
         }
 
@@ -157,6 +171,7 @@ namespace SPTItemIntelligence
         void OnDestroy()
         {
             if (dataCancellation != null) dataCancellation.Cancel();
+            if (inventoryRefreshCoroutine != null) StopCoroutine(inventoryRefreshCoroutine);
             if (hoverIntegration != null) hoverIntegration.Dispose();
             if (senseIntegration != null) senseIntegration.Dispose();
             FirRequirementRegistry.Clear();
@@ -170,6 +185,7 @@ namespace SPTItemIntelligence
             uiSettings = null;
             senseIntegration = null;
             raidInventoryScanner = null;
+            inventoryRefreshCoroutine = null;
             PresentationStore = null;
         }
     }
