@@ -149,7 +149,7 @@ namespace SPTItemIntelligence
                 List<RequirementContribution> selected = new List<RequirementContribution>(additive);
                 selected.AddRange(alternatives.Values);
                 selected.Sort((a, b) => { int source = a.Source.CompareTo(b.Source); return source != 0 ? source : StringComparer.Ordinal.Compare(a.Label, b.Label); });
-                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0;
+                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0, hideoutFir = 0;
                 RequirementReasonFlags reasons = RequirementReasonFlags.None;
                 List<RequirementDetail> details = new List<RequirementDetail>();
                 checked
@@ -159,12 +159,12 @@ namespace SPTItemIntelligence
                         int n = c.RemainingCount;
                         if (c.Source == RequirementSource.CurrentQuest) { now += n; if (c.FoundInRaidRequired) nowFir += n; reasons |= RequirementReasonFlags.CurrentQuest; }
                         else if (c.Source == RequirementSource.FutureQuest) { later += n; if (c.FoundInRaidRequired) laterFir += n; reasons |= RequirementReasonFlags.FutureQuest; }
-                        else { hideout += n; reasons |= RequirementReasonFlags.Hideout; }
+                        else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
                         details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir);
                 int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
                 return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }

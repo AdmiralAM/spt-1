@@ -405,6 +405,8 @@ namespace SPTItemIntelligence
                         if (templateId == RequirementDataContract.RuntimeTraceTemplateId)
                             Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
                         if (!itemRequirement) continue;
+                        bool foundInRaid = JsonNode.ReadBool(JsonNode.Get(requirement,
+                            "onlyFoundInRaid", "OnlyFoundInRaid", "foundInRaid", "FoundInRaid", "isFoundInRaid", "IsFoundInRaid"), false);
                         string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
                         int satisfied = 0;
                         if (stage == currentLevel + 1)
@@ -412,7 +414,7 @@ namespace SPTItemIntelligence
                             object areaProgress = JsonNode.Get(areaProgresses, type);
                             satisfied = Math.Min(count, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(areaProgress, templateId), 0)));
                         }
-                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, label: label));
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, foundInRaidRequired: foundInRaid, label: label));
                     }
                 }
             }

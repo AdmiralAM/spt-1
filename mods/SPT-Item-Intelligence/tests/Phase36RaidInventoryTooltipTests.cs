@@ -30,6 +30,9 @@ static class Phase36RaidInventoryTooltipTests
         Expect(text.RequirementBreakdownLine == "Required: total ×4 · FIR ×2", "Full states the exact item total and its FIR-only portion", ref assertions);
         ItemHoverText unrestricted = new ItemHoverText("", "", "", "tpl", 0, 0, 0, 9, 9);
         Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9 · FIR not required", "unrestricted requirements never imply arbitrary item templates", ref assertions);
+        ItemRequirementAllocation firHideout = new ItemRequirementAllocation(2, 1, 0, 0, 2, 0, 0, hideoutFir: 2);
+        Expect(firHideout.HideoutFirRequired == 2 && firHideout.HideoutFirAllocated == 1 && firHideout.HideoutMissing == 1,
+            "FIR-only hideout stock is reserved before unrestricted consumption", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&

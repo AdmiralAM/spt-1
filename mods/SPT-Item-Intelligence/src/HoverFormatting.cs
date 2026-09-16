@@ -84,7 +84,7 @@ namespace SPTItemIntelligence
             FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
                 GameUiText.T("Active quest", "Активный квест"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
-            HideoutLine = RequirementLine(GameUiText.T("Hideout", "Убежище"), HideoutOwned, HideoutNeeded, 0, 0);
+            HideoutLine = RequirementLine(GameUiText.T("Hideout", "Убежище"), HideoutOwned, HideoutNeeded, Allocation.HideoutFirAllocated, Allocation.HideoutFirRequired);
             QuestLaterLine = RequirementLine(
                 GameUiText.T("Future quest", "Будущий квест"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine(GameUiText.T("Keep", "Оставить"), KeepCount);
@@ -100,7 +100,7 @@ namespace SPTItemIntelligence
             TotalOwnedLine = GameUiText.T("Total (stash + raid) ×", "Всего (схрон + рейд) ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
             OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
                 GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
-            int firRequired = QuestNowFoundInRaid + QuestLaterFoundInRaid;
+            int firRequired = Allocation.NowFirRequired + Allocation.LaterFirRequired + Allocation.HideoutFirRequired;
             RequirementBreakdownLine = GameUiText.T("Required: total ×", "Требуется: всего ×") +
                 KeepCount.ToString(CultureInfo.InvariantCulture) +
                 (firRequired > 0

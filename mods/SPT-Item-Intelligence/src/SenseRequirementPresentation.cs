@@ -181,13 +181,16 @@ namespace SPTItemIntelligence
                 baseline.LaterRequired,
                 baseline.HideoutRequired,
                 baseline.NowFirRequired,
-                baseline.LaterFirRequired);
+                baseline.LaterFirRequired,
+                baseline.ExactOwned,
+                baseline.ExactOwnedFir,
+                baseline.HideoutFirRequired);
 
             ItemNeedReason primary = ItemNeedReason.None;
             ItemNeedReason secondary = ItemNeedReason.None;
             int remaining = 0;
             AddReason(ItemNeedReason.ActiveQuest, EligibleNowMissing(allocation, candidateFoundInRaid), ref primary, ref secondary, ref remaining);
-            AddReason(ItemNeedReason.Hideout, allocation.HideoutMissing, ref primary, ref secondary, ref remaining);
+            AddReason(ItemNeedReason.Hideout, EligibleHideoutMissing(allocation, candidateFoundInRaid), ref primary, ref secondary, ref remaining);
             AddReason(ItemNeedReason.FutureQuest, EligibleLaterMissing(allocation, candidateFoundInRaid), ref primary, ref secondary, ref remaining);
 
             return new ItemIntelligenceDecision(allocation.Coverage, primary, secondary, remaining, candidateFoundInRaid, allocation);
@@ -206,6 +209,14 @@ namespace SPTItemIntelligence
             if (candidateFoundInRaid) return allocation.LaterMissing;
             int unrestrictedRequired = allocation.LaterRequired - allocation.LaterFirRequired;
             int unrestrictedAllocated = allocation.LaterAllocated - allocation.LaterFirAllocated;
+            return Math.Max(0, unrestrictedRequired - unrestrictedAllocated);
+        }
+
+        static int EligibleHideoutMissing(ItemRequirementAllocation allocation, bool candidateFoundInRaid)
+        {
+            if (candidateFoundInRaid) return allocation.HideoutMissing;
+            int unrestrictedRequired = allocation.HideoutRequired - allocation.HideoutFirRequired;
+            int unrestrictedAllocated = allocation.HideoutAllocated - allocation.HideoutFirAllocated;
             return Math.Max(0, unrestrictedRequired - unrestrictedAllocated);
         }
 
