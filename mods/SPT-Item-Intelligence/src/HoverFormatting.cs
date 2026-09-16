@@ -100,10 +100,12 @@ namespace SPTItemIntelligence
             TotalOwnedLine = GameUiText.T("Total (stash + raid) ×", "Всего (схрон + рейд) ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
             OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
                 GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
-            RequirementBreakdownLine = GameUiText.T("Required: FIR ×", "Требуется: из рейда ×") +
-                (QuestNowFoundInRaid + QuestLaterFoundInRaid).ToString(CultureInfo.InvariantCulture) +
-                GameUiText.T(" · any ×", " · любые ×") +
-                (Math.Max(0, KeepCount - QuestNowFoundInRaid - QuestLaterFoundInRaid)).ToString(CultureInfo.InvariantCulture);
+            int firRequired = QuestNowFoundInRaid + QuestLaterFoundInRaid;
+            RequirementBreakdownLine = GameUiText.T("Required: total ×", "Требуется: всего ×") +
+                KeepCount.ToString(CultureInfo.InvariantCulture) +
+                (firRequired > 0
+                    ? GameUiText.T(" · FIR ×", " · из рейда ×") + firRequired.ToString(CultureInfo.InvariantCulture)
+                    : GameUiText.T(" · FIR not required", " · из рейда не требуется"));
             string ownedLine = OwnedFoundInRaid > 0
                 ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);

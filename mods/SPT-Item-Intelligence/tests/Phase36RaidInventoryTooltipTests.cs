@@ -27,7 +27,9 @@ static class Phase36RaidInventoryTooltipTests
         Expect(text.SummaryOwnedLine == "In raid ×3", "regular modes expose only current-raid stock", ref assertions);
         Expect(text.TotalOwnedLine == "Total (stash + raid) ×5", "Full preserves the combined stash and raid total", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
-        Expect(text.RequirementBreakdownLine == "Required: FIR ×2 · any ×2", "Full separates FIR-only from unrestricted demand", ref assertions);
+        Expect(text.RequirementBreakdownLine == "Required: total ×4 · FIR ×2", "Full states the exact item total and its FIR-only portion", ref assertions);
+        ItemHoverText unrestricted = new ItemHoverText("", "", "", "tpl", 0, 0, 0, 9, 9);
+        Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9 · FIR not required", "unrestricted requirements never imply arbitrary item templates", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&
