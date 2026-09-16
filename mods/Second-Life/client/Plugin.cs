@@ -19,7 +19,7 @@ namespace Admiral.SecondLife.Client
                 "Emergency armament",
                 "Eligible pistol template IDs",
                 string.Empty,
-                "Comma-separated pistol template IDs. Empty allows every owned pistol placed directly in the stash root.");
+                "Comma-separated pistol template IDs. Empty allows every owned pistol anywhere inside the stash tree, including nested containers.");
             ConfigEntry<float> recoveryDelaySeconds = Config.Bind(
                 "Recovery",
                 "Offer delay seconds",

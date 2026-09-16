@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Admiral.SecondLife;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -183,16 +184,16 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
         if (inventory?.Stash is null) return new(false, false, "authoritative stash unavailable", null);
         List<Item> items = inventory.Items ?? [];
         string stashId = inventory.Stash.Value.ToString();
-        Dictionary<string, Item> byId = items.ToDictionary(item => item.Id.ToString(), StringComparer.Ordinal);
+        Dictionary<string, string?> parentById = items.ToDictionary(item => item.Id.ToString(), item => item.ParentId, StringComparer.Ordinal);
         HashSet<string> allowed = eligibleTemplates.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal);
-        Item[] pistols = items.Where(item => IsBelow(item, stashId, byId) && itemHelper.IsOfBaseclass(item.Template, PistolBaseClass) && (allowed.Count == 0 || allowed.Contains(item.Template.ToString())))
+        Item[] pistols = items.Where(item => InventoryAncestry.IsBelow(item.Id.ToString(), stashId, parentById) && itemHelper.IsOfBaseclass(item.Template, PistolBaseClass) && (allowed.Count == 0 || allowed.Contains(item.Template.ToString())))
             .OrderBy(item => item.Id.ToString(), StringComparer.Ordinal).ToArray();
         var candidates = new List<(Item Pistol, Item Spare)>();
         foreach (Item pistol in pistols)
         {
             Item? installed = items.FirstOrDefault(item => item.ParentId == pistol.Id.ToString() && string.Equals(item.SlotId, "mod_magazine", StringComparison.Ordinal));
             if (installed is null) continue;
-            Item? spare = items.Where(item => item.Id != installed.Id && item.Template == installed.Template && IsBelow(item, stashId, byId) && !IsBelow(item, pistol.Id.ToString(), byId))
+            Item? spare = items.Where(item => item.Id != installed.Id && item.Template == installed.Template && InventoryAncestry.IsBelow(item.Id.ToString(), stashId, parentById) && !InventoryAncestry.IsBelow(item.Id.ToString(), pistol.Id.ToString(), parentById))
                 .OrderBy(item => item.Id.ToString(), StringComparer.Ordinal).FirstOrDefault();
             if (spare is not null) candidates.Add((pistol, spare));
         }
@@ -200,7 +201,7 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
         int index = (int)((uint)StringComparer.Ordinal.GetHashCode(key) % (uint)candidates.Count);
         (Item selectedPistol, Item selectedSpare) = candidates[index];
         HashSet<string> roots = [selectedPistol.Id.ToString(), selectedSpare.Id.ToString()];
-        List<Item> selected = items.Where(item => roots.Contains(item.Id.ToString()) || roots.Any(root => IsBelow(item, root, byId))).ToList();
+        List<Item> selected = items.Where(item => roots.Contains(item.Id.ToString()) || roots.Any(root => InventoryAncestry.IsBelow(item.Id.ToString(), root, parentById))).ToList();
         List<ArmamentNode> nodes = selected.Select(item => new ArmamentNode(
             item.Id.ToString(), item.Template.ToString(), roots.Contains(item.Id.ToString()) ? null : item.ParentId,
             roots.Contains(item.Id.ToString()) ? null : item.SlotId,
@@ -235,18 +236,6 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
         if (!reservations.TryRemove(key, out Reservation? reservation)) return new(true, false, "already released", null);
         reservation.Inventory.AddRange(reservation.Items);
         return new(true, false, "refunded", null);
-    }
-
-    static bool IsBelow(Item item, string rootId, IReadOnlyDictionary<string, Item> byId)
-    {
-        string? parent = item.ParentId;
-        for (int depth = 0; depth < 32 && !string.IsNullOrWhiteSpace(parent); depth++)
-        {
-            if (parent == rootId) return true;
-            if (!byId.TryGetValue(parent, out Item? owner)) return false;
-            parent = owner.ParentId;
-        }
-        return false;
     }
 
     sealed class Reservation(List<Item> inventory, List<Item> items, List<ArmamentNode> nodes)

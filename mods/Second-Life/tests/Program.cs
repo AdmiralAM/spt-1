@@ -88,6 +88,21 @@ var largeMapPolicy = SafeSpawnSelector.AdaptPolicyToMap(
     },
     new SafeSpawnPolicy(75, 100, 75));
 Expect(largeMapPolicy == new SafeSpawnPolicy(75, 100, 75), "large map retains configured safety distances");
+var nestedInventory = new Dictionary<string, string?>(StringComparer.Ordinal)
+{
+    ["stash"] = null,
+    ["weapon-case"] = "stash",
+    ["nested-pouch"] = "weapon-case",
+    ["pistol"] = "nested-pouch",
+    ["mag-case"] = "stash",
+    ["spare-magazine"] = "mag-case",
+    ["equipment"] = null,
+    ["equipped-pistol"] = "equipment"
+};
+Expect(InventoryAncestry.IsBelow("pistol", "stash", nestedInventory), "pistol in nested stash containers remains eligible");
+Expect(InventoryAncestry.IsBelow("spare-magazine", "stash", nestedInventory), "spare magazine in a stash case remains eligible");
+Expect(!InventoryAncestry.IsBelow("equipped-pistol", "stash", nestedInventory), "equipment branch is not mistaken for stash ownership");
+Expect(!InventoryAncestry.IsBelow("missing", "stash", nestedInventory), "broken ancestry fails closed");
 Expect(SafeSpawnSelector.TrySelect(
     spawnCandidates,
     "original",
