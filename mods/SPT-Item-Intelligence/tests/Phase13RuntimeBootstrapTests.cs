@@ -47,6 +47,14 @@ static class Phase13RuntimeBootstrapTests
                         ["2"] = Stage("D", 6),
                         ["3"] = Stage("D", 5)
                     }
+                },
+                new Dictionary<string, object>
+                {
+                    ["type"] = "9",
+                    ["stages"] = new Dictionary<string, object>
+                    {
+                        ["1"] = Stage("F", 2, true)
+                    }
                 }
             }
         };
@@ -73,6 +81,8 @@ static class Phase13RuntimeBootstrapTests
         Expect(index.Get("c").QuestNeededLater == 4, "future quest projected", ref assertions);
         Expect(index.Get("d").HideoutNeeded == 7, "deposited Hideout In Progress items reduce the current stage but not a future stage", ref assertions);
         Expect(index.Get("d").OwnedCount == 0, "deposited items are committed and never returned to shared owned inventory", ref assertions);
+        Expect(index.Get("f").Allocation.HideoutFirRequired == 2 && index.Get("f").RequiresFoundInRaid,
+            "native hideout isSpawnedInSession projects as an FIR-only requirement", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -124,13 +134,17 @@ static class Phase13RuntimeBootstrapTests
         };
     }
 
-    static Dictionary<string, object> Stage(string templateId, int count)
+    static Dictionary<string, object> Stage(string templateId, int count, bool isSpawnedInSession = false)
     {
         return new Dictionary<string, object>
         {
             ["requirements"] = new object[]
             {
-                new Dictionary<string, object> { ["type"] = 1, ["templateId"] = templateId, ["count"] = count }
+                new Dictionary<string, object>
+                {
+                    ["type"] = 1, ["templateId"] = templateId, ["count"] = count,
+                    ["isSpawnedInSession"] = isSpawnedInSession
+                }
             }
         };
     }

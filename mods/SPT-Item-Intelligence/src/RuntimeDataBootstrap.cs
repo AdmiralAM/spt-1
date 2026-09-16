@@ -405,7 +405,11 @@ namespace SPTItemIntelligence
                         if (templateId == RequirementDataContract.RuntimeTraceTemplateId)
                             Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
                         if (!itemRequirement) continue;
+                        // SPT hideout requirements use isSpawnedInSession for the same FIR contract
+                        // that quests expose as onlyFoundInRaid.  Keep the aliases for custom areas,
+                        // but prefer the native hideout field so every station follows one rule.
                         bool foundInRaid = JsonNode.ReadBool(JsonNode.Get(requirement,
+                            "isSpawnedInSession", "IsSpawnedInSession", "spawnedInSession", "SpawnedInSession",
                             "onlyFoundInRaid", "OnlyFoundInRaid", "foundInRaid", "FoundInRaid", "isFoundInRaid", "IsFoundInRaid"), false);
                         string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
                         int satisfied = 0;
