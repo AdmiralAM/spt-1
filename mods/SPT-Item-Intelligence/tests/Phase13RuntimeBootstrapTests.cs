@@ -83,6 +83,22 @@ static class Phase13RuntimeBootstrapTests
         Expect(index.Get("d").OwnedCount == 0, "deposited items are committed and never returned to shared owned inventory", ref assertions);
         Expect(index.Get("f").Allocation.HideoutFirRequired == 2 && index.Get("f").RequiresFoundInRaid,
             "native hideout isSpawnedInSession projects as an FIR-only requirement", ref assertions);
+        RequirementIndex committedCurrent = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(
+            new RequirementDataEnvelope(124,
+                ProfileWithOwned("T", 3, 3, "20", 0),
+                new object[0],
+                HideoutWithCommittedAndFutureRequirement(),
+                new object[0],
+                new Dictionary<string, object>
+                {
+                    ["areaProgresses"] = new Dictionary<string, object>
+                    {
+                        ["20"] = new Dictionary<string, object> { ["T"] = 5 }
+                    }
+                })));
+        Expect(committedCurrent.Get("t").KeepCount == 3 && committedCurrent.Get("t").Allocation.HideoutFirRequired == 3 &&
+               committedCurrent.Get("t").Allocation.HideoutMissing == 0,
+            "components committed to the current hideout stage remain satisfied while FIR stock is reserved for a future stage", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -144,6 +160,45 @@ static class Phase13RuntimeBootstrapTests
                 {
                     ["type"] = 1, ["templateId"] = templateId, ["count"] = count,
                     ["isSpawnedInSession"] = isSpawnedInSession
+                }
+            }
+        };
+    }
+
+    static Dictionary<string, object> ProfileWithOwned(string templateId, int count, int fir, string areaType, int areaLevel)
+    {
+        object[] items = new object[count];
+        for (int i = 0; i < count; i++)
+            items[i] = new Dictionary<string, object>
+            {
+                ["_tpl"] = templateId,
+                ["upd"] = new Dictionary<string, object> { ["SpawnedInSession"] = i < fir }
+            };
+        return new Dictionary<string, object>
+        {
+            ["Inventory"] = new Dictionary<string, object> { ["items"] = items },
+            ["Hideout"] = new Dictionary<string, object>
+            {
+                ["Areas"] = new object[] { new Dictionary<string, object> { ["type"] = areaType, ["level"] = areaLevel } }
+            }
+        };
+    }
+
+    static Dictionary<string, object> HideoutWithCommittedAndFutureRequirement()
+    {
+        return new Dictionary<string, object>
+        {
+            ["areas"] = new object[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["type"] = "20",
+                    ["stages"] = new Dictionary<string, object>
+                    {
+                        ["1"] = Stage("T", 5, true),
+                        ["2"] = Stage("other", 1),
+                        ["3"] = Stage("T", 3, true)
+                    }
                 }
             }
         };

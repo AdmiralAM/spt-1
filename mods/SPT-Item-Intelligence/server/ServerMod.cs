@@ -80,17 +80,26 @@ public sealed class RequirementDataService(
                 if (!File.Exists(path)) continue;
                 try
                 {
-                    return JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path)) ?? EmptyHideoutProgress();
+                    HideoutProgressSnapshot? snapshot = JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path));
+                    return ProgressEnvelope(snapshot?.areaProgresses);
                 }
-                catch (IOException) { return EmptyHideoutProgress(); }
-                catch (UnauthorizedAccessException) { return EmptyHideoutProgress(); }
-                catch (JsonException) { return EmptyHideoutProgress(); }
+                catch (IOException) { return ProgressEnvelope(null); }
+                catch (UnauthorizedAccessException) { return ProgressEnvelope(null); }
+                catch (JsonException) { return ProgressEnvelope(null); }
             }
         }
-        return EmptyHideoutProgress();
+        return ProgressEnvelope(null);
     }
 
-    private static HideoutProgressSnapshot EmptyHideoutProgress() => new();
+    // JsonUtil serializes the existing snapshot's dictionary contracts reliably.  Do not expose a
+    // private DTO here: contributions recorded by Hideout In Progress must survive the server/client boundary.
+    private static Dictionary<string, object> ProgressEnvelope(Dictionary<string, Dictionary<string, int>>? progresses)
+    {
+        return new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["areaProgresses"] = progresses ?? new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal)
+        };
+    }
 
     private sealed class HideoutProgressSnapshot
     {
