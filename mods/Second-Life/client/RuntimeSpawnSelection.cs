@@ -93,7 +93,8 @@ namespace Admiral.SecondLife.Client
                 }
             }
 
-            var policy = new SafeSpawnPolicy(minimumPlayerDistance, minimumCorpseDistance, minimumPlayerDistance);
+            var configuredPolicy = new SafeSpawnPolicy(minimumPlayerDistance, minimumCorpseDistance, minimumPlayerDistance);
+            SafeSpawnPolicy policy = SafeSpawnSelector.AdaptPolicyToMap(candidates, configuredPolicy);
             if (!SafeSpawnSelector.TrySelect(
                     candidates,
                     originalId,
@@ -106,7 +107,10 @@ namespace Admiral.SecondLife.Client
                     out int safePass) ||
                 !pointsById.TryGetValue(selected.Id, out object selectedPoint))
             {
-                return Fail($"no bounded safe alternate spawn exists (visited={visited}, readable={readable}, mask-pass={maskPass}, native-pass={nativePass}, distance-pass={safePass})", out failure);
+                return Fail(
+                    $"no bounded safe alternate spawn exists (visited={visited}, readable={readable}, mask-pass={maskPass}, native-pass={nativePass}, distance-pass={safePass}, " +
+                    $"effective-distance corpse={policy.MinimumCorpseDistance:0.#}, killer={policy.MinimumKillerDistance:0.#}, combat={policy.MinimumCombatDistance:0.#})",
+                    out failure);
             }
 
             selection = new RuntimeSpawnSelection(

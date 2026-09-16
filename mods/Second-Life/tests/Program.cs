@@ -70,6 +70,24 @@ var spawnCandidates = new[]
     new SpawnCandidate("safe-b", new WorldPoint(600, 0, 0), true, false)
 };
 var spawnPolicy = new SafeSpawnPolicy(50, 50, 50);
+var compactMapPolicy = SafeSpawnSelector.AdaptPolicyToMap(
+    new[]
+    {
+        new SpawnCandidate("compact-a", new WorldPoint(0, 0, 0), true, false),
+        new SpawnCandidate("compact-b", new WorldPoint(100, 0, 100), true, false)
+    },
+    new SafeSpawnPolicy(75, 100, 75));
+Expect(compactMapPolicy.MinimumCorpseDistance < 100, "compact map scales corpse clearance below the large-map setting");
+Expect(compactMapPolicy.MinimumKillerDistance < 75, "compact map scales killer clearance below the large-map setting");
+Expect(compactMapPolicy.MinimumCombatDistance < compactMapPolicy.MinimumKillerDistance, "compact map keeps ordinary combatants less restrictive than the killer");
+var largeMapPolicy = SafeSpawnSelector.AdaptPolicyToMap(
+    new[]
+    {
+        new SpawnCandidate("large-a", new WorldPoint(0, 0, 0), true, false),
+        new SpawnCandidate("large-b", new WorldPoint(1000, 0, 1000), true, false)
+    },
+    new SafeSpawnPolicy(75, 100, 75));
+Expect(largeMapPolicy == new SafeSpawnPolicy(75, 100, 75), "large map retains configured safety distances");
 Expect(SafeSpawnSelector.TrySelect(
     spawnCandidates,
     "original",

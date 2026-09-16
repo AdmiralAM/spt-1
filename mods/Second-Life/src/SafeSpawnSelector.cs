@@ -24,6 +24,31 @@ public readonly record struct SafeSpawnPolicy(
 
 public static class SafeSpawnSelector
 {
+    public static SafeSpawnPolicy AdaptPolicyToMap(
+        IEnumerable<SpawnCandidate> candidates,
+        SafeSpawnPolicy configured)
+    {
+        if (candidates is null) throw new ArgumentNullException(nameof(candidates));
+
+        SpawnCandidate[] usable = candidates
+            .Where(candidate => candidate.NativeEligible && !candidate.IsInvalidExtract)
+            .ToArray();
+        if (usable.Length < 2) return configured;
+
+        float minX = usable.Min(candidate => candidate.Position.X);
+        float maxX = usable.Max(candidate => candidate.Position.X);
+        float minZ = usable.Min(candidate => candidate.Position.Z);
+        float maxZ = usable.Max(candidate => candidate.Position.Z);
+        float width = maxX - minX;
+        float depth = maxZ - minZ;
+        float mapSpan = MathF.Sqrt((width * width) + (depth * depth));
+
+        return new SafeSpawnPolicy(
+            Scale(configured.MinimumKillerDistance, mapSpan, 0.12f, 15f),
+            Scale(configured.MinimumCorpseDistance, mapSpan, 0.18f, 20f),
+            Scale(configured.MinimumCombatDistance, mapSpan, 0.06f, 10f));
+    }
+
     public static bool TrySelect(
         IEnumerable<SpawnCandidate> candidates,
         string originalSpawnId,
@@ -82,5 +107,12 @@ public static class SafeSpawnSelector
     {
         float bounded = Math.Max(0f, value);
         return bounded * bounded;
+    }
+
+    private static float Scale(float configured, float mapSpan, float fraction, float floor)
+    {
+        float boundedConfigured = Math.Max(0f, configured);
+        if (boundedConfigured == 0f) return 0f;
+        return Math.Min(boundedConfigured, Math.Max(floor, mapSpan * fraction));
     }
 }
