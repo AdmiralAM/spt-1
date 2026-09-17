@@ -65,13 +65,34 @@ static class Phase18TooltipIntelligenceTests
             }
         };
 
-        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, new object[0]);
+        Dictionary<string, object> locales = new Dictionary<string, object>
+        {
+            ["en"] = new Dictionary<string, object>
+            {
+                ["q-now name"] = "Signal - Part 1",
+                ["hideout_area_10_name"] = "Workbench"
+            },
+            ["ru"] = new Dictionary<string, object>
+            {
+                ["q-now name"] = "Сигнал. Часть 1",
+                ["hideout_area_10_name"] = "Верстак"
+            }
+        };
+        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, new object[0], new object[0], locales);
         RequirementIndex index = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(envelope));
         RequirementIndexEntry entry = index.Get("value");
         Expect(index.Get("ignored") == RequirementIndexEntry.Empty, "completed quest condition is excluded", ref assertions);
         Expect(entry.Details.Count == 2, "quest and hideout details are retained", ref assertions);
         Expect(entry.Details[0].Label == "Signal - Part 1" && entry.Details[0].FoundInRaidRequired, "quest name and FIR are retained", ref assertions);
         Expect(entry.Details[1].Label == "Workbench L1 (current)", "hideout area and target level are concrete", ref assertions);
+        try
+        {
+            GameUiText.SetRussian(true);
+            RequirementIndex russianIndex = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(envelope));
+            Expect(russianIndex.Get("value").Details[0].Label == "Сигнал. Часть 1", "quest name follows Russian game language", ref assertions);
+            Expect(russianIndex.Get("value").Details[1].Label == "Верстак ур. 1 (текущий)", "hideout station follows Russian game language", ref assertions);
+        }
+        finally { GameUiText.SetRussian(false); }
 
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateBuilder.Build(index), ItemPriceIndexBuilder.Build(new[]

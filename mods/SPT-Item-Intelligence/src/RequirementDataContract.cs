@@ -22,6 +22,11 @@ namespace SPTItemIntelligence
         }
 
         public RequirementDataEnvelope(long generatedAtUnixSeconds, object profile, object quests, object hideout, object prices, object hideoutProgress)
+            : this(generatedAtUnixSeconds, profile, quests, hideout, prices, hideoutProgress, Array.Empty<object>())
+        {
+        }
+
+        public RequirementDataEnvelope(long generatedAtUnixSeconds, object profile, object quests, object hideout, object prices, object hideoutProgress, object locales)
         {
             schemaVersion = RequirementDataContract.SchemaVersion;
             this.generatedAtUnixSeconds = Math.Max(0, generatedAtUnixSeconds);
@@ -30,6 +35,7 @@ namespace SPTItemIntelligence
             this.hideout = hideout ?? throw new ArgumentNullException(nameof(hideout));
             this.prices = prices ?? throw new ArgumentNullException(nameof(prices));
             this.hideoutProgress = hideoutProgress;
+            this.locales = locales ?? Array.Empty<object>();
         }
 
         public int schemaVersion { get; }
@@ -40,6 +46,7 @@ namespace SPTItemIntelligence
         public object hideout { get; }
         public object prices { get; }
         public object hideoutProgress { get; }
+        public object locales { get; }
     }
 
     public sealed class ItemPriceSnapshotEntry

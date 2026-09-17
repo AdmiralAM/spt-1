@@ -90,13 +90,14 @@ namespace SPTItemIntelligence
             object quests = JsonNode.Get(root, "quests");
             object hideout = JsonNode.Get(root, "hideout");
             object prices = JsonNode.Get(root, "prices");
+            object locales = JsonNode.Get(root, "locales");
             if (JsonNode.IsNull(quests) || JsonNode.IsNull(hideout) || JsonNode.IsNull(prices))
                 throw new InvalidOperationException("Requirement snapshot tables are incomplete.");
 
             long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
             Trace("decoder profileReady=" + (!JsonNode.IsNull(profile)) + " quests=" + CountValues(quests) + " hideoutAreas=" + CountValues(JsonNode.Get(hideout, "areas", "Areas")));
             object hideoutProgress = JsonNode.Get(root, "hideoutProgress");
-            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices, hideoutProgress);
+            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices, hideoutProgress, locales);
         }
 
         void Trace(string message)
@@ -185,9 +186,9 @@ namespace SPTItemIntelligence
             List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
             List<RequirementContribution> contributions = new List<RequirementContribution>();
             Dictionary<string, PoolCount> alternativePools = new Dictionary<string, PoolCount>(StringComparer.Ordinal);
-            ProjectQuests(snapshot.profile, snapshot.quests, contributions, owned, alternativePools);
+            ProjectQuests(snapshot.profile, snapshot.quests, snapshot.locales, contributions, owned, alternativePools);
             owned = ApplyAlternativePools(owned, alternativePools);
-            ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, contributions);
+            ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, snapshot.locales, contributions);
             int ownedBulbex = 0;
             for (int i = 0; i < owned.Count; i++)
                 if (owned[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) ownedBulbex += owned[i].Count;
@@ -222,7 +223,7 @@ namespace SPTItemIntelligence
             return result;
         }
 
-        static void ProjectQuests(object profile, object questTable, List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
+        static void ProjectQuests(object profile, object questTable, object locales, List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
         {
             Dictionary<string, QuestProgress> progress = new Dictionary<string, QuestProgress>(StringComparer.OrdinalIgnoreCase);
             foreach (object quest in JsonNode.Values(JsonNode.Get(profile, "Quests", "quests")))
@@ -244,7 +245,8 @@ namespace SPTItemIntelligence
                 string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
                 if (string.IsNullOrWhiteSpace(questId)) questId = pair.Key;
                 if (string.IsNullOrWhiteSpace(questId)) continue;
-                string questLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
+                string questLabel = Localized(locales, questId + " name",
+                    JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name"))).Trim();
                 if (questLabel.Length == 0) questLabel = "Quest " + questId;
 
                 QuestProgress state;
@@ -363,7 +365,7 @@ namespace SPTItemIntelligence
             return satisfied;
         }
 
-        void ProjectHideout(object profile, object hideoutTable, object hideoutProgress, List<RequirementContribution> output)
+        void ProjectHideout(object profile, object hideoutTable, object hideoutProgress, object locales, List<RequirementContribution> output)
         {
             Dictionary<string, int> currentLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
@@ -379,16 +381,16 @@ namespace SPTItemIntelligence
 
             HashSet<string> seenStages = new HashSet<string>(StringComparer.Ordinal);
             object areaProgresses = JsonNode.Get(hideoutProgress, "areaProgresses", "AreaProgresses");
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, areaProgresses, output, seenStages);
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, areaProgresses, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, areaProgresses, locales, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, areaProgresses, locales, output, seenStages);
         }
 
-        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, object areaProgresses, List<RequirementContribution> output, HashSet<string> seenStages)
+        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, object areaProgresses, object locales, List<RequirementContribution> output, HashSet<string> seenStages)
         {
             foreach (object area in JsonNode.Values(areas))
             {
                 string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
-                string areaLabel = HideoutAreaName(type);
+                string areaLabel = Localized(locales, "hideout_area_" + type + "_name", HideoutAreaName(type));
                 int currentLevel;
                 currentLevels.TryGetValue(type, out currentLevel);
                 foreach (KeyValuePair<string, object> stagePair in JsonNode.Pairs(JsonNode.Get(area, "stages", "Stages")))
@@ -411,7 +413,8 @@ namespace SPTItemIntelligence
                         bool foundInRaid = JsonNode.ReadBool(JsonNode.Get(requirement,
                             "isSpawnedInSession", "IsSpawnedInSession", "spawnedInSession", "SpawnedInSession",
                             "onlyFoundInRaid", "OnlyFoundInRaid", "foundInRaid", "FoundInRaid", "isFoundInRaid", "IsFoundInRaid"), false);
-                        string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
+                        string label = areaLabel + GameUiText.T(" L", " ур. ") + stage.ToString(CultureInfo.InvariantCulture) +
+                            (stage == currentLevel + 1 ? GameUiText.T(" (current)", " (текущий)") : GameUiText.T(" (future)", " (будущий)"));
                         int satisfied = 0;
                         if (stage == currentLevel + 1)
                         {
@@ -427,6 +430,13 @@ namespace SPTItemIntelligence
         void Trace(string message)
         {
             if (trace != null) trace("[II TRACE] client " + message);
+        }
+
+        static string Localized(object locales, string key, string fallback)
+        {
+            string language = GameUiText.Russian ? "ru" : "en";
+            string value = JsonNode.ReadString(JsonNode.Get(JsonNode.Get(locales, language), key)).Trim();
+            return value.Length == 0 ? (fallback ?? string.Empty).Trim() : value;
         }
 
         sealed class QuestProgress

@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Locales;
 using SPTarkov.Server.Core.Utils;
 using System.Text.Json;
 
@@ -40,7 +41,8 @@ public sealed class RequirementDataService(
     HandbookHelper handbookHelper,
     ItemHelper itemHelper,
     PresetHelper presetHelper,
-    RagfairServerHelper ragfairServerHelper)
+    RagfairServerHelper ragfairServerHelper,
+    LocaleService localeService)
 {
     private static readonly MongoId[] TotalValueBaseClasses =
     [
@@ -61,9 +63,45 @@ public sealed class RequirementDataService(
             templateTable.Quests,
             hideoutTable,
             prices,
-            LoadHideoutProgress(sessionId));
+            LoadHideoutProgress(sessionId),
+            BuildLocales());
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private Dictionary<string, object> BuildLocales()
+    {
+        Dictionary<string, string> english = localeService.GetLocaleDb("en");
+        Dictionary<string, string> russian = localeService.GetLocaleDb("ru");
+        Dictionary<string, string> selectedEnglish = new(StringComparer.Ordinal);
+        Dictionary<string, string> selectedRussian = new(StringComparer.Ordinal);
+
+        foreach (MongoId questId in templateTable.Quests.Keys)
+            AddLocalePair($"{questId} name", english, russian, selectedEnglish, selectedRussian);
+
+        foreach (string key in english.Keys)
+            if (key.StartsWith("hideout_area_", StringComparison.Ordinal) && key.EndsWith("_name", StringComparison.Ordinal))
+                AddLocalePair(key, english, russian, selectedEnglish, selectedRussian);
+        foreach (string key in russian.Keys)
+            if (key.StartsWith("hideout_area_", StringComparison.Ordinal) && key.EndsWith("_name", StringComparison.Ordinal))
+                AddLocalePair(key, english, russian, selectedEnglish, selectedRussian);
+
+        return new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["en"] = selectedEnglish,
+            ["ru"] = selectedRussian
+        };
+    }
+
+    private static void AddLocalePair(
+        string key,
+        Dictionary<string, string> english,
+        Dictionary<string, string> russian,
+        Dictionary<string, string> selectedEnglish,
+        Dictionary<string, string> selectedRussian)
+    {
+        if (english.TryGetValue(key, out string? en) && !string.IsNullOrWhiteSpace(en)) selectedEnglish[key] = en;
+        if (russian.TryGetValue(key, out string? ru) && !string.IsNullOrWhiteSpace(ru)) selectedRussian[key] = ru;
     }
 
     private static object LoadHideoutProgress(MongoId sessionId)
