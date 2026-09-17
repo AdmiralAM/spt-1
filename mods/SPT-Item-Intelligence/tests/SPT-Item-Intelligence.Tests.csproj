@@ -32,5 +32,6 @@
     <Compile Include="..\src\MarkerPresentation.cs" Link="MarkerPresentation.cs" />
     <Compile Include="..\src\SenseRequirementPresentation.cs" Link="SenseRequirementPresentation.cs" />
     <Compile Include="..\src\RaidRequirementLedger.cs" Link="RaidRequirementLedger.cs" />
+    <Compile Include="..\src\RaidInventoryRuntimeScanner.cs" Link="RaidInventoryRuntimeScanner.cs" />
   </ItemGroup>
 </Project>

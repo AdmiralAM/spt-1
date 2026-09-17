@@ -51,7 +51,10 @@ namespace SPTItemIntelligence
             if (instantiated is bool && !(bool)instantiated) return false;
             object world = Member(singleton, "Instance");
             object player = Member(world, "MainPlayer");
-            raidActive = world != null && player != null;
+            // EFT keeps a GameWorld and a HideoutPlayer alive in the hideout.  Treating that
+            // inventory as a raid made the card show "in raid" while looking at hideout upgrades.
+            // The concrete player class is the reliable boundary and does not require a scene scan.
+            raidActive = world != null && player != null && !IsHideoutPlayer(player);
             if (!raidActive) return false;
             object inventory = Member(player, "Inventory");
             IEnumerable items = Member(inventory, "AllRealPlayerItems") as IEnumerable;
@@ -68,6 +71,23 @@ namespace SPTItemIntelligence
                 result.Add(new RaidInventoryItemSnapshot(id, template, stack, fir));
             }
             return true;
+        }
+
+        internal static bool IsHideoutPlayerTypeName(string typeName)
+        {
+            return !string.IsNullOrWhiteSpace(typeName) &&
+                typeName.IndexOf("HideoutPlayer", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        static bool IsHideoutPlayer(object player)
+        {
+            if (player == null) return false;
+            for (Type type = player.GetType(); type != null; type = type.BaseType)
+            {
+                string name = type.FullName ?? type.Name;
+                if (IsHideoutPlayerTypeName(name)) return true;
+            }
+            return Flag(Member(player, "IsHideout", "IsHideoutPlayer"));
         }
 
         static ItemAccessors GetAccessors(Type type)

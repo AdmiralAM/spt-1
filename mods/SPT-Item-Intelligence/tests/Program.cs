@@ -102,6 +102,8 @@ static class Program
         int phase36Assertions = Phase36RaidInventoryTooltipTests.Run();
         int phase37Assertions = Phase37AlternativeQuestPoolTests.Run();
         int phase38Assertions = Phase38SenseVisualPolicyTests.Run();
+        Expect(RaidInventoryRuntimeScanner.IsHideoutPlayerTypeName("EFT.HideoutPlayer"), "hideout player never starts the raid inventory ledger");
+        Expect(!RaidInventoryRuntimeScanner.IsHideoutPlayerTypeName("EFT.Player"), "normal raid player remains eligible for the raid inventory ledger");
         Console.WriteLine("Item Intelligence regression passed through Phase 38: " + phase38Assertions + " Sense visual policy assertions; Phase 37=" + phase37Assertions + "; Phase 36=" + phase36Assertions + "; prior phases remain green if execution reaches this line.");
     }
 
