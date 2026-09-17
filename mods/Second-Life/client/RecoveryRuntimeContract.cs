@@ -13,6 +13,9 @@ namespace Admiral.SecondLife.Client
         internal FieldInfo InventoryEquipment { get; private set; }
         internal ConstructorInfo EquipmentConstructor { get; private set; }
         internal ConstructorInfo InventoryConstructor { get; private set; }
+        internal MethodInfo GetPlayerItems { get; private set; }
+        internal object AllPlayerItemsMask { get; private set; }
+        internal PropertyInfo ItemSpawnedInSession { get; private set; }
         internal FieldInfo GameProfile { get; private set; }
         internal FieldInfo PlayerFactory { get; private set; }
         internal FieldInfo OwnerFactory { get; private set; }
@@ -47,6 +50,8 @@ namespace Admiral.SecondLife.Client
             Type localGame = FindType("EFT.LocalGame");
             Type profile = FindType("EFT.Profile");
             Type inventory = FindType("EFT.InventoryLogic.Inventory");
+            Type item = FindType("EFT.InventoryLogic.Item");
+            Type playerItems = FindType("EFT.InventoryLogic.EPlayerItems");
             Type equipment = FindType("EFT.InventoryLogic.InventoryEquipment");
             Type equipmentTemplate = FindType("EFT.InventoryLogic.InventoryEquipmentTemplate");
             Type cameraController = FindType("EFT.CameraControl.PlayerCameraController");
@@ -62,7 +67,7 @@ namespace Admiral.SecondLife.Client
             Type corpse = FindType("EFT.Interactive.Corpse");
             Type playerBody = FindType("EFT.PlayerBody");
             Type pointOfView = FindType("EFT.EPointOfView");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner, changeItemsOperation, cullingManager, corpse, playerBody, pointOfView }.Any(type => type == null))
+            if (new[] { player, localPlayer, localGame, profile, inventory, item, playerItems, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner, changeItemsOperation, cullingManager, corpse, playerBody, pointOfView }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -79,6 +84,8 @@ namespace Admiral.SecondLife.Client
             ConstructorInfo equipmentConstructor = equipment.GetConstructor(new[] { typeof(string), equipmentTemplate });
             ConstructorInfo inventoryConstructor = inventory.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
                 .SingleOrDefault(ctor => ctor.GetParameters().Length == 12 && ctor.GetParameters()[0].ParameterType == equipment);
+            MethodInfo getPlayerItems = inventory.GetMethod("GetPlayerItems", BindingFlags.Instance | BindingFlags.Public, null, new[] { playerItems }, null);
+            PropertyInfo itemSpawnedInSession = item.GetProperty("SpawnedInSession", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo localPlayerCreate = UniqueMethod(localPlayer, "Create", isStatic: true, parameterCount: 21);
             Type inventoryController = player.GetNestedType("SinglePlayerInventoryController", BindingFlags.Public | BindingFlags.NonPublic);
             ConstructorInfo inventoryControllerConstructor = inventoryController?.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -127,7 +134,7 @@ namespace Admiral.SecondLife.Client
                 return Fail("Profile.Inventory is no longer a replaceable Inventory field", out failure);
             if (inventoryEquipment == null || !inventoryEquipment.IsInitOnly || inventoryEquipment.FieldType != equipment)
                 return Fail("Inventory.Equipment ownership shape changed", out failure);
-            if (equipmentConstructor == null || inventoryConstructor == null)
+            if (equipmentConstructor == null || inventoryConstructor == null || getPlayerItems == null || itemSpawnedInSession?.GetMethod == null || itemSpawnedInSession.SetMethod == null)
                 return Fail("empty equipment/inventory construction signatures changed", out failure);
             if (localPlayerCreate == null || inventoryControllerConstructor == null)
                 return Fail("local-player reconstruction signatures changed", out failure);
@@ -150,6 +157,9 @@ namespace Admiral.SecondLife.Client
                 InventoryEquipment = inventoryEquipment,
                 EquipmentConstructor = equipmentConstructor,
                 InventoryConstructor = inventoryConstructor,
+                GetPlayerItems = getPlayerItems,
+                AllPlayerItemsMask = Enum.ToObject(playerItems, 63),
+                ItemSpawnedInSession = itemSpawnedInSession,
                 GameProfile = gameProfile,
                 PlayerFactory = playerFactory,
                 OwnerFactory = ownerFactory,

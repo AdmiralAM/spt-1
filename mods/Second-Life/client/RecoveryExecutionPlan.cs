@@ -126,6 +126,10 @@ namespace Admiral.SecondLife.Client
                 // Player.Init registers the player before the factory task completes.
                 // Track that ownership immediately so every later failure unregisters it.
                 newPlayerRegistered = true;
+                int restoredFoundInRaid = inventoryLease.RestoreSpawnedInSession();
+                trace?.Invoke(
+                    "Recovery trace: restored found-in-raid state=" + restoredFoundInRaid +
+                    "/" + inventoryLease.SpawnedInSessionCount);
                 Trace(stage, gameWorld, newPlayer);
                 stage = "new-player-prepare";
                 RuntimeSafeSpawnSelector.Apply(newPlayer, spawnSelection);
