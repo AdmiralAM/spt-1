@@ -83,10 +83,10 @@ namespace SPTItemIntelligence
             BestTraderLine = bestTraderLine ?? string.Empty;
             FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
-                GameUiText.T("Active quest", "Активный квест"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
-            HideoutLine = RequirementLine(GameUiText.T("Hideout", "Убежище"), HideoutOwned, HideoutNeeded, Allocation.HideoutFirAllocated, Allocation.HideoutFirRequired);
+                GameUiText.T("For active quest", "Для активного квеста"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
+            HideoutLine = RequirementLine(GameUiText.T("For hideout after quests", "Для убежища после квестов"), HideoutOwned, HideoutNeeded, Allocation.HideoutFirAllocated, Allocation.HideoutFirRequired);
             QuestLaterLine = RequirementLine(
-                GameUiText.T("Future quest", "Будущий квест"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
+                GameUiText.T("For future quest", "Для будущего квеста"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine(GameUiText.T("Keep", "Оставить"), KeepCount);
             PerSlotLine = perSlotLine ?? string.Empty;
 
@@ -367,8 +367,8 @@ namespace SPTItemIntelligence
             for (int i = 0; i < ordered.Count; i++)
             {
                 DetailAggregate detail = ordered[i];
-                string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Now", "Сейчас") :
-                    detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Later", "Позже") : GameUiText.T("Hideout", "Убежище");
+                string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Active quest", "Активный квест") :
+                    detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Future quest", "Будущий квест") : GameUiText.T("Hideout", "Убежище");
                 string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
                 if (detail.FoundInRaidRequired) line += GameUiText.T(" · FIR", " · Найдено в рейде");
                 yield return line;

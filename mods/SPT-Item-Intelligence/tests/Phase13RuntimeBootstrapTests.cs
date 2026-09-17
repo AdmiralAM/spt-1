@@ -115,9 +115,9 @@ static class Phase13RuntimeBootstrapTests
         Expect(store.Get("a").Price.BestSource == PriceSource.Flea && store.Get("a").Price.TotalValue == 2000, "live flea/trader snapshot populates Value", ref assertions);
         ItemHoverText active = controller.OnHoverEnter("a");
         Expect(active.Primary == "1,000 ₽ · Therapist" && active.Secondary == "Flea: 2,000 ₽", "live cached vendor and alternate flea values reach hover formatting", ref assertions);
-        Expect(active.Status.Length == 0 && active.QuestNowLine == "Active quest: 0/2 · FIR 0/2", "non-FIR stock does not fulfill live FIR-only requirements", ref assertions);
+        Expect(active.Status.Length == 0 && active.QuestNowLine == "For active quest: 0/2 · FIR 0/2", "non-FIR stock does not fulfill live FIR-only requirements", ref assertions);
         ItemHoverText missingHideout = controller.OnHoverEnter("d");
-        Expect(missingHideout.HideoutLine == "Hideout: 0/7" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
+        Expect(missingHideout.HideoutLine == "For hideout after quests: 0/7" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
             "numeric server hideout requirement reaches runtime marker classification", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.SummaryLine == "Not Needed" && unknown.DataState == ItemDataState.Ready && !unknown.IsDiagnostic,

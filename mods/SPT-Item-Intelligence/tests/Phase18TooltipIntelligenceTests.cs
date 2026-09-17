@@ -82,7 +82,7 @@ static class Phase18TooltipIntelligenceTests
         Expect(text.Primary == "42,000 ₽ · Therapist", "vendor mode exposes named highest trader value", ref assertions);
         Expect(text.Secondary == "Flea: 12,000 ₽", "vendor mode retains alternate flea value for Full", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 21,000 ₽"), "full mode exposes value per slot", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Detailed, "Now: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Detailed, "Active quest: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current) ×3"), "detailed mode stops after the single nearest target", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) ×3"), "full mode retains the hideout target", ref assertions);
 
@@ -151,7 +151,7 @@ static class Phase18TooltipIntelligenceTests
         ItemPresentationStore bulbexStore = new ItemPresentationStore();
         bulbexStore.Refresh(ItemRequirementStateBuilder.Build(bulbexIndex), ItemPriceIndex.Empty);
         ItemHoverText bulbexText = new ItemHoverTextFormatter().Format(new ItemHoverState(bulbexStore.Get(bulbexId)));
-        Expect(bulbexText.HideoutLine == "Hideout: 1/1 ✓", "fulfilled Bulbex hideout quantity remains visible", ref assertions);
+        Expect(bulbexText.HideoutLine == "For hideout after quests: 1/1 ✓", "fulfilled Bulbex hideout quantity remains visible", ref assertions);
         Expect(ItemMarkerPresentation.From(bulbexText).Kind == ItemMarkerKind.Default, "fulfilled Bulbex requirement uses default color", ref assertions);
         Expect(bulbexIndex.Get("area_only") == RequirementIndexEntry.Empty, "numeric Area requirements are not projected as items", ref assertions);
         Expect(bulbexIndex.Get("custom").HideoutNeeded == 2, "custom hideout areas are projected", ref assertions);
@@ -163,7 +163,7 @@ static class Phase18TooltipIntelligenceTests
         ItemPresentationStore missingStore = new ItemPresentationStore();
         missingStore.Refresh(ItemRequirementStateBuilder.Build(missingIndex), ItemPriceIndex.Empty);
         ItemHoverText missingBulbex = new ItemHoverTextFormatter().Format(new ItemHoverState(missingStore.Get(bulbexId)));
-        Expect(missingBulbex.HideoutLine == "Hideout: 0/1" && ItemMarkerPresentation.From(missingBulbex).Kind == ItemMarkerKind.Hideout,
+        Expect(missingBulbex.HideoutLine == "For hideout after quests: 0/1" && ItemMarkerPresentation.From(missingBulbex).Kind == ItemMarkerKind.Hideout,
             "missing Bulbex uses the hideout marker", ref assertions);
 
         Dictionary<string, object> constructingProfile = ProfileWithHideout(

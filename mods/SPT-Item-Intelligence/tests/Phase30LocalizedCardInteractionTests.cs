@@ -16,9 +16,9 @@ static class Phase30LocalizedCardInteractionTests
             Expect(russian.SummaryLine == "Нужно ещё ×4 · Оставить ×6", "Russian summary follows the game-language selection and reports total keep demand", ref assertions);
             Expect(russian.SummaryOwnedLine == "В наличии ×2", "Russian regular-play total stays concise", ref assertions);
             Expect(russian.OwnedBreakdownLine == "Из рейда ×1 · не из рейда ×1", "Russian Full breakdown keeps FIR semantics explicit", ref assertions);
-            Expect(russian.QuestNowLine.StartsWith("Активный квест:", StringComparison.Ordinal), "Russian active quest label is distinct", ref assertions);
-            Expect(russian.QuestLaterLine.StartsWith("Будущий квест:", StringComparison.Ordinal), "Russian future quest label is distinct", ref assertions);
-            Expect(russian.HideoutLine.StartsWith("Убежище:", StringComparison.Ordinal), "Russian hideout label is distinct", ref assertions);
+            Expect(russian.QuestNowLine.StartsWith("Для активного квеста:", StringComparison.Ordinal), "Russian active quest allocation is explicit", ref assertions);
+            Expect(russian.QuestLaterLine.StartsWith("Для будущего квеста:", StringComparison.Ordinal), "Russian future quest allocation is explicit", ref assertions);
+            Expect(russian.HideoutLine.StartsWith("Для убежища после квестов:", StringComparison.Ordinal), "Russian hideout allocation order is explicit", ref assertions);
         }
         finally { GameUiText.SetRussian(false); }
 
