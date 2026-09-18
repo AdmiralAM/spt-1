@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -26,6 +25,8 @@ namespace Admiral.SecondLife.Client
         object pendingCorpse;
         string pendingCorpseEquipmentRootId;
         string pendingProfileId;
+        string pendingRaidId;
+        long raidSequence;
         bool warnedExecutorUnavailable;
         bool nativeFinalizationReentry;
 
@@ -128,6 +129,17 @@ namespace Admiral.SecondLife.Client
             pendingCorpseEquipment = ReadObject(corpse, "Item");
             pendingCorpseEquipmentRootId = ReadString(pendingCorpseEquipment, "Id");
             pendingProfileId = ReadString(player, "ProfileId");
+            RecoveryState priorState = finalizationGate.Snapshot.State;
+            if (string.IsNullOrWhiteSpace(pendingRaidId) ||
+                priorState == RecoveryState.Disabled ||
+                priorState == RecoveryState.FinalDeath ||
+                priorState == RecoveryState.Extracted)
+            {
+                raidSequence++;
+                pendingRaidId = pendingProfileId + ":raid-" + raidSequence;
+                warnedExecutorUnavailable = false;
+            }
+            logInfo?.Invoke("Recovery trace: captured local-player corpse for " + pendingRaidId + "; prior-state=" + priorState + ".");
             if (string.IsNullOrWhiteSpace(pendingCorpseEquipmentRootId))
                 logWarning?.Invoke("Native corpse has no stable equipment-root ID; recovery will fail closed.");
         }
@@ -137,7 +149,12 @@ namespace Admiral.SecondLife.Client
             if (nativeFinalizationReentry) return true;
             if (enabled == null || !enabled.Value) return true;
 
-            string raidId = pendingProfileId + ":" + RuntimeHelpers.GetHashCode(localGame).ToString("X8");
+            string raidId = pendingRaidId;
+            if (string.IsNullOrWhiteSpace(raidId))
+            {
+                logWarning?.Invoke("Recovery has no captured raid identity; continuing native finalization.");
+                return true;
+            }
             RecoveryState state = finalizationGate.Snapshot.State;
             RecoveryExecutionPlan plan = null;
             string failure = null;
@@ -333,6 +350,8 @@ namespace Admiral.SecondLife.Client
             pendingCorpse = null;
             pendingCorpseEquipmentRootId = null;
             pendingProfileId = null;
+            pendingRaidId = null;
+            raidSequence = 0;
         }
     }
 }
