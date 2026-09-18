@@ -278,7 +278,7 @@ namespace Admiral.SecondLife.Client
                 exception =>
                 {
                     finalizationGate.AbortPendingRecovery();
-                    logWarning?.Invoke("Recovery failed; cleanup attempted; resuming native death: " + exception.Message);
+                    logWarning?.Invoke("Recovery failed; cleanup attempted; resuming native death: " + exception);
                     ResumeNativeFinalization(localGame);
                 });
         }

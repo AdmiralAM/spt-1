@@ -17,7 +17,7 @@ namespace Admiral.SecondLife.Client
         readonly System.Collections.Generic.List<SlotTransfer> protectedTransfers;
         readonly int preservedFastAccessCount;
         readonly string preservedFastAccessSummary;
-        readonly List<object> spawnedInSessionItems;
+        readonly HashSet<string> spawnedInSessionItemIds;
         bool applied;
 
         RecoveryInventoryLease(
@@ -28,7 +28,7 @@ namespace Admiral.SecondLife.Client
             System.Collections.Generic.List<SlotTransfer> protectedTransfers,
             int preservedFastAccessCount,
             string preservedFastAccessSummary,
-            List<object> spawnedInSessionItems,
+            HashSet<string> spawnedInSessionItemIds,
             string corpseEquipmentRootId,
             string recoveryEquipmentRootId)
         {
@@ -39,7 +39,7 @@ namespace Admiral.SecondLife.Client
             this.protectedTransfers = protectedTransfers;
             this.preservedFastAccessCount = preservedFastAccessCount;
             this.preservedFastAccessSummary = preservedFastAccessSummary;
-            this.spawnedInSessionItems = spawnedInSessionItems;
+            this.spawnedInSessionItemIds = spawnedInSessionItemIds;
             CorpseEquipmentRootId = corpseEquipmentRootId;
             RecoveryEquipmentRootId = recoveryEquipmentRootId;
         }
@@ -52,13 +52,22 @@ namespace Admiral.SecondLife.Client
             : string.Join(",", protectedTransfers.Select(transfer => transfer.SlotName));
         internal int PreservedFastAccessCount => preservedFastAccessCount;
         internal string PreservedFastAccessSummary => preservedFastAccessSummary;
-        internal int SpawnedInSessionCount => spawnedInSessionItems.Count;
+        internal int SpawnedInSessionCount => spawnedInSessionItemIds.Count;
 
         internal int RestoreSpawnedInSession()
         {
+            object values = contract.GetPlayerItems.Invoke(recoveryInventory, new[] { contract.AllPlayerItemsMask });
+            if (!(values is IEnumerable items))
+                throw new InvalidOperationException("recovery player-item enumeration returned no collection");
+            var currentItems = new List<object>();
+            foreach (object item in items)
+                if (item != null) currentItems.Add(item);
+
             int restored = 0;
-            foreach (object item in spawnedInSessionItems)
+            foreach (object item in currentItems)
             {
+                string id = ReadString(item, "Id");
+                if (string.IsNullOrWhiteSpace(id) || !spawnedInSessionItemIds.Contains(id)) continue;
                 if (item == null || contract.ItemSpawnedInSession.GetValue(item, null) is not bool current || current) continue;
                 contract.ItemSpawnedInSession.SetValue(item, true, null);
                 restored++;
@@ -118,7 +127,7 @@ namespace Admiral.SecondLife.Client
             if (!ReferenceEquals(originalEquipment, corpseEquipment))
                 return Fail("profile equipment is not the exact corpse-owned root", out failure);
 
-            List<object> spawnedInSessionItems = CaptureSpawnedInSession(contract, originalInventory);
+            HashSet<string> spawnedInSessionItemIds = CaptureSpawnedInSession(contract, originalInventory);
 
             string corpseRootId = ReadString(corpseEquipment, "Id");
             object equipmentTemplate = AccessTools.Property(corpseEquipment.GetType(), "Template")?.GetValue(corpseEquipment, null);
@@ -173,7 +182,7 @@ namespace Admiral.SecondLife.Client
                 protectedTransfers,
                 preservedFastAccessCount,
                 preservedFastAccessSummary,
-                spawnedInSessionItems,
+                spawnedInSessionItemIds,
                 corpseRootId,
                 recoveryRootId);
             return true;
@@ -242,16 +251,17 @@ namespace Admiral.SecondLife.Client
             };
         }
 
-        static List<object> CaptureSpawnedInSession(RecoveryRuntimeContract contract, object inventory)
+        static HashSet<string> CaptureSpawnedInSession(RecoveryRuntimeContract contract, object inventory)
         {
-            var captured = new List<object>();
+            var captured = new HashSet<string>(StringComparer.Ordinal);
             object values = contract.GetPlayerItems.Invoke(inventory, new[] { contract.AllPlayerItemsMask });
             if (!(values is IEnumerable items))
                 throw new InvalidOperationException("player-item enumeration returned no collection");
             foreach (object item in items)
             {
-                if (item != null && contract.ItemSpawnedInSession.GetValue(item, null) is bool spawned && spawned)
-                    captured.Add(item);
+                string id = ReadString(item, "Id");
+                if (!string.IsNullOrWhiteSpace(id) && contract.ItemSpawnedInSession.GetValue(item, null) is bool spawned && spawned)
+                    captured.Add(id);
             }
             return captured;
         }
