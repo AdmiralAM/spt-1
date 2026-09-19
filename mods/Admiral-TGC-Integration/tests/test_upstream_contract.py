@@ -22,6 +22,11 @@ class UpstreamContractTests(unittest.TestCase):
         )
         self.assertIn("TGC-NG.dll", spec["forbiddenFinalRuntime"])
         self.assertIn("Painter-4.0.dll", spec["forbiddenFinalRuntime"])
+        belt = spec["beltDelegation"]
+        self.assertEqual(len(belt["slot15Belts"]), 5)
+        self.assertEqual(len(belt["secureContainerAllowlist"]), 2)
+        self.assertEqual(belt["secureContainerDenylist"], ["672e2e75b0ab4fcbbf7dc471"])
+        self.assertEqual(belt["authority"], "B&A&HB")
 
     def test_audit_fails_closed_when_source_set_is_incomplete(self):
         with tempfile.TemporaryDirectory() as directory:
