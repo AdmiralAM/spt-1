@@ -26,6 +26,11 @@ public sealed class SecureContainerCompatibility(
     private static readonly MongoId VanillaDogtagCase = new("5c093e3486f77430cb02e593");
     private static readonly HashSet<MongoId> GammaFamily =
         SecureContainerCompatibilityPolicy.GammaTemplateIds.Select(id => new MongoId(id)).ToHashSet();
+    private static readonly HashSet<MongoId> TgcBelts =
+        TgcCompatibilityPolicy.BeltTemplateIds.Select(id => new MongoId(id)).ToHashSet();
+    private static readonly HashSet<MongoId> TgcSecurePouches =
+        TgcCompatibilityPolicy.SecureContainerPouchAllowlist.Select(id => new MongoId(id)).ToHashSet();
+    private static readonly MongoId TgcToolBox = new(TgcCompatibilityPolicy.ToolBoxTemplateId);
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
@@ -39,7 +44,11 @@ public sealed class SecureContainerCompatibility(
         HashSet<MongoId> wallets = FindAndNormalizeWallets(out int walletMoneyFixes);
         HashSet<MongoId> dogtagCases = FindDogtagCases();
 
-        int gammaAdmissions = ExtendGamma(packNStrapContainers);
+        TgcCommitResult tgc = CommitTgcOwnership();
+        HashSet<MongoId> gammaContainers = packNStrapContainers
+            .Concat(TgcSecurePouches.Where(templateTable.Items.ContainsKey))
+            .ToHashSet();
+        int gammaAdmissions = ExtendGamma(gammaContainers);
         int walletAdmissions = ExtendHeadBand(DedicatedWearableItems.HeadBandCurrencyGridName, wallets);
         int dogtagAdmissions = ExtendHeadBand(DedicatedWearableItems.HeadBandDogtagCaseGridName, dogtagCases);
 
@@ -47,15 +56,96 @@ public sealed class SecureContainerCompatibility(
             new MongoId("6937eccbfd921faceb0dfecd"), "Loui Peeton wallet");
         RequireAdmission(RuntimeIdentity.EmergencyHeadBandItemId, DedicatedWearableItems.HeadBandDogtagCaseGridName,
             VanillaDogtagCase, "vanilla Dogtag Case");
-        foreach (MongoId gamma in GammaFamily.Where(templateTable.Items.ContainsKey))
-            RequireAdmission(gamma.ToString(), null, new MongoId("669c10fa06c00c483c58537a"), "Pack 'n' Strap Small Cash Box");
+        MongoId packNStrapCashBox = new("669c10fa06c00c483c58537a");
+        if (packNStrapContainers.Contains(packNStrapCashBox))
+            foreach (MongoId gamma in GammaFamily.Where(templateTable.Items.ContainsKey))
+                RequireAdmission(gamma.ToString(), null, packNStrapCashBox, "Pack 'n' Strap Small Cash Box");
 
         logger.Success($"B&A&HB final compatibility committed: Gamma Pack 'n' Strap admissions={gammaAdmissions}, "
             + $"containers verified={packNStrapContainers.Count}, Gamma hosts verified={GammaFamily.Count(templateTable.Items.ContainsKey)}, "
             + $"wallets={wallets.Count}/HeadBand additions={walletAdmissions}/money-filter fixes={walletMoneyFixes}, "
-            + $"dogtag cases={dogtagCases.Count}/HeadBand additions={dogtagAdmissions}; Loui Peeton RUB and Pack 'n' Strap Gamma contracts verified.");
+            + $"dogtag cases={dogtagCases.Count}/HeadBand additions={dogtagAdmissions}; "
+            + $"TGC {TgcCompatibilityPolicy.Release} belts={tgc.BeltsPublished}/ArmBand removals={tgc.ArmBandRemovals}/Belt additions={tgc.BeltAdmissions}, "
+            + $"secure removals={tgc.SecureRemovals}/explicit pouch allowlist={tgc.SecurePouchesPublished}; "
+            + "Loui Peeton RUB, Pack 'n' Strap and exact TGC Gamma contracts verified.");
         return Task.CompletedTask;
     }
+
+    private TgcCommitResult CommitTgcOwnership()
+    {
+        HashSet<MongoId> publishedBelts = TgcBelts.Where(templateTable.Items.ContainsKey).ToHashSet();
+        HashSet<MongoId> publishedPouches = TgcSecurePouches.Where(templateTable.Items.ContainsKey).ToHashSet();
+        bool tgcPresent = publishedBelts.Count != 0 || publishedPouches.Count != 0 || templateTable.Items.ContainsKey(TgcToolBox);
+        if (!tgcPresent) return default;
+
+        if (publishedBelts.Count != TgcBelts.Count)
+            throw new InvalidOperationException($"B&A&HB TGC {TgcCompatibilityPolicy.Release} compatibility refused: partial Belt template set ({publishedBelts.Count}/{TgcBelts.Count}).");
+        if (publishedPouches.Count != TgcSecurePouches.Count || !templateTable.Items.ContainsKey(TgcToolBox))
+            throw new InvalidOperationException($"B&A&HB TGC {TgcCompatibilityPolicy.Release} compatibility refused: container template set is incomplete.");
+
+        if (!templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateBeltItem.DefaultInventoryTpl), out TemplateItem? inventory))
+            throw new InvalidOperationException("B&A&HB TGC compatibility requires the canonical default inventory template.");
+        Slot[] armBand = inventory.Properties?.Slots?.Where(slot => string.Equals(slot.Name, "ArmBand", StringComparison.Ordinal)).Take(2).ToArray() ?? [];
+        Slot[] belt = inventory.Properties?.Slots?.Where(slot => string.Equals(slot.Name, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal)).Take(2).ToArray() ?? [];
+        if (armBand.Length != 1 || belt.Length != 1)
+            throw new InvalidOperationException("B&A&HB TGC compatibility requires unique ArmBand and dedicated Belt slot hosts.");
+        HashSet<MongoId>? armBandFilter = armBand[0].Properties?.Filters?.SingleOrDefault()?.Filter;
+        HashSet<MongoId>? beltFilter = belt[0].Properties?.Filters?.SingleOrDefault()?.Filter;
+        if (armBandFilter == null || beltFilter == null)
+            throw new InvalidOperationException("B&A&HB TGC compatibility requires exact mutable slot filters.");
+
+        int armBandRemovals = 0;
+        int beltAdmissions = 0;
+        foreach (MongoId id in publishedBelts)
+        {
+            if (armBandFilter.Remove(id)) armBandRemovals++;
+            if (beltFilter.Add(id)) beltAdmissions++;
+        }
+
+        // First erase TGC's broad PouchesInSecureContainer side effect from all
+        // secure-container hosts. ExtendGamma then republishes only our exact two-ID
+        // allowlist into the supported Gamma family.
+        int secureRemovals = 0;
+        foreach (TemplateItem host in templateTable.Items.Values.Where(IsSecureContainerHost))
+        {
+            foreach (GridFilter filter in host.Properties?.Grids?.SelectMany(grid => grid.Properties?.Filters ?? []) ?? [])
+            {
+                if (filter.Filter == null) continue;
+                foreach (MongoId id in TgcSecurePouches)
+                    if (filter.Filter.Remove(id)) secureRemovals++;
+                if (filter.Filter.Remove(TgcToolBox)) secureRemovals++;
+            }
+        }
+
+        foreach (MongoId id in publishedBelts)
+        {
+            if (armBandFilter.Contains(id) || !beltFilter.Contains(id))
+                throw new InvalidOperationException($"B&A&HB TGC Belt ownership commit failed for {id}.");
+        }
+        return new TgcCommitResult(publishedBelts.Count, publishedPouches.Count, armBandRemovals, beltAdmissions, secureRemovals);
+    }
+
+    private static bool IsSecureContainerHost(TemplateItem item)
+    {
+        string id = item.Id.ToString();
+        return string.Equals(id, "5857a8bc2459772bad15db29", StringComparison.Ordinal)
+            || string.Equals(id, "5857a8b324597729ab0a0e7d", StringComparison.Ordinal)
+            || string.Equals(id, "59db794186f77448bc595262", StringComparison.Ordinal)
+            || string.Equals(id, "5857a8bd2459772bad15db2a", StringComparison.Ordinal)
+            || string.Equals(id, "665ee77ccf2d642e98220bca", StringComparison.Ordinal)
+            || string.Equals(id, "68f117b8121d878a2303eee0", StringComparison.Ordinal)
+            || string.Equals(id, "5c093ca986f7740a1867ab12", StringComparison.Ordinal)
+            || string.Equals(id, "674e52f6c9d3a56bdb5c04f2", StringComparison.Ordinal)
+            || string.Equals(id, "664a55d84a90fc2c8a6305c9", StringComparison.Ordinal)
+            || string.Equals(id, "68f8e04eae031982b00e7aaf", StringComparison.Ordinal);
+    }
+
+    private readonly record struct TgcCommitResult(
+        int BeltsPublished,
+        int SecurePouchesPublished,
+        int ArmBandRemovals,
+        int BeltAdmissions,
+        int SecureRemovals);
 
     private bool IsDescendantOf(TemplateItem item, MongoId ancestor)
     {

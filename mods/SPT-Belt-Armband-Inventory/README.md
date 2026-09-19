@@ -20,6 +20,14 @@ foreign roots never enter the Admiral protection allowlist.
 
 Stable v0.3.0 includes the v0.2 product line plus randomized functional ArmBands, wallet logistics, the crimson Utility HeadBand visual, and native always-visible HeadBand/ArmBand container panels. Previously published identities remain immutable.
 
+### Tactical Gear Component 3.0.0 compatibility
+
+B&A&HB owns the equipment integration boundary when TGC 3.0.0 is present. Five exact TGC combat-belt templates are removed from vanilla `ArmBand` admission and admitted through dedicated Belt slot15 while retaining their original TGC template IDs, grids, bundles and trader ownership. Existing profile roots found in `ArmBand` move to slot15 when free; a displaced PMC root is preserved through the sorting table rather than deleted.
+
+TGC's broad `PouchesInSecureContainer` mutation is treated as disabled regardless of the foreign configuration value. B&A&HB first removes TGC container additions from the secure-container family, then explicitly admits only TGC Ammo Pouch `672e2e758808bacbb9d5abc4` and TGC First Aid container `672e2e7526ba61dbb88be7ff` into the supported Gamma family. TGC Tool Box `672e2e75b0ab4fcbbf7dc471` remains excluded. TGC belts receive Belt access, pickup, build and Scav-host behavior, but never inherit Admiral death/insurance protection.
+
+This contract was audited against the unmodified upstream `TGC_3.0.0.7z` release asset with SHA-256 `932AAAA34D7E7F21770E7249E4F29227751938883E21A7151C684775359D2726`. B&A&HB does not copy TGC assets, change TGC identities, or take ownership of Painter/Artem trader and quest content.
+
 Release authority: Issue **#351** and PR **#357**.
 
 The v0.3.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0.3.0`. Its physical DLL filename intentionally remains `SPT Belt Armband Inventory v0.1.0.dll` so an in-place upgrade replaces the existing client instead of leaving duplicate BepInEx GUIDs. CI forbids additional versioned client DLLs.

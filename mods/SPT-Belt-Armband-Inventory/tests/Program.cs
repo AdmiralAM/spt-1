@@ -26,6 +26,17 @@ internal static class Program
         Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("669c10fa06c00c483c58537a", new[] { SecureContainerCompatibilityPolicy.PackNStrapContainerParent }), "Pack 'n' Strap cash pouch is admitted through its owned parent");
         Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer(SecureContainerCompatibilityPolicy.PackNStrapPlateContainer, Array.Empty<string>()), "Pack 'n' Strap plate case is admitted by exact identity");
         Assert(!SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("5c093e3486f77430cb02e593", new[] { "5795f317245977243854e041" }), "unrelated vanilla simple containers remain forbidden");
+        Assert(TgcCompatibilityPolicy.BeltTemplateIds.Count == 5, "TGC 3.0.0 belt integration is an exact five-template allowlist");
+        Assert(TgcCompatibilityPolicy.IsBelt("672e2e75a16c1d2034c384cf"), "TGC combat belt is assigned to the B&A Belt host");
+        Assert(!TgcCompatibilityPolicy.IsBelt(TgcCompatibilityPolicy.ToolBoxTemplateId), "TGC Tool Box cannot impersonate a Belt");
+        Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e758808bacbb9d5abc4"), "TGC Ammo Pouch is explicitly admitted to supported secure containers");
+        Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e7526ba61dbb88be7ff"), "TGC First Aid container is explicitly admitted to supported secure containers");
+        Assert(!TgcCompatibilityPolicy.IsExplicitSecureContainerPouch(TgcCompatibilityPolicy.ToolBoxTemplateId), "TGC Tool Box remains excluded from secure containers");
+        foreach (string tgcBelt in TgcCompatibilityPolicy.BeltTemplateIds)
+        {
+            Assert(WearableItemDescriptorRegistry.HasCapability(tgcBelt, AccessoryCapability.FastAccess), "TGC Belt receives exact slot15 fast access");
+            Assert(!WearableItemDescriptorRegistry.HasCapability(tgcBelt, AccessoryCapability.DeathRetention), "foreign TGC Belt never receives Admiral death protection");
+        }
         LocalPackNStrapImportRegression.Run();
         UseItemsAnywhereCompatibilityRegression.Run();
         ArmBandVariantCatalogRegression.Run();
@@ -33,6 +44,7 @@ internal static class Program
         ArmBandFeatureConfigRegression.Run();
         HeadBandVisualAssetRegression.Run();
         LegacyCashBoxProfileMigrationRegression.Run();
+        TgcBeltProfileMigrationRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();

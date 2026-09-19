@@ -105,6 +105,21 @@ namespace SPTBeltArmbandInventory
                     capabilities));
             }
 
+            foreach (string templateId in TgcCompatibilityPolicy.BeltTemplateIds)
+            {
+                descriptors.Add(templateId, new WearableItemDescriptor(
+                    templateId,
+                    AccessoryCategory.Belt,
+                    1,
+                    1,
+                    AccessoryCapability.LootPriority |
+                    AccessoryCapability.UnloadPriority |
+                    AccessoryCapability.FastAccess |
+                    AccessoryCapability.PickupFallback |
+                    AccessoryCapability.BuildValidation |
+                    AccessoryCapability.ScavHostRestoration));
+            }
+
             return descriptors;
         }
 
