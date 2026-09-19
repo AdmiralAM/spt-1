@@ -22,6 +22,10 @@ internal static class Program
         Assert(!PackNStrapCompatibility.IsClientPresent(new[] { "com.trenchfoot.beltslot" }), "legacy BeltSlot does not impersonate Pack 'n' Strap");
         Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
         Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
+        Assert(SecureContainerCompatibilityPolicy.GammaTemplateIds.Contains("665ee77ccf2d642e98220bca"), "the equipped SPT Gamma template is an explicit compatibility host");
+        Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("669c10fa06c00c483c58537a", new[] { SecureContainerCompatibilityPolicy.PackNStrapContainerParent }), "Pack 'n' Strap cash pouch is admitted through its owned parent");
+        Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer(SecureContainerCompatibilityPolicy.PackNStrapPlateContainer, Array.Empty<string>()), "Pack 'n' Strap plate case is admitted by exact identity");
+        Assert(!SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("5c093e3486f77430cb02e593", new[] { "5795f317245977243854e041" }), "unrelated vanilla simple containers remain forbidden");
         LocalPackNStrapImportRegression.Run();
         UseItemsAnywhereCompatibilityRegression.Run();
         ArmBandVariantCatalogRegression.Run();

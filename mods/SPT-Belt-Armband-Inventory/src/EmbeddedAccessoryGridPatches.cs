@@ -202,19 +202,18 @@ namespace SPTBeltArmbandInventory
                     {
                         Vector3 point = space.InverseTransformPoint(corners[i]);
                         right = Math.Max(right, point.x);
-                        top = Math.Max(top, point.y);
                     }
                 }
             }
-            if (right > float.MinValue && top > float.MinValue) return new Vector3(right, top, 0f);
             RectTransform fallback = view.transform as RectTransform;
             if (fallback == null) return Vector3.zero;
             fallback.GetWorldCorners(corners);
+            bool useFallbackRight = right == float.MinValue;
             for (int i = 0; i < corners.Length; i++)
             {
                 Vector3 point = space.InverseTransformPoint(corners[i]);
-                right = Math.Max(right, point.x);
                 top = Math.Max(top, point.y);
+                if (useFallbackRight) right = Math.Max(right, point.x);
             }
             return new Vector3(right, top, 0f);
         }

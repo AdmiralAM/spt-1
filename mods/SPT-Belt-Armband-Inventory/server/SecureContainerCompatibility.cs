@@ -15,7 +15,8 @@ public sealed class SecureContainerCompatibility(
     ISptLogger<SecureContainerCompatibility> logger) : IOnLoad
 {
     private static readonly MongoId SimpleContainerParent = new("5795f317245977243854e041");
-    private static readonly MongoId PackNStrapContainerParent = new("680fd1dae5044e670a092e16");
+    private static readonly MongoId PackNStrapContainerParent = new(SecureContainerCompatibilityPolicy.PackNStrapContainerParent);
+    private static readonly MongoId PackNStrapPlateContainer = new(SecureContainerCompatibilityPolicy.PackNStrapPlateContainer);
     private static readonly MongoId MoneyClass = new("543be5dd4bdc2deb348b4569");
     private static readonly MongoId Rouble = new(HeadBandUtilityPolicy.Rouble);
     private static readonly MongoId Dollar = new(HeadBandUtilityPolicy.Dollar);
@@ -24,25 +25,21 @@ public sealed class SecureContainerCompatibility(
     private static readonly MongoId UsecDogtag = new("59f32c3b86f77472a31742f0");
     private static readonly MongoId VanillaDogtagCase = new("5c093e3486f77430cb02e593");
     private static readonly HashSet<MongoId> GammaFamily =
-    [
-        new("5857a8bc2459772bad15db29"),
-        new("68f117b8121d878a2303eee0"),
-        new("68f8e04eae031982b00e7aaf")
-    ];
+        SecureContainerCompatibilityPolicy.GammaTemplateIds.Select(id => new MongoId(id)).ToHashSet();
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        HashSet<MongoId> simpleContainers = templateTable.Items
-            .Where(pair => IsDescendantOf(pair.Value, SimpleContainerParent)
-                || IsDescendantOf(pair.Value, PackNStrapContainerParent))
+        HashSet<MongoId> packNStrapContainers = templateTable.Items
+            .Where(pair => IsDescendantOf(pair.Value, PackNStrapContainerParent)
+                || pair.Key == PackNStrapPlateContainer)
             .Select(pair => pair.Key)
             .ToHashSet();
         HashSet<MongoId> wallets = FindAndNormalizeWallets(out int walletMoneyFixes);
         HashSet<MongoId> dogtagCases = FindDogtagCases();
 
-        int gammaAdmissions = ExtendGamma(simpleContainers);
+        int gammaAdmissions = ExtendGamma(packNStrapContainers);
         int walletAdmissions = ExtendHeadBand(DedicatedWearableItems.HeadBandCurrencyGridName, wallets);
         int dogtagAdmissions = ExtendHeadBand(DedicatedWearableItems.HeadBandDogtagCaseGridName, dogtagCases);
 
@@ -53,7 +50,8 @@ public sealed class SecureContainerCompatibility(
         foreach (MongoId gamma in GammaFamily.Where(templateTable.Items.ContainsKey))
             RequireAdmission(gamma.ToString(), null, new MongoId("669c10fa06c00c483c58537a"), "Pack 'n' Strap Small Cash Box");
 
-        logger.Success($"B&A&HB final compatibility committed: Gamma simple-container admissions={gammaAdmissions}, "
+        logger.Success($"B&A&HB final compatibility committed: Gamma Pack 'n' Strap admissions={gammaAdmissions}, "
+            + $"containers verified={packNStrapContainers.Count}, Gamma hosts verified={GammaFamily.Count(templateTable.Items.ContainsKey)}, "
             + $"wallets={wallets.Count}/HeadBand additions={walletAdmissions}/money-filter fixes={walletMoneyFixes}, "
             + $"dogtag cases={dogtagCases.Count}/HeadBand additions={dogtagAdmissions}; Loui Peeton RUB and Pack 'n' Strap Gamma contracts verified.");
         return Task.CompletedTask;
@@ -119,14 +117,10 @@ public sealed class SecureContainerCompatibility(
             {
                 filter.Filter ??= [];
                 filter.ExcludedFilter ??= [];
-                foreach (MongoId parent in new[] { SimpleContainerParent, PackNStrapContainerParent })
-                    if (filter.ExcludedFilter.Remove(parent)) changed++;
                 foreach (MongoId id in compatible)
                 {
                     if (id != gammaId && filter.Filter.Add(id)) changed++;
                     if (filter.ExcludedFilter.Remove(id)) changed++;
-                    foreach (MongoId ancestor in AncestorsOf(id))
-                        if (filter.ExcludedFilter.Remove(ancestor)) changed++;
                 }
             }
 
@@ -134,19 +128,6 @@ public sealed class SecureContainerCompatibility(
                 RequireAdmission(gammaId.ToString(), null, id, "compatible simple container");
         }
         return changed;
-    }
-
-    private IEnumerable<MongoId> AncestorsOf(MongoId itemId)
-    {
-        MongoId? current = itemId;
-        var seen = new HashSet<MongoId>();
-        while (current != null && seen.Add(current.Value)
-            && templateTable.Items.TryGetValue(current.Value, out TemplateItem? item)
-            && item.Parent != null)
-        {
-            current = item.Parent;
-            yield return current.Value;
-        }
     }
 
     private int ExtendHeadBand(string gridName, HashSet<MongoId> compatible)
