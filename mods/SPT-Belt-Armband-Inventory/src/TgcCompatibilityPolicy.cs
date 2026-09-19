@@ -6,6 +6,8 @@ namespace SPTBeltArmbandInventory
     internal static class TgcCompatibilityPolicy
     {
         internal const string Release = "3.0.0";
+        internal const int IntegrationSourcePr = 362;
+        internal const string IntegrationContractHead = "bd1500b86c356f5e97fade75cf0c1df974ae9621";
 
         internal static readonly IReadOnlyCollection<string> BeltTemplateIds = new[]
         {
@@ -26,6 +28,59 @@ namespace SPTBeltArmbandInventory
         };
 
         internal const string ToolBoxTemplateId = "672e2e75b0ab4fcbbf7dc471";
+
+        internal static bool TryNormalizeBeltHostFilters(
+            ISet<string> armBandFilter,
+            ISet<string> beltFilter,
+            IEnumerable<string> publishedTemplateIds,
+            out int mutations)
+        {
+            if (armBandFilter == null) throw new ArgumentNullException(nameof(armBandFilter));
+            if (beltFilter == null) throw new ArgumentNullException(nameof(beltFilter));
+            if (publishedTemplateIds == null) throw new ArgumentNullException(nameof(publishedTemplateIds));
+            mutations = 0;
+            var published = new HashSet<string>(publishedTemplateIds, StringComparer.Ordinal);
+            int count = 0;
+            foreach (string id in BeltTemplateIds) if (published.Contains(id)) count++;
+            if (count == 0) return true;
+            if (count != BeltTemplateIds.Count) return false;
+            foreach (string id in BeltTemplateIds)
+            {
+                if (armBandFilter.Remove(id)) mutations++;
+                if (beltFilter.Add(id)) mutations++;
+            }
+            return true;
+        }
+
+        internal static bool TryNormalizeSecureContainerFilter(
+            ISet<string> filter,
+            IEnumerable<string> publishedTemplateIds,
+            bool supportedGamma,
+            out int mutations)
+        {
+            if (filter == null) throw new ArgumentNullException(nameof(filter));
+            if (publishedTemplateIds == null) throw new ArgumentNullException(nameof(publishedTemplateIds));
+            mutations = 0;
+            var published = new HashSet<string>(publishedTemplateIds, StringComparer.Ordinal);
+            int managedCount = 0;
+            foreach (string id in SecureContainerPouchAllowlist) if (published.Contains(id)) managedCount++;
+            if (published.Contains(ToolBoxTemplateId)) managedCount++;
+            if (managedCount == 0) return true;
+            if (managedCount != SecureContainerPouchAllowlist.Count + 1) return false;
+
+            if (filter.Remove(ToolBoxTemplateId)) mutations++;
+            if (supportedGamma)
+            {
+                foreach (string id in SecureContainerPouchAllowlist)
+                    if (filter.Add(id)) mutations++;
+            }
+            else
+            {
+                foreach (string pouchId in SecureContainerPouchAllowlist)
+                    if (filter.Remove(pouchId)) mutations++;
+            }
+            return true;
+        }
 
         internal static bool IsBelt(string templateId)
         {

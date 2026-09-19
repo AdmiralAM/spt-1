@@ -28,6 +28,8 @@ TGC's broad `PouchesInSecureContainer` mutation is treated as disabled regardles
 
 This contract was audited against the unmodified upstream `TGC_3.0.0.7z` release asset with SHA-256 `932AAAA34D7E7F21770E7249E4F29227751938883E21A7151C684775359D2726`. B&A&HB does not copy TGC assets, change TGC identities, or take ownership of Painter/Artem trader and quest content.
 
+The cross-module handoff is pinned to Admiral TGC Integration PR #362 head `bd1500b86c356f5e97fade75cf0c1df974ae9621`. That module publishes the unchanged TGC templates while deliberately omitting stock `TGC-NG.dll` filter mutation; B&A&HB remains the sole authority for the five slot15 belts, two Gamma admissions and Tool Box denial. Absence of TGC is a no-op, while a partial recognized TGC template family fails closed before host-filter mutation.
+
 Release authority: Issue **#351** and PR **#357**.
 
 The v0.3.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0.3.0`. Its physical DLL filename intentionally remains `SPT Belt Armband Inventory v0.1.0.dll` so an in-place upgrade replaces the existing client instead of leaving duplicate BepInEx GUIDs. CI forbids additional versioned client DLLs.

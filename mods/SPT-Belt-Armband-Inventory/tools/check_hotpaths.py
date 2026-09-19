@@ -141,35 +141,27 @@ if presentation_path.exists() and presentation_path.name not in removed:
                     "DedicatedSlotPresentationPatches.cs: accepted HeadBand placement mutates/refreshes the host panel "
                     f"({token})")
 
-# Freeze the exact physical layout accepted at 9cf023c: the mapped HeadBand occupies
-# original Headwear local coordinates and native slot RectTransforms are translated by
-# exactly one compact 44+4 row. This is deliberately NOT a host Gear Panel layout
-# mutation: no LayoutElement/preferredHeight write, Canvas rebuild, panel transform
-# move, coroutine, retry or polling is allowed.
+# The accepted left-side fallback remains synchronous and bounded at the proven
+# Headwear SlotView.Show boundary. The compact presentation normally suppresses it;
+# it exists only so failure to install the compact owner does not strand slot16.
 reflow_path = ROOT / "HeadBandRenderSettle.cs"
 if not reflow_path.exists() or reflow_path.name in removed:
-    violations.append("HeadBandRenderSettle.cs: accepted stabilization geometry owner is missing")
+    violations.append("HeadBandRenderSettle.cs: bounded synchronous fallback owner is missing")
 else:
     reflow_text = reflow_path.read_text(encoding="utf-8-sig")
     for token in (
         "const float HeadBandCompactHeight = 44f;",
-        "const float HeadBandGap = 4f;",
-        "const float StructuralOffset = HeadBandCompactHeight + HeadBandGap;",
-        "States.TryGetValue(key, out state);",
-        "Component stateEquipmentTab = state == null ? null : state.EquipmentTab.Target as Component;",
-        "!ReferenceEquals(stateEquipmentTab, equipmentTab)",
-        "rect.anchoredPosition = new Vector2(original.x, original.y - StructuralOffset);",
-        "headBandRect.anchoredPosition = originalHeadwear;",
-        "HEADBAND FIRST-RENDER PROOF",
-        "panelLayoutMutation=False",
-        "synchronous=True",
+        "const float Gap = 4f;",
+        "TryApplyFlowPlacement(headwearView);",
+        "RectTransform headBand = RectFor(slotViews, DedicatedSlotPresentationRuntime.HeadBandSlotKey);",
+        "AlignTopLeft(headBand, BottomLeft(lowestSpecialSlot) + Vector3.down * Gap);",
+        "AlignTopLeft(armBand, TopRight(belt) + Vector3.right * Gap);",
+        "fixed page offsets=False",
     ):
         if token not in reflow_text:
             violations.append(
-                "HeadBandRenderSettle.cs: accepted stabilization geometry/lifecycle contract changed "
+                "HeadBandRenderSettle.cs: accepted bounded fallback contract changed "
                 f"({token})")
-    if "state.EquipmentTab.Target == null" in reflow_text:
-        violations.append("HeadBandRenderSettle.cs: raw WeakReference object-null check can reuse stale Unity state")
     for token in (
         'GetProperty("preferredHeight"',
         'FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement")',
@@ -185,11 +177,10 @@ else:
     ):
         if token in reflow_text:
             violations.append(
-                "HeadBandRenderSettle.cs: frozen geometry introduced host-panel/deferred/slot-map mutation "
+                "HeadBandRenderSettle.cs: synchronous fallback introduced host-panel/deferred/slot-map mutation "
                 f"({token})")
 
-# The accepted reflow is triggered only from dedicated-slot localization on the same
-# proven Headwear SlotView.Show event. No second production caller may appear.
+# No second production caller may activate the fallback.
 reflow_callers = []
 for source in sorted(ROOT.glob("*.cs")):
     if source.name in removed or source.name == "HeadBandRenderSettle.cs":
@@ -213,6 +204,36 @@ if localization_path.exists() and localization_path.name not in removed:
         if token in localization_text:
             violations.append(
                 "DedicatedSlotLocalizationPatches.cs: localization/settle path introduced manual/deferred host refresh "
+                f"({token})")
+
+# The accepted right-side ContainersPanel owner performs the first placement in
+# the same Show/mutation call. Unity may settle native geometry for two frames only;
+# there is no Update loop, open-ended retry, scene scan, or fixed page anchor.
+embedded_path = ROOT / "EmbeddedAccessoryGridPatches.cs"
+if not embedded_path.exists() or embedded_path.name in removed:
+    violations.append("EmbeddedAccessoryGridPatches.cs: accepted responsive accessory owner is missing")
+else:
+    embedded_text = embedded_path.read_text(encoding="utf-8-sig")
+    for token in (
+        "PlaceOnce(content, specialRect, belt, headBand, armBand);",
+        "coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, belt, headBand, armBand));",
+        "for (int settle = 0; settle < 2; settle++)",
+        "yield return new WaitForEndOfFrame();",
+        "if (panel != null) AfterShow(panel);",
+        "fixed page offsets=False",
+    ):
+        if token not in embedded_text:
+            violations.append(
+                "EmbeddedAccessoryGridPatches.cs: accepted immediate-plus-two-frame layout contract changed "
+                f"({token})")
+    immediate_at = embedded_text.find("PlaceOnce(content, specialRect, belt, headBand, armBand);")
+    deferred_at = embedded_text.find("coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, belt, headBand, armBand));")
+    if immediate_at < 0 or deferred_at < 0 or immediate_at >= deferred_at:
+        violations.append("EmbeddedAccessoryGridPatches.cs: first placement is no longer synchronous before bounded correction")
+    for token in ("while (true)", "for (;;)", "InvokeRepeating(", "void Update(", "FindObjectsOfType", "Resources.FindObjectsOfTypeAll"):
+        if token in embedded_text:
+            violations.append(
+                "EmbeddedAccessoryGridPatches.cs: responsive layout introduced unbounded/global work "
                 f"({token})")
 
 first_open_path = ROOT / "FirstOpenHeadBandLayoutPatches.cs"

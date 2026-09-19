@@ -11,10 +11,9 @@ using SPTarkov.Server.Core.Services.Modding.Custom;
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Registers a dedicated Dogtag-slot container without replacing the vanilla
-/// player dogtag contract. The container is cloned from EFT's own Dogtag Case,
-/// and its single internal grid copies the source case's exact filter groups so
-/// B&A&HB never broadens what can be stored inside it.
+/// Registers the persistent Dogtag Case used by the Utility HeadBand without
+/// changing the vanilla player-dogtag slot. Its single internal grid copies the
+/// source case's exact filter groups so B&A&HB never broadens its contents.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Preload + 3)]
 public sealed class DogtagCaseItem(

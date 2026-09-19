@@ -25,6 +25,10 @@ namespace SPTBeltArmbandInventory
                 string slotId = ReflectionTools.ReadMember(slot, "ID")?.ToString();
                 if (string.Equals(slotId, DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId, StringComparison.Ordinal))
                 {
+                    // Synchronous fallback owner. The normal compact presentation
+                    // suppresses it, but if that owner cannot install, the same
+                    // proven Headwear.Show boundary still performs one bounded pass.
+                    HeadBandRenderSettle.OnHeadwearShown(slotView as Component);
                     russianUi = DedicatedSlotPresentationPolicy.ResolveRussian(
                         russianUi,
                         ReadHeader(slotView),

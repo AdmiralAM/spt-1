@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SPTBeltArmbandInventory;
 using SPTBeltArmbandInventory.Tests;
@@ -32,6 +33,35 @@ internal static class Program
         Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e758808bacbb9d5abc4"), "TGC Ammo Pouch is explicitly admitted to supported secure containers");
         Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e7526ba61dbb88be7ff"), "TGC First Aid container is explicitly admitted to supported secure containers");
         Assert(!TgcCompatibilityPolicy.IsExplicitSecureContainerPouch(TgcCompatibilityPolicy.ToolBoxTemplateId), "TGC Tool Box remains excluded from secure containers");
+        Assert(TgcCompatibilityPolicy.IntegrationSourcePr == 362
+            && TgcCompatibilityPolicy.IntegrationContractHead == "bd1500b86c356f5e97fade75cf0c1df974ae9621",
+            "B&A TGC ownership contract is pinned to PR #362 exact reviewed head");
+        var absentArmBand = new HashSet<string>();
+        var absentBelt = new HashSet<string>();
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(absentArmBand, absentBelt, Array.Empty<string>(), out int absentChanges)
+            && absentChanges == 0 && absentArmBand.Count == 0 && absentBelt.Count == 0,
+            "missing TGC is a fail-closed no-op");
+        var stockArmBand = new HashSet<string>(TgcCompatibilityPolicy.BeltTemplateIds);
+        var ownedBelt = new HashSet<string>();
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(stockArmBand, ownedBelt, TgcCompatibilityPolicy.BeltTemplateIds, out int firstBeltChanges)
+            && firstBeltChanges == 10 && stockArmBand.Count == 0 && ownedBelt.SetEquals(TgcCompatibilityPolicy.BeltTemplateIds),
+            "stock TGC ArmBand mutations are transferred to exact B&A slot15 ownership");
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(stockArmBand, ownedBelt, TgcCompatibilityPolicy.BeltTemplateIds, out int secondBeltChanges)
+            && secondBeltChanges == 0,
+            "TGC Belt filter ownership is idempotent");
+        var secureFilter = new HashSet<string>(TgcCompatibilityPolicy.SecureContainerPouchAllowlist) { TgcCompatibilityPolicy.ToolBoxTemplateId };
+        string[] allTgcContainers = TgcCompatibilityPolicy.SecureContainerPouchAllowlist.Concat(new[] { TgcCompatibilityPolicy.ToolBoxTemplateId }).ToArray();
+        Assert(TgcCompatibilityPolicy.TryNormalizeSecureContainerFilter(secureFilter, allTgcContainers, true, out int firstSecureChanges),
+            "complete stock TGC secure family is accepted");
+        Assert(firstSecureChanges > 0,
+            "stock TGC secure normalization reports its owned replacement mutations");
+        Assert(secureFilter.SetEquals(TgcCompatibilityPolicy.SecureContainerPouchAllowlist),
+            $"stock TGC secure normalization leaves exact two-item Gamma allowlist (actual={string.Join(',', secureFilter)})");
+        Assert(TgcCompatibilityPolicy.TryNormalizeSecureContainerFilter(secureFilter, allTgcContainers, true, out int secondSecureChanges)
+            && secondSecureChanges == 0 && secureFilter.SetEquals(TgcCompatibilityPolicy.SecureContainerPouchAllowlist),
+            "TGC secure filter normalization is content-idempotent");
+        Assert(!TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(new HashSet<string>(), new HashSet<string>(), new[] { TgcCompatibilityPolicy.BeltTemplateIds.First() }, out _),
+            "partial TGC Belt publication fails closed before mutation");
         foreach (string tgcBelt in TgcCompatibilityPolicy.BeltTemplateIds)
         {
             Assert(WearableItemDescriptorRegistry.HasCapability(tgcBelt, AccessoryCapability.FastAccess), "TGC Belt receives exact slot15 fast access");

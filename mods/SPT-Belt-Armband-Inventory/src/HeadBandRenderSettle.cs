@@ -16,7 +16,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void OnHeadwearShown(Component headwearView)
         {
-            if (Suppressed || headwearView == null) return;
+            if (Suppressed || headwearView == null || headwearView.transform == null) return;
             TryApplyFlowPlacement(headwearView);
         }
 

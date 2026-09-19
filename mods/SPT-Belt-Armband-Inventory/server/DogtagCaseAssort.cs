@@ -9,9 +9,8 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Publishes the Dogtag Case only after both its exact template and the vanilla
-/// Dogtag equipment host contract are live. This keeps the product obtainable
-/// without weakening the ordinary personal-dogtag slot semantics.
+/// Withdraws the historical cheap Dogtag Case offer while retaining its exact
+/// persistent template for existing profiles and the Utility HeadBand grid.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 2)]
 public sealed class DogtagCaseAssort(

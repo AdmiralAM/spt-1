@@ -108,11 +108,13 @@ public sealed class SecureContainerCompatibility(
         int secureRemovals = 0;
         foreach (TemplateItem host in templateTable.Items.Values.Where(IsSecureContainerHost))
         {
+            bool supportedGamma = GammaFamily.Contains(host.Id);
             foreach (GridFilter filter in host.Properties?.Grids?.SelectMany(grid => grid.Properties?.Filters ?? []) ?? [])
             {
                 if (filter.Filter == null) continue;
-                foreach (MongoId id in TgcSecurePouches)
-                    if (filter.Filter.Remove(id)) secureRemovals++;
+                if (!supportedGamma)
+                    foreach (MongoId id in TgcSecurePouches)
+                        if (filter.Filter.Remove(id)) secureRemovals++;
                 if (filter.Filter.Remove(TgcToolBox)) secureRemovals++;
             }
         }
