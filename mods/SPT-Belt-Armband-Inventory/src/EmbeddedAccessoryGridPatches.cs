@@ -7,7 +7,7 @@ namespace SPTBeltArmbandInventory
 {
     internal static class EmbeddedAccessoryGridRuntime
     {
-        const float HorizontalGap = 4f;
+        const float HorizontalGap = 6f;
         const float VerticalGap = 4f;
         const float HeadBandRightOffset = 4f;
         const float HeadBandDownOffset = 8f;
