@@ -242,31 +242,31 @@
       "cashReductionRub": 24000
     },
     {
-      "questId": "59ca4829e098dfafa03888d2",
+      "questId": "738588764e9531bdb8ccfc5f",
       "tpl": "669c10fa06c00c483c58537a",
       "name": "Малый денежный ящик",
-      "cashReductionRub": 5000
+      "cashReductionRub": 1800
     },
     {
-      "questId": "5f62a924076e4b7c2320f2e8",
+      "questId": "3ccca027eeebaf0a4dcfbb6f",
       "tpl": "440de5d056825485a0cf3a19",
       "name": "Малый подсумок для магазинов",
       "cashReductionRub": 7000
     },
     {
-      "questId": "ad9233f54a7132d905d6f29d",
+      "questId": "eb93814dd020bdc131d526aa",
       "tpl": "ae9e418fd5d4c4eec4a0e6ea",
       "name": "Малый подсумок для боеприпасов",
-      "cashReductionRub": 7000
+      "cashReductionRub": 1800
     },
     {
-      "questId": "4ada822d634041a721b346d5",
+      "questId": "551415adc72a84fa9e6bb571",
       "tpl": "681d1395a5c2308fdcbcda92",
       "name": "Кейс для обвесов",
-      "cashReductionRub": 10000
+      "cashReductionRub": 9000
     },
     {
-      "questId": "2568ee0bfe2ee12f24d78f45",
+      "questId": "5a9a0bb3ffddd538e6fe3842",
       "tpl": "440de5d056825485a0cf3a19",
       "name": "Малый подсумок для магазинов",
       "cashReductionRub": 11000

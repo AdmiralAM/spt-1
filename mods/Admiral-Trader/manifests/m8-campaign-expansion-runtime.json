@@ -6,8 +6,8 @@
   "weaponAssignments": 19,
   "totalWeaponQuestCount": 40,
   "weaponLaneQuestCounts": {
-    "A": 22,
-    "B": 18
+    "A": 20,
+    "B": 20
   },
   "weaponGraphRoots": 2,
   "groundZeroOperations": 4,

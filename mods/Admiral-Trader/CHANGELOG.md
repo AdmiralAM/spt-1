@@ -26,6 +26,8 @@
 - Move the latter half of the opening story from Ground Zero into Customs, Woods, Factory and Interchange cadence while preserving all quest IDs and prerequisites.
 - Add eleven bounded native tactical rewards: two pistols, five optics and four weapon-support packages, each replacing part of the original rouble payout.
 - Replace the old repetitive distance ladder with a three-step 100 m / 200 m / 300 m marksman chain and weapon-specific pools.
+- Rebalance all 40 Arsenal assignments into two simultaneous 20-step lines with contrasting weapon roles, complete 143-model native family coverage, optional WTT analogues, persistent quest IDs and progressively rarer late-game platforms.
+- Give every Arsenal assignment a useful item reward while trading away part of its rouble payout: 30 staged field-support rewards and ten complete configured weapons, one at every fourth step in each line.
 
 ## 0.2.0 — stable campaign baseline
 

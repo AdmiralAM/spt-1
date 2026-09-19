@@ -14,21 +14,43 @@ LOCATION_IDS = {
     "Streets": ["TarkovStreets"], "The Lab": ["laboratory"],
 }
 
+POOL_NAMES_RU = {
+    "service-pistols": "Служебные пистолеты",
+    "compact-ak": "Укороченные автоматы Калашникова",
+    "manual-shotguns": "Помповые и магазинные дробовики",
+    "early-smg": "Ранние пистолеты-пулемёты",
+    "forty-five-pistols": "Пистолеты .45 ACP",
+    "service-smg": "Служебные пистолеты-пулемёты",
+    "automatic-pistols": "Автоматические пистолеты",
+    "compact-pdw": "Компактное оружие самообороны",
+    "autoloading-shotguns": "Самозарядные дробовики",
+    "modern-smg": "Современные пистолеты-пулемёты",
+    "starter-service-rifles": "Стартовые служебные автоматы",
+    "civilian-ak": "Гражданские карабины Калашникова",
+    "compact-rifles": "Компактные автоматы",
+    "sks-hunter": "Самозарядные карабины",
+    "classic-ak-545": "Классические автоматы 5,45",
+    "classic-ak-762": "Классические автоматы 7,62",
+    "nato-service-rifles": "Служебные винтовки НАТО",
+    "nato-alternatives": "Альтернативные винтовки НАТО",
+    "nine-by-thirty-nine": "Специальные системы 9×39",
+}
+
 LEGACY_WEAPON_LANES = {
     "A": [
-        (5, "59ca4829e098dfafa03888d2"), (8, "b016df9d2bea4269cc59d531"),
-        (12, "8cba3e2ec639a4aa2c26c4da"), (12, "5f62a924076e4b7c2320f2e8"),
-        (13, "88118e994f26cab3bee1521d"), (18, "8d8d81032315f4fdc5a06798"),
-        (18, "2568ee0bfe2ee12f24d78f45"), (20, "33810921ad5c893b866b3951"),
-        (25, "7564e60e4c1c2f1b67a594a4"), (25, "cb8a202d7107f39d860ccb38"),
-        (30, "73febe7f3f61ca0913410ffc"), (35, "f1368cb3b69c3a4917c4f206"),
+        (23, "b016df9d2bea4269cc59d531"), (25, "43d9544a09d068476a1a18df"),
+        (27, "8d8d81032315f4fdc5a06798"), (29, "8cba3e2ec639a4aa2c26c4da"),
+        (31, "59ca4829e098dfafa03888d2"), (33, "cb8a202d7107f39d860ccb38"),
+        (35, "73febe7f3f61ca0913410ffc"), (37, "f1368cb3b69c3a4917c4f206"),
+        (40, "88118e994f26cab3bee1521d"), (40, "5f62a924076e4b7c2320f2e8"),
     ],
     "B": [
-        (8, "ad9233f54a7132d905d6f29d"), (12, "ffb63228a333c8b0755741ea"),
-        (16, "43d9544a09d068476a1a18df"), (16, "4ada822d634041a721b346d5"),
-        (16, "570d250679328757614dcbcb"), (20, "f6e51dc4e50e47ee9af50a4d"),
-        (20, "a0d05e28971f1ba57639b97d"), (25, "153839f368b80b6fbc36d29e"),
-        (30, "cd2641c70bede98dac3945d0"),
+        (21, "7564e60e4c1c2f1b67a594a4"), (23, "2568ee0bfe2ee12f24d78f45"),
+        (25, "33810921ad5c893b866b3951"), (27, "a0d05e28971f1ba57639b97d"),
+        (29, "153839f368b80b6fbc36d29e"), (31, "cd2641c70bede98dac3945d0"),
+        (33, "f6e51dc4e50e47ee9af50a4d"), (35, "4ada822d634041a721b346d5"),
+        (37, "570d250679328757614dcbcb"), (40, "ffb63228a333c8b0755741ea"),
+        (40, "ad9233f54a7132d905d6f29d"),
     ],
 }
 
@@ -106,7 +128,11 @@ def main():
     previous={"A":None,"B":None}
     expanded_by_lane={"A":[],"B":[]}
     for lane,row in [("A",x) for x in plan["lanes"]["A-close-support"][:10]]+[("B",x) for x in plan["lanes"]["B-rifle-precision"][:9]]:
-        order,pool,band,locations,semantics=row; level=int(band.split('-')[0]); native_weapons=plan["pools"][pool]; optional_weapons=optional_by_pool.get(pool,[]); weapons=native_weapons+[x["tpl"] for x in optional_weapons]; runtime_locations=[x for label in locations for x in LOCATION_IDS[label]]; slug=f"rotation-{lane.lower()}-{order:02d}-{pool}"; name=f"Arsenal Rotation {lane}-{order}: {pool.replace('-',' ').title()}"
+        order,pool,band,locations,semantics=row; level=int(band.split('-')[0]); native_weapons=plan["pools"][pool]; optional_weapons=optional_by_pool.get(pool,[]); weapons=native_weapons+[x["tpl"] for x in optional_weapons]; runtime_locations=[x for label in locations for x in LOCATION_IDS[label]]
+        # B-9 existed before the family correction. Keep its authored slug so
+        # the persistent quest ID and player progress remain unchanged.
+        slug = "rotation-b-09-battle-rifles" if lane == "B" and order == 9 else f"rotation-{lane.lower()}-{order:02d}-{pool}"
+        name=f"Arsenal Rotation {lane}-{order}: {pool.replace('-',' ').title()}"
         target = "Savage" if pool == "sks-hunter" else "Any"
         minimum_distance = 40 if pool == "sks-hunter" else 0
         required_count = 8 if pool == "sks-hunter" else min(6+order,15)
@@ -126,7 +152,8 @@ def main():
             q["QuestName"] = name
             en_detail += "\nTask: eliminate 8 Scavs from at least 40 metres on Customs, Woods, or Shoreline; progress carries across raids."
             ru_detail += "\nЗадача: устранить 8 Диких с дистанции не менее 40 метров на Таможне, Лесу или Берегу; прогресс сохраняется между рейдами."
-        en.update(locale(qid,name,en_detail,level,objective_en));ru.update(locale(qid,"Ротация «Арсенал» B-4: Самозарядные карабины",ru_detail,level,objective_ru,True))
+        ru_name = f"Ротация «Арсенал» {lane}-{order}: {POOL_NAMES_RU[pool]}"
+        en.update(locale(qid,name,en_detail,level,objective_en));ru.update(locale(qid,ru_name,ru_detail,level,objective_ru,True))
     # Ground Zero opening chain.
     prev=None
     gz=[("ground-zero-arrival","Operation: First Contact",1,2,"Savage"),("ground-zero-corridor","Operation: Open Corridor",3,4,"Savage"),("ground-zero-pressure","Operation: Contested Ground",5,2,"AnyPmc"),("ground-zero-exit","Operation: Exit Discipline",7,5,"Any")]

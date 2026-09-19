@@ -566,8 +566,8 @@
       ]
     }
   },
-  "59ca4829e098dfafa03888d2": {
-    "cashReductionRub": 5000,
+  "738588764e9531bdb8ccfc5f": {
+    "cashReductionRub": 1800,
     "name": "Малый денежный ящик",
     "reward": {
       "value": 1,
@@ -587,7 +587,7 @@
       ]
     }
   },
-  "5f62a924076e4b7c2320f2e8": {
+  "3ccca027eeebaf0a4dcfbb6f": {
     "cashReductionRub": 7000,
     "name": "Малый подсумок для магазинов",
     "reward": {
@@ -608,8 +608,8 @@
       ]
     }
   },
-  "ad9233f54a7132d905d6f29d": {
-    "cashReductionRub": 7000,
+  "eb93814dd020bdc131d526aa": {
+    "cashReductionRub": 1800,
     "name": "Малый подсумок для боеприпасов",
     "reward": {
       "value": 1,
@@ -629,8 +629,8 @@
       ]
     }
   },
-  "4ada822d634041a721b346d5": {
-    "cashReductionRub": 10000,
+  "551415adc72a84fa9e6bb571": {
+    "cashReductionRub": 9000,
     "name": "Кейс для обвесов",
     "reward": {
       "value": 1,
@@ -650,7 +650,7 @@
       ]
     }
   },
-  "2568ee0bfe2ee12f24d78f45": {
+  "5a9a0bb3ffddd538e6fe3842": {
     "cashReductionRub": 11000,
     "name": "Малый подсумок для магазинов",
     "reward": {

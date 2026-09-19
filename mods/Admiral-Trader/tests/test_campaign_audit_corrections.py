@@ -23,13 +23,23 @@ class CampaignAuditCorrectionTests(unittest.TestCase):
             total += len(flattened)
         self.assertEqual(total, 49)
 
-    def test_each_runtime_arsenal_quest_uses_only_its_authored_stage_pool(self):
-        pools = load("manifests/weapon-family-runtime-pools.json")["stagePools"]
-        plan = load("manifests/weapon-ammo-runtime-plan.json")["quests"]
-        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("20-*.json")}
-        for row in plan:
-            kill = quests[row["id"]]["conditions"]["AvailableForFinish"][0]["counter"]["conditions"][0]
-            self.assertEqual(kill["weapon"], pools[row["family"]][row["stage"]])
+    def test_every_runtime_arsenal_quest_uses_its_complete_authored_family(self):
+        plan = load("manifests/weapon-rotation-expansion-plan.json")
+        runtime = load("manifests/weapon-rotation-runtime.json")
+        optional = load("manifests/optional-weapon-runtime.json")
+        optional_by_pool = {}
+        for row in optional["acceptedWeapons"]:
+            optional_by_pool.setdefault(row["pool"], []).append(row["tpl"])
+        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("*.json")}
+        for row in runtime["assignments"]:
+            kill = next(
+                condition
+                for finish in quests[row["id"]]["conditions"]["AvailableForFinish"]
+                for condition in finish.get("counter", {}).get("conditions", [])
+                if condition.get("conditionType") == "Kills"
+            )
+            expected = plan["pools"][row["pool"]] + optional_by_pool.get(row["pool"], [])
+            self.assertEqual(kill["weapon"], expected)
 
     def test_special_munitions_has_one_m576_sample_and_finite_unlock(self):
         qid, offer, tpl = "f1368cb3b69c3a4917c4f206", "3500e7b76f097a98ced5d61b", "5ede475339ee016e8c534742"
