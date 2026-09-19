@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Compatibility Suite",
+  "components": [
+    {
+      "id": "foldables-extended",
+      "sourcePath": "mods/SPT-Foldables-Extended",
+      "target": "com.ozen.foldables",
+      "disposition": "suite-component",
+      "status": "implemented"
+    },
+    {
+      "id": "stackable-armor-plates",
+      "sourcePath": "mods/SPT-Stackable-Armor-Plates",
+      "target": "com.lacyway.mc",
+      "disposition": "suite-component",
+      "status": "implemented"
+    },
+    {
+      "id": "belt-use-items-anywhere",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
+      "target": "com.cj.useFromAnywhere",
+      "disposition": "migrate-to-suite",
+      "status": "embedded"
+    },
+    {
+      "id": "belt-ui-fixes",
+      "sourcePath": "external-worktree:bahb-rc4/integrated-repair/Runtime/NativeBeltActions.cs",
+      "target": "com.tyfon.uifixes",
+      "disposition": "migrate-to-suite",
+      "status": "installed-private-runtime-not-in-live-pr-source"
+    },
+    {
+      "id": "belt-tgc",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory",
+      "target": "com.emilanderss0n.tgc",
+      "disposition": "migrate-to-suite",
+      "status": "embedded"
+    },
+    {
+      "id": "belt-packnstrap",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory",
+      "target": "com.wtt.packnstrap",
+      "disposition": "migrate-to-suite",
+      "status": "embedded-private-import"
+    },
+    {
+      "id": "use-items-anywhere-core-fixes",
+      "sourcePath": "unlocated-runtime-patch",
+      "target": "com.cj.useFromAnywhere",
+      "disposition": "suite-component",
+      "status": "audit-required"
+    },
+    {
+      "id": "item-intelligence-sense",
+      "sourcePath": "mods/SPT-Item-Intelligence/src/AmandsSenseIntegration.cs",
+      "target": "xyz.drakia.Sense",
+      "disposition": "retain-owner",
+      "owner": "Item Intelligence"
+    },
+    {
+      "id": "trader-external-consolidation",
+      "sourcePath": "mods/Admiral-Trader",
+      "target": "Painter/Artem/TGC",
+      "disposition": "retain-owner",
+      "owner": "Admiral Trader"
+    }
+  ]
+}
