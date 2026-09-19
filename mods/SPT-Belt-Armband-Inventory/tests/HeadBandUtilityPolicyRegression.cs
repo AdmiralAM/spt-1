@@ -16,10 +16,7 @@ internal static class HeadBandUtilityPolicyRegression
             HeadBandUtilityPolicy.Rouble,
             HeadBandUtilityPolicy.Dollar,
             HeadBandUtilityPolicy.Euro,
-            HeadBandUtilityPolicy.ApolloSoyuz,
-            HeadBandUtilityPolicy.Malboro,
-            HeadBandUtilityPolicy.Wilston,
-            HeadBandUtilityPolicy.Strike,
+            HeadBandUtilityPolicy.DogtagCase,
             HeadBandUtilityPolicy.VanillaWallet,
             HeadBandUtilityPolicy.WzWallet
         };
@@ -34,6 +31,10 @@ internal static class HeadBandUtilityPolicyRegression
         if (!HeadBandUtilityPolicy.IsAccepted("5783c43d2459774bbe137486")
             || !HeadBandUtilityPolicy.IsAccepted("60b0f6c058e0b0481a09ad11"))
             throw new InvalidOperationException("HeadBand must accept both Simple Wallet and WZ Wallet.");
+        if (!HeadBandUtilityPolicy.IsDogtagCase(RuntimeIdentity.DogtagCaseItemId))
+            throw new InvalidOperationException("HeadBand second grid must accept the persistent Dogtag Case.");
+        if (HeadBandUtilityPolicy.IsAccepted(HeadBandUtilityPolicy.Malboro))
+            throw new InvalidOperationException("Cigarettes must no longer be admitted by the HeadBand product policy.");
         if (HeadBandUtilityPolicy.IsAccepted("5734758f24597738025ee253"))
             throw new InvalidOperationException("Golden neck chain must never be accepted as Apollo cigarettes.");
         if (HeadBandUtilityPolicy.IsAccepted("544fb3f34bdc2d03748b456a"))

@@ -34,7 +34,6 @@ internal static class Program
         ReloadScopeThreadIsolationRegression.Run();
         ReloadScopeEpochRegression.Run();
         ReloadSlotArrayContentPinRegression.Run();
-        DogtagCaseHostContractRegression.RunConcurrentCommittedVerificationRegression();
         Assert(BeltSlotPlan.IsExpectedContainerPanelOrder(Vanilla), "recognizes SPT 4.1 container order");
         Assert(!BeltSlotPlan.IsExpectedContainerPanelOrder(new[] { BeltSlotPlan.Pockets }), "rejects unrelated enum arrays");
 

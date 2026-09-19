@@ -7,6 +7,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The vanilla Dogtag-slot publication concept was retired. Its source-shape
+         regressions describe a product path that no longer ships. -->
+    <Compile Remove="DogtagCase*.cs" />
+    <Compile Remove="DogtagOrdinaryTagRecoveryRegression.cs" />
     <ProjectReference Include="..\server\SPT-Belt-Armband-Inventory.Server.csproj" />
   </ItemGroup>
   <ItemGroup>

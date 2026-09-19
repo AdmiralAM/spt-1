@@ -28,11 +28,27 @@ public sealed class DogtagCaseAssort(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // The HeadBand now hosts the Dogtag Case. Keep the template/profile ID,
+        // but withdraw the old cheap Ragman offer if an earlier build published it.
+        var traderForCleanup = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId);
+        var cleanupAssort = traderForCleanup?.Assort;
+        if (cleanupAssort?.Items != null)
+        {
+            var offerId = new MongoId(RuntimeIdentity.DogtagCaseAssortId);
+            cleanupAssort.Items.RemoveAll(x => x.Id == offerId);
+            cleanupAssort.BarterScheme?.Remove(offerId);
+            cleanupAssort.LoyalLevelItems?.Remove(offerId);
+        }
+        logger.Success("B&A&HB Dogtag Case trader offer is withdrawn; the persistent case remains available for existing profiles and the HeadBand slot.");
+        return Task.CompletedTask;
+
+#pragma warning disable CS0162
         if (!DogtagCaseAvailability.IsAvailable)
         {
             logger.Warning($"B&A&HB Dogtag Case offer skipped: {DogtagCaseAvailability.UnavailableReason}");
             return Task.CompletedTask;
         }
+#pragma warning restore CS0162
 
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         RequirePublicationBoundary(templateTable, templateId);

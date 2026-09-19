@@ -22,11 +22,18 @@ public sealed class DogtagCaseHostExclusionGuard(TemplateTable templateTable) : 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!DogtagCaseAvailability.IsAvailable)
-            return Task.CompletedTask;
-        DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
+        RemoveOwnedDogtagSlotExposure(templateTable);
         cancellationToken.ThrowIfCancellationRequested();
         return Task.CompletedTask;
+    }
+
+    private static void RemoveOwnedDogtagSlotExposure(TemplateTable templates)
+    {
+        if (!templates.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var inventory)) return;
+        var slot = inventory.Properties?.Slots?.SingleOrDefault(x => string.Equals(x.Name, "Dogtag", StringComparison.Ordinal));
+        var groups = slot?.Properties?.Filters?.ToArray();
+        if (groups?.Length != 1 || groups[0].Filter == null) return;
+        groups[0].Filter.Remove(new MongoId(RuntimeIdentity.DogtagCaseItemId));
     }
 }
 
@@ -42,9 +49,6 @@ public sealed class DogtagCaseTraderHostExclusionGuard(TemplateTable templateTab
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!DogtagCaseAvailability.IsAvailable)
-            return Task.CompletedTask;
-        DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
         cancellationToken.ThrowIfCancellationRequested();
         return Task.CompletedTask;
     }
