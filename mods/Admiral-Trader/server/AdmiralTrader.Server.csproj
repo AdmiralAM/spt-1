@@ -47,6 +47,8 @@
     <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\story-campaign-runtime.json" Link="manifests\story-campaign-runtime.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\external-trader-consolidation.json" Link="manifests\external-trader-consolidation.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\external-content-identities.json" Link="manifests\external-content-identities.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\painter-special-delivery-pool.json" Link="manifests\painter-special-delivery-pool.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\dialogue.json" Link="db\dialogue.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="Always" />

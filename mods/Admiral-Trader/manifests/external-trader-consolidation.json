@@ -14,7 +14,9 @@
       "asset": "Painter_3.0.0.7z",
       "sha256": "4f4735329821ce71aa0720e8fe90a4f8c76d572f33f6154f36e5cdc111d2d3be",
       "quests": 12,
-      "rootOffers": 7
+      "rootOffers": 7,
+      "questUnlocks": 3,
+      "customItemTemplates": 5
     },
     {
       "name": "Tactical Gear Component",
@@ -34,14 +36,15 @@
       "validatedRuntimeProvider": "Admiral-Artyom-Revival 3.0.0",
       "quests": 23,
       "rootOffers": 281,
-      "questUnlocks": 41
+      "questUnlocks": 41,
+      "suits": 64
     }
   ],
   "combinedExternalRuntime": {
     "quests": 35,
     "rootOffers": 402,
     "assortItemRows": 946,
-    "questUnlocks": 41,
+    "questUnlocks": 44,
     "suits": 68
   },
   "profileMigration": {
@@ -54,5 +57,12 @@
     "insurance": "re-own-to-admiral",
     "repeatableQuests": "re-own-to-admiral",
     "removeLegacyTraderRecords": "only-after-every-loaded-profile-saves-successfully"
+  },
+  "identityInventory": "external-content-identities.json",
+  "integrationAuthority": {
+    "tgcPr": 362,
+    "tgcHead": "bd1500b86c356f5e97fade75cf0c1df974ae9621",
+    "beltPr": 360,
+    "beltHead": "c48238023e0d1d0dc8fabcabafb79db66154b90b"
   }
 }

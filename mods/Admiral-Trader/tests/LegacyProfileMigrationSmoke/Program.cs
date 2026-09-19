@@ -3,6 +3,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Profile;
+using SPTarkov.Server.Core.Models.Enums;
 
 MongoId admiralId = new(RuntimeIdentity.TraderId);
 MongoId painterId = new(LegacyTraderConsolidation.PainterTraderId);
@@ -17,6 +18,25 @@ SptProfile profile = new()
     {
         PmcData = new PmcData
         {
+            Quests =
+            [
+                new QuestStatus
+                {
+                    QId = new MongoId("668aacd1dee3de3ce276fdef"),
+                    Status = QuestStatusEnum.Started,
+                    StartTime = 123,
+                    StatusTimers = [],
+                    CompletedConditions = ["672e31c3262af62a8eb157cd"]
+                },
+                new QuestStatus
+                {
+                    QId = new MongoId("673f06ffd971eef67d8cc504"),
+                    Status = QuestStatusEnum.Success,
+                    StartTime = 50,
+                    StatusTimers = [],
+                    CompletedConditions = []
+                }
+            ],
             TradersInfo = new Dictionary<MongoId, TraderInfo>
             {
                 [admiralId] = new() { Standing = 0.2, SalesSum = 12000, LoyaltyLevel = 2, Unlocked = true },
@@ -74,5 +94,10 @@ if (profile.DialogueRecords!.ContainsKey(painterId)
     || dialogue.Messages!.Single().UserId != admiralId
     || dialogue.Users!.Single().Id != admiralId)
     throw new Exception("legacy dialogue was not re-owned by Admiral");
+if (profile.CharacterData.PmcData.Quests!.Count != 2
+    || profile.CharacterData.PmcData.Quests[0].Status != QuestStatusEnum.Started
+    || profile.CharacterData.PmcData.Quests[0].CompletedConditions!.Single() != "672e31c3262af62a8eb157cd"
+    || profile.CharacterData.PmcData.Quests[1].Status != QuestStatusEnum.Success)
+    throw new Exception("persistent external quest status or objective progress changed during migration");
 
 Console.WriteLine("Legacy profile migration PASS: relations, standing, sales, purchases and dialogue preserved; second pass is idempotent.");

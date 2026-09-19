@@ -154,6 +154,12 @@ public sealed class AdmiralTraderRegistration(
                 },
                 Dialogue = []
             });
+            if (!traderConfig.UpdateTime.Any(entry => entry.TraderId == legacyId))
+                traderConfig.UpdateTime.Add(new UpdateTime
+                {
+                    TraderId = legacyId,
+                    Seconds = new MinMax<int>(timeUtil.GetHoursAsSeconds(1), timeUtil.GetHoursAsSeconds(2))
+                });
         }
     }
 

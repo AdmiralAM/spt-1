@@ -9,6 +9,10 @@ MANIFEST = json.loads(
 CONSOLIDATION = (ROOT / "server" / "LegacyTraderConsolidation.cs").read_text(encoding="utf-8")
 REGISTRATION = (ROOT / "server" / "TraderRegistration.cs").read_text(encoding="utf-8")
 AUDIT = (ROOT / "docs" / "painter-artem-consolidation-audit.md").read_text(encoding="utf-8")
+IDENTITIES = json.loads((ROOT / "manifests" / "external-content-identities.json").read_text(encoding="utf-8"))
+PAINTER_POOL = json.loads((ROOT / "manifests" / "painter-special-delivery-pool.json").read_text(encoding="utf-8"))
+PAINTER_REGISTRATION = (ROOT / "server" / "PainterContentRegistration.cs").read_text(encoding="utf-8")
+IMPORT_TOOL = (ROOT / "tools" / "Import-PainterContent.ps1").read_text(encoding="utf-8")
 
 
 def test_persistent_ownership_and_measured_external_scope() -> None:
@@ -23,7 +27,7 @@ def test_persistent_ownership_and_measured_external_scope() -> None:
         "quests": 35,
         "rootOffers": 402,
         "assortItemRows": 946,
-        "questUnlocks": 41,
+        "questUnlocks": 44,
         "suits": 68,
     }
 
@@ -47,3 +51,40 @@ def test_scope_excludes_belt_container_compatibility_and_records_real_campaign_s
         assert forbidden not in lowered
     assert "207 quests without Icebreaker" in AUDIT
     assert "217 with the installed ten-quest Icebreaker chain" in AUDIT
+
+
+def test_every_external_identity_is_inventoried_without_collisions() -> None:
+    expected = {
+        "painter": {"questIds": 12, "offerIds": 7, "customItemIds": 5},
+        "tgc": {"itemTemplateIds": 117, "offerIds": 114, "suitIds": 4},
+        "artem": {"questIds": 23, "offerIds": 281, "questUnlockOfferIds": 41, "suitIds": 64},
+    }
+    for provider, fields in expected.items():
+        for field, count in fields.items():
+            values = IDENTITIES[provider][field]
+            assert len(values) == count
+            assert len(values) == len(set(values))
+            assert all(len(value) == 24 and set(value) <= set("0123456789abcdef") for value in values)
+    offer_sets = [set(IDENTITIES[name]["offerIds"]) for name in ("painter", "tgc", "artem")]
+    assert not (offer_sets[0] & offer_sets[1] or offer_sets[0] & offer_sets[2] or offer_sets[1] & offer_sets[2])
+    assert set(IDENTITIES["artem"]["questUnlockOfferIds"]) <= offer_sets[2]
+
+
+def test_exact_cross_pr_authority_and_content_only_painter_contract() -> None:
+    assert IDENTITIES["authority"]["tgcIntegrationHead"] == "bd1500b86c356f5e97fade75cf0c1df974ae9621"
+    assert IDENTITIES["authority"]["beltHead"] == "c48238023e0d1d0dc8fabcabafb79db66154b90b"
+    assert "Painter-4.0.dll must not be present" in IMPORT_TOOL
+    assert "PainterContentRegistration" in PAINTER_REGISTRATION
+    assert "CreateItemFromClone" in PAINTER_REGISTRATION
+    assert "ValidateExternalAssort" in CONSOLIDATION
+    assert "ValidateExternalQuestGraph" in CONSOLIDATION
+    assert "PruneUnavailableOfferTrees" in CONSOLIDATION
+
+
+def test_painter_special_delivery_retains_its_authored_loot_contract() -> None:
+    assert PAINTER_POOL["containerId"] == "668ff5bde41a0cce3b142464"
+    assert PAINTER_POOL["rewardCount"] == 20
+    assert PAINTER_POOL["foundInRaid"] is True
+    assert len(PAINTER_POOL["rewardTplPool"]) == 175
+    assert all(len(item_id) == 24 and set(item_id) <= set("0123456789abcdef") for item_id in PAINTER_POOL["rewardTplPool"])
+    assert all(weight in {1, 5, 10} for weight in PAINTER_POOL["rewardTplPool"].values())

@@ -53,6 +53,8 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/campaign-authored-100-review.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/story-campaign-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/external-trader-consolidation.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/external-content-identities.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/painter-special-delivery-pool.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
@@ -127,6 +129,8 @@ jobs:
               out / 'manifests/relationship-stock.json',
               out / 'manifests/story-campaign-runtime.json',
               out / 'manifests/external-trader-consolidation.json',
+              out / 'manifests/external-content-identities.json',
+              out / 'manifests/painter-special-delivery-pool.json',
               out / 'db/base.json',
               out / 'db/dialogue.json',
               out / 'db/assort.json',

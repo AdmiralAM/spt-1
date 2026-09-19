@@ -1,14 +1,18 @@
+using System.Reflection;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Utils.Json;
+using IOPath = System.IO.Path;
 
 namespace AdmiralTrader.Server;
 
@@ -25,6 +29,9 @@ public sealed class LegacyTraderConsolidation(
     TraderConfig traderConfig,
     RagfairConfig ragfairConfig,
     SaveServer saveServer,
+    ModHelper modHelper,
+    ImageRouter imageRouter,
+    LocaleTable localesTable,
     ISptLogger<LegacyTraderConsolidation> logger) : IOnLoad
 {
     public const string PainterTraderId = "668aaff35fd574b6dcc4a686";
@@ -39,11 +46,14 @@ public sealed class LegacyTraderConsolidation(
         if (!tradersTable.TryGetValue(AdmiralId, out Trader? admiral))
             throw new InvalidOperationException("Admiral must exist before legacy trader consolidation");
 
-        int offerRoots = 0;
-        int itemRows = 0;
-        int questUnlocks = 0;
-        int suits = 0;
-        int quests = 0;
+        string modPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
+        ExternalContentCounts direct = AttachContentOnlyProviders(modPath, admiral);
+
+        int offerRoots = direct.OfferRoots;
+        int itemRows = direct.ItemRows;
+        int questUnlocks = direct.QuestUnlocks;
+        int suits = direct.Suits;
+        int quests = direct.Quests;
         List<MongoId> presentLegacyIds = [];
 
         foreach (string legacyIdText in LegacyTraderIds)
@@ -59,6 +69,17 @@ public sealed class LegacyTraderConsolidation(
                 continue;
 
             presentLegacyIds.Add(legacyId);
+            int skippedOffers = PruneUnavailableOfferTrees(legacy.Assort);
+            if (LegacyQuestsReferenceMissingTemplates(legacyId))
+            {
+                RemoveLegacyQuests(legacyId);
+                legacyQuests = 0;
+                logger.Warning($"Admiral skipped the quest graph for legacy provider {legacyIdText}: a required item template is unavailable");
+            }
+            if (skippedOffers > 0)
+                logger.Warning($"Admiral omitted {skippedOffers} invalid offers from legacy provider {legacyIdText}; all valid content remains available");
+            ValidateExternalAssort(legacy.Assort!, legacyIdText);
+            ValidateExternalQuestGraph(legacyId);
             offerRoots += legacy.Assort!.Items.Count(item => item.ParentId?.ToString() == "hideout");
             itemRows += MergeAssort(admiral.Assort, legacy.Assort, legacyIdText);
             questUnlocks += MergeQuestAssort(admiral.QuestAssort, legacy.QuestAssort, legacyIdText);
@@ -79,7 +100,7 @@ public sealed class LegacyTraderConsolidation(
             return;
         }
 
-        foreach (MongoId legacyId in presentLegacyIds)
+        foreach (MongoId legacyId in LegacyTraderIds.Select(id => new MongoId(id)))
         {
             tradersTable.Remove(legacyId);
             traderConfig.UpdateTime.RemoveAll(update => update.TraderId == legacyId);
@@ -88,6 +109,209 @@ public sealed class LegacyTraderConsolidation(
         RemoveEmptyCompatibilityShells();
 
         logger.Success($"Admiral consolidated {presentLegacyIds.Count} legacy content providers: {offerRoots} offers/{itemRows} item rows, {quests} quests, {questUnlocks} quest unlocks and {suits} suits; legacy trader tabs removed");
+    }
+
+    private ExternalContentCounts AttachContentOnlyProviders(string modPath, Trader admiral)
+    {
+        ExternalContentCounts result = new();
+        DirectoryInfo? modsDirectory = Directory.GetParent(modPath.TrimEnd(IOPath.DirectorySeparatorChar, IOPath.AltDirectorySeparatorChar));
+        if (modsDirectory is null || !modsDirectory.Exists)
+            return result;
+
+        bool painterProviderLoaded = templateTable.Quests.Values.Any(quest => quest.TraderId.ToString() == PainterTraderId);
+        bool painterTraderHasStock = tradersTable.TryGetValue(new MongoId(PainterTraderId), out Trader? painterTrader)
+            && (painterTrader.Assort?.Items?.Count ?? 0) > 0;
+
+        DirectoryInfo? tgc = modsDirectory.EnumerateDirectories()
+            .FirstOrDefault(candidate => File.Exists(IOPath.Combine(candidate.FullName, "db", "CustomItems", "modTGC_items.json"))
+                && File.Exists(IOPath.Combine(candidate.FullName, "db", "traders", PainterTraderId, "assort.json")));
+        if (tgc is not null && !painterTraderHasStock)
+        {
+            TraderAssort assort = LoadExternal<TraderAssort>(modPath, IOPath.Combine(tgc.FullName, "db", "traders", PainterTraderId, "assort.json"));
+            List<Suit> externalSuits = LoadExternal<List<Suit>>(modPath, IOPath.Combine(tgc.FullName, "db", "traders", PainterTraderId, "suits.json"));
+            MongoId[] missing = assort.Items.Select(item => item.Template).Where(template => !templateTable.Items.ContainsKey(template)).Distinct().ToArray();
+            if (missing.Length == 0)
+            {
+                int roots = assort.Items.Count(item => item.ParentId?.ToString() == "hideout");
+                if (roots != 114 || assort.Items.Count != 236 || externalSuits.Count != 4)
+                    throw new InvalidDataException($"TGC 3.0.0 content shape drift: roots={roots}, rows={assort.Items.Count}, suits={externalSuits.Count}");
+                ValidateExternalAssort(assort, "TGC content-only provider");
+                result = result with
+                {
+                    OfferRoots = roots,
+                    ItemRows = MergeAssort(admiral.Assort, assort, "TGC content-only provider"),
+                    Suits = MergeSuits(admiral, externalSuits)
+                };
+            }
+            else
+                logger.Warning($"Admiral skipped TGC storefront: {missing.Length} TGC templates are unavailable; core Admiral remains active");
+        }
+
+        string packagedPainter = IOPath.Combine(modPath, "external", "painter");
+        DirectoryInfo? painter = Directory.Exists(packagedPainter) && FindPainterQuestFile(packagedPainter) is not null
+            ? new DirectoryInfo(packagedPainter)
+            : modsDirectory.EnumerateDirectories()
+            .FirstOrDefault(candidate => FindPainterQuestFile(candidate.FullName) is not null);
+        if (painter is not null && !painterProviderLoaded && !painterTraderHasStock)
+            result += AttachPainterContent(modPath, painter.FullName, admiral);
+        return result;
+    }
+
+    private ExternalContentCounts AttachPainterContent(string modPath, string painterPath, Trader admiral)
+    {
+        string questFile = FindPainterQuestFile(painterPath)!;
+        string assortFile = IOPath.Combine(painterPath, "db", "assort.json");
+        if (!File.Exists(assortFile))
+            return new();
+        TraderAssort assort = LoadExternal<TraderAssort>(modPath, assortFile);
+        Dictionary<MongoId, Quest> quests = LoadExternal<Dictionary<MongoId, Quest>>(modPath, questFile);
+        MongoId[] missing = assort.Items.Select(item => item.Template).Where(template => !templateTable.Items.ContainsKey(template)).Distinct().ToArray();
+        if (missing.Length > 0)
+        {
+            logger.Warning($"Admiral skipped Painter content: {missing.Length} Painter templates are unavailable; core Admiral remains active");
+            return new();
+        }
+        if (quests.Count != 12 || assort.Items.Count(item => item.ParentId?.ToString() == "hideout") != 7)
+            throw new InvalidDataException("Painter 3.0.0 content shape drift");
+        foreach (var (questId, quest) in quests)
+            if (!templateTable.Quests.TryAdd(questId, quest))
+                throw new InvalidDataException($"Painter quest id collides with an existing quest: {questId}");
+        ValidateExternalAssort(assort, "Painter content-only provider");
+        ValidateExternalQuestGraph(new MongoId(PainterTraderId));
+        int remapped = RemapQuests(new MongoId(PainterTraderId));
+        RegisterPainterLocales(modPath, painterPath);
+        RegisterPainterImages(painterPath);
+        int unlocks = MergeQuestAssort(admiral.QuestAssort, new Dictionary<string, Dictionary<MongoId, MongoId>>
+        {
+            ["started"] = [],
+            ["success"] = new()
+            {
+                [new MongoId("672e2804a0529208b4e10e18")] = new MongoId("668aad3c3ff8f5b258e3a65b"),
+                [new MongoId("672e284a363b798192b802af")] = new MongoId("668c18eb12542b3c3ff6e20f"),
+                [new MongoId("672e289bb4096716fcb918a7")] = new MongoId("668c18eb12542b3c3ff6e20f")
+            },
+            ["fail"] = []
+        }, "Painter content-only provider");
+        return new(7, MergeAssort(admiral.Assort, assort, "Painter content-only provider"), unlocks, 0, remapped);
+    }
+
+    private T LoadExternal<T>(string modPath, string absolutePath) =>
+        modHelper.GetJsonDataFromFile<T>(modPath, IOPath.GetRelativePath(modPath, absolutePath).Replace('\\', '/'));
+
+    private static string? FindPainterQuestFile(string root)
+    {
+        string current = IOPath.Combine(root, "db", "CustomQuests", PainterTraderId, "Quests", "painter.json");
+        if (File.Exists(current)) return current;
+        string legacy = IOPath.Combine(root, "db", "quests", "painter.json");
+        return File.Exists(legacy) ? legacy : null;
+    }
+
+    private void RegisterPainterLocales(string modPath, string painterPath)
+    {
+        string localeRoot = IOPath.Combine(painterPath, "db", "CustomQuests", PainterTraderId, "Locales");
+        if (!Directory.Exists(localeRoot)) localeRoot = IOPath.Combine(painterPath, "db", "locales");
+        string? englishPath = FindLocaleFile(localeRoot, "en");
+        if (englishPath is null) throw new InvalidDataException("Painter English quest locale is missing");
+        Dictionary<string, string> english = LoadExternal<Dictionary<string, string>>(modPath, englishPath);
+        foreach (var (localeCode, locale) in localesTable.Global)
+        {
+            string? localizedPath = FindLocaleFile(localeRoot, localeCode);
+            Dictionary<string, string> source = localizedPath is null
+                ? english
+                : LoadExternal<Dictionary<string, string>>(modPath, localizedPath);
+            locale.AddTransformer(data =>
+            {
+                if (data is null) return data;
+                foreach (var (key, value) in english) data[key] = value;
+                foreach (var (key, value) in source) data[key] = value;
+                return data;
+            });
+        }
+    }
+
+    private static string? FindLocaleFile(string root, string locale)
+    {
+        string direct = IOPath.Combine(root, $"{locale}.json");
+        if (File.Exists(direct)) return direct;
+        string directory = IOPath.Combine(root, locale);
+        return Directory.Exists(directory) ? Directory.GetFiles(directory, "*.json").OrderBy(path => path, StringComparer.Ordinal).FirstOrDefault() : null;
+    }
+
+    private void RegisterPainterImages(string painterPath)
+    {
+        string imageRoot = IOPath.Combine(painterPath, "db", "CustomQuests", PainterTraderId, "Images");
+        if (!Directory.Exists(imageRoot)) imageRoot = IOPath.Combine(painterPath, "res", "quests");
+        if (!Directory.Exists(imageRoot)) throw new InvalidDataException("Painter quest images are missing");
+        foreach (string image in Directory.GetFiles(imageRoot).Where(path => path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)))
+            imageRouter.AddRoute($"/files/quest/icon/{IOPath.GetFileNameWithoutExtension(image)}", image);
+    }
+
+    private void RemoveLegacyQuests(MongoId legacyId)
+    {
+        foreach (MongoId questId in templateTable.Quests.Where(row => row.Value.TraderId == legacyId).Select(row => row.Key).ToArray())
+            templateTable.Quests.Remove(questId);
+    }
+
+    private int PruneUnavailableOfferTrees(TraderAssort? assort)
+    {
+        if (assort?.Items is null || assort.Items.Count == 0) return 0;
+        Dictionary<MongoId, Item> byId = assort.Items.ToDictionary(item => item.Id);
+        HashSet<MongoId> invalidRoots = [];
+        foreach (Item item in assort.Items.Where(item => !templateTable.Items.ContainsKey(item.Template)))
+        {
+            Item cursor = item;
+            HashSet<MongoId> visited = [];
+            for (int depth = 0; depth < assort.Items.Count; depth++)
+            {
+                if (cursor.ParentId is null || cursor.ParentId.ToString() == "hideout" || !visited.Add(cursor.Id)
+                    || !byId.TryGetValue(new MongoId(cursor.ParentId), out Item? parent))
+                    break;
+                cursor = parent;
+            }
+            invalidRoots.Add(cursor.Id);
+        }
+        if (invalidRoots.Count == 0) return 0;
+        HashSet<MongoId> removed = invalidRoots.ToHashSet();
+        List<MongoId> queue = invalidRoots.ToList();
+        for (int index = 0; index < queue.Count; index++)
+        {
+            MongoId parentId = queue[index];
+            foreach (Item item in assort.Items)
+                if (item.ParentId is not null && item.ParentId.ToString() != "hideout"
+                    && new MongoId(item.ParentId) == parentId && removed.Add(item.Id))
+                    queue.Add(item.Id);
+        }
+        assort.Items.RemoveAll(item => removed.Contains(item.Id));
+        foreach (MongoId root in invalidRoots)
+        {
+            assort.BarterScheme.Remove(root);
+            assort.LoyalLevelItems.Remove(root);
+        }
+        return invalidRoots.Count;
+    }
+
+    private bool LegacyQuestsReferenceMissingTemplates(MongoId legacyId)
+    {
+        foreach (Quest quest in templateTable.Quests.Values.Where(candidate => candidate.TraderId == legacyId))
+        {
+            foreach (QuestCondition condition in EnumerateConditions(quest))
+                if (condition.ConditionType is "FindItem" or "HandoverItem"
+                    && EnumerateTargets(condition).Any(target => target.Length == 24 && !templateTable.Items.ContainsKey(new MongoId(target))))
+                    return true;
+            foreach (Reward reward in quest.Rewards?.Values.SelectMany(rows => rows) ?? [])
+                if ((reward.Items ?? []).Any(item => !templateTable.Items.ContainsKey(item.Template)))
+                    return true;
+        }
+        return false;
+    }
+
+    private static IEnumerable<string> EnumerateTargets(QuestCondition condition)
+    {
+        if (condition.Target is null) yield break;
+        if (condition.Target.IsList)
+            foreach (string target in condition.Target.List ?? []) yield return target;
+        else if (condition.Target.IsItem && condition.Target.Item is not null)
+            yield return condition.Target.Item;
     }
 
     private void RemoveEmptyCompatibilityShells()
@@ -126,6 +350,30 @@ public sealed class LegacyTraderConsolidation(
         return added;
     }
 
+    private static void ValidateExternalAssort(TraderAssort assort, string sourceName)
+    {
+        HashSet<MongoId> ids = assort.Items.Select(item => item.Id).ToHashSet();
+        MongoId[] roots = assort.Items.Where(item => item.ParentId?.ToString() == "hideout").Select(item => item.Id).ToArray();
+        foreach (Item item in assort.Items.Where(item => item.ParentId is not null && item.ParentId.ToString() != "hideout"))
+            if (!ids.Contains(new MongoId(item.ParentId)))
+                throw new InvalidDataException($"{sourceName} assort item {item.Id} has missing parent {item.ParentId}");
+        foreach (MongoId root in roots)
+            if (!assort.BarterScheme.ContainsKey(root) || !assort.LoyalLevelItems.ContainsKey(root))
+                throw new InvalidDataException($"{sourceName} offer {root} is missing barter or loyalty data");
+        if (assort.BarterScheme.Keys.Any(key => !roots.Contains(key)) || assort.LoyalLevelItems.Keys.Any(key => !roots.Contains(key)))
+            throw new InvalidDataException($"{sourceName} has orphaned barter or loyalty keys");
+    }
+
+    private void ValidateExternalQuestGraph(MongoId legacyId)
+    {
+        foreach (Quest quest in templateTable.Quests.Values.Where(candidate => candidate.TraderId == legacyId))
+            foreach (QuestCondition condition in quest.Conditions.AvailableForStart ?? [])
+                if (condition.ConditionType == "Quest")
+                    foreach (string target in EnumerateTargets(condition).Where(target => target.Length == 24))
+                        if (!templateTable.Quests.ContainsKey(new MongoId(target)))
+                            throw new InvalidDataException($"External quest {quest.Id} references missing prerequisite {target}");
+    }
+
     private static int MergeQuestAssort(
         Dictionary<string, Dictionary<MongoId, MongoId>> target,
         Dictionary<string, Dictionary<MongoId, MongoId>>? source,
@@ -150,11 +398,16 @@ public sealed class LegacyTraderConsolidation(
 
     private static int MergeSuits(Trader admiral, Trader legacy)
     {
-        if (legacy.Suits is null || legacy.Suits.Count == 0) return 0;
+        return MergeSuits(admiral, legacy.Suits);
+    }
+
+    private static int MergeSuits(Trader admiral, List<Suit>? source)
+    {
+        if (source is null || source.Count == 0) return 0;
         admiral.Suits ??= [];
         HashSet<MongoId> existing = admiral.Suits.Select(suit => suit.SuiteId).ToHashSet();
         int added = 0;
-        foreach (Suit suit in legacy.Suits)
+        foreach (Suit suit in source)
             if (existing.Add(suit.SuiteId))
             {
                 admiral.Suits.Add(suit);
@@ -279,4 +532,10 @@ public sealed class LegacyTraderConsolidation(
         admiral.AttachmentsNew = (admiral.AttachmentsNew ?? 0) + (legacy.AttachmentsNew ?? 0);
         admiral.New = (admiral.New ?? 0) + (legacy.New ?? 0);
     }
+}
+
+public readonly record struct ExternalContentCounts(int OfferRoots = 0, int ItemRows = 0, int QuestUnlocks = 0, int Suits = 0, int Quests = 0)
+{
+    public static ExternalContentCounts operator +(ExternalContentCounts left, ExternalContentCounts right) =>
+        new(left.OfferRoots + right.OfferRoots, left.ItemRows + right.ItemRows, left.QuestUnlocks + right.QuestUnlocks, left.Suits + right.Suits, left.Quests + right.Quests);
 }

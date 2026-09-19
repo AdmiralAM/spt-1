@@ -14,7 +14,7 @@ The source set is Painter 3.0.0 (`4f4735…d2d3be`), TGC 3.0.0 (`932aaa…d2726`
 | Painter 3.0.0 | 12 | 7 | 7 | 3 | 0 | Quest and small specialty stock provider |
 | TGC 3.0.0 | 0 | 114 | 236 | 0 | 4 | Painter-owned gear and clothing provider |
 | Artem | 23 | 281 | 703 | 41 | 64 | Quest, gear and clothing provider |
-| Consolidated external addition | **35** | **402** | **946** | **41** | **68** | Re-owned by Admiral |
+| Consolidated external addition | **35** | **402** | **946** | **44** | **68** | Re-owned by Admiral |
 
 The resulting campaign is 207 quests without Icebreaker and 217 with the installed ten-quest Icebreaker chain. This replaces the obsolete 43-quest assumption with the actual current source count.
 
@@ -73,7 +73,9 @@ Artem has one introduction root. It branches immediately into `Expanding Wardrob
 4. Existing profile standing and sales keep the strongest recorded value. Purchase ledgers, dialogue/messages, insurance and repeatable-quest ownership move to Admiral. The operation is marked and idempotent.
 5. Legacy trader database records are removed only after every loaded profile migration saves successfully. This removes the two extra trader tabs while preserving the content and historical profile state.
 6. Missing providers are safe: stale Painter/Artem profile ownership is migrated when present, empty compatibility shells are removed, clean profiles are not written, and the original Admiral campaign/store remain unchanged.
+7. Painter quest locales and image routes are published by Admiral from the content-only layer. Artem continues to register its own locales, images and custom zones before Admiral changes only trader ownership; zone IDs and objective references are retained byte-for-byte.
+8. Every external assort is checked for complete parent trees, barter keys and loyalty keys. Every external quest prerequisite is checked against the final quest table. Missing external templates remove only the affected optional offer tree or external quest graph; the 172-quest Admiral core remains active.
 
 ## Validation result
 
-The isolated exact-runtime smoke loaded Painter 3.0.0, TGC 3.0.0, maintained Artem 3.0.0 and Admiral together. It consolidated two legacy providers into Admiral as **402 offers / 946 item rows / 35 quests / 41 quest unlocks / 68 suits**, removed the legacy trader records, and reached `Server has started, happy playing`. A deterministic synthetic-profile test proves relation, standing, sales, purchase and dialogue migration and confirms the second pass is a no-op.
+The exact integration smoke used Admiral TGC Integration PR #362 head `bd1500b86c356f5e97fade75cf0c1df974ae9621`, its 117 upstream TGC templates, a content-only Painter layer without `Painter-4.0.dll`, maintained Artem, and Admiral. It consolidated **402 offers / 946 item rows / 35 quests / 44 quest unlocks / 68 suits**, removed the legacy trader records, and reached `Server has started, happy playing`. The content-only Painter layer also preserves its five template identities, Hall of Fame compatibility, two non-lootable quest figurines, and the authored 175-entry/20-draw Special Delivery pool. A deterministic synthetic-profile test proves quest state, relation, standing, loyalty, sales, purchase and dialogue preservation and confirms the second pass is a no-op. `external-content-identities.json` records every source quest, offer, item, unlock and suit ID used by this contract.
