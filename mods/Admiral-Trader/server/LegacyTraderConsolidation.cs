@@ -7,10 +7,12 @@ using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Profile;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Routers;
+using SPTarkov.Server.Core.Services.Commerce;
 using SPTarkov.Server.Core.Utils.Json;
 using IOPath = System.IO.Path;
 
@@ -32,6 +34,7 @@ public sealed class LegacyTraderConsolidation(
     ModHelper modHelper,
     ImageRouter imageRouter,
     LocaleTable localesTable,
+    MailSendService mailSendService,
     ISptLogger<LegacyTraderConsolidation> logger) : IOnLoad
 {
     public const string PainterTraderId = "668aaff35fd574b6dcc4a686";
@@ -39,6 +42,10 @@ public sealed class LegacyTraderConsolidation(
     public static readonly string[] LegacyTraderIds = [PainterTraderId, ArtemTraderId];
     private static readonly MongoId AdmiralId = new(RuntimeIdentity.TraderId);
     private const string MigrationKey = "admiral-trader-legacy-consolidation-v1";
+    private const string PainterTapedUpQuestId = "668aacd1dee3de3ce276fdef";
+    private const string PainterTapedUpRepairKey = "admiral-trader-painter-taped-up-reward-repair-v1";
+    private const int PainterTapedUpRoubles = 21000;
+    private const double PainterTapedUpStanding = 0.02;
 
     public async Task OnLoadAsync(CancellationToken cancellationToken)
     {
@@ -89,7 +96,9 @@ public sealed class LegacyTraderConsolidation(
 
         foreach (var (profileId, profile) in saveServer.GetProfiles())
         {
-            if (!MigrateProfile(profile, LegacyTraderIds.Select(id => new MongoId(id)).ToArray()))
+            bool changed = MigrateProfile(profile, LegacyTraderIds.Select(id => new MongoId(id)).ToArray());
+            changed |= RepairFailedPainterTapedUpReward(profileId, profile);
+            if (!changed)
                 continue;
             await saveServer.SaveProfileAsync(profileId, cancellationToken);
         }
@@ -451,11 +460,71 @@ public sealed class LegacyTraderConsolidation(
                 if (condition.TraderId == legacyId.ToString())
                     condition.TraderId = RuntimeIdentity.TraderId;
             foreach (Reward reward in quest.Rewards?.Values.SelectMany(rows => rows) ?? [])
+            {
                 if (reward.TraderId?.String == legacyId.ToString())
                     reward.TraderId = new StringOrInt(RuntimeIdentity.TraderId, null);
+                if (reward.Target == legacyId.ToString())
+                    reward.Target = RuntimeIdentity.TraderId;
+            }
             count++;
         }
         return count;
+    }
+
+    private bool RepairFailedPainterTapedUpReward(MongoId profileId, SptProfile profile)
+    {
+        bool repaired = ApplyPainterTapedUpRewardRepair(
+            profile,
+            items => mailSendService.SendDirectNpcMessageToPlayer(
+                profileId,
+                RuntimeIdentity.TraderId,
+                MessageType.QuestSuccess,
+                "Компенсация за задание «Связано скотчем»: денежная награда не была выдана из-за ошибки переноса Painter.",
+                items),
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        if (repaired)
+            logger.Success($"Restored missing Painter quest reward for profile {profileId}: {PainterTapedUpRoubles} RUB by Admiral mail and +{PainterTapedUpStanding:0.00} standing; XP was not repeated");
+        return repaired;
+    }
+
+    public static bool ApplyPainterTapedUpRewardRepair(SptProfile profile, Action<List<Item>> deliver, long repairTimestamp)
+    {
+        profile.SptData ??= new Spt();
+        profile.SptData.Migrations ??= [];
+        if (profile.SptData.Migrations.ContainsKey(PainterTapedUpRepairKey)
+            || !profile.SptData.Migrations.TryGetValue(MigrationKey, out long consolidationTime))
+            return false;
+
+        QuestStatus? quest = profile.CharacterData?.PmcData?.Quests?
+            .FirstOrDefault(row => row.QId.ToString() == PainterTapedUpQuestId && row.Status == QuestStatusEnum.Success);
+        if (quest is null
+            || !quest.StatusTimers.TryGetValue(QuestStatusEnum.Success, out double completionTime)
+            || completionTime < consolidationTime)
+            return false;
+
+        Dictionary<MongoId, TraderInfo>? traders = profile.CharacterData?.PmcData?.TradersInfo;
+        if (traders is null || !traders.TryGetValue(AdmiralId, out TraderInfo? admiral))
+            throw new InvalidDataException($"Cannot repair Painter quest {PainterTapedUpQuestId}: Admiral trader state is missing");
+
+        double previousStanding = admiral.Standing ?? 0;
+        try
+        {
+            deliver([new Item
+            {
+                Id = new MongoId(),
+                Template = new MongoId("5449016a4bdc2d6f028b456f"),
+                Upd = new Upd { StackObjectsCount = PainterTapedUpRoubles }
+            }]);
+            admiral.Standing = previousStanding + PainterTapedUpStanding;
+            profile.SptData.Migrations[PainterTapedUpRepairKey] = repairTimestamp;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            admiral.Standing = previousStanding;
+            profile.SptData.Migrations.Remove(PainterTapedUpRepairKey);
+            throw new InvalidOperationException($"Failed to repair Painter quest {PainterTapedUpQuestId}; no repair marker was saved", exception);
+        }
     }
 
     private static IEnumerable<QuestCondition> EnumerateConditions(Quest quest)

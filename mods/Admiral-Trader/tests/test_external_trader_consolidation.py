@@ -47,6 +47,36 @@ def test_profile_migration_is_explicit_idempotent_and_save_first() -> None:
     assert 'RegisterLegacyCompatibilityShells(traderBase)' in REGISTRATION
 
 
+def test_external_quest_rewards_remap_both_unlock_and_standing_trader_fields() -> None:
+    assert "reward.TraderId?.String == legacyId.ToString()" in CONSOLIDATION
+    assert "reward.Target == legacyId.ToString()" in CONSOLIDATION
+    assert "reward.Target = RuntimeIdentity.TraderId" in CONSOLIDATION
+
+    painter_quests = json.loads(
+        next((ROOT / "external/painter/db/CustomQuests/668aaff35fd574b6dcc4a686/Quests").glob("*.json")).read_text(
+            encoding="utf-8-sig"
+        )
+    )
+    legacy_targets = [
+        reward
+        for quest in painter_quests.values()
+        for rewards in quest.get("rewards", {}).values()
+        for reward in rewards
+        if reward.get("target") == MANIFEST["legacyTraderIds"]["painter"]
+    ]
+    assert legacy_targets
+    assert all(reward["type"] == "TraderStanding" for reward in legacy_targets)
+
+
+def test_failed_painter_reward_has_bounded_idempotent_recovery() -> None:
+    assert 'PainterTapedUpQuestId = "668aacd1dee3de3ce276fdef"' in CONSOLIDATION
+    assert 'PainterTapedUpRepairKey = "admiral-trader-painter-taped-up-reward-repair-v1"' in CONSOLIDATION
+    assert "completionTime < consolidationTime" in CONSOLIDATION
+    assert "StackObjectsCount = PainterTapedUpRoubles" in CONSOLIDATION
+    assert "previousStanding + PainterTapedUpStanding" in CONSOLIDATION
+    assert "XP was not repeated" in CONSOLIDATION
+
+
 def test_scope_excludes_belt_container_compatibility_and_records_real_campaign_size() -> None:
     lowered = CONSOLIDATION.lower()
     for forbidden in ("belt", "armband", "securecontainer", "secure container"):

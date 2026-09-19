@@ -100,4 +100,71 @@ if (profile.CharacterData.PmcData.Quests!.Count != 2
     || profile.CharacterData.PmcData.Quests[1].Status != QuestStatusEnum.Success)
     throw new Exception("persistent external quest status or objective progress changed during migration");
 
-Console.WriteLine("Legacy profile migration PASS: relations, standing, sales, purchases and dialogue preserved; second pass is idempotent.");
+SptProfile failedPainterReward = new()
+{
+    CharacterData = new Characters
+    {
+        PmcData = new PmcData
+        {
+            Quests =
+            [
+                new QuestStatus
+                {
+                    QId = new MongoId("668aacd1dee3de3ce276fdef"),
+                    StartTime = 150,
+                    Status = QuestStatusEnum.Success,
+                    StatusTimers = new() { [QuestStatusEnum.Success] = 220 },
+                    CompletedConditions = []
+                }
+            ],
+            TradersInfo = new() { [admiralId] = new TraderInfo { Standing = 0.592 } },
+            Info = new SPTarkov.Server.Core.Models.Eft.Common.Tables.Info { Experience = 1212906 }
+        }
+    },
+    SptData = new Spt
+    {
+        Migrations = new() { ["admiral-trader-legacy-consolidation-v1"] = 200 }
+    }
+};
+List<Item>? repairedItems = null;
+if (!LegacyTraderConsolidation.ApplyPainterTapedUpRewardRepair(failedPainterReward, items => repairedItems = items, 300))
+    throw new Exception("eligible failed Painter reward was not repaired");
+if (LegacyTraderConsolidation.ApplyPainterTapedUpRewardRepair(failedPainterReward, _ => throw new Exception("duplicate delivery"), 301))
+    throw new Exception("Painter reward repair was not idempotent");
+if (repairedItems is null || repairedItems.Count != 1
+    || repairedItems[0].Template.ToString() != "5449016a4bdc2d6f028b456f"
+    || repairedItems[0].Upd?.StackObjectsCount != 21000)
+    throw new Exception("Painter reward repair did not deliver exactly 21000 RUB");
+if (failedPainterReward.CharacterData.PmcData.TradersInfo![admiralId].Standing != 0.612)
+    throw new Exception("Painter reward repair did not restore exactly 0.02 Admiral standing");
+if (failedPainterReward.CharacterData.PmcData.Info!.Experience != 1212906)
+    throw new Exception("Painter reward repair repeated XP");
+if (failedPainterReward.SptData.Migrations!["admiral-trader-painter-taped-up-reward-repair-v1"] != 300)
+    throw new Exception("Painter reward repair marker is missing");
+
+SptProfile historicalPainterCompletion = new()
+{
+    CharacterData = new Characters
+    {
+        PmcData = new PmcData
+        {
+            Quests =
+            [
+                new QuestStatus
+                {
+                    QId = new MongoId("668aacd1dee3de3ce276fdef"),
+                    StartTime = 100,
+                    Status = QuestStatusEnum.Success,
+                    StatusTimers = new() { [QuestStatusEnum.Success] = 190 },
+                    CompletedConditions = []
+                }
+            ],
+            TradersInfo = new() { [admiralId] = new TraderInfo { Standing = 0.5 } }
+        }
+    },
+    SptData = new Spt { Migrations = new() { ["admiral-trader-legacy-consolidation-v1"] = 200 } }
+};
+if (LegacyTraderConsolidation.ApplyPainterTapedUpRewardRepair(historicalPainterCompletion, _ => throw new Exception("historical delivery"), 300))
+    throw new Exception("historical Painter completion was incorrectly compensated");
+
+Console.WriteLine("Legacy profile migration PASS: state preserved; failed Painter reward repaired exactly once without repeated XP.");
