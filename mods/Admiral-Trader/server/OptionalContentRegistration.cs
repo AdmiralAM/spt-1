@@ -37,8 +37,28 @@ public sealed class OptionalContentRegistration(
         int fieldSupportRewards = ApplyCashTrades(modPath, "db/rewards/field-support-reward-trades.json", optional: false);
         int tacticalRewards = ApplyCashTrades(modPath, "db/rewards/tactical-reward-trades.json", optional: false);
         int beltRewards = ApplyCashTrades(modPath, "db/rewards/belt-container-reward-trades.json", optional: true);
-        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
+        int wttPresets = ValidateWttPresetCatalog(modPath);
+        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {wttPresets} WTT complete presets available, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
         return Task.CompletedTask;
+    }
+
+    private int ValidateWttPresetCatalog(string modPath)
+    {
+        const string relative = "db/optional/wtt-preset-catalog.json";
+        if (!File.Exists(IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar)))) return 0;
+        List<WttRewardPreset> presets = modHelper.GetJsonDataFromFile<List<WttRewardPreset>>(modPath, relative);
+        int admitted = 0;
+        foreach (WttRewardPreset preset in presets)
+        {
+            if (preset.Items.Count == 0 || preset.Items[0].Template.ToString() != preset.RootTemplate)
+                throw new InvalidDataException($"WTT preset {preset.PresetId} has an invalid root");
+            HashSet<string> ids = preset.Items.Select(item => item.Id.ToString()).ToHashSet(StringComparer.Ordinal);
+            if (ids.Count != preset.Items.Count || preset.Items.Skip(1).Any(item => item.ParentId is null || !ids.Contains(item.ParentId)))
+                throw new InvalidDataException($"WTT preset {preset.PresetId} has a broken item tree");
+            if (preset.Items.Any(item => !templateTable.Items.ContainsKey(item.Template))) continue;
+            admitted++;
+        }
+        return admitted;
     }
 
     private int MergeOptionalStorefront(string modPath, TraderAssort assort)
@@ -131,4 +151,16 @@ public sealed record OptionalCashTrade
 
     [JsonPropertyName("reward")]
     public required Reward Reward { get; init; }
+}
+
+public sealed record WttRewardPreset
+{
+    [JsonPropertyName("presetId")]
+    public required string PresetId { get; init; }
+    [JsonPropertyName("source")]
+    public required string Source { get; init; }
+    [JsonPropertyName("rootTemplate")]
+    public required string RootTemplate { get; init; }
+    [JsonPropertyName("items")]
+    public required List<Item> Items { get; init; }
 }

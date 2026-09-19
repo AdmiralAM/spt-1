@@ -47,6 +47,17 @@ class RewardBundleArchitectureTests(unittest.TestCase):
     def test_policy_is_packaged(self):
         project = (ROOT / "server" / "AdmiralTrader.Server.csproj").read_text(encoding="utf-8")
         self.assertIn("reward-bundle-policy.json", project)
+        self.assertIn("wtt-preset-catalog.json", project)
+
+    def test_wtt_preset_catalog_contains_complete_optional_trees(self):
+        rows = json.loads((ROOT / "db" / "optional" / "wtt-preset-catalog.json").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(rows), 60)
+        self.assertEqual({row["source"] for row in rows}, {"wtt-armory", "wtt-content-backport"})
+        for row in rows:
+            self.assertEqual(row["items"][0]["_tpl"], row["rootTemplate"])
+            ids = {item["_id"] for item in row["items"]}
+            self.assertEqual(len(ids), len(row["items"]))
+            self.assertTrue(all(item.get("parentId") in ids for item in row["items"][1:]))
 
 
 if __name__ == "__main__":

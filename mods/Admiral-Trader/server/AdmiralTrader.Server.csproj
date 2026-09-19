@@ -55,6 +55,7 @@
     <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\db\optional\icebreaker\**\*.json" Link="db\optional\icebreaker\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\db\optional\storefront\*.json" Link="db\optional\storefront\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\optional\wtt-preset-catalog.json" Link="db\optional\wtt-preset-catalog.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\rewards\*.json" Link="db\rewards\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>
