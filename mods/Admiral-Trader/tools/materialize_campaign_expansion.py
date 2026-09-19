@@ -50,8 +50,8 @@ def replace_prerequisite(quest: dict, previous: str | None):
 def counter(qid: str, value: int, conditions: list[dict], qtype="Elimination", one=False):
     return {"id":hid(qid+":finish"),"index":0,"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","value":value,"type":qtype,"oneSessionOnly":one,"isResetOnConditionFailed":False,"isNecessary":False,"doNotResetIfCounterCompleted":False,"counter":{"id":hid(qid+":counter"),"conditions":conditions},"completeInSeconds":0,"conditionType":"CounterCreator"}
 
-def kill(qid, weapons, locations, target="Any"):
-    rows=[{"id":hid(qid+":kill"),"dynamicLocale":False,"target":target,"compareMethod":">=","value":1,"weapon":weapons,"distance":{"value":0,"compareMethod":">="},"weaponModsInclusive":[],"weaponModsExclusive":[],"enemyEquipmentInclusive":[],"enemyEquipmentExclusive":[],"weaponCaliber":[],"savageRole":[],"bodyPart":[],"daytime":{"from":0,"to":0},"conditionType":"Kills","enemyHealthEffects":[],"resetOnSessionEnd":False}]
+def kill(qid, weapons, locations, target="Any", distance=0):
+    rows=[{"id":hid(qid+":kill"),"dynamicLocale":False,"target":target,"compareMethod":">=","value":1,"weapon":weapons,"distance":{"value":distance,"compareMethod":">="},"weaponModsInclusive":[],"weaponModsExclusive":[],"enemyEquipmentInclusive":[],"enemyEquipmentExclusive":[],"weaponCaliber":[],"savageRole":[],"bodyPart":[],"daytime":{"from":0,"to":0},"conditionType":"Kills","enemyHealthEffects":[],"resetOnSessionEnd":False}]
     if locations: rows.append({"id":hid(qid+":location"),"dynamicLocale":False,"conditionType":"Location","target":locations})
     return rows
 
@@ -107,7 +107,10 @@ def main():
     expanded_by_lane={"A":[],"B":[]}
     for lane,row in [("A",x) for x in plan["lanes"]["A-close-support"][:10]]+[("B",x) for x in plan["lanes"]["B-rifle-precision"][:9]]:
         order,pool,band,locations,semantics=row; level=int(band.split('-')[0]); native_weapons=plan["pools"][pool]; optional_weapons=optional_by_pool.get(pool,[]); weapons=native_weapons+[x["tpl"] for x in optional_weapons]; runtime_locations=[x for label in locations for x in LOCATION_IDS[label]]; slug=f"rotation-{lane.lower()}-{order:02d}-{pool}"; name=f"Arsenal Rotation {lane}-{order}: {pool.replace('-',' ').title()}"
-        qid,q=quest(slug,name,level,previous[lane],lambda qid,w=weapons,l=runtime_locations,v=min(6+order,15):counter(qid,v,kill(qid,w,l)),"Elimination")
+        target = "Savage" if pool == "sks-hunter" else "Any"
+        minimum_distance = 40 if pool == "sks-hunter" else 0
+        required_count = 8 if pool == "sks-hunter" else min(6+order,15)
+        qid,q=quest(slug,name,level,previous[lane],lambda qid,w=weapons,l=runtime_locations,v=required_count,t=target,d=minimum_distance:counter(qid,v,kill(qid,w,l,t,d)),"Elimination")
         previous[lane]=qid;out.append((qid,q));meta.append({"id":qid,"kind":"weapon","lane":lane,"order":order,"pool":pool})
         expanded_by_lane[lane].append((level, qid, q))
         optional_names=", ".join(x["name"] for x in optional_weapons)
@@ -116,7 +119,14 @@ def main():
         allowed_ru=item_list(native_weapons,'ru')+(f"; опционально WTT: {optional_names_ru}" if optional_names_ru else "")
         en_detail=f"Allowed weapons: {item_list(native_weapons,'en')}." + (f"\nOptional WTT additions: {optional_names}." if optional_names else "")
         ru_detail=f"Разрешённое оружие:\n- {item_list(native_weapons,'ru')}." + (f"\nДополнительные модели при установленном WTT:\n- {optional_names_ru}." if optional_names_ru else "")
-        en.update(locale(qid,name,en_detail,level,f"Eliminate {min(6+order,15)} targets with the allowed weapon pool"));ru.update(locale(qid,name,ru_detail,level,f"Устранить {min(6+order,15)} целей разрешённым оружием",True))
+        objective_en = "Eliminate 8 Scavs from at least 40 metres with an allowed self-loading carbine on Customs, Woods, or Shoreline" if pool == "sks-hunter" else f"Eliminate {required_count} targets with the allowed weapon pool"
+        objective_ru = "Устранить 8 Диких с дистанции от 40 метров допустимым самозарядным карабином на Таможне, Лесу или Берегу" if pool == "sks-hunter" else f"Устранить {required_count} целей разрешённым оружием"
+        if pool == "sks-hunter":
+            name = "Arsenal Rotation B-4: Self-loading Carbines"
+            q["QuestName"] = name
+            en_detail += "\nTask: eliminate 8 Scavs from at least 40 metres on Customs, Woods, or Shoreline; progress carries across raids."
+            ru_detail += "\nЗадача: устранить 8 Диких с дистанции не менее 40 метров на Таможне, Лесу или Берегу; прогресс сохраняется между рейдами."
+        en.update(locale(qid,name,en_detail,level,objective_en));ru.update(locale(qid,"Ротация «Арсенал» B-4: Самозарядные карабины",ru_detail,level,objective_ru,True))
     # Ground Zero opening chain.
     prev=None
     gz=[("ground-zero-arrival","Operation: First Contact",1,2,"Savage"),("ground-zero-corridor","Operation: Open Corridor",3,4,"Savage"),("ground-zero-pressure","Operation: Contested Ground",5,2,"AnyPmc"),("ground-zero-exit","Operation: Exit Discipline",7,5,"Any")]
@@ -128,7 +138,7 @@ def main():
     gear=[
         # The opening assignment is logistics training, not a combat exam. Two
         # groups require one common rig and one common backpack simultaneously.
-        ("light-rig","Loadout: First Field Kit",6,["Ground Zero","Customs","Woods"],[["572b7adb24597762ae139821","5e4abc1f86f774069619fbaa","6034d0230ca681766b6a0fb5"],["544a5cde4bdc2d39388b456b","56e33680d2720be2748b4576","56e335e4d2720b6c058b456d"]],1,None,None,"Use one allowed rig and one allowed backpack, then survive and extract from one listed map","Использовать одну разрешённую разгрузку и один разрешённый рюкзак, затем выжить и выйти с одной из указанных карт"),
+        ("light-rig","Loadout: First Field Kit",6,["Ground Zero","Customs","Woods"],[["572b7adb24597762ae139821","5e4abc1f86f774069619fbaa","6034d0230ca681766b6a0fb5"],["544a5cde4bdc2d39388b456b","56e33680d2720be2748b4576","56e335e4d2720b6c058b456d"]],1,None,None,"Equip one allowed rig and one allowed backpack, then survive and extract from Ground Zero, Customs, or Woods in the same raid; no kills or received damage are required","Надеть одну разрешённую разгрузку и один разрешённый рюкзак, затем выжить и эвакуироваться с Эпицентра, Таможни или Леса в том же рейде; убийства и получение урона не требуются"),
         ("field-headset","Loadout: Acoustic Cover",11,["Customs","Woods","Shoreline"],[["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]],4,"Any","f2b78c3ab062acd976bbe35c","Test the headset in combat: eliminate 4 targets and survive the same raid","Проверить наушники в бою: устранить 4 противников и выжить в том же рейде"),
         ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],[["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]],5,"Any","9d78917164400742a5e2511d","Test the helmet under fire: eliminate 5 targets and survive the same raid","Проверить защиту головы в бою: устранить 5 противников и выжить в том же рейде"),
         ("medium-armor","Loadout: Mobile Armor",21,["Shoreline","Interchange","Streets"],[["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]],2,"AnyPmc","3ac29a7f402bea66538246bc","Test the mobile armor: eliminate 2 PMCs and survive the same raid","Проверить подвижную броню: устранить 2 бойцов ЧВК и выжить в том же рейде"),
@@ -148,7 +158,9 @@ def main():
         rendered_ru=[item_list(group,'ru') for group in equipment_groups]
         en_detail="Eligible equipment:\n" + "\n".join(f"- choose one from: {group}." for group in rendered_en) + f"\nTask: {task_en}."
         ru_detail="Допуск по снаряжению:\n" + "\n".join(f"- выбрать один предмет: {group}." for group in rendered_ru) + f"\nЗадача: {task_ru}."
-        en.update(locale(qid,name,en_detail,level,task_en));ru.update(locale(qid,name,ru_detail,level,task_ru,True))
+        objective_en = "Equip one allowed rig and one allowed backpack, then survive and extract" if slug == "light-rig" else task_en
+        objective_ru = "Надеть разрешённую разгрузку и рюкзак, затем выжить и эвакуироваться" if slug == "light-rig" else task_ru
+        en.update(locale(qid,name,en_detail,level,objective_en));ru.update(locale(qid,name,ru_detail,level,objective_ru,True))
     qdir=ROOT/"db/quests"
     lane_lengths={}
     for lane in ("A", "B"):

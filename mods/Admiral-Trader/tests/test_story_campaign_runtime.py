@@ -94,7 +94,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             finish = self.by_id[quest_id]["conditions"]["AvailableForFinish"]
             key_conditions = [row for row in finish if row["conditionType"] == "FindItem" and set(row["target"]) == targets]
             self.assertEqual(len(key_conditions), 1, quest_id)
-            self.assertFalse(key_conditions[0]["onlyFoundInRaid"], quest_id)
+            self.assertTrue(key_conditions[0]["onlyFoundInRaid"], quest_id)
             self.assertFalse(any(row["conditionType"] == "HandoverItem" and set(row["target"]) == targets for row in finish), quest_id)
             self.assertIn("ключ не сдаётся", self.ru[quest_id + " description"], quest_id)
 
@@ -103,8 +103,8 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         description = self.ru[quest_id + " description"]
         for room in ("114", "204", "214", "220"):
             self.assertIn(room, description)
-        self.assertIn("не требуется", description)
-        self.assertIn("ключ останется у тебя", description)
+        self.assertIn("Найти в рейде", description)
+        self.assertIn("останется у тебя", description)
 
     def test_english_story_copy_contains_no_russian_map_names(self):
         for key, value in self.en.items():
@@ -209,7 +209,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                         if objective["kind"] == "retrieveQuestItem":
                             expected_find.append(objective["itemTpl"])
                 finish = self.by_id[row["id"]]["conditions"]["AvailableForFinish"]
-                actual_find = [condition["target"][0] for condition in finish if condition["conditionType"] == "FindItem" and condition.get("onlyFoundInRaid")]
+                actual_find = [condition["target"][0] for condition in finish if condition["conditionType"] == "FindItem" and condition.get("onlyFoundInRaid") and len(condition.get("target", [])) == 1]
                 actual_handover = [condition["target"][0] for condition in finish if condition["conditionType"] == "HandoverItem"]
                 self.assertEqual(actual_find, expected_find, row["id"])
                 self.assertEqual(actual_handover, expected_handover, row["id"])

@@ -163,7 +163,7 @@ def item_condition(qid: str, suffix: str, tpl: str, kind: str, index: int, fir: 
 
 
 def key_pool_condition(qid: str, targets: list[str], index: int) -> dict:
-    return {"conditionType": "FindItem", "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:access-key:FindItem"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": False, "parentId": "", "target": targets, "value": 1, "visibilityConditions": []}
+    return {"conditionType": "FindItem", "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:access-key:FindItem"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": True, "parentId": "", "target": targets, "value": 1, "visibilityConditions": []}
 
 
 def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[list[dict], list[str], list[str]]:
@@ -221,8 +221,8 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
                 en_pool, ru_pool = "Health Resort office 104, 112, 107 or utility key", "ключ Санатория: офис 104, 112, 107 или подсобка"
             else:
                 en_pool, ru_pool = "Pumping station front or back door key", "ключ от передней или задней двери насосной станции"
-            en.append(f"Have any 1 allowed key: {en_pool}. Found in raid: not required; the key is not handed over")
-            ru.append(f"Иметь любой 1 допустимый ключ: {ru_pool}. Статус «Найдено в рейде»: не требуется; ключ не сдаётся")
+            en.append(f"Find any 1 allowed key in raid: {en_pool}; the key is not handed over")
+            ru.append(f"Найти в рейде любой 1 допустимый ключ: {ru_pool}; ключ не сдаётся")
         elif kind == "eliminate":
             suffix = f"kill-{objective_index}"
             kill = {"id": hid(f"{qid}:{suffix}:kill"), "dynamicLocale": False, "target": {"Scav": "Savage", "Rogue": "Any", "Raider": "Any"}.get(objective.get("target"), "Any"), "compareMethod": ">=", "value": 1, "weapon": [], "distance": {"value": 0, "compareMethod": ">="}, "weaponModsInclusive": [], "weaponModsExclusive": [], "enemyEquipmentInclusive": [], "enemyEquipmentExclusive": [], "weaponCaliber": [], "savageRole": ["exUsec"] if objective.get("target") == "Rogue" else (["pmcBot"] if objective.get("target") == "Raider" else []), "bodyPart": [], "daytime": {"from": 0, "to": 0}, "conditionType": "Kills", "enemyHealthEffects": [], "resetOnSessionEnd": False}
@@ -264,9 +264,10 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
     key_details_ru = [line for line in objective_ru if "допустимый ключ:" in line]
     en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {MAP_NAMES_EN[chain['map']]}. Complete the field work to move the investigation forward."
     ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}"
-    if key_details_en:
-        en_body += "\n\nOperational detail:\n- " + "\n- ".join(key_details_en)
-        ru_body += "\n\nУточнение:\n- " + "\n- ".join(key_details_ru)
+    has_access_key = any(row.get("conditionType") == "FindItem" and len(row.get("target", [])) > 1 for row in q["runtimeFinish"])
+    if has_access_key:
+        en_body += "\n\nOperational detail:\n- Find one allowed key in raid; the key is not handed over."
+        ru_body += "\n\nУточнение:\n- Найти один допустимый ключ в рейде; ключ не сдаётся."
     continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
     continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
     done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")

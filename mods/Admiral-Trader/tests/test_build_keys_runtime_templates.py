@@ -50,6 +50,7 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
             ]
         }
         self.spec = {
+            "designRules": {"foundInRaidRequired": True},
             "quests": [
                 {
                     "id": "0123456789abcdef01234567",
@@ -85,7 +86,7 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
         self.assertEqual(finish[0]["conditionType"], "FindItem")
         self.assertEqual(finish[0]["target"], ["key-a", "key-b"])
         self.assertEqual(finish[0]["value"], 2)
-        self.assertFalse(finish[0]["onlyFoundInRaid"])
+        self.assertTrue(finish[0]["onlyFoundInRaid"])
         self.assertEqual(template["traderId"], MODULE.TRADER_ID)
         self.assertEqual(template["type"], "PickUp")
 
@@ -97,7 +98,7 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
         self.assertEqual(finish[0]["conditionType"], "FindItem")
         self.assertEqual(finish[0]["target"], ["key-b"])
         self.assertEqual(finish[0]["value"], 2)
-        self.assertFalse(finish[0]["onlyFoundInRaid"])
+        self.assertTrue(finish[0]["onlyFoundInRaid"])
 
     def test_reward_budget_materializes_without_legacy_unlock(self):
         payload = MODULE.build_payload(self.spec, self.plan, self.inventory, self.root)

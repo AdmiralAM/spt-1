@@ -15,12 +15,12 @@
       "key": "acoustic-discipline",
       "title": {"en": "Acoustic Discipline", "ru": "Акустическая дисциплина"},
       "briefing": {
-        "en": "One of my patrols heard movement along a route and chose not to chase the noise. Correct decision. Sound means very little until you know where it came from and what it is doing there. Take a proper headset, check the approach, and come back with an answer. I do not need a fight. I need to know whether that ground is being used.",
-        "ru": "На одном из моих маршрутов патруль услышал движение и не полез проверять шум вслепую. Правильно сделал. Сам по себе звук мало что значит, пока не понимаешь, откуда он и зачем там появился. Возьми нормальную гарнитуру, проверь подходы и вернись с ответом. Бой мне не нужен. Мне нужно понять, пользуется ли кто-то этим маршрутом."
+        "en": "A patrol heard movement between the abandoned convoy and the USEC camp, but could not identify who was using the route. Take an approved headset, inspect both points on Woods in one raid, and extract alive. Do not start a firefight for the report; I need the route checked, not a body count.\n\nOperational detail:\nUse GSSh-01, Peltor Tactical Sport, Walker’s Razor Digital, OPSMEN Earmor M32, or Peltor ComTac IV Hybrid. Visit the abandoned convoy and USEC camp, then survive and extract in the same Woods raid.",
+        "ru": "Патруль услышал движение между брошенной колонной и лагерем USEC, но не понял, кто пользуется маршрутом. Возьми одну из допущенных гарнитур, осмотри обе точки на Лесу за один рейд и выйди живым. Перестрелка ради отчёта не нужна: мне требуется проверенный маршрут, а не счёт убитых.\n\nУточнение:\nПодойдут ГСШ-01, Peltor Tactical Sport, Walker’s Razor Digital, OPSMEN Earmor M32 или Peltor ComTac IV Hybrid. Посети брошенную колонну и лагерь USEC, затем выживи и эвакуируйся в том же рейде на Лесу."
       },
       "objective": {
-        "en": ["Use a headset during the reconnaissance pass.", "Check the marked approach.", "Survive and extract."],
-        "ru": ["Использовать гарнитуру во время разведывательного выхода.", "Проверить отмеченный подход к маршруту.", "Выжить и выйти из рейда."]
+        "en": ["With an approved headset, visit the abandoned convoy and USEC camp, then survive and extract from Woods in the same raid."],
+        "ru": ["В допущенной гарнитуре посетить брошенную колонну и лагерь USEC, затем выжить и эвакуироваться с Леса в том же рейде."]
       },
       "success": {
         "en": "Good. You listened before you acted. The route stays open, but now we know what to watch for.",

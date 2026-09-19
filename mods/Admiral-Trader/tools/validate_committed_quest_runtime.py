@@ -93,8 +93,8 @@ def validate_runtime(
         finish = (quest.get("conditions") or {}).get("AvailableForFinish") or []
         if len(finish) != 1 or finish[0].get("conditionType") != "FindItem":
             raise ValueError(f"quest {qid} must contain exactly one FindItem finish condition")
-        if finish[0].get("onlyFoundInRaid") is not False:
-            raise ValueError(f"quest {qid} unexpectedly requires FIR")
+        if finish[0].get("onlyFoundInRaid") is not True:
+            raise ValueError(f"quest {qid} must require a found-in-raid key")
         if any(condition.get("conditionType") == "HandoverItem" for condition in finish):
             raise ValueError(f"quest {qid} leaked legacy HandoverItem grind")
 

@@ -136,7 +136,7 @@ def start_conditions(quest: dict[str, Any]) -> list[dict[str, Any]]:
     return result
 
 
-def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[str, Any]]:
+def finish_conditions(quest: dict[str, Any], key_pool: list[str], found_in_raid: bool) -> list[dict[str, Any]]:
     slug = str(quest["slug"])
     objective = quest.get("objective") or {}
     count = int(objective.get("representativeCount", 1))
@@ -152,7 +152,7 @@ def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[s
             "isEncoded": False,
             "maxDurability": 100,
             "minDurability": 0,
-            "onlyFoundInRaid": False,
+            "onlyFoundInRaid": found_in_raid,
             "parentId": "",
             "target": targets,
             "value": count,
@@ -198,7 +198,7 @@ def success_rewards(quest: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
     return rewards, int(budget.get("unlockSlots", 0))
 
 
-def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str, Any], int]:
+def build_template(quest: dict[str, Any], key_pool: list[str], found_in_raid: bool) -> tuple[dict[str, Any], int]:
     qid = str(quest["id"])
     rewards, deferred_unlocks = success_rewards(quest)
     template = {
@@ -210,7 +210,7 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "changeQuestMessageText": f"{qid} changeQuestMessageText",
         "completePlayerMessage": f"{qid} completePlayerMessage",
         "conditions": {
-            "AvailableForFinish": finish_conditions(quest, key_pool),
+            "AvailableForFinish": finish_conditions(quest, key_pool, found_in_raid),
             "AvailableForStart": start_conditions(quest),
             "Fail": [],
         },
@@ -288,7 +288,11 @@ def build_payload(
 
         pool = bounded_key_pool(quest, source_pool)
         key_pools[slug] = pool
-        template, unlock_count = build_template(quest, pool)
+        template, unlock_count = build_template(
+            quest,
+            pool,
+            bool((spec.get("designRules") or {}).get("foundInRaidRequired", False)),
+        )
         templates[str(quest["id"])] = template
         if unlock_count:
             deferred_unlocks.append({"questId": str(quest["id"]), "slug": slug, "unlockSlots": unlock_count})

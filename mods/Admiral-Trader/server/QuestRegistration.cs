@@ -283,8 +283,8 @@ public sealed class AdmiralQuestRegistration(
 
     private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)
     {
-        if (finish.OnlyFoundInRaid is not false)
-            throw new InvalidDataException($"Access quest {questId} must not require found-in-raid keys");
+        if (finish.OnlyFoundInRaid is not true)
+            throw new InvalidDataException($"Access quest {questId} must require a found-in-raid key");
         if (finish.Target is null || finish.Value is null || finish.Value <= 0)
             throw new InvalidDataException($"Access quest {questId} has an invalid key objective");
     }
