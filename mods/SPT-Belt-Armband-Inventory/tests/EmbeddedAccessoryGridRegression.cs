@@ -15,6 +15,8 @@ internal static class EmbeddedAccessoryGridRegression
         Require(source.Contains("EFT.UI.ContainersPanel", StringComparison.Ordinal), "must bind the actual owner of special slots");
         Require(source.Contains("EFT.UI.DragAndDrop.SearchableSlotView", StringComparison.Ordinal), "must resolve the actual native special-slot owner");
         Require(source.Contains("_specSlotsPanel", StringComparison.Ordinal) && source.Contains("specialPanel", StringComparison.Ordinal), "must anchor below the exact native special-slot panel");
+        Require(source.Contains("GetComponentInParent(EquipmentTabType)", StringComparison.Ordinal), "stash placement must not mutate the left character EquipmentTab");
+        Require(source.Contains("HeadBandRightOffset", StringComparison.Ordinal) && source.Contains("HeadBandDownOffset", StringComparison.Ordinal), "HeadBand must use explicit small right/down polish offsets");
         Require(source.Contains("BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic", StringComparison.Ordinal), "public EFT layout fields must be discoverable at runtime");
         Require(source.Contains("ignoreLayout", StringComparison.Ordinal), "overlay and panels must be excluded from automatic layout");
         Require(source.Contains("_slotPlace", StringComparison.Ordinal) && source.Contains("SetActive(false)", StringComparison.Ordinal), "compact panels must hide the duplicate equipped-item card");

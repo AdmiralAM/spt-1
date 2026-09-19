@@ -32,7 +32,6 @@ public sealed class HeadBandDogtagGridProfileMigration : AbstractProfileMigratio
             foreach (var child in Children(items, id))
             {
                 string? tpl = Read(child, "_tpl");
-                if (HeadBandUtilityPolicy.IsCigarette(tpl ?? "")) return true;
                 if (HeadBandUtilityPolicy.IsDogtagCase(tpl ?? "")
                     && !string.Equals(Read(child, "slotId"), DedicatedWearableItems.HeadBandDogtagCaseGridName, StringComparison.Ordinal)) return true;
             }
@@ -45,7 +44,6 @@ public sealed class HeadBandDogtagGridProfileMigration : AbstractProfileMigratio
         var inventory = profile["characters"]?[character]?["Inventory"] as JsonObject;
         var items = inventory?["items"] as JsonArray;
         if (inventory == null || items == null) return;
-        string? sorting = Read(inventory, "sortingTable");
         foreach (var headBand in items.OfType<JsonObject>().Where(IsHeadBand).ToArray())
         {
             string? id = Read(headBand, "_id");
@@ -59,12 +57,6 @@ public sealed class HeadBandDogtagGridProfileMigration : AbstractProfileMigratio
                     child["slotId"] = DedicatedWearableItems.HeadBandDogtagCaseGridName;
                     child["location"] = new JsonObject { ["x"] = 0, ["y"] = 0, ["r"] = "Horizontal" };
                     casePlaced = true;
-                }
-                else if (HeadBandUtilityPolicy.IsCigarette(tpl ?? "") && sorting != null)
-                {
-                    child["parentId"] = sorting;
-                    child["slotId"] = "hideout";
-                    child.Remove("location");
                 }
             }
         }
