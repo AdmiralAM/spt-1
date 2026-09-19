@@ -129,6 +129,10 @@ def counter_requirement(condition: dict[str, Any], items: dict[str, Any], locale
             result += f" оружием: {names(weapons, items, locale, optional)}"
         if distance:
             result += f" с дистанции от {distance} м"
+        if equipment:
+            result += f"; обязательная экипировка: {names(equipment, items, locale, optional)}"
+        if survived:
+            result += "; выжить и эвакуироваться в том же рейде"
     elif kind == "Exploration":
         result = "Выжить в рейде" if survived else "Выполнить рейдовую задачу"
         if equipment:
@@ -157,15 +161,12 @@ def requirement(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, 
         # Pools of keys and weapons must stay visible in the review; their
         # native objective sentence intentionally calls them simply
         # "подходящий" and would hide the meaningful balance decision.
-        if kind == "CounterCreator" and str(condition.get("type") or "") == "Elimination":
-            parts.append(counter_requirement(condition, items, locale, optional))
-            continue
         if kind == "CounterCreator":
             exact = localized_condition_text(condition, quest_locale)
-            if exact:
-                parts.extend(exact)
-            else:
-                parts.append(counter_requirement(condition, items, locale, optional))
+            parts.extend(exact)
+            derived = counter_requirement(condition, items, locale, optional)
+            if not exact or all(derived.rstrip(".") not in text for text in exact):
+                parts.append(derived)
         elif kind in {"FindItem", "HandoverItem"}:
             count = int(condition.get("value") or 1)
             verb = "Найти" if kind == "FindItem" else "Передать"

@@ -96,7 +96,7 @@ SUPPORT_REWARDS = {
     11: ("SIG BRAVO4 optical sight", "57adff4f24597737f373b6e6", 1),
     13: ("MSA Sordin active headset", "5aa2ba71e5b5b000137b758f", 1),
     14: ("EOTech HHS-1 hybrid sight", "5c07dd120db834001c39092d", 1),
-    15: ("CMS surgical kit", "5d02778e86f774203e7dedbe", 1),
+    15: ("Grizzly medical kit (3x3)", "590c657e86f77412b013051d", 1),
     17: ("Grizzly medical kit", "590c657e86f77412b013051d", 1),
     18: ("Surv12 field surgical kit", "5d02797c86f774203f38e30a", 1),
     19: ("Camelbak Tri-Zip backpack", "545cdae64bdc2d39198b4568", 1),

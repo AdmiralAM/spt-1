@@ -48,6 +48,22 @@ class QuestProgressAndBarterContractTests(unittest.TestCase):
                     continue
                 self.assertTrue(any(set(row.get("target") or []) == targets and row.get("value") == find.get("value") for row in handovers), quest["_id"])
 
+    def test_every_access_protocol_awards_its_authored_key(self):
+        authored = {row["id"]: row for row in load("manifests/keys-authored-spec.json")["quests"]}
+        quests = {row["_id"]: row for row in self.quests}
+        for quest_id, row in authored.items():
+            expected = row["rewardBudget"]["itemReward"]
+            roots = [
+                item
+                for reward in quests[quest_id]["rewards"]["Success"] if reward.get("type") == "Item"
+                for item in reward.get("items", []) if not item.get("parentId")
+            ]
+            self.assertTrue(any(item["_tpl"] == expected["tpl"] for item in roots), quest_id)
+
+        factory = quests["1b92e4cf212d895be4f70b2c"]
+        find = next(row for row in factory["conditions"]["AvailableForFinish"] if row["conditionType"] == "FindItem")
+        self.assertEqual(set(find["target"]), set(authored[factory["_id"]]["objective"]["targetTpls"]))
+
     def test_selected_specialist_stock_uses_real_item_barters(self):
         policy = load("manifests/storefront-barter-policy.json")
         assort = load("db/assort.json")
@@ -56,6 +72,9 @@ class QuestProgressAndBarterContractTests(unittest.TestCase):
             scheme = assort["barter_scheme"][offer["offerId"]]
             self.assertEqual(scheme, [[{"count": row["count"], "_tpl": row["tpl"]} for row in offer["requirements"]]])
             self.assertTrue(all(row["_tpl"] != ROUBLES for row in scheme[0]))
+
+        first = next(row for row in assort["items"] if row["_id"] == "ad2000000000000000000003")
+        self.assertEqual("590c60fc86f77412b13fddcf", first["_tpl"])
 
     def test_flir_barter_uses_radar_array_virtex_and_military_cable(self):
         policy = load("manifests/storefront-barter-policy.json")

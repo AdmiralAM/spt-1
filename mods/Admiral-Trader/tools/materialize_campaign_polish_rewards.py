@@ -32,6 +32,30 @@ REWARD_LADDER = [
     ("Стимулятор eTG-c", "5c0e534186f7747fa1419867", 1),
 ]
 
+# Product-reviewed rewards for the equipment and legacy operation clusters.
+# These are deliberately useful at the quest's actual progression stage and
+# remain native, so the reward never disappears when optional content is off.
+CURATED_REWARDS = {
+    "4a8f533e1ed458e83b41c01f": ("Аптечка IFAK", "590c678286f77426c9660122", 1),
+    "4ab0b49478adb233ae900b33": ("Активные наушники MSA Sordin", "5aa2ba71e5b5b000137b758f", 1),
+    "ca33fab8b9cc5f5f5ad322c0": ("Бронежилет HighCom Trooper", "5c0e655586f774045612eeb2", 1),
+    "9c35b3ac22ede1a5a79118bc": ("Бронежилет БНТИ Жук", "5c0e625a86f7742d77340f62", 1),
+    "ee813142de655daf2dedfebc": ("Кейс для патронов", "5aafbde786f774389d0cbc0f", 1),
+    "47480d824cea0b80917cafa5": ("Бронежилет 6Б13 М Killa", "5c0e541586f7747fa54205c9", 1),
+    "8dad0d354ac000b7bbf05b9a": ("Активные наушники ComTac IV", "628e4e576d783146b124c64d", 1),
+    "56813681ae0690016376f163": ("Металлическая топливная канистра", "5d1b36a186f7742523398433", 1),
+    "208db81b5ce195bf0c176852": ("Бронежилет HighCom Trooper", "5c0e655586f774045612eeb2", 1),
+    "6574a072f763d0b09a553401": ("Бронежилет БНТИ Жук", "5c0e625a86f7742d77340f62", 1),
+    "8b6f2b25ab2e91e0540761e3": ("Планшет для документов", "590c60fc86f77412b13fddcf", 1),
+    "41a41cb262ea084c1e110513": ("Активные наушники MSA Sordin", "5aa2ba71e5b5b000137b758f", 1),
+    "133aa723b4695a3d93de92f1": ("Кейс для патронов", "5aafbde786f774389d0cbc0f", 1),
+    "db220288bc8d5559a45feeb1": ("Кейс для жетонов", "5c093e3486f77430cb02e593", 1),
+    "4c2cc3f85d60170907642d9e": ("Оптический прицел SIG BRAVO4", "57adff4f24597737f373b6e6", 1),
+    "b1b3d9e3a930a3eae47b2353": ("Бронежилет 6Б13 М Killa", "5c0e541586f7747fa54205c9", 1),
+    "f62d8e1285027e336767513c": ("Полевой хирургический набор Surv12", "5d02797c86f774203f38e30a", 1),
+    "4072a5e458946a243b886ad8": ("Кейс S I C C", "5d235bb686f77443f4331278", 1),
+}
+
 OVERLAY_FILES = [
     "natalya-signature-replacements.json", "early-weapon-reward-trades.json",
     "field-support-reward-trades.json", "tactical-reward-trades.json",
@@ -58,13 +82,13 @@ def level(quest) -> int:
 def main():
     quest_paths = {load(path)["_id"]: path for path in (ROOT / "db/quests").glob("*.json")}
     quests = {qid: load(path) for qid, path in quest_paths.items()}
-    overlays = set()
-    for filename in OVERLAY_FILES:
-        overlays.update(load(ROOT / "db/rewards" / filename))
-    rotation = load(ROOT / "manifests/weapon-rotation-rewards.json")
-    overlays.update(row["questId"] for row in rotation["rewards"])
     output_path = ROOT / "manifests/campaign-polish-rewards.json"
     previous = load(output_path) if output_path.exists() else {"rewards": []}
+    previous_by_quest = {row["questId"]: row for row in previous.get("rewards", [])}
+    optional_reductions = {
+        quest_id: int(row["cashReductionRub"])
+        for quest_id, row in load(ROOT / "db/rewards/belt-container-reward-trades.json").items()
+    }
     for row in previous.get("rewards", []):
         quest = quests[row["questId"]]
         quest["rewards"]["Success"] = [reward for reward in quest["rewards"]["Success"] if reward["id"] != row["rewardId"]]
@@ -78,16 +102,27 @@ def main():
             reward.get("type") == "Item" and reward.get("items", [{}])[0].get("_tpl") != RUB
             for reward in quest["rewards"]["Success"]
         )
-        if not direct_item and qid not in overlays:
+        curated = CURATED_REWARDS.get(qid)
+        has_curated = curated and any(
+            reward.get("type") == "Item" and reward.get("items", [{}])[0].get("_tpl") == curated[1]
+            for reward in quest["rewards"]["Success"]
+        )
+        if (curated and not has_curated) or not direct_item:
             candidates.append((level(quest), qid, quest))
     candidates.sort(key=lambda row: (row[0], row[1]))
     rows = []
     for index, (quest_level, qid, quest) in enumerate(candidates):
         tier = min(19, max(0, (quest_level - 1) // 2))
-        name, tpl, quantity = REWARD_LADDER[(tier + index) % len(REWARD_LADDER)]
+        name, tpl, quantity = CURATED_REWARDS.get(qid, REWARD_LADDER[(tier + index) % len(REWARD_LADDER)])
         cash = next(reward for reward in quest["rewards"]["Success"] if reward.get("items", [{}])[0].get("_tpl") == RUB)
-        desired = 3000 + min(27000, quest_level * 700)
-        reduction = min(desired, max(0, int(cash["value"]) - 10000))
+        maximum_reduction = max(0, int(cash["value"]) - optional_reductions.get(qid, 0) - 10000)
+        if qid in CURATED_REWARDS:
+            reduction = 0
+        elif qid in previous_by_quest:
+            reduction = min(int(previous_by_quest[qid]["cashReductionRub"]), maximum_reduction)
+        else:
+            desired = 3000 + min(27000, quest_level * 700)
+            reduction = min(desired, maximum_reduction)
         cash["value"] -= reduction
         cash["items"][0]["upd"]["StackObjectsCount"] = cash["value"]
         item_id = hid(f"{qid}:campaign-polish-item")
@@ -98,7 +133,7 @@ def main():
 
     for qid, quest in quests.items():
         save(quest_paths[qid], quest)
-    output = {"schemaVersion": 1, "status": "runtime-materialized", "policy": "Every quest has XP, standing, at least 10000 remaining roubles and one useful item or unlock after native and conditional reward layers are considered.", "rewardedQuestCount": len(rows), "minimumRemainingRoubles": 10000, "rewards": rows}
+    output = {"schemaVersion": 1, "status": "runtime-materialized", "policy": "Every quest has a native useful item reward even when optional content is absent; curated equipment and operation rewards supplement rather than replace cash.", "rewardedQuestCount": len(rows), "minimumRemainingRoubles": 10000, "rewards": rows}
     output_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 

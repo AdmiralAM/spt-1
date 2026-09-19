@@ -3,12 +3,101 @@
   "status": "runtime-materialized",
   "policy": "Keep routine field stock purchasable for roubles, but require raid-sourced barter goods for selected specialist equipment, containers and exceptional access items.",
   "offers": [
-    {"offerId":"ad2000000000000000000003","name":"Wilcox RAPTAR ES","requirements":[{"tpl":"5d1b304286f774253763a528","count":2},{"tpl":"5c06779c86f77426e00dd782","count":1}]},
-    {"offerId":"3e6f816c41a9c73328116881","name":"Injector case","requirements":[{"tpl":"619cc01e0a7c3a1a2731940c","count":2},{"tpl":"59e3606886f77417674759a5","count":2},{"tpl":"5d1b3f2d86f774253763b735","count":5}]},
-    {"offerId":"b5b55194b4a76ce0ce71a409","name":"6-STEN-140-M military battery","requirements":[{"tpl":"5e2aee0a86f774755a234b62","count":2},{"tpl":"5d0375ff86f774186372f685","count":4},{"tpl":"5d1b313086f77425227d1678","count":4}]},
-    {"offerId":"6b0d153489b984ae9b940adb","name":"FLIR RS-32","requirements":[{"tpl":"5d03775b86f774203e7e0c4b","count":1},{"tpl":"5c05308086f7746b2101e90b","count":1},{"tpl":"5d0375ff86f774186372f685","count":2}]},
-    {"offerId":"ad1000000000000000000001","name":"TerraGroup Labs access keycard (clearance offer)","requirements":[{"tpl":"5c12613b86f7743bbe2c3f76","count":1},{"tpl":"5c052fb986f7746b2101e909","count":1}]},
-    {"offerId":"e76db2cbe4b00c66047ccb27","name":"TerraGroup Labs access keycard","requirements":[{"tpl":"5c12613b86f7743bbe2c3f76","count":2},{"tpl":"590c392f86f77444754deb29","count":2}]}
+    {
+      "offerId": "ad2000000000000000000003",
+      "name": "Documents case",
+      "requirements": [
+        {
+          "tpl": "590c645c86f77412b01304d9",
+          "count": 2
+        },
+        {
+          "tpl": "590c651286f7741e566b6461",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "offerId": "3e6f816c41a9c73328116881",
+      "name": "Injector case",
+      "requirements": [
+        {
+          "tpl": "619cc01e0a7c3a1a2731940c",
+          "count": 2
+        },
+        {
+          "tpl": "59e3606886f77417674759a5",
+          "count": 2
+        },
+        {
+          "tpl": "5d1b3f2d86f774253763b735",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "offerId": "b5b55194b4a76ce0ce71a409",
+      "name": "6-STEN-140-M military battery",
+      "requirements": [
+        {
+          "tpl": "5e2aee0a86f774755a234b62",
+          "count": 2
+        },
+        {
+          "tpl": "5d0375ff86f774186372f685",
+          "count": 4
+        },
+        {
+          "tpl": "5d1b313086f77425227d1678",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "offerId": "6b0d153489b984ae9b940adb",
+      "name": "FLIR RS-32",
+      "requirements": [
+        {
+          "tpl": "5d03775b86f774203e7e0c4b",
+          "count": 1
+        },
+        {
+          "tpl": "5c05308086f7746b2101e90b",
+          "count": 1
+        },
+        {
+          "tpl": "5d0375ff86f774186372f685",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "offerId": "ad1000000000000000000001",
+      "name": "TerraGroup Labs access keycard (clearance offer)",
+      "requirements": [
+        {
+          "tpl": "5c12613b86f7743bbe2c3f76",
+          "count": 1
+        },
+        {
+          "tpl": "5c052fb986f7746b2101e909",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "offerId": "e76db2cbe4b00c66047ccb27",
+      "name": "TerraGroup Labs access keycard",
+      "requirements": [
+        {
+          "tpl": "5c12613b86f7743bbe2c3f76",
+          "count": 2
+        },
+        {
+          "tpl": "590c392f86f77444754deb29",
+          "count": 2
+        }
+      ]
+    }
   ]
 }
-

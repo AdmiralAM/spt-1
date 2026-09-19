@@ -38,7 +38,11 @@
         "xp": 4500,
         "rub": 15000,
         "standing": 0.01,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5937ee6486f77408994ba448",
+          "quantity": 1
+        }
       }
     },
     {
@@ -53,18 +57,24 @@
       "objective": {
         "model": "possess-representative-keys",
         "representativeCount": 1,
-        "maximumTargetPoolSize": 2,
+        "maximumTargetPoolSize": 4,
         "sourceGroup": "keys-factory",
         "targetTpls": [
-          "57a349b2245977762b199ec7",
-          "593858c486f774253a24cb52"
+          "5937ee6486f77408994ba448",
+          "5938144586f77473c2087145",
+          "593962ca86f774068014d9af",
+          "5913877a86f774432f15d444"
         ]
       },
       "rewardBudget": {
         "xp": 5000,
         "rub": 20000,
         "standing": 0.01,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5448ba0b4bdc2d02308b456c",
+          "quantity": 1
+        }
       }
     },
     {
@@ -92,7 +102,11 @@
         "xp": 6500,
         "rub": 25000,
         "standing": 0.02,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5780cf7f2459777de4559322",
+          "quantity": 1
+        }
       }
     },
     {
@@ -118,7 +132,11 @@
         "xp": 7500,
         "rub": 25000,
         "standing": 0.02,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "591afe0186f77431bd616a11",
+          "quantity": 1
+        }
       }
     },
     {
@@ -147,7 +165,11 @@
         "xp": 8500,
         "rub": 30000,
         "standing": 0.02,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5ad5d7d286f77450166e0a89",
+          "quantity": 1
+        }
       }
     },
     {
@@ -176,7 +198,11 @@
         "xp": 10000,
         "rub": 40000,
         "standing": 0.02,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5a0ee30786f774023b6ee08f",
+          "quantity": 1
+        }
       }
     },
     {
@@ -207,7 +233,11 @@
         "xp": 15000,
         "rub": 50000,
         "standing": 0.03,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5d80c60f86f77440373c4ece",
+          "quantity": 1
+        }
       }
     },
     {
@@ -238,7 +268,11 @@
         "xp": 17000,
         "rub": 60000,
         "standing": 0.03,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "61aa5b518f5e7a39b41416e2",
+          "quantity": 1
+        }
       }
     },
     {
@@ -267,7 +301,7 @@
         "standing": 0.03,
         "unlockSlots": 0,
         "itemReward": {
-          "tpl": "5c0e533786f7747fa23f4d47",
+          "tpl": "5c1d0c5f86f7744bb2683cf0",
           "quantity": 1
         }
       }
@@ -299,7 +333,7 @@
         "standing": 0.03,
         "unlockSlots": 1,
         "itemReward": {
-          "tpl": "60098ad7c2240c0fe85c570a",
+          "tpl": "5c1e495a86f7743109743dfb",
           "quantity": 1
         }
       }

@@ -165,10 +165,10 @@
       "lane": "A",
       "order": 15,
       "kind": "field-support",
-      "name": "CMS surgical kit",
+      "name": "Grizzly medical kit (3x3)",
       "cashReductionRub": 5000,
       "rewardId": "61e59db4432706f74d0ce7c8",
-      "rootTemplate": "5d02778e86f774203e7dedbe",
+      "rootTemplate": "590c657e86f77412b013051d",
       "itemTreeSize": 1
     },
     {
@@ -385,10 +385,10 @@
       "lane": "B",
       "order": 15,
       "kind": "field-support",
-      "name": "CMS surgical kit",
+      "name": "Grizzly medical kit (3x3)",
       "cashReductionRub": 20000,
       "rewardId": "8e2e44db226e8af2bce5910e",
-      "rootTemplate": "5d02778e86f774203e7dedbe",
+      "rootTemplate": "590c657e86f77412b013051d",
       "itemTreeSize": 1
     },
     {

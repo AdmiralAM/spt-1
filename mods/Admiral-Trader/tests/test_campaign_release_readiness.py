@@ -19,17 +19,8 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
             quest = json.loads(path.read_text(encoding="utf-8"))
             cls.quests[quest["_id"]] = quest
 
-    def test_all_172_quests_have_xp_rep_cash_and_a_useful_reward_layer(self):
+    def test_all_172_quests_have_xp_rep_cash_and_a_native_item_reward(self):
         self.assertEqual(172, len(self.quests))
-        overlay_ids = set()
-        for filename in (
-            "natalya-signature-replacements.json", "early-weapon-reward-trades.json",
-            "field-support-reward-trades.json", "tactical-reward-trades.json",
-            "belt-container-reward-trades.json",
-        ):
-            overlay_ids.update(load(f"db/rewards/{filename}"))
-        overlay_ids.update(row["questId"] for row in load("manifests/weapon-rotation-rewards.json")["rewards"])
-        overlay_ids.update(row["questId"] for row in load("manifests/campaign-polish-rewards.json")["rewards"])
         for quest_id, quest in self.quests.items():
             rewards = quest["rewards"]["Success"]
             self.assertTrue(any(row["type"] == "Experience" and row["value"] > 0 for row in rewards), quest_id)
@@ -37,8 +28,7 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
             cash = next(row for row in rewards if row.get("items", [{}])[0].get("_tpl") == ROUBLES)
             self.assertGreaterEqual(cash["value"], 10000, quest_id)
             direct_item = any(row.get("type") == "Item" and row.get("items", [{}])[0].get("_tpl") != ROUBLES for row in rewards)
-            unlocked_offer = any(row.get("type") == "AssortmentUnlock" for row in rewards)
-            self.assertTrue(direct_item or unlocked_offer or quest_id in overlay_ids, quest_id)
+            self.assertTrue(direct_item, quest_id)
 
     def test_loyalty_uses_level_reputation_and_vanilla_style_sales_gates(self):
         levels = load("db/base.json")["loyaltyLevels"]
