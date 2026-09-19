@@ -15,7 +15,6 @@ Admiral Tactical HUD owns only HUD functionality:
 - compact population display;
 - optional Full Census population display;
 - player status display;
-- kill feed;
 - HUD edit mode;
 - HUD assets and their validation/optimization pipeline.
 
@@ -25,7 +24,7 @@ The `1.13.3` line is the only maintained version. Legacy Tactical HUD versions a
 
 ### Compact
 
-`Admiral Tactical HUD.dll` contains the original compact population strip together with player status and kill feed. The compact population roles now prefer the cleaner Bot Census glyph set for PMC/Scav/Boss/Raider-compatible categories.
+`Admiral Tactical HUD.dll` contains the original compact population strip together with player status. Compact PMC, Scav, Boss and reinforced-enemy roles use the established Admiral atlas icons; the later Bot Census replacements remain available only as fallback for those roles.
 
 ### Full Census
 
@@ -40,14 +39,6 @@ Population glyphs compatible with the Full Census model are derived from the MIT
 The original Admiral Tactical HUD sprite atlas and approved source cells are **retained, not deleted**. They remain the reserve/fallback source for status, body-part and self icons and for any population glyph that cannot be loaded from the embedded Bot Census set.
 
 Both the Bot Census population glyphs and the Admiral reserve atlas are embedded in the relevant client assemblies. The external `assets/hud-sprites.png` remains packaged for compatibility, but losing that file no longer removes all HUD icons.
-
-## Kill feed
-
-Kill-feed rows use a compact weapon name instead of a weapon-class icon. The intended row is:
-
-`killer icon -> short weapon text -> victim icon -> hit-location icon -> distance`
-
-Weapon text is normalized to compact forms such as `AK-105`, `M4A1` or `MP7A2` and rendered with a compact font plus dark outline/shadow. Role and hit-location icons remain independent of the weapon text.
 
 ## Source layout
 
@@ -74,4 +65,4 @@ existing directories listed under `replace` and copy the packaged `BepInEx/` and
 `SPT_Runtime/` folders into the SPT root. This prevents an old DLL or duplicate atlas from
 being loaded beside RC2; the manifest is the exact machine-readable replacement contract.
 
-RC2 is not promoted as stable until Compact icons, Full Census, status icons and the weapon-text kill feed pass a physical SPT smoke test.
+RC2 is not promoted as stable until Compact population icons, Full Census, status icons and raid/menu lifecycle pass a physical SPT smoke test. The experimental kill feed has been removed from this release line; any future replacement requires a separate readable and non-distracting design.

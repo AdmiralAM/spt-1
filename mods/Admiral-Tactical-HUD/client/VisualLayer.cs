@@ -20,13 +20,7 @@ namespace SPTPopCounter
 
         sealed class HudVisualRenderer
         {
-            static readonly Color KillPmc = new Color(.56f, .76f, .51f, 1f);
-            static readonly Color KillScav = new Color(.77f, .43f, .40f, 1f);
-            static readonly Color KillBoss = new Color(.86f, .62f, .28f, 1f);
-            static readonly Color KillRaider = new Color(.66f, .53f, .78f, 1f);
-            static readonly Color KillSelf = new Color(.65f, .78f, .42f, 1f);
             static readonly Color Neutral = new Color(.80f, .82f, .81f, 1f);
-            static readonly Color WeaponTextColor = new Color(.88f, .89f, .87f, 1f);
             static readonly Color Muted = new Color(.58f, .60f, .59f, 1f);
             static readonly Color Head = new Color(.84f, .33f, .30f, 1f);
             static readonly Color Water = new Color(.49f, .69f, .86f, 1f);
@@ -43,8 +37,8 @@ namespace SPTPopCounter
             GUIStyle text;
             int dragCluster;
             Vector2 dragOffset;
-            Rect populationEditRect, statusEditRect, killEditRect;
-            bool populationEditRectValid, statusEditRectValid, killEditRectValid;
+            Rect populationEditRect, statusEditRect;
+            bool populationEditRectValid, statusEditRectValid;
             int cachedPmc = int.MinValue, cachedScav = int.MinValue, cachedBoss = int.MinValue, cachedRaider = int.MinValue;
             int cachedHydration = int.MinValue, cachedEnergy = int.MinValue, cachedWeight = int.MinValue;
             string pmcText, scavText, bossText, raiderText, hydrationText, energyText, weightText;
@@ -110,7 +104,6 @@ namespace SPTPopCounter
                 bool showPopulation = (runtime.inRaid || debug) && (runtime.mode >= 1 || editing) && runtime.popEnabled.Value;
                 bool showStatus = (runtime.inRaid || debug || runtime.statusOutside.Value) &&
                                   (runtime.mode >= 2 || editing) && runtime.statusEnabled.Value;
-                bool showKillFeed = (runtime.inRaid || debug) && runtime.killEnabled.Value;
 
                 if (eventType != EventType.Repaint)
                 {
@@ -119,14 +112,11 @@ namespace SPTPopCounter
                         EditSurface(1, populationEditRect, runtime.popX, runtime.popY, true);
                     if (showStatus && statusEditRectValid)
                         EditSurface(2, statusEditRect, runtime.statusX, runtime.statusY, true);
-                    if (showKillFeed && killEditRectValid)
-                        EditSurface(3, killEditRect, runtime.killX, runtime.killY, false);
                     return;
                 }
 
                 if (showPopulation) DrawPopulation();
                 if (showStatus) DrawStatus();
-                if (showKillFeed) DrawKillFeed(editing);
             }
 
             void EnsureStyle(int size)
@@ -273,7 +263,6 @@ namespace SPTPopCounter
             {
                 if (id == 1) { populationEditRect = r; populationEditRectValid = true; }
                 else if (id == 2) { statusEditRect = r; statusEditRectValid = true; }
-                else if (id == 3) { killEditRect = r; killEditRectValid = true; }
             }
 
             void DrawPopulation()
@@ -361,148 +350,6 @@ namespace SPTPopCounter
                 EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.statusX, runtime.statusY, true);
             }
 
-            void DrawKillFeed(bool editing)
-            {
-                int size = runtime.killSize.Value;
-                int max = runtime.killMax.Value;
-                float opacity = runtime.killOpacity.Value;
-                float life = runtime.killLifetime.Value;
-                string displayMode = runtime.killMode.Value;
-
-                int count = Mathf.Min(max, runtime.kills.Count);
-                int rows = editing ? Mathf.Max(1, count) : count;
-                float width = displayMode == "Detailed" ? 235f : displayMode == "Minimal" ? 88f : 205f;
-                float rowHeight = size + 14;
-                Rect root = new Rect(runtime.killX.Value, runtime.killY.Value, width, rowHeight * Mathf.Max(1, rows));
-
-                if (rows > 0) EditSurface(3, root, runtime.killX, runtime.killY, false);
-
-                if (runtime.kills.Count == 0)
-                {
-                    if (editing)
-                        DrawKillRow(root, "Self", "Scav", "AK-105", "head", "187m", true, 0, 1f, displayMode, size, opacity);
-                    return;
-                }
-
-                int shown = 0;
-                float fadeWindow = Mathf.Max(.25f, Mathf.Min(1.4f, life));
-                for (int i = runtime.kills.Count - 1; i >= 0 && shown < max; i--, shown++)
-                {
-                    KillLine k = runtime.kills[i];
-                    float age = Time.unscaledTime - k.Created;
-                    float fade = Mathf.Clamp01((life - age) / fadeWindow);
-                    DrawKillRow(root, k.Killer, k.Victim, k.WeaponText, k.HitIcon, k.DistanceText, k.HasDistance,
-                        shown, fade, displayMode, size, opacity);
-                }
-            }
-
-            void DrawKillRow(Rect r, string killer, string victim, string weaponText, string hitIcon, string distanceText,
-                bool hasDistance, int row, float fade, string displayMode, int size, float opacity)
-            {
-                float y = row * (size + 14);
-                float x = 0;
-                float op = opacity * fade;
-                Color killerColor = RoleColor(killer);
-                Color victimColor = RoleColor(victim);
-
-                x = Icon(r, RoleIcon(killer), x, y, size, op, killerColor, 1f);
-                x = Gap(x, 5);
-
-                if (displayMode != "Minimal")
-                {
-                    x = Text(r, weaponText, x, y, Mathf.Max(9, size), op, WeaponTextColor, 1f);
-                    x = Gap(x, 5);
-                }
-
-                x = Icon(r, RoleIcon(victim), x, y, size, op, victimColor, 1f);
-
-                if (displayMode != "Minimal")
-                {
-                    if (displayMode == "Detailed")
-                    {
-                        x = Gap(x, 6);
-                        x = Icon(r, hitIcon, x, y, size, op, hitIcon == "head" ? Head : Muted, 1f);
-                    }
-                    if (hasDistance)
-                    {
-                        x = Gap(x, 1);
-                        Text(r, distanceText, x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
-                    }
-                }
-            }
-
-            static Color RoleColor(string role)
-            {
-                if (role == "USEC" || role == "BEAR" || role == "PMC") return KillPmc;
-                if (role == "Scav") return KillScav;
-                if (role == "Boss") return KillBoss;
-                if (role == "Raider") return KillRaider;
-                if (role == "Self") return KillSelf;
-                return Neutral;
-            }
-
-            static string RoleIcon(string role)
-            {
-                if (role == "BEAR") return "bear";
-                if (role == "Scav") return "scav";
-                if (role == "Boss") return "boss";
-                if (role == "Raider") return "raider";
-                if (role == "Self") return "self";
-                return "usec";
-            }
-
-            internal static string HitKey(string hit)
-            {
-                if (string.IsNullOrEmpty(hit)) return "torso";
-                if (Contains(hit, "head")) return "head";
-                if (Contains(hit, "leftarm") || Contains(hit, "left arm")) return "left_arm";
-                if (Contains(hit, "rightarm") || Contains(hit, "right arm")) return "right_arm";
-                if (Contains(hit, "leftleg") || Contains(hit, "left leg")) return "left_leg";
-                if (Contains(hit, "rightleg") || Contains(hit, "right leg")) return "right_leg";
-                if (Contains(hit, "arm")) return "left_arm";
-                if (Contains(hit, "leg")) return "left_leg";
-                if (Contains(hit, "stomach")) return "stomach";
-                return "torso";
-            }
-
-            internal static string CleanWeapon(string raw)
-            {
-                if (string.IsNullOrWhiteSpace(raw)) return "?";
-                string s = raw.Trim();
-                int bracket = s.IndexOf('[');
-                if (bracket >= 0) s = s.Substring(0, bracket).Trim();
-                s = s.Replace("ShortName", string.Empty).Replace("Template", string.Empty).Trim(' ', '[', ']', '(', ')', '{', '}');
-                if (s.Length == 0) return "?";
-
-                string compact = s.Replace("-", string.Empty).Replace("_", string.Empty).Replace(" ", string.Empty);
-                bool hexLike = compact.Length >= 20;
-                for (int i = 0; i < compact.Length && hexLike; i++)
-                    if (!Uri.IsHexDigit(compact[i])) hexLike = false;
-                if (hexLike) return "?";
-
-                string lower = s.ToLowerInvariant();
-                string[] noise = { "assault rifle", "assault carbine", "marksman rifle", "sniper rifle", "submachine gun", "machine gun", "shotgun", "pistol", "carbine", "rifle", "weapon" };
-                for (int i = 0; i < noise.Length; i++)
-                {
-                    int index = lower.IndexOf(noise[i], StringComparison.Ordinal);
-                    if (index >= 0)
-                    {
-                        s = (s.Substring(0, index) + s.Substring(index + noise[i].Length)).Trim(' ', '-', ':');
-                        lower = s.ToLowerInvariant();
-                    }
-                }
-
-                int caliber = s.IndexOf(" 5.", StringComparison.Ordinal);
-                if (caliber < 0) caliber = s.IndexOf(" 7.", StringComparison.Ordinal);
-                if (caliber < 0) caliber = s.IndexOf(" 9x", StringComparison.OrdinalIgnoreCase);
-                if (caliber > 0) s = s.Substring(0, caliber).Trim();
-
-                while (s.Contains("  ")) s = s.Replace("  ", " ");
-                if (s.Length > 14) s = s.Substring(0, 14).Trim();
-                return string.IsNullOrEmpty(s) ? "?" : s;
-            }
-
-            static bool Contains(string value, string token) => value.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

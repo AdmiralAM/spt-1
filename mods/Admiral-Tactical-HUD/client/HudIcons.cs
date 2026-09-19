@@ -98,17 +98,24 @@ namespace SPTPopCounter
             if (string.IsNullOrEmpty(key)) return null;
             if (cache.TryGetValue(key,out Texture2D cached)) return cached;
 
-            Texture2D preferred = LoadBotCensus(key);
+            Texture2D preferred = IsLegacyPopulationIcon(key) ? LoadReserve(key) : LoadBotCensus(key);
             if (preferred != null)
             {
                 cache[key] = preferred;
                 return preferred;
             }
 
-            Texture2D reserve = LoadReserve(key);
-            cache[key] = reserve;
-            return reserve;
+            Texture2D fallback = IsLegacyPopulationIcon(key) ? LoadBotCensus(key) : LoadReserve(key);
+            cache[key] = fallback;
+            return fallback;
         }
+
+        static bool IsLegacyPopulationIcon(string key) =>
+            key.Equals("usec", StringComparison.OrdinalIgnoreCase) ||
+            key.Equals("bear", StringComparison.OrdinalIgnoreCase) ||
+            key.Equals("scav", StringComparison.OrdinalIgnoreCase) ||
+            key.Equals("boss", StringComparison.OrdinalIgnoreCase) ||
+            key.Equals("raider", StringComparison.OrdinalIgnoreCase);
 
         Texture2D LoadBotCensus(string key)
         {

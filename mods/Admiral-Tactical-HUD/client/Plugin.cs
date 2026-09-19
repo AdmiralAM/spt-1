@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
@@ -14,14 +13,14 @@ namespace SPTPopCounter
     [BepInPlugin("com.admiralam.tacticalhud", "Admiral Tactical HUD", "1.13.3")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
-        ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
+        ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, showVersion;
         ConfigEntry<KeyboardShortcut> toggleKey;
-        ConfigEntry<int> savedMode, popSize, statusSize, killSize, killMax;
-        ConfigEntry<string> popLayout, statusLayout, killMode;
-        ConfigEntry<float> popOpacity, statusOpacity, killOpacity, popX, popY, statusX, statusY, killX, killY, killLifetime;
+        ConfigEntry<int> savedMode, popSize, statusSize;
+        ConfigEntry<string> popLayout, statusLayout;
+        ConfigEntry<float> popOpacity, statusOpacity, popX, popY, statusX, statusY;
         ConfigEntry<Color> pmcColor, scavColor, bossColor, reinforcedColor, weightOk, weightHeavy, weightCritical;
 
-        float nextRefresh, nextVersionSearch, nextSubscribe, nextOutsideProfileSearch;
+        float nextRefresh, nextVersionSearch, nextOutsideProfileSearch;
         int mode, pmc, scav, boss, reinforced, versionSearchAttempts;
         bool inRaid, lastShowVersion, versionTextTypesResolved;
         float hydration, energy, weight, overweightLimit, walkDrainLimit;
@@ -41,37 +40,10 @@ namespace SPTPopCounter
         static readonly Dictionary<string, Type> ExactTypeCache = new Dictionary<string, Type>(StringComparer.Ordinal);
         static readonly Dictionary<string, Type> SimpleTypeCache = new Dictionary<string, Type>(StringComparer.Ordinal);
         static readonly Dictionary<Type, PropertyInfo> SingletonPropertyCache = new Dictionary<Type, PropertyInfo>();
-        static readonly Dictionary<Type, Dictionary<string, EventInfo>> EventCache = new Dictionary<Type, Dictionary<string, EventInfo>>();
-
-        readonly Dictionary<string, Tracked> tracked = new Dictionary<string, Tracked>();
-        readonly Dictionary<string, object> playersByProfileId = new Dictionary<string, object>();
         readonly List<object> refreshPlayers = new List<object>(64);
-        readonly HashSet<string> refreshSeen = new HashSet<string>(StringComparer.Ordinal);
-        readonly List<string> refreshRemoved = new List<string>(32);
-        readonly Queue<string> subscribeQueue = new Queue<string>();
-        readonly HashSet<string> queuedIds = new HashSet<string>();
-        readonly List<KillLine> kills = new List<KillLine>();
-        readonly HashSet<string> diagSeen = new HashSet<string>();
         readonly List<VersionTarget> versionTargets = new List<VersionTarget>();
         readonly List<Type> versionTextTypes = new List<Type>();
         readonly Dictionary<Type, MemberInfo[]> versionStringMembers = new Dictionary<Type, MemberInfo[]>();
-
-        sealed class Tracked
-        {
-            public object Player, Health, LastDamage, LastAttacker;
-            public bool Alive, DeathCaptured, Subscribed;
-            public Vector3 Pos;
-            public string Kind, LastHit, LastWeapon;
-            public EventInfo DiedEvent, DamageEvent, PlayerDamageEvent;
-            public Delegate DiedHandler, DamageHandler, PlayerDamageHandler;
-        }
-
-        sealed class KillLine
-        {
-            public string Killer, Victim, WeaponText, HitIcon, DistanceText;
-            public float Created;
-            public bool HasDistance;
-        }
 
         sealed class VersionTarget
         {
@@ -116,20 +88,6 @@ namespace SPTPopCounter
             weightHeavy = C("Player Status Colors", "Weight Heavy", .78f, .68f, .39f);
             weightCritical = C("Player Status Colors", "Weight Critical", .75f, .42f, .39f);
 
-            killEnabled = Config.Bind("Kill Feed", "Enabled", true, "Runtime kill feed");
-            killDiagnostics = Config.Bind("Kill Feed", "Diagnostics", false, "Log unresolved death attribution fields");
-            killMode = Config.Bind("Kill Feed", "Display Mode", "Normal",
-                new ConfigDescription("Minimal / Normal / Detailed", new AcceptableValueList<string>("Minimal", "Normal", "Detailed")));
-            killSize = Size("Kill Feed");
-            killOpacity = Opacity("Kill Feed");
-            killX = X("Kill Feed", 1500);
-            killY = Config.Bind("Kill Feed", "Position Y", 100f,
-                new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
-            killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f,
-                new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
-            killMax = Config.Bind("Kill Feed", "Max Entries", 3,
-                new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-
             Logger.LogInfo("Admiral Tactical HUD v1.13.3 loaded (optimized runtime, HUD state " + mode + ")");
         }
 
@@ -147,7 +105,6 @@ namespace SPTPopCounter
 
         bool PopulationActive => popEnabled.Value && (mode >= 1 || editMode.Value || workAlways.Value);
         bool StatusActive => statusEnabled.Value && (mode >= 2 || editMode.Value || workAlways.Value);
-        bool KillTrackingActive => killEnabled.Value;
 
         void Update()
         {
@@ -160,12 +117,6 @@ namespace SPTPopCounter
             {
                 Refresh();
                 nextRefresh = now + RefreshInterval();
-            }
-
-            if (inRaid && KillTrackingActive && now >= nextSubscribe)
-            {
-                nextSubscribe = now + .20f;
-                ProcessOneSubscription();
             }
 
             if (versionSearchAttempts > 0 && now >= nextVersionSearch)
@@ -183,18 +134,11 @@ namespace SPTPopCounter
                 if (versionTargets.Count == 0) ArmVersionSearch(0f);
             }
 
-            if (kills.Count > 0)
-            {
-                float lifetime = killLifetime.Value;
-                for (int i = kills.Count - 1; i >= 0; i--)
-                    if (now - kills[i].Created > lifetime) kills.RemoveAt(i);
-            }
         }
 
         float RefreshInterval()
         {
             if (!inRaid) return statusOutside.Value ? 1.0f : 2.0f;
-            if (KillTrackingActive) return .50f;
             if (PopulationActive || StatusActive) return .75f;
             return 2.0f;
         }
@@ -211,7 +155,6 @@ namespace SPTPopCounter
         void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            ClearTracking(false);
             if (visualRenderer != null) visualRenderer.Dispose();
         }
 
@@ -241,8 +184,6 @@ namespace SPTPopCounter
         void Refresh()
         {
             refreshPlayers.Clear();
-            refreshSeen.Clear();
-            refreshRemoved.Clear();
 
             try
             {
@@ -280,20 +221,15 @@ namespace SPTPopCounter
                 SetRaidState(true);
 
                 bool needPopulation = PopulationActive;
-                bool needKillTracking = KillTrackingActive;
                 bool needStatus = StatusActive;
 
-                if (!needKillTracking && tracked.Count > 0)
-                    ClearTracking(true);
-
-                if (!needPopulation && !needKillTracking)
+                if (!needPopulation)
                 {
                     if (needStatus) RefreshStatus(local);
                     return;
                 }
 
                 int p = 0, s = 0, b = 0, r = 0;
-                if (needKillTracking) playersByProfileId.Clear();
 
                 foreach (object pl in refreshPlayers)
                 {
@@ -308,44 +244,6 @@ namespace SPTPopCounter
                         else s++;
                     }
 
-                    if (!needKillTracking) continue;
-
-                    string id = PlayerId(pl);
-                    if (string.IsNullOrEmpty(id)) id = pl.GetHashCode().ToString();
-                    refreshSeen.Add(id);
-                    playersByProfileId[id] = pl;
-                    Vector3 pos = Position(pl);
-
-                    if (!tracked.TryGetValue(id, out Tracked t))
-                    {
-                        t = new Tracked { Player = pl, Alive = alive, Pos = pos, Kind = kind };
-                        tracked[id] = t;
-                        if (queuedIds.Add(id)) subscribeQueue.Enqueue(id);
-                    }
-                    else
-                    {
-                        t.Player = pl;
-                        t.Pos = pos;
-                        t.Kind = kind;
-                        if (t.Alive && !alive && !t.DeathCaptured) CaptureDeath(t);
-                        t.Alive = alive;
-                    }
-                }
-
-                if (needKillTracking)
-                {
-                    foreach (string id in tracked.Keys)
-                        if (!refreshSeen.Contains(id)) refreshRemoved.Add(id);
-
-                    for (int i = 0; i < refreshRemoved.Count; i++)
-                    {
-                        string id = refreshRemoved[i];
-                        Tracked t = tracked[id];
-                        if (t.Alive && !t.DeathCaptured && (t.LastDamage != null || t.LastAttacker != null)) CaptureDeath(t);
-                        Unsubscribe(t);
-                        tracked.Remove(id);
-                        queuedIds.Remove(id);
-                    }
                 }
 
                 if (needPopulation)
@@ -365,8 +263,6 @@ namespace SPTPopCounter
             finally
             {
                 refreshPlayers.Clear();
-                refreshSeen.Clear();
-                refreshRemoved.Clear();
             }
         }
 
@@ -374,21 +270,9 @@ namespace SPTPopCounter
         {
             if (inRaid == value) return;
             inRaid = value;
-            ClearTracking(false);
             pmc = scav = boss = reinforced = 0;
             if (!inRaid && !statusOutside.Value)
                 hydration = energy = weight = overweightLimit = walkDrainLimit = 0f;
-        }
-
-        void ClearTracking(bool preserveKills)
-        {
-            foreach (Tracked t in tracked.Values) Unsubscribe(t);
-            tracked.Clear();
-            playersByProfileId.Clear();
-            subscribeQueue.Clear();
-            queuedIds.Clear();
-            diagSeen.Clear();
-            if (!preserveKills) kills.Clear();
         }
 
         bool IsRaidWorld(object world, object localPlayer)
@@ -426,299 +310,6 @@ namespace SPTPopCounter
             if (value == null) return false;
             UnityEngine.Object unityObject = value as UnityEngine.Object;
             return ReferenceEquals(unityObject, null) || unityObject;
-        }
-
-        void ProcessOneSubscription()
-        {
-            while (subscribeQueue.Count > 0)
-            {
-                string id = subscribeQueue.Dequeue();
-                queuedIds.Remove(id);
-                if (!tracked.TryGetValue(id, out Tracked t) || t.Subscribed || !t.Alive) continue;
-                SubscribeEvents(id, t);
-                break;
-            }
-        }
-
-        void SubscribeEvents(string id, Tracked t)
-        {
-            try
-            {
-                object hc = ReadMember(t.Player, "HealthController");
-                if (hc == null) return;
-                t.Health = hc;
-
-                t.DiedEvent = FindEvent(hc.GetType(), "DiedEvent");
-                if (t.DiedEvent != null)
-                {
-                    t.DiedHandler = BuildEventDelegate(t.DiedEvent.EventHandlerType, "OnTrackedDied", id, 0);
-                    t.DiedEvent.AddEventHandler(hc, t.DiedHandler);
-                }
-
-                t.DamageEvent = FindEvent(hc.GetType(), "ApplyDamageEvent");
-                if (t.DamageEvent != null)
-                {
-                    t.DamageHandler = BuildEventDelegate(t.DamageEvent.EventHandlerType, "OnTrackedDamage", id, 1);
-                    t.DamageEvent.AddEventHandler(hc, t.DamageHandler);
-                }
-
-                t.PlayerDamageEvent = FindEvent(hc.GetType(), "OnApplyDamageByPlayer");
-                if (t.PlayerDamageEvent != null)
-                {
-                    t.PlayerDamageHandler = BuildEventDelegate(t.PlayerDamageEvent.EventHandlerType, "OnTrackedPlayerDamage", id, 2);
-                    t.PlayerDamageEvent.AddEventHandler(hc, t.PlayerDamageHandler);
-                }
-
-                t.Subscribed = true;
-            }
-            catch (Exception ex)
-            {
-                if (killDiagnostics.Value) Logger.LogWarning("KillFeed subscribe: " + ex.Message);
-            }
-        }
-
-        static EventInfo FindEvent(Type type, string name)
-        {
-            if (type == null || string.IsNullOrEmpty(name)) return null;
-            if (!EventCache.TryGetValue(type, out Dictionary<string, EventInfo> perType))
-            {
-                perType = new Dictionary<string, EventInfo>(StringComparer.Ordinal);
-                EventCache[type] = perType;
-            }
-            if (perType.TryGetValue(name, out EventInfo cached)) return cached;
-
-            EventInfo result = null;
-            try { result = type.GetEvent(name, InstanceFlags); } catch { }
-            if (result == null)
-            {
-                try
-                {
-                    foreach (Type i in type.GetInterfaces())
-                    {
-                        result = i.GetEvent(name, InstanceFlags);
-                        if (result != null) break;
-                    }
-                }
-                catch { }
-            }
-            if (result == null)
-            {
-                for (Type b = type.BaseType; b != null; b = b.BaseType)
-                {
-                    try { result = b.GetEvent(name, InstanceFlags); } catch { result = null; }
-                    if (result != null) break;
-                }
-            }
-            perType[name] = result;
-            return result;
-        }
-
-        Delegate BuildEventDelegate(Type handlerType, string method, string id, int modeId)
-        {
-            MethodInfo invoke = handlerType.GetMethod("Invoke");
-            ParameterExpression[] pars = invoke.GetParameters().Select((p, i) => Expression.Parameter(p.ParameterType, "p" + i)).ToArray();
-            MethodInfo target = GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic);
-            Expression call;
-
-            if (modeId == 0)
-            {
-                call = Expression.Call(Expression.Constant(this), target, Expression.Constant(id));
-            }
-            else if (modeId == 1)
-            {
-                Expression hit = pars.Length > 0 ? Expression.Convert(pars[0], typeof(object)) : Expression.Constant(null, typeof(object));
-                Expression data = pars.Length > 2 ? Expression.Convert(pars[2], typeof(object)) :
-                    pars.Length > 1 ? Expression.Convert(pars[1], typeof(object)) : Expression.Constant(null, typeof(object));
-                call = Expression.Call(Expression.Constant(this), target, Expression.Constant(id), hit, data);
-            }
-            else
-            {
-                Expression a = pars.Length > 0 ? Expression.Convert(pars[0], typeof(object)) : Expression.Constant(null, typeof(object));
-                Expression b = pars.Length > 1 ? Expression.Convert(pars[1], typeof(object)) : Expression.Constant(null, typeof(object));
-                call = Expression.Call(Expression.Constant(this), target, Expression.Constant(id), a, b);
-            }
-
-            return Expression.Lambda(handlerType, call, pars).Compile();
-        }
-
-        void OnTrackedDamage(string id, object hit, object data)
-        {
-            if (!tracked.TryGetValue(id, out Tracked t)) return;
-            t.LastHit = hit?.ToString();
-            t.LastDamage = data;
-            object a = ExtractAttacker(data) ?? ResolveAttackerById(data);
-            if (a != null)
-            {
-                t.LastAttacker = a;
-                string w = Weapon(a);
-                if (!string.IsNullOrEmpty(w) && w != "?") t.LastWeapon = w;
-            }
-            if (string.IsNullOrEmpty(t.LastWeapon)) t.LastWeapon = ResolveWeaponFromDamage(data);
-        }
-
-        void OnTrackedPlayerDamage(string id, object a, object b)
-        {
-            if (!tracked.TryGetValue(id, out Tracked t)) return;
-            object pa = NormalizePlayer(a), pb = NormalizePlayer(b), attacker = null;
-            if (pa != null && !ReferenceEquals(pa, t.Player)) attacker = pa;
-            else if (pb != null && !ReferenceEquals(pb, t.Player)) attacker = pb;
-            if (attacker == null) return;
-            t.LastAttacker = attacker;
-            string w = Weapon(attacker);
-            if (!string.IsNullOrEmpty(w) && w != "?") t.LastWeapon = w;
-        }
-
-        void OnTrackedDied(string id)
-        {
-            if (!tracked.TryGetValue(id, out Tracked t) || t.DeathCaptured) return;
-            CaptureDeath(t);
-            t.Alive = false;
-        }
-
-        void CaptureDeath(Tracked t)
-        {
-            t.DeathCaptured = true;
-            object hc = t.Health ?? ReadMember(t.Player, "HealthController");
-            object info = FirstNonNull(t.LastDamage, ReadMember(hc, "LastDamageInfo"), ReadMember(t.Player, "LastDamageInfo"),
-                ReadMember(hc, "DamageInfo"), ReadMember(t.Player, "DamageInfo"));
-            object attacker = t.LastAttacker ?? ExtractAttacker(info) ?? ResolveAttackerById(info);
-            string hit = FirstNonEmpty(t.LastHit, ExtractHit(info));
-            string killer = "Unknown";
-            string victim = IsTrue(ReadMember(t.Player, "IsYourPlayer")) ? "Self" : t.Kind;
-            string weapon = FirstNonEmpty(t.LastWeapon, ResolveWeaponFromDamage(info), "?");
-            bool hasDist = false;
-            float dist = 0f;
-
-            if (attacker != null && !ReferenceEquals(attacker, t.Player))
-            {
-                killer = IsTrue(ReadMember(attacker, "IsYourPlayer")) ? "Self" : Kind(attacker);
-                string liveWeapon = Weapon(attacker);
-                if (!string.IsNullOrEmpty(liveWeapon) && liveWeapon != "?") weapon = liveWeapon;
-                Vector3 ap = Position(attacker);
-                if (ap != Vector3.zero && t.Pos != Vector3.zero)
-                {
-                    dist = Vector3.Distance(ap, t.Pos);
-                    hasDist = true;
-                }
-            }
-            else
-            {
-                DiagnoseDeath(t.Player, hc, info);
-            }
-
-            string cleanWeapon = HudVisualRenderer.CleanWeapon(weapon);
-            kills.Add(new KillLine
-            {
-                Killer = killer,
-                Victim = victim,
-                WeaponText = cleanWeapon,
-                HitIcon = HudVisualRenderer.HitKey(hit),
-                DistanceText = hasDist ? Mathf.RoundToInt(dist) + "m" : string.Empty,
-                HasDistance = hasDist,
-                Created = Time.unscaledTime
-            });
-        }
-
-        string ResolveWeaponFromDamage(object info)
-        {
-            if (info == null) return null;
-            foreach (string n in new[] { "Weapon", "WeaponItem", "SourceItem", "Item", "WeaponTemplate" })
-            {
-                object v = ReadMember(info, n);
-                if (v == null) continue;
-                string direct = v as string;
-                if (!string.IsNullOrEmpty(direct)) return direct;
-                object tpl = ReadMember(v, "Template");
-                string name = (ReadMember(tpl, "ShortName") ?? ReadMember(tpl, "Name") ?? ReadMember(v, "ShortName") ?? ReadMember(v, "Name"))?.ToString();
-                if (!string.IsNullOrEmpty(name)) return name;
-            }
-            foreach (string n in new[] { "WeaponName", "SourceName", "WeaponId" })
-            {
-                string s = ReadMember(info, n)?.ToString();
-                if (!string.IsNullOrEmpty(s)) return s;
-            }
-            return null;
-        }
-
-        object ExtractAttacker(object info)
-        {
-            if (info == null) return null;
-            foreach (string n in new[] { "Player", "Attacker", "SourcePlayer", "Aggressor", "Killer", "Instigator", "Owner", "Source" })
-            {
-                object p = NormalizePlayer(ReadMember(info, n));
-                if (p != null) return p;
-            }
-            object nested = FirstNonNull(ReadMember(info, "DamageSource"), ReadMember(info, "Weapon"), ReadMember(info, "Bullet"));
-            if (nested != null)
-            {
-                foreach (string n in new[] { "Player", "Owner", "Attacker", "SourcePlayer" })
-                {
-                    object p = NormalizePlayer(ReadMember(nested, n));
-                    if (p != null) return p;
-                }
-            }
-            return null;
-        }
-
-        object ResolveAttackerById(object info)
-        {
-            if (info == null) return null;
-            foreach (string n in new[] { "SourceId", "AttackerId", "KillerId", "PlayerId", "ProfileId", "SourceProfileId" })
-            {
-                string id = ReadMember(info, n)?.ToString();
-                if (!string.IsNullOrEmpty(id) && playersByProfileId.TryGetValue(id, out object p)) return p;
-            }
-            object nested = FirstNonNull(ReadMember(info, "DamageSource"), ReadMember(info, "Weapon"), ReadMember(info, "Bullet"));
-            if (nested != null)
-            {
-                foreach (string n in new[] { "SourceId", "AttackerId", "OwnerId", "ProfileId" })
-                {
-                    string id = ReadMember(nested, n)?.ToString();
-                    if (!string.IsNullOrEmpty(id) && playersByProfileId.TryGetValue(id, out object p)) return p;
-                }
-            }
-            return null;
-        }
-
-        object NormalizePlayer(object v)
-        {
-            if (v == null) return null;
-            if (ReadMember(v, "Profile") != null) return v;
-            foreach (string n in new[] { "Player", "Owner", "Person", "Controller" })
-            {
-                object p = ReadMember(v, n);
-                if (p != null && ReadMember(p, "Profile") != null) return p;
-            }
-            return null;
-        }
-
-        string ExtractHit(object info)
-        {
-            if (info == null) return null;
-            foreach (string n in new[] { "BodyPart", "HitBodyPart", "BodyPartType", "DamageBodyPart", "HitPart" })
-            {
-                object v = ReadMember(info, n);
-                if (v != null) return v.ToString();
-            }
-            return null;
-        }
-
-        void DiagnoseDeath(object victim, object hc, object info)
-        {
-            if (!killDiagnostics.Value) return;
-            string key = (info?.GetType().FullName ?? "null") + "|" + (hc?.GetType().FullName ?? "null");
-            if (!diagSeen.Add(key)) return;
-            Logger.LogWarning("KillFeed unresolved victim=" + victim?.GetType().FullName +
-                              " health=" + (hc?.GetType().FullName ?? "null") +
-                              " damage=" + (info?.GetType().FullName ?? "null"));
-        }
-
-        void Unsubscribe(Tracked t)
-        {
-            try { if (t.Health != null && t.DiedEvent != null && t.DiedHandler != null) t.DiedEvent.RemoveEventHandler(t.Health, t.DiedHandler); } catch { }
-            try { if (t.Health != null && t.DamageEvent != null && t.DamageHandler != null) t.DamageEvent.RemoveEventHandler(t.Health, t.DamageHandler); } catch { }
-            try { if (t.Health != null && t.PlayerDamageEvent != null && t.PlayerDamageHandler != null) t.PlayerDamageEvent.RemoveEventHandler(t.Health, t.PlayerDamageHandler); } catch { }
-            t.Subscribed = false;
         }
 
         void RefreshStatus(object pl)
@@ -977,33 +568,6 @@ namespace SPTPopCounter
             return "Scav";
         }
 
-        string Weapon(object p)
-        {
-            object hands = ReadMember(p, "HandsController");
-            object item = ReadMember(hands, "Item");
-            object tpl = ReadMember(item, "Template");
-            string n = (ReadMember(tpl, "ShortName") ?? ReadMember(tpl, "Name") ?? ReadMember(item, "ShortName") ?? ReadMember(item, "Name"))?.ToString();
-            return string.IsNullOrEmpty(n) ? "?" : n;
-        }
-
-        static Vector3 Position(object p)
-        {
-            try
-            {
-                object tr = ReadMember(p, "Transform") ?? ReadMember(p, "transform");
-                object v = ReadMember(tr, "position");
-                if (v is Vector3 vector) return vector;
-            }
-            catch { }
-            return Vector3.zero;
-        }
-
-        static string PlayerId(object p)
-        {
-            object pr = ReadMember(p, "Profile");
-            return (ReadMember(pr, "Id") ?? ReadMember(pr, "ProfileId") ?? ReadMember(p, "ProfileId"))?.ToString();
-        }
-
         object GetWorld()
         {
             worldType ??= FindType("EFT.GameWorld") ?? FindTypeByName("GameWorld");
@@ -1089,7 +653,6 @@ namespace SPTPopCounter
         static bool? ReadWrappedBool(object v) { if (v == null) return null; object x = ReadMember(v, "Value") ?? v; return x is bool ? (bool?)x : null; }
         static float? ReadFloatDeep(object o, string a, string b) { object x = ReadMember(o, a); return ReadFloat(ReadMember(x, b)) ?? ReadFloat(x); }
         static Vector2? ReadVector2(object v) { if (v is Vector2 vector) return vector; return null; }
-        static string FirstNonEmpty(params string[] values) { foreach (string s in values) if (!string.IsNullOrEmpty(s) && s != "?") return s; return values.LastOrDefault(); }
         static object FirstNonNull(params object[] values) { foreach (object v in values) if (v != null) return v; return null; }
 
         static object ReadMember(object o, string n)

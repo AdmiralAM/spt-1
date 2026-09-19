@@ -58,10 +58,12 @@ def main() -> int:
     icons = ICONS.read_text(encoding="utf-8")
     if "if (!TryLoadSheet(bytes)) TryLoadSheet(ReadEmbeddedReserve());" not in icons:
         raise SystemExit("external atlas decode failure does not fall back to the embedded reserve")
-    if "WeaponIcon" in plugin or "WeaponIcon" in visual or "WeaponKey(" in plugin or "WeaponKey(" in visual:
-        raise SystemExit("legacy weapon-icon kill-feed contract detected; store and render WeaponText directly")
-    if "WeaponText = cleanWeapon" not in plugin or "k.WeaponText" not in visual:
-        raise SystemExit("kill-feed weapon text is not precomputed at capture time and rendered directly")
+    forbidden_kill_feed = ("Kill Feed", "KillLine", "DrawKillFeed", "CaptureDeath", "OnTrackedDied")
+    for token in forbidden_kill_feed:
+        if token in plugin or token in visual:
+            raise SystemExit(f"removed kill-feed contract returned: {token}")
+    if "IsLegacyPopulationIcon(key) ? LoadReserve(key)" not in icons:
+        raise SystemExit("legacy role icons are not preferred for compact population roles")
     bodies = {
         "Refresh": method_body(plugin, "Refresh"),
         "Update": method_body(plugin, "Update"),
@@ -70,8 +72,6 @@ def main() -> int:
         "Text": method_body(visual, "Text"),
         "DrawPopulation": method_body(visual, "DrawPopulation"),
         "DrawStatus": method_body(visual, "DrawStatus"),
-        "DrawKillFeed": method_body(visual, "DrawKillFeed"),
-        "HitKey": method_body(visual, "HitKey"),
         "FullUpdate": method_body(full, "Update"),
         "FullOnGUI": method_body(full, "OnGUI"),
         "FullDraw": method_body(full, "Draw"),
@@ -100,10 +100,6 @@ def main() -> int:
          "DrawPopulation formats numbers on every repaint."),
         ("status-number-formatting", "DrawStatus", re.compile(r"\.ToString\s*\("), True,
          "DrawStatus formats numbers on every repaint."),
-        ("killfeed-reclassification", "DrawKillFeed", re.compile(r"\b(?:HitKey|CleanWeapon)\s*\("), True,
-         "DrawKillFeed reclassifies immutable kill data on every repaint."),
-        ("hitkey-lowercase", "HitKey", re.compile(r"ToLowerInvariant\s*\("), True,
-         "HitKey allocates a lowercase copy."),
         ("full-update-resource-scan", "FullUpdate", re.compile(r"Resources\.FindObjectsOfTypeAll"), True,
          "Full Census Update performs a global Resources scan."),
         ("full-update-texture-allocation", "FullUpdate", re.compile(r"new\s+Texture2D"), True,
