@@ -8,34 +8,42 @@ namespace SPTItemIntelligence
     // First reserve all FIR-only obligations, then spend unrestricted inventory.
     public sealed class ItemRequirementAllocation
     {
-        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir)
+        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir, int exactOwned = -1, int exactFirOwned = -1, int hideoutFir = 0)
         {
             Owned = Math.Max(0, owned);
             OwnedFir = Math.Min(Owned, Math.Max(0, firOwned));
+            ExactOwned = exactOwned < 0 ? Owned : Math.Max(0, exactOwned);
+            ExactOwnedFir = exactFirOwned < 0 ? Math.Min(ExactOwned, OwnedFir) : Math.Min(ExactOwned, Math.Max(0, exactFirOwned));
             NowRequired = Math.Max(0, now);
             LaterRequired = Math.Max(0, later);
             HideoutRequired = Math.Max(0, hideout);
             NowFirRequired = Math.Min(NowRequired, Math.Max(0, nowFir));
             LaterFirRequired = Math.Min(LaterRequired, Math.Max(0, laterFir));
+            HideoutFirRequired = Math.Min(HideoutRequired, Math.Max(0, hideoutFir));
             Keep = checked(NowRequired + LaterRequired + HideoutRequired);
             int fir = OwnedFir;
             int nonFir = Owned - fir;
             NowFirAllocated = Take(ref fir, NowFirRequired);
             LaterFirAllocated = Take(ref fir, LaterFirRequired);
+            HideoutFirAllocated = Take(ref fir, HideoutFirRequired);
             NowAllocated = NowFirAllocated + TakeAny(ref nonFir, ref fir, NowRequired - NowFirRequired);
-            HideoutAllocated = TakeAny(ref nonFir, ref fir, HideoutRequired);
+            HideoutAllocated = HideoutFirAllocated + TakeAny(ref nonFir, ref fir, HideoutRequired - HideoutFirRequired);
             LaterAllocated = LaterFirAllocated + TakeAny(ref nonFir, ref fir, LaterRequired - LaterFirRequired);
             Surplus = fir + nonFir;
         }
         public int Owned { get; }
         public int OwnedFir { get; }
+        public int ExactOwned { get; }
+        public int ExactOwnedFir { get; }
         public int NowRequired { get; }
         public int LaterRequired { get; }
         public int HideoutRequired { get; }
         public int NowFirRequired { get; }
         public int LaterFirRequired { get; }
+        public int HideoutFirRequired { get; }
         public int NowFirAllocated { get; }
         public int LaterFirAllocated { get; }
+        public int HideoutFirAllocated { get; }
         public int NowAllocated { get; }
         public int LaterAllocated { get; }
         public int HideoutAllocated { get; }

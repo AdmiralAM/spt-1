@@ -56,7 +56,9 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> partialColor;
         readonly ConfigEntry<Color> missingColor;
         readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseSecondaryOutline, senseRemainingText;
-        readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor;
+        readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor, senseFoodColor;
+        readonly ConfigEntry<Color> senseMissingColor, sensePartialColor, senseNextColor, senseCompleteColor;
+        readonly ConfigEntry<Color> senseCountOneColor, senseCountFewColor, senseCountManyColor;
         int revision;
         ModuleSelection modules;
 
@@ -129,6 +131,14 @@ namespace SPTItemIntelligence
             senseQuestColor = ColorEntry(config, "Amands Sense Colors", "Active Quest", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
             senseHideoutColor = ColorEntry(config, "Amands Sense Colors", "Hideout", new Color(0.20f, 0.78f, 1.00f), "Unmet hideout requirement.");
             senseFutureColor = ColorEntry(config, "Amands Sense Colors", "Future Quest", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
+            senseFoodColor = ColorEntry(config, "Amands Sense Colors", "Food", new Color(0.84f, 0.93f, 0.70f), "Food and drink category when no stronger Item Intelligence requirement is present.");
+            senseMissingColor = ColorEntry(config, "Amands Sense Stock Colors", "Missing", new Color(1.00f, 0.16f, 0.12f), "Not enough for the nearest requirement.");
+            sensePartialColor = ColorEntry(config, "Amands Sense Stock Colors", "Partial", new Color(1.00f, 0.58f, 0.12f), "Some useful stock, but the nearest requirement is not covered.");
+            senseNextColor = ColorEntry(config, "Amands Sense Stock Colors", "Next Covered", new Color(0.62f, 1.00f, 0.38f), "Nearest requirement covered, later requirements remain.");
+            senseCompleteColor = ColorEntry(config, "Amands Sense Stock Colors", "Complete", new Color(0.10f, 1.00f, 0.20f), "All tracked requirements are covered.");
+            senseCountOneColor = ColorEntry(config, "Amands Sense Count Colors", "One Item", Color.white, "Count color for one useful item in a container.");
+            senseCountFewColor = ColorEntry(config, "Amands Sense Count Colors", "Two to Three", new Color(1.00f, 0.91f, 0.45f), "Count color for two or three useful items in a container.");
+            senseCountManyColor = ColorEntry(config, "Amands Sense Count Colors", "Four Plus", new Color(1.00f, 0.62f, 0.22f), "Count color for four or more useful items in a container.");
 
             tooltipMode.SettingChanged += delegate { Touch(); };
             valueMode.SettingChanged += delegate { Touch(); };
@@ -162,6 +172,14 @@ namespace SPTItemIntelligence
             senseQuestColor.SettingChanged += delegate { Touch(); };
             senseHideoutColor.SettingChanged += delegate { Touch(); };
             senseFutureColor.SettingChanged += delegate { Touch(); };
+            senseFoodColor.SettingChanged += delegate { Touch(); };
+            senseMissingColor.SettingChanged += delegate { Touch(); };
+            sensePartialColor.SettingChanged += delegate { Touch(); };
+            senseNextColor.SettingChanged += delegate { Touch(); };
+            senseCompleteColor.SettingChanged += delegate { Touch(); };
+            senseCountOneColor.SettingChanged += delegate { Touch(); };
+            senseCountFewColor.SettingChanged += delegate { Touch(); };
+            senseCountManyColor.SettingChanged += delegate { Touch(); };
             modules = ReadModules();
         }
 
@@ -197,7 +215,21 @@ namespace SPTItemIntelligence
             if (reason == ItemNeedReason.ActiveQuest) return senseQuestColor.Value;
             if (reason == ItemNeedReason.Hideout) return senseHideoutColor.Value;
             if (reason == ItemNeedReason.FutureQuest) return senseFutureColor.Value;
+            if (reason == ItemNeedReason.Food) return senseFoodColor.Value;
             return defaultColor.Value;
+        }
+        public Color GetSenseCountColor(int count)
+        {
+            if (count >= 4) return senseCountManyColor.Value;
+            if (count >= 2) return senseCountFewColor.Value;
+            return senseCountOneColor.Value;
+        }
+        public Color GetSenseStockColor(SenseStockState state)
+        {
+            if (state == SenseStockState.Complete) return senseCompleteColor.Value;
+            if (state == SenseStockState.NextCovered) return senseNextColor.Value;
+            if (state == SenseStockState.Partial) return sensePartialColor.Value;
+            return senseMissingColor.Value;
         }
         public int Revision => Volatile.Read(ref revision);
 

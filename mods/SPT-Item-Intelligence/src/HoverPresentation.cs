@@ -28,6 +28,9 @@ namespace SPTItemIntelligence
         public bool IsSafeToSell => Presentation.IsSafeToSell;
         public string HoldReason => Presentation.HoldReason;
         public int OwnedCount => Presentation.Requirement == null ? 0 : Presentation.Requirement.OwnedCount;
+        public int RaidOwnedCount => Presentation.RaidOwnedCount;
+        public int RaidFoundInRaidCount => Presentation.RaidFoundInRaidCount;
+        public bool RaidSessionActive => Presentation.RaidSessionActive;
         public int KeepCount => Presentation.Requirement == null ? 0 : Presentation.Requirement.KeepCount;
         public int SurplusCount => Presentation.Requirement == null ? 0 : Presentation.Requirement.SurplusCount;
         public int QuestNeededNow => Presentation.Requirement == null ? 0 : Presentation.Requirement.QuestNeededNow;

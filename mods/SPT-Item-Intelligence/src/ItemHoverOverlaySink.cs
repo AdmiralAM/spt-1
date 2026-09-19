@@ -16,6 +16,7 @@ namespace SPTItemIntelligence
         readonly ItemPresentationStore store;
         readonly ItemHoverTextCache textCache;
         readonly Func<string, ItemHoverText> fallbackFactory;
+        readonly RaidRequirementLedger raidLedger;
         ItemHoverText current = ItemHoverText.Empty;
         object hoveredView;
         object pinnedView;
@@ -25,21 +26,25 @@ namespace SPTItemIntelligence
         int renderedInvalidation = -1;
         bool tooltipDrawingDisabled;
         public event Action InventoryOpened;
+        public event Action RaidInventoryRefreshRequested;
         public void OnViewInitialized()
         {
             if (settings.Modules.TrackViews && trackedViews.Count == 0) InventoryOpened?.Invoke();
+            if (settings.Modules.TrackViews) RaidInventoryRefreshRequested?.Invoke();
         }
 
         public ItemHoverOverlaySink(
             ItemIntelligenceUiSettings settings,
             ItemPresentationStore store,
             ItemHoverTextCache textCache,
-            Func<string, ItemHoverText> fallbackFactory)
+            Func<string, ItemHoverText> fallbackFactory,
+            RaidRequirementLedger raidLedger = null)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             this.textCache = textCache ?? throw new ArgumentNullException(nameof(textCache));
             this.fallbackFactory = fallbackFactory;
+            this.raidLedger = raidLedger;
         }
 
         public ItemHoverText Current => Volatile.Read(ref current);
@@ -72,6 +77,7 @@ namespace SPTItemIntelligence
             int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
+            CompatibilityHighlighterIntegration.Track(itemView);
             GameLanguageDetector.ObserveNativeUi(target);
 
             TrackedItemView tracked;
@@ -95,6 +101,7 @@ namespace SPTItemIntelligence
         public void UnregisterView(object itemView)
         {
             if (itemView == null) return;
+            CompatibilityHighlighterIntegration.Untrack(itemView);
             TrackedItemView tracked;
             if (trackedViews.TryGetValue(itemView, out tracked)) tracked.Dispose();
             trackedViews.Remove(itemView);
@@ -108,6 +115,7 @@ namespace SPTItemIntelligence
 
         public void ClearViews()
         {
+            CompatibilityHighlighterIntegration.ClearTracked();
             foreach (TrackedItemView tracked in trackedViews.Values) tracked.Dispose();
             trackedViews.Clear();
             staleViews.Clear();
@@ -129,7 +137,15 @@ namespace SPTItemIntelligence
             bool repaint = guiEvent == null || guiEvent.type == EventType.Repaint;
             bool click = guiEvent != null && guiEvent.type == EventType.MouseDown && guiEvent.button == 0;
             if (!repaint && !click) return;
-            if (repaint) RefreshTrackedViewsIfNeeded();
+            if (repaint)
+            {
+                // ItemView initialization only tells us that an inventory window opened. A pickup can
+                // change the player's inventory while that same window stays open, so refresh lazily
+                // while an Item Intelligence marker/card is actually being inspected.
+                if (pinnedView != null || Volatile.Read(ref hoveredView) != null)
+                    RaidInventoryRefreshRequested?.Invoke();
+                RefreshTrackedViewsIfNeeded();
+            }
             if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
 
             object activeView = pinnedView ?? Volatile.Read(ref hoveredView);
@@ -224,11 +240,15 @@ namespace SPTItemIntelligence
             ItemPresentationState presentation = safeIndex.Get(templateId);
             if (presentation != ItemPresentationState.Empty)
             {
+                if (raidLedger != null) presentation = raidLedger.Apply(presentation);
                 if (presentation.Price != null && stackCount > 1)
                     presentation = new ItemPresentationState(
                         presentation.TemplateId,
                         presentation.Requirement,
-                        ItemPriceEvaluator.WithStackCount(presentation.Price, stackCount));
+                        ItemPriceEvaluator.WithStackCount(presentation.Price, stackCount),
+                        presentation.RaidOwnedCount,
+                        presentation.RaidFoundInRaidCount,
+                        presentation.RaidSessionActive);
                 return textCache.Get(new ItemHoverState(presentation), safeIndex) ?? ItemHoverText.Empty;
             }
 

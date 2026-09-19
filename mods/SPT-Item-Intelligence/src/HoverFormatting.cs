@@ -48,7 +48,8 @@ namespace SPTItemIntelligence
             string bestSellLine = null,
             string bestTraderLine = null,
             string fleaPriceLine = null, ItemRequirementAllocation allocation = null, ModuleSelection modules = null,
-            ItemDataState dataState = ItemDataState.Ready)
+            ItemDataState dataState = ItemDataState.Ready, int raidOwnedCount = 0,
+            int raidFoundInRaidCount = 0, bool raidSessionActive = false)
         {
             modules = modules ?? ModuleSelection.Default;
             Primary = primary ?? string.Empty;
@@ -62,6 +63,9 @@ namespace SPTItemIntelligence
             HideoutNeeded = Math.Max(0, hideoutNeeded);
             KeepCount = Math.Max(0, keepCount);
             OwnedFoundInRaid = Math.Min(OwnedCount, Math.Max(0, ownedFoundInRaid));
+            RaidOwnedCount = Math.Max(0, raidOwnedCount);
+            RaidFoundInRaidCount = Math.Min(RaidOwnedCount, Math.Max(0, raidFoundInRaidCount));
+            RaidSessionActive = raidSessionActive;
             QuestNowFoundInRaid = Math.Min(QuestNeededNow, Math.Max(0, questNowFoundInRaid));
             QuestLaterFoundInRaid = Math.Min(QuestNeededLater, Math.Max(0, questLaterFoundInRaid));
 
@@ -79,10 +83,10 @@ namespace SPTItemIntelligence
             BestTraderLine = bestTraderLine ?? string.Empty;
             FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
-                GameUiText.T("Active quest", "Активный квест"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
-            HideoutLine = RequirementLine(GameUiText.T("Hideout", "Убежище"), HideoutOwned, HideoutNeeded, 0, 0);
+                GameUiText.T("For active quest", "Для активного квеста"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
+            HideoutLine = RequirementLine(GameUiText.T("For hideout after quests", "Для убежища после квестов"), HideoutOwned, HideoutNeeded, Allocation.HideoutFirAllocated, Allocation.HideoutFirRequired);
             QuestLaterLine = RequirementLine(
-                GameUiText.T("Future quest", "Будущий квест"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
+                GameUiText.T("For future quest", "Для будущего квеста"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine(GameUiText.T("Keep", "Оставить"), KeepCount);
             PerSlotLine = perSlotLine ?? string.Empty;
 
@@ -90,7 +94,22 @@ namespace SPTItemIntelligence
             SummaryLine = allocation == null ? string.Empty :
                 (allocation.Coverage == RequirementCoverage.NotNeeded ? GameUiText.T("Not Needed", "Не нужен") : allocation.Coverage == RequirementCoverage.Enough ? GameUiText.T("Enough", "Достаточно") : GameUiText.T("Need More ×", "Нужно ещё ×") + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
                 (allocation.MustKeep ? GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
-            SummaryOwnedLine = GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture);
+            SummaryOwnedLine = RaidSessionActive
+                ? GameUiText.T("In raid ×", "В наличии в рейде ×") + RaidOwnedCount.ToString(CultureInfo.InvariantCulture)
+                : GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
+            TotalOwnedLine = GameUiText.T("Total (stash + raid) ×", "Всего (схрон + рейд) ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
+            OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
+                GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
+            int firRequired = Allocation.NowFirRequired + Allocation.LaterFirRequired + Allocation.HideoutFirRequired;
+            RequirementBreakdownLine = GameUiText.T("Required: total ×", "Требуется: всего ×") +
+                KeepCount.ToString(CultureInfo.InvariantCulture) +
+                (firRequired > 0
+                    ? GameUiText.T(" · FIR ×", " · из рейда ×") + firRequired.ToString(CultureInfo.InvariantCulture)
+                    : GameUiText.T(" · FIR not required", " · из рейда не требуется"));
+            int questRequired = Allocation.NowRequired + Allocation.LaterRequired;
+            RequirementSourcesLine = GameUiText.T("Sources: quests ×", "По источникам: квесты ×") +
+                questRequired.ToString(CultureInfo.InvariantCulture) +
+                GameUiText.T(" · hideout ×", " · убежище ×") + Allocation.HideoutRequired.ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
                 ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);
@@ -128,6 +147,9 @@ namespace SPTItemIntelligence
         public ItemRequirementAllocation Allocation { get; }
         public string SummaryLine { get; }
         public string SummaryOwnedLine { get; }
+        public string OwnedBreakdownLine { get; }
+        public string RequirementBreakdownLine { get; }
+        public string RequirementSourcesLine { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -135,6 +157,9 @@ namespace SPTItemIntelligence
         public string TemplateId { get; }
         public int OwnedCount { get; }
         public int OwnedFoundInRaid { get; }
+        public int RaidOwnedCount { get; }
+        public int RaidFoundInRaidCount { get; }
+        public bool RaidSessionActive { get; }
         public int QuestNeededNow { get; }
         public int QuestNeededLater { get; }
         public int HideoutNeeded { get; }
@@ -161,6 +186,7 @@ namespace SPTItemIntelligence
         public string CraftLine { get; }
         public string BarterLine { get; }
         public string OwnedLine { get; }
+        public string TotalOwnedLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
         public IReadOnlyList<string> DetailedRequirementLines { get; }
@@ -195,6 +221,10 @@ namespace SPTItemIntelligence
 
             if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
             if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && RaidSessionActive && SummaryLine.Length > 0 && TryLine(TotalOwnedLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(OwnedBreakdownLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementBreakdownLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementSourcesLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Full)
             {
@@ -269,7 +299,8 @@ namespace SPTItemIntelligence
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
             modules = modules ?? ModuleSelection.Default;
             if ((!modules.Tooltips || !modules.Value) && hover.Presentation.Price != null)
-                hover = new ItemHoverState(new ItemPresentationState(hover.TemplateId, hover.Presentation.Requirement, null));
+                hover = new ItemHoverState(new ItemPresentationState(hover.TemplateId, hover.Presentation.Requirement, null,
+                    hover.RaidOwnedCount, hover.RaidFoundInRaidCount, hover.RaidSessionActive));
 
             bool fleaPreferred = valueMode == ItemValueMode.Flea;
             string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? GameUiText.T("Trader", "Торговец") : hover.BestTraderName.Trim();
@@ -308,13 +339,14 @@ namespace SPTItemIntelligence
                 hover.KeepCount,
                 string.Empty,
                 FormatRequirementDetails(hover.RequirementDetails),
-                truth.OwnedFir,
+                truth.ExactOwnedFir,
                 truth.NowFirRequired,
                 truth.LaterFirRequired,
                 perSlot,
                 string.Empty,
                 bestTrader,
-                fleaPrice, truth, modules);
+                fleaPrice, truth, modules, ItemDataState.Ready,
+                hover.RaidOwnedCount, hover.RaidFoundInRaidCount, hover.RaidSessionActive);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
@@ -341,8 +373,8 @@ namespace SPTItemIntelligence
             for (int i = 0; i < ordered.Count; i++)
             {
                 DetailAggregate detail = ordered[i];
-                string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Now", "Сейчас") :
-                    detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Later", "Позже") : GameUiText.T("Hideout", "Убежище");
+                string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Active quest", "Активный квест") :
+                    detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Future quest", "Будущий квест") : GameUiText.T("Hideout", "Убежище");
                 string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
                 if (detail.FoundInRaidRequired) line += GameUiText.T(" · FIR", " · Найдено в рейде");
                 yield return line;

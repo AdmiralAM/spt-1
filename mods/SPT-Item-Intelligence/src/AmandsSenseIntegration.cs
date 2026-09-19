@@ -12,20 +12,27 @@ namespace SPTItemIntelligence
         static AmandsSenseIntegration active;
         readonly ItemIntelligenceUiSettings settings;
         readonly ItemPresentationStore store;
-        readonly RaidRequirementLedger ledger = new RaidRequirementLedger();
+        readonly RaidRequirementLedger ledger;
+        readonly Action raidChanged;
+        readonly Action raidStarted;
         readonly HashSet<string> pickedItemIds = new HashSet<string>(StringComparer.Ordinal);
+        readonly Dictionary<object, SenseEvaluationCache> evaluationCache = new Dictionary<object, SenseEvaluationCache>(ReferenceEqualityComparer.Instance);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
-        ItemPresentationIndex observedIndex;
+        int pickupObservedReported;
 
         public AmandsSenseIntegration(ItemIntelligenceUiSettings settings, ItemPresentationStore store,
-            Action<string> logInfo, Action<string> logWarning)
+            Action<string> logInfo, Action<string> logWarning,
+            RaidRequirementLedger ledger = null, Action raidChanged = null, Action raidStarted = null)
         {
             this.settings = settings;
             this.store = store;
             this.logInfo = logInfo;
             this.logWarning = logWarning;
+            this.ledger = ledger ?? new RaidRequirementLedger();
+            this.raidChanged = raidChanged;
+            this.raidStarted = raidStarted;
         }
 
         public bool IsInstalled { get; private set; }
@@ -37,11 +44,18 @@ namespace SPTItemIntelligence
             {
                 Assembly sense = FindAssembly("AmandsSense");
                 Type itemType = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseItem", false);
+                Type containerType = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseContainer", false);
                 Type senseClass = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseClass", false);
                 MethodInfo setSense = FindMethod(itemType, "SetSense", 1);
+                MethodInfo setContainerSense = FindMethod(containerType, "SetSense", 1);
                 MethodInfo remove = FindMethod(itemType, "RemoveLootItem", 1);
                 MethodInfo clear = FindMethod(senseClass, "Clear", 0);
-                if (setSense == null || remove == null || clear == null) return false;
+                if (setSense == null || setContainerSense == null || remove == null || clear == null)
+                {
+                    if (logWarning != null) logWarning("Item Intelligence Sense bridge unavailable: Item.SetSense=" + (setSense != null) +
+                        ", Container.SetSense=" + (setContainerSense != null) + ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
+                    return false;
+                }
 
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
@@ -51,6 +65,7 @@ namespace SPTItemIntelligence
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 Patch(patch, hmCtor, setSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
+                Patch(patch, hmCtor, setContainerSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 Patch(patch, hmCtor, remove, typeof(AmandsSenseIntegration).GetMethod(nameof(RemovePrefix), BindingFlags.Static | BindingFlags.NonPublic), null);
                 Patch(patch, hmCtor, clear, null, typeof(AmandsSenseIntegration).GetMethod(nameof(ClearPostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 active = this;
@@ -73,62 +88,244 @@ namespace SPTItemIntelligence
         void Apply(object senseItem)
         {
             if (!settings.SenseIntegration || !settings.SenseRequiredItems || senseItem == null) return;
+            if (ledger.BeginRaid())
+            {
+                if (raidStarted != null) raidStarted();
+                if (raidChanged != null) raidChanged();
+            }
             ItemPresentationIndex index = store.Current;
-            if (!ReferenceEquals(index, observedIndex)) { observedIndex = index; ResetRaid(); }
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");
-            string templateId = Text(Member(item, "TemplateId", "Tpl"));
             string itemId = Text(Member(item, "Id", "ID"));
-            int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
-            bool fir = Flag(Member(item, "SpawnedInSession"));
-            if (itemId.Length > 0 && pickedItemIds.Remove(itemId)) ledger.Remove(itemId);
+            if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId))
+            {
+                evaluationCache.Clear();
+                if (raidChanged != null) raidChanged();
+            }
 
-            ItemPresentationState state = index.Get(templateId);
-            ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
-            SenseRequirementPresentation presentation = SenseRequirementMapper.Map(ledger.Evaluate(templateId, allocation, fir));
-            if (!presentation.OverridesSense) return;
+            SenseVisualPolicy policy;
+            bool isContainer;
+            SenseEvaluationCache cached;
+            if (evaluationCache.TryGetValue(senseItem, out cached) && ReferenceEquals(cached.Index, index) &&
+                cached.LedgerRevision == ledger.Revision && cached.SettingsRevision == settings.Revision)
+            {
+                policy = cached.Policy;
+                isContainer = cached.IsContainer;
+            }
+            else
+            {
+                List<SenseVisualPolicy> candidates = new List<SenseVisualPolicy>();
+                int foodCount = 0;
+                foreach (object contained in EnumerateSenseItemTree(senseItem, item))
+                {
+                    if (IsFood(contained)) foodCount++;
+                    string templateId = Text(Member(contained, "TemplateId", "Tpl"));
+                    if (templateId.Length == 0) continue;
+                    bool fir = Flag(Member(contained, "SpawnedInSession"));
+                    ItemPresentationState state = index.Get(templateId);
+                    ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
+                    ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
+                    candidates.Add(SenseVisualPolicyEngine.Evaluate(decision.Allocation));
+                }
+                policy = SenseContainerPolicyEngine.Combine(candidates);
+                isContainer = IsContainer(senseItem);
+                if (!policy.HasItemIntelligence && foodCount > 0) policy = SenseVisualPolicy.Food(foodCount);
+                if (evaluationCache.Count >= 512) evaluationCache.Clear();
+                evaluationCache[senseItem] = new SenseEvaluationCache(index, ledger.Revision, settings.Revision, policy, isContainer);
+            }
+            if (!policy.HasItemIntelligence) return;
 
-            Color primary = settings.GetSenseColor(presentation.PrimaryReason);
-            SetField(senseItem, "color", primary);
-            Color secondary = presentation.OutlineReason == ItemNeedReason.None || !settings.SenseSecondaryOutline
-                ? primary : settings.GetSenseColor(presentation.OutlineReason);
+            Color primary = settings.GetSenseColor(policy.Category);
+            Color stock = settings.GetSenseStockColor(policy.Stock);
+            bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
+            bool preserveIcon = HasProtectedSenseVisual(senseItem) && !completedContainer && policy.Stock != SenseStockState.Complete && policy.Category != ItemNeedReason.Food;
+            if (!preserveIcon) SetField(senseItem, "color", completedContainer ? stock : primary);
+            Color secondary = policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
+                ? primary : settings.GetSenseColor(policy.SecondaryCategory);
             SetField(senseItem, "outlineColor", secondary);
 
-            object sprite = FindSenseSprite(senseItem.GetType().Assembly, IconFile(presentation.Icon));
-            if (sprite != null) SetField(senseItem, "sprite", sprite);
-            ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, primary);
-            ApplyLight(Member(senseItem, "light"), primary);
+            ItemNeedIcon renderedIcon = completedContainer ? ItemNeedIcon.Complete : policy.Icon;
+            object sprite = preserveIcon ? Member(senseItem, "sprite") : FindSenseSprite(senseItem.GetType().Assembly, IconFile(renderedIcon));
+            if (!preserveIcon && sprite != null) SetField(senseItem, "sprite", sprite);
+            object nativeColor = Member(senseItem, "color");
+            Color renderColor = completedContainer ? stock : preserveIcon && nativeColor is Color ? (Color)nativeColor : primary;
+            ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, renderColor);
+            ApplyLight(Member(senseItem, "light"), completedContainer || preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
-                ApplyText(Member(senseItem, "typeText"), Label(presentation) + " ×" + presentation.Remaining, primary, secondary);
+                ApplyText(Member(senseItem, "typeText"), CompactText(policy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount)), Color.white, secondary);
+        }
+
+        static IEnumerable<object> EnumerateSenseItemTree(object senseItem, object looseItem)
+        {
+            HashSet<object> yielded = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            foreach (object value in EnumerateItemTree(looseItem))
+                if (yielded.Add(value)) yield return value;
+
+            // AmandsSense uses a separate component for world containers. Its loot is owned by
+            // LootableContainer.ItemOwner and is therefore not reachable from observedLootItem.
+            object lootableContainer = Member(senseItem, "lootableContainer");
+            object owner = Member(lootableContainer, "ItemOwner", "Owner");
+            object root = Member(owner, "RootItem");
+            foreach (object value in EnumerateItemTree(root))
+                if (yielded.Add(value)) yield return value;
+
+            IEnumerable ownerItems = Member(owner, "Items", "AllItems", "AllRealPlayerItems") as IEnumerable;
+            if (ownerItems == null) yield break;
+            foreach (object owned in ownerItems)
+                foreach (object value in EnumerateItemTree(owned))
+                    if (yielded.Add(value)) yield return value;
+        }
+
+        static IEnumerable<object> EnumerateItemTree(object root)
+        {
+            if (root == null) yield break;
+            Queue<object> pending = new Queue<object>();
+            HashSet<object> seen = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            pending.Enqueue(root);
+            while (pending.Count > 0 && seen.Count < 512)
+            {
+                object item = pending.Dequeue();
+                if (item == null || !seen.Add(item)) continue;
+                yield return item;
+                EnqueueItems(InvokeEnumerable(item, "GetAllItems"), pending);
+                EnqueueItems(Member(item, "Children", "AllItems", "Items"), pending);
+                EnqueueContained(Member(item, "Containers"), pending);
+                EnqueueContained(Member(item, "Grids"), pending);
+                EnqueueContained(Member(item, "Slots"), pending);
+                EnqueueContained(Member(item, "Cartridges"), pending);
+                EnqueueContained(Member(item, "Chambers"), pending);
+            }
+        }
+
+        static void EnqueueContained(object containers, Queue<object> pending)
+        {
+            IEnumerable values = containers as IEnumerable;
+            if (values == null || containers is string) return;
+            foreach (object container in values)
+            {
+                if (container == null) continue;
+                object contained = Member(container, "ContainedItem", "Item");
+                if (contained != null) pending.Enqueue(contained);
+                EnqueueItems(Member(container, "Items", "ContainedItems", "Children"), pending);
+            }
+        }
+
+        static void EnqueueItems(object values, Queue<object> pending)
+        {
+            IEnumerable enumerable = values as IEnumerable;
+            if (enumerable == null || values is string) return;
+            foreach (object value in enumerable) if (value != null) pending.Enqueue(value);
+        }
+
+        static object InvokeEnumerable(object target, string name)
+        {
+            if (target == null) return null;
+            for (Type type = target.GetType(); type != null; type = type.BaseType)
+            {
+                MethodInfo method = type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+                    BindingFlags.DeclaredOnly, null, Type.EmptyTypes, null);
+                if (method == null) continue;
+                try { return method.Invoke(target, null); } catch { return null; }
+            }
+            return null;
         }
 
         void RecordPickup(object senseItem, object eventArgs)
         {
             if (!settings.SenseIntegration || !IsSuccess(eventArgs)) return;
             object item = Member(Member(senseItem, "observedLootItem"), "Item");
-            string id = Text(Member(item, "Id", "ID"));
-            string template = Text(Member(item, "TemplateId", "Tpl"));
-            if (id.Length == 0 || template.Length == 0) return;
-            int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
-            bool fir = Flag(Member(item, "SpawnedInSession"));
-            ledger.Observe(id, template, stack, fir);
-            pickedItemIds.Add(id);
+            bool changed = false;
+            int observed = 0;
+            foreach (object picked in EnumerateItemTree(item))
+            {
+                string id = Text(Member(picked, "Id", "ID"));
+                string template = Text(Member(picked, "TemplateId", "Tpl"));
+                if (id.Length == 0 || template.Length == 0) continue;
+                int stack = Math.Max(1, Number(Member(picked, "StackObjectsCount"), 1));
+                bool fir = Flag(Member(picked, "SpawnedInSession"));
+                changed |= ledger.Observe(id, template, stack, fir);
+                pickedItemIds.Add(id);
+                observed++;
+            }
+            if (changed)
+            {
+                evaluationCache.Clear();
+                if (raidChanged != null) raidChanged();
+            }
+            if (observed > 0 && System.Threading.Interlocked.Exchange(ref pickupObservedReported, 1) == 0 && logInfo != null)
+                logInfo("Item Intelligence raid inventory pickup tracking active; item tree records=" + observed + ".");
         }
 
-        void ResetRaid() { ledger.Reset(); pickedItemIds.Clear(); }
-
-        static string Label(SenseRequirementPresentation value)
+        void ResetRaid()
         {
-            if (value.PrimaryReason == ItemNeedReason.ActiveQuest) return GameUiText.T("QUEST", "КВЕСТ");
-            if (value.PrimaryReason == ItemNeedReason.Hideout) return GameUiText.T("HIDEOUT", "УБЕЖИЩЕ");
+            int revision = ledger.Revision;
+            ledger.Reset();
+            pickedItemIds.Clear();
+            evaluationCache.Clear();
+            if (ledger.Revision != revision && raidChanged != null) raidChanged();
+        }
+
+        static string Label(ItemNeedReason reason)
+        {
+            if (reason == ItemNeedReason.ActiveQuest) return GameUiText.T("QUEST", "КВЕСТ");
+            if (reason == ItemNeedReason.Hideout) return GameUiText.T("HIDEOUT", "УБЕЖИЩЕ");
+            if (reason == ItemNeedReason.Food) return GameUiText.T("FOOD", "ЕДА");
             return GameUiText.T("FUTURE", "ПОТОМ");
+        }
+
+        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer, Color countColor)
+        {
+            if (isContainer && policy.Stock == SenseStockState.Complete) return string.Empty;
+            if (policy.Category == ItemNeedReason.Food)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color>" +
+                       (isContainer ? " <color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" : string.Empty);
+            if (isContainer)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color> " +
+                       "<color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>";
+            if (policy.Stock == SenseStockState.Complete)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + Label(policy.Category) + "</color>";
+            return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color> " +
+                   "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">−" + policy.Remaining + "</color>";
+        }
+
+        static bool HasProtectedSenseVisual(object senseItem)
+        {
+            string type = Text(Member(senseItem, "senseItemType"));
+            if (type == "Valuables" || type == "QuestItems") return true;
+            object raw = Member(senseItem, "color");
+            if (!(raw is Color)) return false;
+            Color color = (Color)raw;
+            return (color.r > .85f && color.g < .25f) ||
+                   (color.r > .85f && color.g > .70f && color.b < .30f) ||
+                   (color.b > .45f && color.r > .25f && color.g < .45f);
         }
 
         static string IconFile(ItemNeedIcon icon)
         {
             if (icon == ItemNeedIcon.Quest) return "icon_quest.png";
             if (icon == ItemNeedIcon.Hideout) return "icon_barter_building.png";
+            if (icon == ItemNeedIcon.Food) return "icon_provisions_food.png";
+            if (icon == ItemNeedIcon.Complete) return "icon_fav_checked.png";
             return "icon_info.png";
+        }
+
+        static bool IsContainer(object senseItem)
+        {
+            return senseItem != null && (Member(senseItem, "lootableContainer") != null ||
+                senseItem.GetType().Name.IndexOf("Container", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        static bool IsFood(object item)
+        {
+            if (item == null) return false;
+            string itemType = item.GetType().Name;
+            object template = Member(item, "Template");
+            string templateType = template == null ? string.Empty : template.GetType().Name;
+            return itemType.IndexOf("Food", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   itemType.IndexOf("Drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   templateType.IndexOf("Food", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   templateType.IndexOf("Drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   Member(item, "FoodDrinkComponent") != null || Member(template, "FoodDrinkComponent") != null;
         }
 
         static object FindSenseSprite(Assembly assembly, string key)
@@ -167,10 +364,18 @@ namespace SPTItemIntelligence
 
         static bool IsSuccess(object args)
         {
+            if (args == null) return true;
+            object success = Member(args, "Succeed", "Succeeded", "Success", "IsSuccess");
+            if (success != null) return Flag(success);
+            object failed = Member(args, "Failed", "Failure", "IsFailed");
+            if (failed != null && Flag(failed)) return false;
             object status = Member(args, "Status");
-            if (status == null) return false;
+            if (status == null) return true;
             string text = status.ToString();
-            return string.Equals(text, "Succeed", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase) || Number(status, -1) == 1;
+            return string.Equals(text, "Succeed", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(text, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase) ||
+                   Number(status, -1) == 1;
         }
 
         static object Member(object source, params string[] names)
@@ -212,8 +417,20 @@ namespace SPTItemIntelligence
         static string Text(object value) { return value == null ? string.Empty : value.ToString().Trim(); }
         static bool Flag(object value) { try { return value != null && Convert.ToBoolean(value); } catch { return false; } }
         static int Number(object value, int fallback) { try { return value == null ? fallback : Convert.ToInt32(value); } catch { return fallback; } }
+
+        sealed class SenseEvaluationCache
+        {
+            internal SenseEvaluationCache(ItemPresentationIndex index, int ledgerRevision, int settingsRevision,
+                SenseVisualPolicy policy, bool isContainer)
+            { Index = index; LedgerRevision = ledgerRevision; SettingsRevision = settingsRevision; Policy = policy; IsContainer = isContainer; }
+            internal ItemPresentationIndex Index { get; }
+            internal int LedgerRevision { get; }
+            internal int SettingsRevision { get; }
+            internal SenseVisualPolicy Policy { get; }
+            internal bool IsContainer { get; }
+        }
         static Assembly FindAssembly(string name) { foreach (Assembly value in AppDomain.CurrentDomain.GetAssemblies()) if (string.Equals(value.GetName().Name, name, StringComparison.OrdinalIgnoreCase)) return value; return null; }
-        static MethodInfo FindMethod(Type type, string name, int parameters) { if (type == null) return null; foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) if (method.Name == name && method.GetParameters().Length == parameters) return method; return null; }
+        static MethodInfo FindMethod(Type type, string name, int parameters) { if (type == null) return null; foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) if (method.Name == name && method.GetParameters().Length == parameters) return method; return null; }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
@@ -246,6 +463,13 @@ namespace SPTItemIntelligence
             harmony = null;
             IsInstalled = false;
             ResetRaid();
+        }
+
+        sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            internal static readonly ReferenceEqualityComparer Instance = new ReferenceEqualityComparer();
+            public new bool Equals(object left, object right) { return ReferenceEquals(left, right); }
+            public int GetHashCode(object value) { return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(value); }
         }
     }
 }

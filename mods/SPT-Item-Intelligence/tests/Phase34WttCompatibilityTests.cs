@@ -8,6 +8,7 @@ static class Phase34WttCompatibilityTests
     const string ArmoryTemplate = "66875ecf64c1fb1896b2ddc1";
     const string BackportTemplate = "6a15ae2ae5267ba21c07f990";
     const string UnknownTemplate = "ffffffffffffffffffffffff";
+    const string IcebreakerTemplate = "69bb43df99f3fda8f1072483";
 
     public static int Run()
     {
@@ -21,11 +22,13 @@ static class Phase34WttCompatibilityTests
                     Item("armory-owned", ArmoryTemplate.ToUpperInvariant(), 2, true),
                     Item("backport-owned", BackportTemplate, 1, false),
                     Item("unknown-owned", UnknownTemplate, 1, false)
+                    ,Item("icebreaker-owned-a", IcebreakerTemplate, 2, true)
                 }
             },
             ["Quests"] = new object[]
             {
                 new Dictionary<string, object> { ["qid"] = "wtt-current", ["status"] = "Started" }
+                ,new Dictionary<string, object> { ["qid"] = "icebreaker-current", ["status"] = "Started" }
             },
             ["Hideout"] = new Dictionary<string, object>
             {
@@ -36,6 +39,7 @@ static class Phase34WttCompatibilityTests
         {
             ["wtt-current"] = Quest("wtt-current", ArmoryTemplate, 3, true),
             ["wtt-future"] = Quest("wtt-future", BackportTemplate, 2, false)
+            ,["icebreaker-current"] = FindAndHandoverQuest("icebreaker-current", IcebreakerTemplate, 10, true)
         };
         Dictionary<string, object> hideout = new Dictionary<string, object>
         {
@@ -69,6 +73,13 @@ static class Phase34WttCompatibilityTests
             "Backport future-quest and hideout requirements aggregate through the generic path", ref assertions);
         Expect(backport.Allocation.Missing == 5 && backport.KeepCount == 6,
             "Backport stock is allocated once across consumptive requirements", ref assertions);
+        RequirementIndexEntry icebreaker = index.Get(IcebreakerTemplate);
+        Expect(icebreaker.QuestNeededNow == 10 && icebreaker.Allocation.NowFirRequired == 10 && icebreaker.Allocation.NowMissing == 8,
+            "Icebreaker paired FindItem/HandoverItem contributes one FIR consumptive requirement", ref assertions);
+        SenseVisualPolicy icebreakerSense = SenseVisualPolicyEngine.Evaluate(icebreaker.Allocation);
+        Expect(icebreakerSense.Category == ItemNeedReason.ActiveQuest && icebreakerSense.Icon == ItemNeedIcon.Quest &&
+               icebreakerSense.Stock == SenseStockState.Partial,
+            "Icebreaker requirement reaches Sense through the shared active-quest allocation", ref assertions);
 
         ItemPriceIndex priceIndex = new SptPriceDataProjector().Project(prices);
         ItemPriceState armoryPrice;
@@ -147,6 +158,29 @@ static class Phase34WttCompatibilityTests
                 new Dictionary<string, object> { ["type"] = 1, ["templateId"] = templateId, ["count"] = count }
             }
         };
+    }
+
+    static Dictionary<string, object> FindAndHandoverQuest(string id, string templateId, int count, bool fir)
+    {
+        Dictionary<string, object> quest = Quest(id, templateId, count, fir);
+        quest["QuestName"] = "War Never Changes";
+        quest["conditions"] = new Dictionary<string, object>
+        {
+            ["AvailableForFinish"] = new object[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["id"] = id + "-find", ["conditionType"] = "FindItem",
+                    ["target"] = new object[] { templateId }, ["value"] = count, ["onlyFoundInRaid"] = fir
+                },
+                new Dictionary<string, object>
+                {
+                    ["id"] = id + "-handover", ["conditionType"] = "HandoverItem",
+                    ["target"] = new object[] { templateId }, ["value"] = count, ["onlyFoundInRaid"] = fir
+                }
+            }
+        };
+        return quest;
     }
 
     static string FindRepositoryRoot()

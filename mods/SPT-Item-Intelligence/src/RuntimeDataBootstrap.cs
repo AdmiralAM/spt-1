@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -90,13 +91,14 @@ namespace SPTItemIntelligence
             object quests = JsonNode.Get(root, "quests");
             object hideout = JsonNode.Get(root, "hideout");
             object prices = JsonNode.Get(root, "prices");
+            object locales = JsonNode.Get(root, "locales");
             if (JsonNode.IsNull(quests) || JsonNode.IsNull(hideout) || JsonNode.IsNull(prices))
                 throw new InvalidOperationException("Requirement snapshot tables are incomplete.");
 
             long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
             Trace("decoder profileReady=" + (!JsonNode.IsNull(profile)) + " quests=" + CountValues(quests) + " hideoutAreas=" + CountValues(JsonNode.Get(hideout, "areas", "Areas")));
             object hideoutProgress = JsonNode.Get(root, "hideoutProgress");
-            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices, hideoutProgress);
+            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices, hideoutProgress, locales);
         }
 
         void Trace(string message)
@@ -184,8 +186,10 @@ namespace SPTItemIntelligence
 
             List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
             List<RequirementContribution> contributions = new List<RequirementContribution>();
-            ProjectQuests(snapshot.profile, snapshot.quests, contributions);
-            ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, contributions);
+            Dictionary<string, PoolCount> alternativePools = new Dictionary<string, PoolCount>(StringComparer.Ordinal);
+            ProjectQuests(snapshot.profile, snapshot.quests, snapshot.locales, contributions, owned, alternativePools);
+            owned = ApplyAlternativePools(owned, alternativePools);
+            ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, snapshot.locales, contributions);
             int ownedBulbex = 0;
             for (int i = 0; i < owned.Count; i++)
                 if (owned[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) ownedBulbex += owned[i].Count;
@@ -220,7 +224,7 @@ namespace SPTItemIntelligence
             return result;
         }
 
-        static void ProjectQuests(object profile, object questTable, List<RequirementContribution> output)
+        static void ProjectQuests(object profile, object questTable, object locales, List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
         {
             Dictionary<string, QuestProgress> progress = new Dictionary<string, QuestProgress>(StringComparer.OrdinalIgnoreCase);
             foreach (object quest in JsonNode.Values(JsonNode.Get(profile, "Quests", "quests")))
@@ -236,43 +240,103 @@ namespace SPTItemIntelligence
                 progress[id.Trim()] = new QuestProgress(JsonNode.ReadString(JsonNode.Get(quest, "status", "Status")), completed);
             }
 
+            HashSet<string> projectedQuestIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, object> pair in JsonNode.Pairs(questTable))
             {
                 object quest = pair.Value;
                 string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
                 if (string.IsNullOrWhiteSpace(questId)) questId = pair.Key;
                 if (string.IsNullOrWhiteSpace(questId)) continue;
-                string questLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
-                if (questLabel.Length == 0) questLabel = "Quest " + questId;
-
                 QuestProgress state;
                 progress.TryGetValue(questId, out state);
-                if (state != null && state.IsComplete) continue;
-                RequirementSource source = state != null && state.IsCurrent ? RequirementSource.CurrentQuest : RequirementSource.FutureQuest;
+                ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
+                projectedQuestIds.Add(questId);
+            }
 
-                object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
-                List<QuestCondition> parsed = ParseQuestConditions(conditions);
-                HashSet<string> seenConditions = new HashSet<string>(StringComparer.Ordinal);
-                for (int i = 0; i < parsed.Count; i++)
+            // Daily/weekly operational quests are generated per profile and do not exist in the
+            // global quest template table. Project their active list through the exact same path.
+            foreach (object group in JsonNode.Values(JsonNode.Get(profile, "RepeatableQuests", "repeatableQuests")))
+            {
+                foreach (object quest in JsonNode.Values(JsonNode.Get(group, "activeQuests", "ActiveQuests")))
                 {
-                    QuestCondition condition = parsed[i];
-                    if (condition.Id.Length > 0 && !seenConditions.Add(condition.Id)) continue;
-                    if (state != null && state.IsConditionComplete(condition.Id)) continue;
-                    if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
-                        condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
-
-                    HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
-                    for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
-                    {
-                        string target = condition.Targets[targetIndex];
-                        if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
-                        // Finding is observational; a matching consumptive objective owns the reserve.
-                        if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
-                        int satisfied = ReadSatisfied(profile, condition.Id);
-                        output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
-                    }
+                    string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
+                    if (questId.Length == 0 || !projectedQuestIds.Add(questId)) continue;
+                    object status = JsonNode.Get(quest, "questStatus", "QuestStatus");
+                    QuestProgress state = new QuestProgress(JsonNode.ReadString(JsonNode.Get(status, "status", "Status")),
+                        JsonNode.Values(JsonNode.Get(status, "completedConditions", "CompletedConditions")).Select(JsonNode.ReadString));
+                    ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
                 }
             }
+        }
+
+        static void ProjectQuest(object profile, object quest, string questId, QuestProgress state, object locales,
+            List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
+        {
+            if (state != null && state.IsComplete) return;
+            string rawLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
+            string questLabel = Localized(locales, rawLabel, Localized(locales, questId + " name", rawLabel)).Trim();
+            if (questLabel.Length == 0) questLabel = "Quest " + questId;
+            RequirementSource source = state != null && state.IsCurrent ? RequirementSource.CurrentQuest : RequirementSource.FutureQuest;
+            object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
+            List<QuestCondition> parsed = ParseQuestConditions(conditions);
+            HashSet<string> seenConditions = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < parsed.Count; i++)
+            {
+                QuestCondition condition = parsed[i];
+                if (condition.Id.Length > 0 && !seenConditions.Add(condition.Id)) continue;
+                if (state != null && state.IsConditionComplete(condition.Id)) continue;
+                if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
+                    condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
+                RegisterAlternativePool(condition, owned, alternativePools);
+                HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
+                for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
+                {
+                    string target = condition.Targets[targetIndex];
+                    if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
+                    if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
+                    int satisfied = ReadSatisfied(profile, condition.Id);
+                    output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
+                }
+            }
+        }
+
+        static void RegisterAlternativePool(QuestCondition condition, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        {
+            HashSet<string> targets = new HashSet<string>(condition.Targets, StringComparer.Ordinal);
+            if (targets.Count < 2) return;
+            int total = 0, fir = 0;
+            for (int i = 0; i < owned.Count; i++)
+            {
+                if (!targets.Contains(owned[i].TemplateId)) continue;
+                total = checked(total + owned[i].Count);
+                fir = checked(fir + owned[i].FoundInRaidCount);
+            }
+            foreach (string target in targets)
+            {
+                PoolCount prior;
+                pools.TryGetValue(target, out prior);
+                pools[target] = new PoolCount(Math.Max(total, prior == null ? 0 : prior.Total), Math.Max(fir, prior == null ? 0 : prior.Fir));
+            }
+        }
+
+        static List<OwnedTemplateCount> ApplyAlternativePools(List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        {
+            Dictionary<string, OwnedTemplateCount> byTemplate = new Dictionary<string, OwnedTemplateCount>(StringComparer.Ordinal);
+            for (int i = 0; i < owned.Count; i++) byTemplate[owned[i].TemplateId] = owned[i];
+            foreach (KeyValuePair<string, PoolCount> pair in pools)
+            {
+                OwnedTemplateCount exact;
+                byTemplate.TryGetValue(pair.Key, out exact);
+                byTemplate[pair.Key] = new OwnedTemplateCount(pair.Key, exact == null ? 0 : exact.Count, exact == null ? 0 : exact.FoundInRaidCount, pair.Value.Total, pair.Value.Fir);
+            }
+            return new List<OwnedTemplateCount>(byTemplate.Values);
+        }
+
+        sealed class PoolCount
+        {
+            public PoolCount(int total, int fir) { Total = total; Fir = fir; }
+            public int Total { get; }
+            public int Fir { get; }
         }
 
         static List<QuestCondition> ParseQuestConditions(object conditions)
@@ -320,7 +384,7 @@ namespace SPTItemIntelligence
             return satisfied;
         }
 
-        void ProjectHideout(object profile, object hideoutTable, object hideoutProgress, List<RequirementContribution> output)
+        void ProjectHideout(object profile, object hideoutTable, object hideoutProgress, object locales, List<RequirementContribution> output)
         {
             Dictionary<string, int> currentLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
@@ -336,16 +400,16 @@ namespace SPTItemIntelligence
 
             HashSet<string> seenStages = new HashSet<string>(StringComparer.Ordinal);
             object areaProgresses = JsonNode.Get(hideoutProgress, "areaProgresses", "AreaProgresses");
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, areaProgresses, output, seenStages);
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, areaProgresses, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, areaProgresses, locales, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, areaProgresses, locales, output, seenStages);
         }
 
-        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, object areaProgresses, List<RequirementContribution> output, HashSet<string> seenStages)
+        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, object areaProgresses, object locales, List<RequirementContribution> output, HashSet<string> seenStages)
         {
             foreach (object area in JsonNode.Values(areas))
             {
                 string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
-                string areaLabel = HideoutAreaName(type);
+                string areaLabel = Localized(locales, "hideout_area_" + type + "_name", HideoutAreaName(type));
                 int currentLevel;
                 currentLevels.TryGetValue(type, out currentLevel);
                 foreach (KeyValuePair<string, object> stagePair in JsonNode.Pairs(JsonNode.Get(area, "stages", "Stages")))
@@ -362,14 +426,21 @@ namespace SPTItemIntelligence
                         if (templateId == RequirementDataContract.RuntimeTraceTemplateId)
                             Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
                         if (!itemRequirement) continue;
-                        string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
+                        // SPT hideout requirements use isSpawnedInSession for the same FIR contract
+                        // that quests expose as onlyFoundInRaid.  Keep the aliases for custom areas,
+                        // but prefer the native hideout field so every station follows one rule.
+                        bool foundInRaid = JsonNode.ReadBool(JsonNode.Get(requirement,
+                            "isSpawnedInSession", "IsSpawnedInSession", "spawnedInSession", "SpawnedInSession",
+                            "onlyFoundInRaid", "OnlyFoundInRaid", "foundInRaid", "FoundInRaid", "isFoundInRaid", "IsFoundInRaid"), false);
+                        string label = areaLabel + GameUiText.T(" L", " ур. ") + stage.ToString(CultureInfo.InvariantCulture) +
+                            (stage == currentLevel + 1 ? GameUiText.T(" (current)", " (текущий)") : GameUiText.T(" (future)", " (будущий)"));
                         int satisfied = 0;
                         if (stage == currentLevel + 1)
                         {
                             object areaProgress = JsonNode.Get(areaProgresses, type);
                             satisfied = Math.Min(count, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(areaProgress, templateId), 0)));
                         }
-                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, label: label));
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, foundInRaidRequired: foundInRaid, label: label));
                     }
                 }
             }
@@ -378,6 +449,13 @@ namespace SPTItemIntelligence
         void Trace(string message)
         {
             if (trace != null) trace("[II TRACE] client " + message);
+        }
+
+        static string Localized(object locales, string key, string fallback)
+        {
+            string language = GameUiText.Russian ? "ru" : "en";
+            string value = JsonNode.ReadString(JsonNode.Get(JsonNode.Get(locales, language), key)).Trim();
+            return value.Length == 0 ? (fallback ?? string.Empty).Trim() : value;
         }
 
         sealed class QuestProgress

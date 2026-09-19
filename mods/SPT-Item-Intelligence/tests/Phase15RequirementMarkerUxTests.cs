@@ -15,9 +15,9 @@ static class Phase15RequirementMarkerUxTests
         Expect(text.GetLine(ItemTooltipMode.Minimal, 1) == "Keep ×4", "keep count is the second minimal line", ref assertions);
 
         Expect(text.GetLineCount(ItemTooltipMode.Normal) == 5, "normal mode exposes the selected value and compact requirement progress", ref assertions);
-        Expect(text.QuestNowLine == "Active quest: 2/2 ✓", "inventory is allocated to current quests first", ref assertions);
-        Expect(text.GetLine(ItemTooltipMode.Normal, 2) == "Hideout: 3/4", "hideout is the second allocation and color priority", ref assertions);
-        Expect(text.QuestLaterLine == "Future quest: 0/3", "future quest progress is explicit", ref assertions);
+        Expect(text.QuestNowLine == "For active quest: 2/2 ✓", "inventory is allocated to current quests first", ref assertions);
+        Expect(text.GetLine(ItemTooltipMode.Normal, 2) == "For hideout after quests: 3/4", "hideout is the second allocation and color priority", ref assertions);
+        Expect(text.QuestLaterLine == "For future quest: 0/3", "future quest progress is explicit", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Normal, 4) == "Keep ×4", "aggregate keep count remains visible", ref assertions);
 
         Expect(text.GetLineCount(ItemTooltipMode.Detailed) == 6, "detailed mode adds owned count without Full-only value rows", ref assertions);
