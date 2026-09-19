@@ -43,5 +43,10 @@ class SuiteContractTests(unittest.TestCase):
         self.assertNotIn("Harmony", source)
         self.assertIn("BepInDependency(UseItemsAnywhereAdapter.UpstreamPluginGuid", plugin)
 
+    def test_posters_use_foldables_compound_item_size_path(self):
+        source = (ROOT / "mods/SPT-Foldables-Extended/client/FoldableTypes.cs").read_text(encoding="utf-8")
+        self.assertIn("FoldablePosterTemplate : CompoundItemTemplate", source)
+        self.assertIn("FoldablePoster : CompoundItem, IFoldable", source)
+
 if __name__ == "__main__":
     unittest.main()

@@ -47,7 +47,14 @@ public sealed class Plugin : BaseUnityPlugin
         JsonTypes.TemplateTypeTable[taxonomyId] = typeof(TTemplate);
         JsonTypes.ItemConstructors[taxonomyId] = (id, template) => constructor(id, (TTemplate)template);
 
-        int itemIndex = ItemSorter.IndexOf(typeof(Item));
+        Type sorterBase = typeof(CompoundItem).IsAssignableFrom(typeof(TItem))
+            ? typeof(CompoundItem)
+            : typeof(Item);
+        int itemIndex = ItemSorter.IndexOf(sorterBase);
+        if (itemIndex < 0)
+        {
+            itemIndex = ItemSorter.IndexOf(typeof(Item));
+        }
         if (!ItemSorter._itemSuccessors.Contains(typeof(TItem)))
         {
             ItemSorter._itemSuccessors.Insert(itemIndex, typeof(TItem));

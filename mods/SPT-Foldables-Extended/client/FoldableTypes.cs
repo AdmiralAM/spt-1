@@ -111,7 +111,7 @@ public sealed class FoldableFaceCover : FaceCover, IFoldable
     public override int GetHashSum() => Foldable == null ? base.GetHashSum() : base.GetHashSum() * 27 + Foldable.Folded.GetHashCode();
 }
 
-public sealed class FoldablePosterTemplate : ItemTemplate, IExtendedFoldableComponentTemplate
+public sealed class FoldablePosterTemplate : CompoundItemTemplate, IExtendedFoldableComponentTemplate
 {
     public bool Foldable { get; set; }
     public string FoldedSlot { get; set; }
@@ -120,7 +120,7 @@ public sealed class FoldablePosterTemplate : ItemTemplate, IExtendedFoldableComp
     public float FoldingTime { get; set; }
 }
 
-public sealed class FoldablePoster : Item, IFoldable
+public sealed class FoldablePoster : CompoundItem, IFoldable
 {
     [Component, UsedImplicitly]
     public readonly ExtendedFoldableComponent Foldable;
@@ -132,7 +132,7 @@ public sealed class FoldablePoster : Item, IFoldable
 
     public FoldablePoster(string id, FoldablePosterTemplate template) : base(id, template)
     {
-        // SPT 4.1.6 can materialize custom ItemTemplate descendants before
+        // SPT 4.1.6 can materialize custom templates before
         // extension-data fold geometry has been bound. The Folded flag then
         // changes correctly while both reductions remain zero, leaving a 4-cell
         // poster at its open size. Posters have one fixed contract, so restore
