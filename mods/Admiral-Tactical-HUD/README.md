@@ -34,7 +34,7 @@ The two client DLLs are independent. For a single population presentation, keep 
 
 ## Icon architecture
 
-Population glyphs compatible with the Full Census model are derived from the MIT-licensed `CameronsWorks/BotCensus` project. Attribution and the upstream license are preserved under `client/assets/botcensus/` and `THIRD-PARTY-LICENSES/`.
+The Full Census glyph files are vendored unchanged from the MIT-licensed `CameronsWorks/BotCensus` project. Its vanilla role classification and known custom-faction range fallback inform the current Full Census implementation. This is not a complete Bot Census port: the upstream live MoreBotsAPI registry, custom boss/escort shaping and typed Fika source are not currently integrated. Attribution and the upstream license are preserved under `client/assets/botcensus/` and `THIRD-PARTY-LICENSES/`.
 
 The original Admiral Tactical HUD sprite atlas and approved source cells are **retained, not deleted**. They remain the reserve/fallback source for status, body-part and self icons and for any population glyph that cannot be loaded from the embedded Bot Census set.
 
