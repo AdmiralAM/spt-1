@@ -14,7 +14,7 @@ The root-template comparison found 23 template overlaps and 49 involved offers. 
 | --- | --- | --- | --- |
 | Documents case | Admiral LL1 barter; Artem LL2 barter | retain both for now | The payments serve different loot routes. Audit their effective value before choosing one. |
 | Labs access card | two authored Admiral quest barters; Artem LL4 cash | retain | These are three materially different acquisition paths and progression gates. |
-| `.45 ACP AP` | Admiral LL1 cash; Artem LL4 cash | **removal candidate: Artem offer `66bf757f27d0b097db0acf0c`** | Identical loose ammunition; the later offer adds no role and is only marginally cheaper. |
+| `.45 ACP AP` | Admiral quest-unlocked offer `67d5501fb925a7836b99f112`; Artem LL4 cash | retain | The Admiral row is unlocked by Arsenal A-12 rather than being an unrestricted LL1 sale. Artem provides the ordinary late-loyalty route; the two acquisition paths have distinct roles. |
 | `5.56x45 M856A1` | Admiral LL1 premium cash; Artem LL3 cheaper cash | retain | Price and loyalty create a legitimate early-premium versus later-standard choice. |
 | `7.62x51 M62` | Admiral LL1 cash; Artem LL4 cash | retain | The Artem row is a persistent quest-assort unlock and reward target. Its higher price is secondary to preserving the authored quest result. |
 | Injector case | Admiral LL1 barter; Artem LL3 barter | retain for value audit | Different barter ingredients may support distinct loot decisions; neither should be removed without valuation. |
@@ -51,6 +51,6 @@ The 172 authored records divide into 10 access protocols, 40 paced Arsenal tasks
 
 ## Approved implementation boundary
 
-The next content change may remove only the `.45 ACP AP` offer `66bf757f27d0b097db0acf0c`, which has no quest-assort or quest-reward reference. The two superficially inferior M61/M62 rows are explicitly protected by their preserved Artem unlocks. Quest work may consolidate only the five listed candidates after successor prerequisites and rewards are explicitly mapped. Persistent IDs remain recorded as retired identities; completed profile history is not rewritten. Price and loyalty normalization must use effective item value, stock limit, quest gate and acquisition route together. No broad reward increase and no generated replacement filler are allowed.
+The exact-tree duplicate pass authorizes **no offer deletion yet**. The apparently redundant ammunition rows are separated by quest unlocks or loyalty progression; M61/M62 are explicitly protected by preserved Artem unlocks, and the Admiral `.45 ACP AP` row is protected by Arsenal A-12. The next store pass must compare prices, stock limits, quest gates and retained-trader availability across every category before proposing removals. Quest work may consolidate only the five listed candidates after successor prerequisites and rewards are explicitly mapped. Persistent IDs remain recorded as retired identities; completed profile history is not rewritten. No broad reward increase and no generated replacement filler are allowed.
 
 Painter item localization is independent of those deletion decisions. All five preserved Painter templates require complete Russian name, short name and description records while retaining their IDs and English fallback.

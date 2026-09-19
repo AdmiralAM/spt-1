@@ -88,8 +88,8 @@ def test_exact_cross_pr_authority_and_content_only_painter_contract() -> None:
 def test_post_consolidation_audit_names_bounded_candidates_before_removal() -> None:
     assert "no offers or quests removed by this audit" in POST_CONSOLIDATION_AUDIT
     assert "13 exact product-tree overlaps" in POST_CONSOLIDATION_AUDIT
-    assert "66bf757f27d0b097db0acf0c" in POST_CONSOLIDATION_AUDIT
-    assert "M61/M62 rows are explicitly protected" in POST_CONSOLIDATION_AUDIT
+    assert "authorizes **no offer deletion yet**" in POST_CONSOLIDATION_AUDIT
+    assert "M61/M62 are explicitly protected" in POST_CONSOLIDATION_AUDIT
     for quest_id in (
         "208db81b5ce195bf0c176852",
         "8dad0d354ac000b7bbf05b9a",
@@ -100,12 +100,14 @@ def test_post_consolidation_audit_names_bounded_candidates_before_removal() -> N
         assert quest_id in POST_CONSOLIDATION_AUDIT
 
 
-def test_only_unreferenced_external_offer_is_a_removal_candidate() -> None:
+def test_duplicate_audit_protects_all_quest_linked_ammunition_routes() -> None:
     artem_quests = next((ROOT / "db/CustomQuests/66bf757f27d0b097db0acea5/Quests").glob("*.json")).read_text(encoding="utf-8-sig")
     artem_unlocks = next((ROOT / "db/CustomQuests/66bf757f27d0b097db0acea5/QuestAssort").glob("*.json")).read_text(encoding="utf-8-sig")
+    admiral_unlocks = (ROOT / "db/questassort.json").read_text(encoding="utf-8-sig")
 
     assert "66bf757f27d0b097db0acf0c" not in artem_quests
     assert "66bf757f27d0b097db0acf0c" not in artem_unlocks
+    assert "67d5501fb925a7836b99f112" in admiral_unlocks
     for protected_offer in ("66bf757f27d0b097db0acf0a", "66bf757f27d0b097db0acf10"):
         assert protected_offer in artem_quests
         assert protected_offer in artem_unlocks
