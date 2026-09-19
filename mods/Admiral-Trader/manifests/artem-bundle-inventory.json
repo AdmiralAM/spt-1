@@ -1,0 +1,1319 @@
+{
+  "schemaVersion": 1,
+  "sourceRelease": "3.0.2",
+  "sourceAsset": "WTT-Artem.7z",
+  "sourceAssetSha256": "11e5bf532e591f5dedab72f44bc5f7fab886216c10288fc0ed13b3327b36318d",
+  "bundleCount": 262,
+  "bundles": [
+    {
+      "path": "artem_back6sh118.bundle",
+      "size": 8679608,
+      "sha256": "27576199b0eb146476bbff324277f542af1b4b33e687202e4eeeaf23ae7fafaf"
+    },
+    {
+      "path": "artem_back6sh118snow.bundle",
+      "size": 8931902,
+      "sha256": "f8bc3fa2b2dca40a8e1c41a94683a14bb50dab76826e42c92005bdf56d592f18"
+    },
+    {
+      "path": "artem_circularpatch1.bundle",
+      "size": 336053,
+      "sha256": "d663ddda6dd4d7af39cb7b2aaf8a70cf0745e101e1a71ddd2bfc7befde9624a3"
+    },
+    {
+      "path": "artem_circularpatch2.bundle",
+      "size": 336634,
+      "sha256": "d915fb8bd44872d6456b368e095727c3d9fa35d34543285d5ab0333a1202d896"
+    },
+    {
+      "path": "artem_circularpatch3.bundle",
+      "size": 332011,
+      "sha256": "1c5fbfbf9e753057a28e60d85f4563ce5698bc62ab5232e3db8d1bd74d039c0e"
+    },
+    {
+      "path": "artem_circularpatch4.bundle",
+      "size": 333673,
+      "sha256": "1e20d88cc77ac6ef7e5aaa86a4336254456773617a0c6632856f19626d1d9be3"
+    },
+    {
+      "path": "artem_circularpatch5.bundle",
+      "size": 333684,
+      "sha256": "d9493eebfef23119ab39b8fa58d0e92de48d1b7b51949236b5bd6bbc05ad3422"
+    },
+    {
+      "path": "artem_circularpatch6.bundle",
+      "size": 331606,
+      "sha256": "df29886310e105e3b5a7f6cce1808d3fd4e8484d471f9714e39f55a2616fab24"
+    },
+    {
+      "path": "artem_circularpatch7.bundle",
+      "size": 144482,
+      "sha256": "72edc76f0169543c263b5150daf398c34e856ce66bf9e978ae27f45e5ce3c60d"
+    },
+    {
+      "path": "artem_clutistmask2.bundle",
+      "size": 4253808,
+      "sha256": "1e5b34811e6b42386d0a0c858308e5e6ed6ee4214740656e548edc7688ac2070"
+    },
+    {
+      "path": "artem_cpcalp.bundle",
+      "size": 2002678,
+      "sha256": "f72f658f6a5b03742a84e6c96c3bd40c04d4b99aff880e022915c2ad53ba4c6f"
+    },
+    {
+      "path": "artem_cpcbmc.bundle",
+      "size": 1941203,
+      "sha256": "4b2ec66e2d2fa4889c82c3f978db412c6be25230cafb8ae0c1cbdfdacca226dd"
+    },
+    {
+      "path": "artem_cpcmc.bundle",
+      "size": 2086543,
+      "sha256": "1b74f2b99d157b936703b3ac906cc275801eb3d6a267249183cc4a7fafc36d18"
+    },
+    {
+      "path": "artem_cultistbastionshield.bundle",
+      "size": 7297819,
+      "sha256": "bfed4deba57145025bef297c123f9c1c80b6acf216f1d579f06af80adc109e97"
+    },
+    {
+      "path": "artem_cultistmask.bundle",
+      "size": 2018738,
+      "sha256": "c93b8ee957090167a1159d1d27022f4f7c6008f3aa04a23481652f4c621b9326"
+    },
+    {
+      "path": "artem_custom_helmet1.bundle",
+      "size": 8136695,
+      "sha256": "e3f59fbc19bb398d69b3ac03dea1ede74b44e5a1c2b02512fe0924c744fa22a1"
+    },
+    {
+      "path": "artem_custom_helmet4.bundle",
+      "size": 7022959,
+      "sha256": "904c1db1cd54dd6933a8de9e0f4ee8c908222012a17485aaa63baed555ef7638"
+    },
+    {
+      "path": "artem_custom_helmet5.bundle",
+      "size": 6704012,
+      "sha256": "3ea2f206896d40efb53afee91e5e0189e2b9251ca11de72891d7d771148f0c52"
+    },
+    {
+      "path": "artem_customcap.bundle",
+      "size": 982857,
+      "sha256": "4cebe6f6e97037cb073f385b7b8dccc334244042b055c756e51a422db7415efd"
+    },
+    {
+      "path": "artem_denniscollar.bundle",
+      "size": 3519048,
+      "sha256": "b1cc321bae66efbdf4c7d728d78ded144481e0c08dc17851b0d45e9e95e452a3"
+    },
+    {
+      "path": "artem_devroninalpine.bundle",
+      "size": 893031,
+      "sha256": "c233c606a9d70327c21461afa353c6af540407a4994d5f07502c3f1520651300"
+    },
+    {
+      "path": "artem_devroninblack.bundle",
+      "size": 737337,
+      "sha256": "e205dff08e44b28ee944bbfb9433df207b8958a7a04ada32d3830616b5911fc1"
+    },
+    {
+      "path": "artem_ferronvgpack1.bundle",
+      "size": 4958739,
+      "sha256": "118a5b806fc1a4a88f0af6ccef875c7b5e9f7e307f8ef1ea4be3b2c87d032b5d"
+    },
+    {
+      "path": "artem_ferronvgpack2.bundle",
+      "size": 4953750,
+      "sha256": "ba1ab97a92dd07201a3a54f7393d83652e3d1861009653961e24d4f082d4fefc"
+    },
+    {
+      "path": "artem_ferronvgpack3.bundle",
+      "size": 4907687,
+      "sha256": "f6f8fe84fff727492828e0cc241e1198b4a7ced0a18aa690d24cbf211fee7ab9"
+    },
+    {
+      "path": "artem_ferronvgpack4.bundle",
+      "size": 5058592,
+      "sha256": "33395475d5a91441eab0a80f7a3c0f1e53210c2f483af009656c7270fff62f3d"
+    },
+    {
+      "path": "artem_gasmask4.bundle",
+      "size": 1363490,
+      "sha256": "562ac0681afc035c620f097d5eac13b14eeebfe3d2034ae1900b2046a245ec3e"
+    },
+    {
+      "path": "artem_gpnvg4.bundle",
+      "size": 29086753,
+      "sha256": "5c968f71ad401049844f40fc393608628c79e056819f3037f28b7ce3216791bd"
+    },
+    {
+      "path": "artem_grooveysflashdrive.bundle",
+      "size": 141804,
+      "sha256": "bedb0466ec130a2d6f17cf67708b659cf46c7c93b8c4a5db5cfbfd28f88ba735"
+    },
+    {
+      "path": "artem_headcrabtrophy.bundle",
+      "size": 206152,
+      "sha256": "e7a67ee05bceb868f1451de63d6154e8315df28a0dc06c03d32ee78ca93cd658"
+    },
+    {
+      "path": "artem_headphones1.bundle",
+      "size": 6087155,
+      "sha256": "411f8a2bba57cd111e29186da9cd44f0c18b466412ce4683b31a86b9ab7972d8"
+    },
+    {
+      "path": "artem_headphones2.bundle",
+      "size": 6383176,
+      "sha256": "fa66e7ce062c241b905a44c92cef3c8918a90c1e34706597e434c81ed5b84cce"
+    },
+    {
+      "path": "artem_headphones3.bundle",
+      "size": 6390455,
+      "sha256": "7dd43a2814ea7a62d82ad48f1a389dce99fa1c915feff9f16f651bcec4a1f6cf"
+    },
+    {
+      "path": "artem_headphones4.bundle",
+      "size": 3055452,
+      "sha256": "24706459e982bb857566daff55e6ba3758206f6bbc7e5c093cdf5d788dca811e"
+    },
+    {
+      "path": "artem_headphones5.bundle",
+      "size": 3446449,
+      "sha256": "869f4785614758c9df0f4e3642c9c5ff71c4803f2af1972ab984e723ce1c288e"
+    },
+    {
+      "path": "artem_headphones6.bundle",
+      "size": 3290266,
+      "sha256": "ab13dccd6de5e824ec8456b733d49363855d8bc2f191408de4fee3d15163dee7"
+    },
+    {
+      "path": "artem_headphones7.bundle",
+      "size": 3575895,
+      "sha256": "82e33eecd5c7d4808a31d2d158af49905efdae34de7703ec4399a5a3cba3e830"
+    },
+    {
+      "path": "artem_hecutrophy.bundle",
+      "size": 164971,
+      "sha256": "5fa9e0a0adbb148c035d74f860eb0a10cfd039cbe4b0f88b09653eb9d24d44a7"
+    },
+    {
+      "path": "artem_helmet_mod_3.bundle",
+      "size": 258632,
+      "sha256": "039af6cdd2386887ab91091eefb6b11edb49d5abaad49cd7579bc9adf984602a"
+    },
+    {
+      "path": "artem_helmet_mod_4.bundle",
+      "size": 109052,
+      "sha256": "6406035dfd9dc0635454f8548a36cff18540c7adc8538030680fa5f3ffeec36c"
+    },
+    {
+      "path": "artem_helmet_mod_5.bundle",
+      "size": 1324881,
+      "sha256": "9d1c1e7813382c3d3d54a1dce72e362ffbb6be4479443a5b24f8b74d43e188e1"
+    },
+    {
+      "path": "artem_helmet_mod_6.bundle",
+      "size": 1327402,
+      "sha256": "0ffaafa843dc40b85978c5134aa72279508b5b140dd61ca6c1c40bf8ecdc142f"
+    },
+    {
+      "path": "artem_helmet_mod_7.bundle",
+      "size": 1327349,
+      "sha256": "4d99f2160204dd2ca3b40365fbb40ef12b67773091744a493912052d754c4daf"
+    },
+    {
+      "path": "artem_helmet_warrior.bundle",
+      "size": 5134024,
+      "sha256": "58b556a7b46bb809c0fa6907b3ea92c214a582c7f5132703891b2d01c955e116"
+    },
+    {
+      "path": "artem_helmet22.bundle",
+      "size": 3277985,
+      "sha256": "9934104206a8a5ce0f317c282e82d90608a807e0903015795deac90f83fece0f"
+    },
+    {
+      "path": "artem_helmet23.bundle",
+      "size": 5077472,
+      "sha256": "9f085aa1e863f1cd5e69db1ed6f85f0c325785fefe6b77916d001bbd5b96ecd7"
+    },
+    {
+      "path": "artem_helmetcover1.bundle",
+      "size": 4474938,
+      "sha256": "a0a30cb0dee6d37aaa6e6a9467fa97930eada496aa2e1a86a2048ae4c2bd706e"
+    },
+    {
+      "path": "artem_helmetcover2.bundle",
+      "size": 4656326,
+      "sha256": "f1920bb8542e0852f13b82db938cee96333d44a48d996898efb8ea9a4fee6c39"
+    },
+    {
+      "path": "artem_helmetcover3.bundle",
+      "size": 4335985,
+      "sha256": "58c4eda31bc5866d3673f73e6928551cfd8ad01a5a0313c93e4b7abf0fc5f6f2"
+    },
+    {
+      "path": "artem_helmetcover4.bundle",
+      "size": 4776481,
+      "sha256": "6920a7b61deb5306d11f6f8fe06455d4e2caed02a913917fdfd33ecfa14a9329"
+    },
+    {
+      "path": "artem_helmetcover5.bundle",
+      "size": 4477402,
+      "sha256": "64919b36b3f528987c3c71185aac9f6e9ed94494817b34d338ea4e6240fa43df"
+    },
+    {
+      "path": "artem_ir_test.bundle",
+      "size": 1325827,
+      "sha256": "48695b0df246f1f5f509b2de2d433a82df8c9c93062637b37b8c6288b7185675"
+    },
+    {
+      "path": "artem_lowerhalfmask1.bundle",
+      "size": 1356322,
+      "sha256": "5400b0d7ead7941586a2d068621ff4754a4cefbe2dff4ca0f9ce29abca62c944"
+    },
+    {
+      "path": "artem_lowerhalfmask2.bundle",
+      "size": 1355443,
+      "sha256": "8163db40802f84971b3cabea7611ba0e7a0127de763019309c65a7bf28a47406"
+    },
+    {
+      "path": "artem_lowerhalfmask3.bundle",
+      "size": 1391298,
+      "sha256": "ea1c863863a6beff45afa9b24de51c76cbbbcc0f56a38e4c1af51a05125167c8"
+    },
+    {
+      "path": "artem_marpatbalaclava.bundle",
+      "size": 2628665,
+      "sha256": "007439172afae8467c2d0fb2c5c5f5c5285314c0708834b7df9f626db90a090b"
+    },
+    {
+      "path": "artem_mcbbalaclava.bundle",
+      "size": 2347513,
+      "sha256": "60a39700f2b9268d418a907152814e8247449bd97fc214886baef872807c6306"
+    },
+    {
+      "path": "artem_nvgpack1.bundle",
+      "size": 193241,
+      "sha256": "957aae14261c2814d0456993d03a23f436c16c13276e7b487e531d1874572cf6"
+    },
+    {
+      "path": "artem_nvgpack2.bundle",
+      "size": 208555,
+      "sha256": "05065138be4ca73da09d2a63b0e21acbd81e0f1a9cfb1c55370b1569a01d7caf"
+    },
+    {
+      "path": "artem_nvgpack3.bundle",
+      "size": 212541,
+      "sha256": "612dca7dcf973e0fb477d30a17cedc038f18475b8ed3c718c65fe28a59a5ffca"
+    },
+    {
+      "path": "artem_nvgpack4.bundle",
+      "size": 199672,
+      "sha256": "131fe21cddd106dc11425dcb7d2a0e7b9a9fc77557edd4f5c5dfd66574550db7"
+    },
+    {
+      "path": "artem_obeybalaclava.bundle",
+      "size": 2011405,
+      "sha256": "ce422de3992c2807b2d2adc3e88fdadea8f2abfafab307d3099fad9ea9f49def"
+    },
+    {
+      "path": "artem_patch1.bundle",
+      "size": 75006,
+      "sha256": "8fe4a27eb0db3f45e7c96d249bc826479feb0b5ef182ee54b5408a4260559e54"
+    },
+    {
+      "path": "artem_patch10.bundle",
+      "size": 68356,
+      "sha256": "b5956fe00a3beac4018c162fd763871ef3d141e6869e516a2c226d0a1c8104c7"
+    },
+    {
+      "path": "artem_patch11.bundle",
+      "size": 87220,
+      "sha256": "b0d0159502ea49451c0bbee8132a053d968d3273937fab98a1f10677040a486b"
+    },
+    {
+      "path": "artem_patch12.bundle",
+      "size": 81425,
+      "sha256": "47aca3b67d55a6e2c2bd0a0bd924cc412cdc76645892dff23d2cb3ee72ed93a7"
+    },
+    {
+      "path": "artem_patch13.bundle",
+      "size": 82592,
+      "sha256": "7674d63aab5d9ccf4ab2db527b2756a1d4749e7776562684f6c53d6b8962545f"
+    },
+    {
+      "path": "artem_patch14.bundle",
+      "size": 77598,
+      "sha256": "cf3b23f5277a4faaee2afe388ff51667032e500ba9765d9cb74c43491a013932"
+    },
+    {
+      "path": "artem_patch15.bundle",
+      "size": 75972,
+      "sha256": "b80b68a75748ea4d2d71446b39e6219bdaa8d8d5d53d69c7b1426ceb05dded00"
+    },
+    {
+      "path": "artem_patch16.bundle",
+      "size": 81330,
+      "sha256": "3da9b98ef97f55c9c26b4d4d450e960d6b7c5f262d5eba3f6bcc6ccdcdf8488d"
+    },
+    {
+      "path": "artem_patch17.bundle",
+      "size": 74236,
+      "sha256": "ac0738d80e0100c5a386db5e8175dcfb4b3b037a81217d14ff5bf43d6c7d567c"
+    },
+    {
+      "path": "artem_patch18.bundle",
+      "size": 54986,
+      "sha256": "cb7ae5874344d8dc7331a204d96473075ef75dd8aba9532f46e530b0448b5c76"
+    },
+    {
+      "path": "artem_patch19.bundle",
+      "size": 77290,
+      "sha256": "554355d89dfc402fc28857a7774744cd133a19197875ad593f55b0d42e77a918"
+    },
+    {
+      "path": "artem_patch2.bundle",
+      "size": 64140,
+      "sha256": "0f4f9f9568158bef335921386e80156747bb790626e6dbe11ae5c5c5fe901f67"
+    },
+    {
+      "path": "artem_patch20.bundle",
+      "size": 80744,
+      "sha256": "90ebffab67ca7a094c5264dfb926848be08c00e2f78b4e0d0ff360fcb82460e4"
+    },
+    {
+      "path": "artem_patch21.bundle",
+      "size": 71884,
+      "sha256": "1e685b08a9ddc95efeb265d0101d77bab332357f163fbc5f2538fc875c4ffc84"
+    },
+    {
+      "path": "artem_patch22.bundle",
+      "size": 80121,
+      "sha256": "35e79f02d6fb51af6a047ab6cfc1f4d7568a3a355f747e89b6bccb7f8baefec4"
+    },
+    {
+      "path": "artem_patch23.bundle",
+      "size": 82351,
+      "sha256": "7e56aa36dfd3cc477414cada643654e94b854e86919f15fabbb85b53bb694783"
+    },
+    {
+      "path": "artem_patch3.bundle",
+      "size": 77529,
+      "sha256": "05fe51194baae406565c4415dbb2b8ad3abc1499c130f95194ed37f62d365fd3"
+    },
+    {
+      "path": "artem_patch4.bundle",
+      "size": 70298,
+      "sha256": "cf1b5d1147a4cc74a3c15fe08e6d8b795411253b9cdf3994aa33deb9b6a8a0f4"
+    },
+    {
+      "path": "artem_patch5.bundle",
+      "size": 70409,
+      "sha256": "45fb0b4304c0125119f0894a720eadd01a01fff0e4adbdb941addb913a7ec933"
+    },
+    {
+      "path": "artem_patch6.bundle",
+      "size": 66897,
+      "sha256": "51b75395b7b59f983ecd33b0612e1cd32bc36100a91fe4341688aeb5e516dddc"
+    },
+    {
+      "path": "artem_patch7.bundle",
+      "size": 71707,
+      "sha256": "d475b0ed14670d59e2999f9f080980d0ca1d4de3fb1c1dad6ee23ed4f703357f"
+    },
+    {
+      "path": "artem_patch8.bundle",
+      "size": 82809,
+      "sha256": "267039b54a5074873691e2c8ce3121f316e28505a407ecb6711565054ae63e67"
+    },
+    {
+      "path": "artem_patch9.bundle",
+      "size": 70721,
+      "sha256": "e0f4637b9a33e318a596f9e4431dbee7e0a5b62b33f901c6693d48d84c19cfbe"
+    },
+    {
+      "path": "artem_pvs31_wide.bundle",
+      "size": 4880323,
+      "sha256": "a3f53f9a2d6578a97cd11d444110cdc05251d067c841ab95dd4e0b2d6ac9e9e5"
+    },
+    {
+      "path": "artem_pvs31.bundle",
+      "size": 5279300,
+      "sha256": "9ab3876edbc56eb34f51ecc09b46ee77276f00b65cb88deeb9bd1803fc6d85a0"
+    },
+    {
+      "path": "artem_rangerpatch.bundle",
+      "size": 174289,
+      "sha256": "939774208d756b306c90d8fb4302342145772cba3d12314110acc5d870603dff"
+    },
+    {
+      "path": "artem_scrim1.bundle",
+      "size": 1288553,
+      "sha256": "1c45eb64a7b3edf44b0a81f38fe668dc5b3de3b95c20d6d549a80154696fb8eb"
+    },
+    {
+      "path": "artem_scrim2.bundle",
+      "size": 1178415,
+      "sha256": "be3fcb5f5bb2e023c62abd94b2d00818e01bb6273e8e5e1a5ea503e5ec61c8d9"
+    },
+    {
+      "path": "artem_scrim3.bundle",
+      "size": 1073722,
+      "sha256": "9a4eb95487d541c99d3ed40cdf1cac0e8c1d0cb5c95369b55fc17a7d6cc7cdc2"
+    },
+    {
+      "path": "artem_scrim4.bundle",
+      "size": 1872896,
+      "sha256": "3d090240cbe8c126a393e02c72ef80703370cd91dad8d4b48b0410c1843d15c4"
+    },
+    {
+      "path": "artem_shadowmask.bundle",
+      "size": 2440444,
+      "sha256": "8a47d562645e943114b94614f2077a4a8a0fe620e7e77ba54df987492f28afb4"
+    },
+    {
+      "path": "artem_solairetrophy.bundle",
+      "size": 3291472,
+      "sha256": "3c7e1620f09cfdd2d87c661986b679aeca3347cdc39beafb21e95deeaf382b6d"
+    },
+    {
+      "path": "artem_veilblack.bundle",
+      "size": 5673384,
+      "sha256": "44864d6bc28c169208b1185d176c3f779a9bd84738e05b237b400742e0081edd"
+    },
+    {
+      "path": "artem_veilod.bundle",
+      "size": 5782818,
+      "sha256": "38b0f0ecda5ac93abaa74848f57474b919d341ecd7f59d303eb9ece461370f8f"
+    },
+    {
+      "path": "artem_veiltan.bundle",
+      "size": 5869008,
+      "sha256": "73614ce9ff271c64e61452520b60f2f50f8870f91ab4acc02347fe5145c66430"
+    },
+    {
+      "path": "artem_veilwhite.bundle",
+      "size": 5494325,
+      "sha256": "b11d788f5e8eb249a4d2ca6596203f26ca438ca1f516814ab6f1d7b151e0040e"
+    },
+    {
+      "path": "artem_vest_jpc1.bundle",
+      "size": 58555776,
+      "sha256": "04727e1197b43ca197c10a9378f1bd0ecf5c13dedd768964f6775c33fc99e739"
+    },
+    {
+      "path": "artem_wolfhat1.bundle",
+      "size": 14523311,
+      "sha256": "6071b89ac6a7e448859079b9952f1cf2bb8384b5dd74157629eae4f44e2095f3"
+    },
+    {
+      "path": "artem_wolfhat2.bundle",
+      "size": 5812344,
+      "sha256": "10c00d343a6353df6a7e7afb4e036e3451a79858fbca5791f409d5eb37807a93"
+    },
+    {
+      "path": "artem_zryachimask.bundle",
+      "size": 1673545,
+      "sha256": "787c0e39f1c348f5e7626bec2521b00a64f91a5dadad6caff8d21a0ade4c5de6"
+    },
+    {
+      "path": "artem_zryachiygreen.bundle",
+      "size": 1664159,
+      "sha256": "254b046a7bb58edc6e9e6b021a2deceb8804e8c8d4408e1fe1b8c5d826bc7416"
+    },
+    {
+      "path": "artemballisticmask.bundle",
+      "size": 628885,
+      "sha256": "631532bb009a146d27fd03c4ada5af7f5c4b0ab597f803f33bf15be33c0ed7d9"
+    },
+    {
+      "path": "artemballisticmask2.bundle",
+      "size": 2881650,
+      "sha256": "ea1018eedb8919556a9d229a7cfeb5bcd8aa83c16f62b284ec19b26f8d3b8287"
+    },
+    {
+      "path": "artemgasmask1.bundle",
+      "size": 1226404,
+      "sha256": "a5cc79568f7ed4c4b097024f03828202a58523a0060ac55f51cd6e30d84ec6df"
+    },
+    {
+      "path": "artemgasmask2.bundle",
+      "size": 1605296,
+      "sha256": "d175bc4352293d6b6588c26e14cd3d38da29c692765b4f5e3bcab4ba1119a48c"
+    },
+    {
+      "path": "artemgasmask3.bundle",
+      "size": 1467888,
+      "sha256": "58be33800c724c4493da5664d911f8ec029f07646584588e8ae89cf4fbd66605"
+    },
+    {
+      "path": "artemgpnvgblack.bundle",
+      "size": 3569786,
+      "sha256": "840d427d716ed74f7fa86991fb868927b02dd24b6c8a6e9795f9ae3a5d3a6394"
+    },
+    {
+      "path": "artemgpnvgod.bundle",
+      "size": 3678596,
+      "sha256": "3123f0648cd3362a8cead4bc0be62d4e8af49b2d3e9d1dfa50ff89aead63a1e2"
+    },
+    {
+      "path": "artemgpnvgwhite.bundle",
+      "size": 3626279,
+      "sha256": "a7a61fe588fb91ee815fca97428ef84f84e6753897bc425e19db49e849f17634"
+    },
+    {
+      "path": "artemitembox.bundle",
+      "size": 1488885,
+      "sha256": "bf5202488e989f8a746d9650b2218a0cc3637cc08bac053c52b904485911f026"
+    },
+    {
+      "path": "artemmedbox.bundle",
+      "size": 2381976,
+      "sha256": "74045d59f0c50a31621758a042ced682f49e0e635b24b0486cbc5b46c32f7c39"
+    },
+    {
+      "path": "artemsnackiz.bundle",
+      "size": 245053,
+      "sha256": "7158110a7fa95b89d24672102788d730021028bf9b9a35b1edecb5f508168a72"
+    },
+    {
+      "path": "artemtachelmet10.bundle",
+      "size": 3224904,
+      "sha256": "57b6f057836ce6a10beb63980c387fc3e11e24e30162c8568aca4fc173cb28df"
+    },
+    {
+      "path": "artemtachelmet11.bundle",
+      "size": 3156982,
+      "sha256": "8acfc702ced9f5faf1b6dc5d35b7e4220c395d399a831ba79711545560eab0cf"
+    },
+    {
+      "path": "artemtachelmet12.bundle",
+      "size": 3258273,
+      "sha256": "a42eeb864d375d95f03ee659c42dd3ce4d669d0fb65080a50fbfa9ce3ea042ca"
+    },
+    {
+      "path": "artemtachelmet13.bundle",
+      "size": 4681295,
+      "sha256": "944638170f2cf65a193ebd86b7340b709d113c1790aa73e1f0e6492eff2b8c72"
+    },
+    {
+      "path": "artemtachelmet16.bundle",
+      "size": 5349667,
+      "sha256": "9f27d5e5176899eed4fcab7eb73434e7868eb6c01fb28a47536d3b14fca5c546"
+    },
+    {
+      "path": "artemtachelmet18.bundle",
+      "size": 8227861,
+      "sha256": "d9cf21bdc8ad22feea40a74fa60b909fb24b3cb9649daef09987676470e3b438"
+    },
+    {
+      "path": "artemtachelmet2.bundle",
+      "size": 6061290,
+      "sha256": "6d4fa0ba479be75ad008ac95bacf2b61392218f23c286377e072f5d60d0cab06"
+    },
+    {
+      "path": "artemtachelmet20.bundle",
+      "size": 27494826,
+      "sha256": "ac2e475a69b49782246068431013ec10969a5362437e4151805c5fd41e1f2591"
+    },
+    {
+      "path": "artemtachelmet21.bundle",
+      "size": 5374590,
+      "sha256": "0f0b494f38de9c16e1748b93f921e6886f5393a0ce0f2eeba00dc83a04d55472"
+    },
+    {
+      "path": "artemtachelmet4.bundle",
+      "size": 6352019,
+      "sha256": "367f1219989af18e8baeb51851440f1e394369c6b49d83d266337566646794fb"
+    },
+    {
+      "path": "artemtachelmet5.bundle",
+      "size": 8274022,
+      "sha256": "6f724f888c6780293f0463b58108634092a6d44fddcecfa11eabffdb77cd020e"
+    },
+    {
+      "path": "artemtachelmet6.bundle",
+      "size": 8811293,
+      "sha256": "20df4c2153973ffcb8945bc34bacc26322326d17760f17c5695c49adee0efa40"
+    },
+    {
+      "path": "artemtachelmet8.bundle",
+      "size": 10816424,
+      "sha256": "6de7717b94d41049d3d79e4c66d3322e4291203f557284cf2b66dc38a63df25d"
+    },
+    {
+      "path": "artemtacticalvest1.bundle",
+      "size": 15817702,
+      "sha256": "3f63c900651328a7a3d053543da8eefcf403621ab2568297494bb2c93774d892"
+    },
+    {
+      "path": "artemtacticalvest4.bundle",
+      "size": 15609290,
+      "sha256": "deee51a3e58f9c146e55bd20e465ffc5a6e00059fd6408fca604228f784184bb"
+    },
+    {
+      "path": "artemtacticalvest5.bundle",
+      "size": 10711341,
+      "sha256": "62138d779dbd50dad6b93e1bf2a33048d133e2dcf61b4ea71888714933092bd1"
+    },
+    {
+      "path": "artemvest10.bundle",
+      "size": 73359647,
+      "sha256": "800f89e0a7dc50eeb6566e0cfdbd56000a7d6b917c883b22938a35ad28e6e60c"
+    },
+    {
+      "path": "artemvest11.bundle",
+      "size": 62789808,
+      "sha256": "d72abb4b2ef5f5da2c773924795d1caa95efbb376cc4c08c6c941062088e5b35"
+    },
+    {
+      "path": "artemvest14.bundle",
+      "size": 38271956,
+      "sha256": "6d944d90c32b03feb5ce9c0a3c42fed9ce279cb05d609cd02ba236006e6cf7c3"
+    },
+    {
+      "path": "artemvest16.bundle",
+      "size": 12226596,
+      "sha256": "ece2c22d227d77d4f4fbcf4a3377912b5785a6a46125cdcea255e0ec083aacfe"
+    },
+    {
+      "path": "artemvest6.bundle",
+      "size": 40200369,
+      "sha256": "c816156875b64f3ff50aebd1c550b34302abaade0090b790c11259592d9f0ae5"
+    },
+    {
+      "path": "artemvest8.bundle",
+      "size": 44884931,
+      "sha256": "d3b4f6aeabd90295dd69b64db1bd10ee7f3403934501a61de08cf1a3d17adea1"
+    },
+    {
+      "path": "artemvest9.bundle",
+      "size": 70836175,
+      "sha256": "8e7409ac0e6975f3c40752e6a6da2de063637e49dcb06e8aff7c381dda83f7db"
+    },
+    {
+      "path": "ghostmask1.bundle",
+      "size": 5679570,
+      "sha256": "ab8995bab25ad625453d7ed7664c1ac66cd0d1a54b0f9e26c871bd0ec10af0de"
+    },
+    {
+      "path": "ghostmaskb.bundle",
+      "size": 3338407,
+      "sha256": "373fe3ebc79a7a44d9ca3a19a857b64021c9d4b27cc17a9a02d08928459d15e2"
+    },
+    {
+      "path": "ghostmaskr.bundle",
+      "size": 3459727,
+      "sha256": "52951f849c651463100be37654c65fd0ec1b52f48af6629c4e17515765af8d81"
+    },
+    {
+      "path": "Hands/artem_atomhands.bundle",
+      "size": 6636420,
+      "sha256": "5845ffb394ddd1bced34a45b3ecf36260739fa2577809f508f7d2514075d146a"
+    },
+    {
+      "path": "Hands/artem_hands_1.bundle",
+      "size": 9772008,
+      "sha256": "47557d27353e96b6fda71fd4401b61d54e17146120ac4226e94643673ee27bdc"
+    },
+    {
+      "path": "Hands/artem_hands_12.bundle",
+      "size": 5978835,
+      "sha256": "3e3d5ae438a2b04fba91ac37bbb577ed7820149d39b9dfd1c154ca3f651a8f3a"
+    },
+    {
+      "path": "Hands/artem_hands_13.bundle",
+      "size": 5958310,
+      "sha256": "ca57826f8e87ad04a9bac6363f08dbcf6386ceb5b5cb44d533df3e8a739e602b"
+    },
+    {
+      "path": "Hands/artem_hands_14.bundle",
+      "size": 13945939,
+      "sha256": "6371c4c3ca20bf1b5d15e9dde13458b72974df32c55457467dc6fb8d2ea7adc2"
+    },
+    {
+      "path": "Hands/artem_hands_15.bundle",
+      "size": 13945928,
+      "sha256": "08bde793467a48e05ac3407a5384d627934e8d6e84c7de3da201a283b27a4ed2"
+    },
+    {
+      "path": "Hands/artem_hands_16.bundle",
+      "size": 13945936,
+      "sha256": "47c7c95288b74fc1a7d5893dcdf36b6105af0ab7ddf14ff34726972818700955"
+    },
+    {
+      "path": "Hands/artem_hands_18.bundle",
+      "size": 6642466,
+      "sha256": "caed6774f23279520320ebb97d1eaf7137e7d74a58a5681823b39a7f6a68779c"
+    },
+    {
+      "path": "Hands/artem_hands_19.bundle",
+      "size": 14567831,
+      "sha256": "7bd03e7b960451901bca403f7c907cefc86b6a6c481d36842fa0c5c62c49b055"
+    },
+    {
+      "path": "Hands/artem_hands_2.bundle",
+      "size": 6031635,
+      "sha256": "f90d409b1601efd39cdebe2c9697330e05fe6ac7ac8a09eec78b3d86175af902"
+    },
+    {
+      "path": "Hands/artem_hands_20.bundle",
+      "size": 6604840,
+      "sha256": "7b99c234965026bb8c9dfd16715fa499d82a94313542e6f6fcf8d8c1accec602"
+    },
+    {
+      "path": "Hands/artem_hands_21.bundle",
+      "size": 10384474,
+      "sha256": "fb0ec801022e01772182e580f37630e68b05c1eec89a6b7409da8c0d2c7d49bc"
+    },
+    {
+      "path": "Hands/artem_hands_22_alpineghillie.bundle",
+      "size": 10642409,
+      "sha256": "d7edd2c614af993bc01ecba4b75d340cd5ccbed7b442b580e034c69923e135fc"
+    },
+    {
+      "path": "Hands/artem_hands_23.bundle",
+      "size": 14399571,
+      "sha256": "feae11c654f92814c198596824a5b2a851fd76ecf87edd99becc592116f527ce"
+    },
+    {
+      "path": "Hands/artem_hands_24.bundle",
+      "size": 14401831,
+      "sha256": "58c52fb7494daa4d1456a6f7eaf7c28c837c5f7d4ba40329c69baa07c10431d3"
+    },
+    {
+      "path": "Hands/artem_hands_25.bundle",
+      "size": 14316087,
+      "sha256": "a4d391864b0e4b325f98a8cdbcd59079c5543538649387faaa692c06c650c093"
+    },
+    {
+      "path": "Hands/artem_hands_26.bundle",
+      "size": 6235476,
+      "sha256": "60b0f1912716ebe1399b80f39597923070f0370ba62ed8f31017a3810152a8d4"
+    },
+    {
+      "path": "Hands/artem_hands_3.bundle",
+      "size": 8289604,
+      "sha256": "50713c4009a40bf58c1cbcebc16b3e1f90808652f8ca0a6529691538d97b5f30"
+    },
+    {
+      "path": "Hands/artem_hands_32.bundle",
+      "size": 14067176,
+      "sha256": "9c7ff0c5afbe2135dd811ef6cb5d9d06360abd48c8eec225d913e8738c163dc2"
+    },
+    {
+      "path": "Hands/artem_hands_33.bundle",
+      "size": 14323251,
+      "sha256": "724431050e8aafae490aa7f63f38253d9588a5733adf7b27c150d4cdcb1b45ba"
+    },
+    {
+      "path": "Hands/artem_hands_34.bundle",
+      "size": 14416499,
+      "sha256": "309f25ff63f8e7fdd0ea32335d3106328a5178d1664c7eb326ef897e0fbf0ec9"
+    },
+    {
+      "path": "Hands/artem_hands_35.bundle",
+      "size": 14938704,
+      "sha256": "8aada31aced56dbe777e9b1765e188d7d9825f88d664e50b9b506c2a73f9fb78"
+    },
+    {
+      "path": "Hands/artem_hands_36.bundle",
+      "size": 14361832,
+      "sha256": "944a2b7618f026a6b5a5d3b280a2ee2fb4243f4cfa20e2077b7b3c32a205e7ee"
+    },
+    {
+      "path": "Hands/artem_hands_4.bundle",
+      "size": 14167861,
+      "sha256": "4da007b792431c418c785bec93e18de4d08574e8d017b8b67cafc0c8f41645bf"
+    },
+    {
+      "path": "Hands/artem_hands_40.bundle",
+      "size": 7322479,
+      "sha256": "f148b2481cf7097ec42ed2a81478c8089a59aaba9be94fa70f54cff3eba64303"
+    },
+    {
+      "path": "Hands/artem_hands_41.bundle",
+      "size": 7329872,
+      "sha256": "bd9e3494158d64eb9bc8d408c79a67f262946ace0cc48dae422e0763c2d5cb04"
+    },
+    {
+      "path": "Hands/artem_hands_43.bundle",
+      "size": 7304049,
+      "sha256": "f51c22762b8bd14b67e5a58d3af9aca2c6695b61c77d918a032a7f22f47cd741"
+    },
+    {
+      "path": "Hands/artem_hands_44.bundle",
+      "size": 12516423,
+      "sha256": "b5b60a7dfac2a2aa0ba388d68680eb6e5feaa4c582473d5d57c7ead2f0c0cec0"
+    },
+    {
+      "path": "Hands/artem_hands_46.bundle",
+      "size": 12281072,
+      "sha256": "0260e32dc106f7e14aab1f3e0505b478b83820f4d4e61e035580213fecd9bbe4"
+    },
+    {
+      "path": "Hands/artem_hands_47.bundle",
+      "size": 12317443,
+      "sha256": "65bbdef20e7352f9fd37f06ebc034c04ae5bb0eb48f80e32e830749bdfdd49aa"
+    },
+    {
+      "path": "Hands/artem_hands_48.bundle",
+      "size": 12152656,
+      "sha256": "623ea6b8acd1de1ca27be1a2b2dbaaf0684269e641d2350297e3d16ac514aa58"
+    },
+    {
+      "path": "Hands/artem_hands_49.bundle",
+      "size": 2228800,
+      "sha256": "4de3a8c29f1e6a32c944d243017cbfb950a5b4f7c8a8ab808bd02c4359986547"
+    },
+    {
+      "path": "Hands/artem_hands_5.bundle",
+      "size": 2785088,
+      "sha256": "bffe9273e13b986d51026a2505269680c5fb1b830ee7c33357f4833851f4a121"
+    },
+    {
+      "path": "Hands/artem_hands_50.bundle",
+      "size": 1730632,
+      "sha256": "0aa5fc9d546c75c79d3058d8e5f06e2079d6a1c64f04dab99752a1d44771d9aa"
+    },
+    {
+      "path": "Hands/artem_hands_51.bundle",
+      "size": 1649533,
+      "sha256": "dac760d5c5fe6196810a0ffab7be3f046b41504dd38009b203298e07a127b61a"
+    },
+    {
+      "path": "Hands/artem_hands_6.bundle",
+      "size": 12106794,
+      "sha256": "7fe30845eee22888d84146804195a9eca7e9fb5b87b34ed563b8faff7788b9d9"
+    },
+    {
+      "path": "Hands/artem_hands_7.bundle",
+      "size": 12259816,
+      "sha256": "1eaa91bdc735024969955e8d6d0b31d493328fc398bbf7dc56aa11b2530d3475"
+    },
+    {
+      "path": "Hands/artem_hands_8.bundle",
+      "size": 6397269,
+      "sha256": "095347b81a3b16d10627268c4d91d2200dced6a605eec3997f5a0d1a95dfb77b"
+    },
+    {
+      "path": "Hands/artem_hands_9.bundle",
+      "size": 4204466,
+      "sha256": "da61070758db015481f949e1cac23c3c5e23e69b14611a2865066c97b612babe"
+    },
+    {
+      "path": "Hands/artem_top_29.bundle",
+      "size": 3678828,
+      "sha256": "fd109f2d7aa324c0fa99024a38774a8b67f58226309540fc9495db49e851c9e8"
+    },
+    {
+      "path": "Hands/artem_top_30.bundle",
+      "size": 3997728,
+      "sha256": "a943e27252b3b02d99ef7ef8aa28bad00edd46abba001260d1a61c1d9e0bd964"
+    },
+    {
+      "path": "Hands/artem_top_31.bundle",
+      "size": 4122495,
+      "sha256": "365e7d243587d6ede076ffeb8c1462410ad19a31cc3071cc30f3fea62823fb1a"
+    },
+    {
+      "path": "Hands/artem_tracksuitred_hands.bundle",
+      "size": 5389021,
+      "sha256": "7a8517c6a0321e6a556c85384951fda767d76304af5df6113597248348e85873"
+    },
+    {
+      "path": "Hands/artem_tracksuitwhite_hands.bundle",
+      "size": 5686478,
+      "sha256": "7708fe9e44644d87633a8ef2c0339f3134ff328dad9c8fd9396d73bdfca9a3c3"
+    },
+    {
+      "path": "Hands/artem_tracksuityellow_hands.bundle",
+      "size": 5465742,
+      "sha256": "f33880e440e98ca79b9d63fff3f826f2d4a65ceb3b5902ecc6f379d6e045e80d"
+    },
+    {
+      "path": "Hands/artem_wtthands.bundle",
+      "size": 6604840,
+      "sha256": "7b99c234965026bb8c9dfd16715fa499d82a94313542e6f6fcf8d8c1accec602"
+    },
+    {
+      "path": "Hands/testhands.bundle",
+      "size": 12834015,
+      "sha256": "e225d39b4e6313aaf5180427000b7d8d8dd1c7a410861d3bb244f7c1ee172b09"
+    },
+    {
+      "path": "nikomask1.bundle",
+      "size": 2992201,
+      "sha256": "17a9def32764b4f4e499739c9dc94878756831f0d17ca39fd716d77d31c15548"
+    },
+    {
+      "path": "Pants/artem_pants_1.bundle",
+      "size": 8553849,
+      "sha256": "f8484e0a81c41df7c27693ba92c81c0b2c6d793215ebcc6d6a9761dc50ae982f"
+    },
+    {
+      "path": "Pants/artem_pants_10.bundle",
+      "size": 4344566,
+      "sha256": "793eec0324b0b6c71b545d5f96fa62a569280d61e7f4fa72be12e0183cafb6a8"
+    },
+    {
+      "path": "Pants/artem_pants_2.bundle",
+      "size": 7065380,
+      "sha256": "ded0cb12617e62e4a8be8481e349d9895b0a79d25bd486e1f9ed98de13a118a7"
+    },
+    {
+      "path": "Pants/artem_pants_21.bundle",
+      "size": 6309661,
+      "sha256": "5a132c93a89f491fe1f223f4998d4909716e610787b4c4541a6ec0d4ea953771"
+    },
+    {
+      "path": "Pants/artem_pants_22_alpineghillie.bundle",
+      "size": 6254979,
+      "sha256": "f64cfb87406220af408aa4d560e7d7f9463ea03287eddee643174d5cb442df14"
+    },
+    {
+      "path": "Pants/artem_pants_23.bundle",
+      "size": 4207190,
+      "sha256": "e203c118c425242a775c5d566eb59cc4abfee78b5bc5bfb89edea236e09509f7"
+    },
+    {
+      "path": "Pants/artem_pants_24.bundle",
+      "size": 4396470,
+      "sha256": "078a75ff0462511dc64584b6c0c868b1a4c1450b809f34444d62f6863b78f383"
+    },
+    {
+      "path": "Pants/artem_pants_25.bundle",
+      "size": 4050338,
+      "sha256": "ac24fa62093fd446891abb60d154c0139603a2d1015042c5fdd42799eda35b7e"
+    },
+    {
+      "path": "Pants/artem_pants_26.bundle",
+      "size": 4211044,
+      "sha256": "8f01f20ba6391955af270c9bd571884af58c7f872dcead24cd23b5175c050e02"
+    },
+    {
+      "path": "Pants/artem_pants_27.bundle",
+      "size": 1935023,
+      "sha256": "e58e7dda8b8c7363594a3040f11f7be9a8196f46ddd3b801b7f62c83e8494787"
+    },
+    {
+      "path": "Pants/artem_pants_3.bundle",
+      "size": 7838124,
+      "sha256": "8cab250b680700265ae8282d1bd3f649a7e2d7fd702bb693d6f91c040ecae158"
+    },
+    {
+      "path": "Pants/artem_pants_5.bundle",
+      "size": 19330227,
+      "sha256": "b1cd63802bd0cc95abeecc97afa1b640d8aa4af7f7971cd5f487a72a4d5f66c5"
+    },
+    {
+      "path": "Pants/artem_pants_6.bundle",
+      "size": 7984877,
+      "sha256": "1e69e6d56c4c4e9c4bed3e01b8bb0f9eb11ee261a35016bcc3906f066c11920b"
+    },
+    {
+      "path": "Pants/artem_pants_7.bundle",
+      "size": 7653766,
+      "sha256": "0b0a5f1d9c25ad1b7864c2e221971d1764cc1bd7893426704b8fc4afc833b086"
+    },
+    {
+      "path": "Pants/artem_pants_8.bundle",
+      "size": 5386119,
+      "sha256": "943811b68afc4b8f67feadbf5908520b31ebf5479ddc4d0b80ec9e6c4ab37b5e"
+    },
+    {
+      "path": "Pants/artem_pants_9.bundle",
+      "size": 4376084,
+      "sha256": "3dc6399abda74393fd2f2cc5cd5527cff09e6b94b9f6f12db3c8c4285406640d"
+    },
+    {
+      "path": "Pants/artem_tracksuitred_pants.bundle",
+      "size": 1638397,
+      "sha256": "72411bc7815ca25658b4819a8aa70e176d863faa9336a91db9b3a603c1b133fd"
+    },
+    {
+      "path": "Pants/artem_tracksuitwhite_pants.bundle",
+      "size": 1662922,
+      "sha256": "ff094783b5e025a225f44ca9cd323c56fdd9e5e47a2e1688280d9d2226b13b12"
+    },
+    {
+      "path": "Pants/artem_tracksuityellow_pants.bundle",
+      "size": 1654067,
+      "sha256": "06ebf96d8a973b4efbb6d87a9806d431a737ea278763174f14588c06ffa74892"
+    },
+    {
+      "path": "Pants/Graves_Pants.bundle",
+      "size": 9653196,
+      "sha256": "e332ecd59caccbd24951a2763edc2ee22580e5392ec9ead4d9ecdeb615cbada7"
+    },
+    {
+      "path": "tacticalvest3.bundle",
+      "size": 6599645,
+      "sha256": "2fbd5b97e764de29eb0e20a4a8d1e934f29b1fbc4b80e9a21e1656608d6afc66"
+    },
+    {
+      "path": "tacticalvest6.bundle",
+      "size": 11625588,
+      "sha256": "d055186ce9ab515c27c5c1d39af0e7a9d019e8039847ab7cef59be0a8b954f51"
+    },
+    {
+      "path": "Tops/artem_top_1.bundle",
+      "size": 13600134,
+      "sha256": "9ad6af21e9acf9a1db3f77b6d283b75d72e3b4e5e170d323fc42eba2cc35c9e4"
+    },
+    {
+      "path": "Tops/artem_top_10.bundle",
+      "size": 7303203,
+      "sha256": "fbfd53a5ab992bea21cabe67a9e042afa10e42b03da638960fa24ab0b531db56"
+    },
+    {
+      "path": "Tops/artem_top_12.bundle",
+      "size": 3304813,
+      "sha256": "cc8d1f680cb7cf3e0615f877c6026b555077a6e54120b1059f9888a0035203ab"
+    },
+    {
+      "path": "Tops/artem_top_13.bundle",
+      "size": 3296047,
+      "sha256": "7ffd2fd314bda2738202e78cf924c632ef129595db9c9a0d3b473008f8651bb0"
+    },
+    {
+      "path": "Tops/artem_top_14.bundle",
+      "size": 6705799,
+      "sha256": "ea5b7d76b0aa7bad9b6ca8ab85828ffafdefbc21cc0cc6b40d0ff441052258fd"
+    },
+    {
+      "path": "Tops/artem_top_15.bundle",
+      "size": 11599191,
+      "sha256": "4aee869d63a7f8b3366bbabf21b243a11d860e62b6e389809658de35cd0285fe"
+    },
+    {
+      "path": "Tops/artem_top_16.bundle",
+      "size": 14395687,
+      "sha256": "769ab41a5c2481e19109bde3878c13d169e0aaf7d741317d1156e61a86d360d5"
+    },
+    {
+      "path": "Tops/artem_top_18.bundle",
+      "size": 2451283,
+      "sha256": "1ca6746003f399f9ad3bb857ace3b550ed3ffccd606bdc2657a24e045fcb6504"
+    },
+    {
+      "path": "Tops/artem_top_19.bundle",
+      "size": 2481367,
+      "sha256": "edb093a1248bf20975e9d45faabad12403c59ffc6b40211f94ea267156ff2872"
+    },
+    {
+      "path": "Tops/artem_top_2.bundle",
+      "size": 6070720,
+      "sha256": "8d6e982deaa17561fa7d48a1f5340aefc1289f79324ebc296a8354b5350a7e10"
+    },
+    {
+      "path": "Tops/artem_top_20.bundle",
+      "size": 1969600,
+      "sha256": "e53ffa261bbb08c0c5c8ee1fdf3652f8b9ad5e8c8f32be9b1417ef40d570814d"
+    },
+    {
+      "path": "Tops/artem_top_21.bundle",
+      "size": 11904025,
+      "sha256": "f0937a2461c076b9877da3029e249da49fd1e6a5a7953d91d9c39a87a7b3961b"
+    },
+    {
+      "path": "Tops/artem_top_22_alpineghillie.bundle",
+      "size": 12230160,
+      "sha256": "5bee1e4c0566d2774107b871a6371f0914196c8efb2a84741964d08e8ac2d965"
+    },
+    {
+      "path": "Tops/artem_top_23.bundle",
+      "size": 4465951,
+      "sha256": "2a59697ee656e25287179119568e4ba26856dc9e08a65477fae17248420750c2"
+    },
+    {
+      "path": "Tops/artem_top_24.bundle",
+      "size": 4478131,
+      "sha256": "3ceb065b15cf1cfc768c27e9eb7f29f4c9fef89dc8125d75d995b47b769ec863"
+    },
+    {
+      "path": "Tops/artem_top_25.bundle",
+      "size": 4149800,
+      "sha256": "e8c896e81abb6568bd03f268cec0ab40612b66d9a51218583c6113e2f13612ec"
+    },
+    {
+      "path": "Tops/artem_top_26.bundle",
+      "size": 2105204,
+      "sha256": "80e4c8ffcdbcf8980b537ce58008e21597f7f000fc3c72d6bdba12929e09ded6"
+    },
+    {
+      "path": "Tops/artem_top_27.bundle",
+      "size": 5933827,
+      "sha256": "87617278da89573be5576aabab94bf7949640b7ae2faef1cabe025dafd9aef35"
+    },
+    {
+      "path": "Tops/artem_top_28.bundle",
+      "size": 2228780,
+      "sha256": "ebf4d2f7ac966bf960564d4df59adf0acb5d0f72a6f841de38ce32ca8417f33d"
+    },
+    {
+      "path": "Tops/artem_top_29.bundle",
+      "size": 1742259,
+      "sha256": "7fcc5aec0a96ed691aef944ae73cb44103bed4f551f042ec3feaef16beeac70a"
+    },
+    {
+      "path": "Tops/artem_top_3.bundle",
+      "size": 8404060,
+      "sha256": "31a4976a4ac6a3a4f35ed7f72a03212ca2c500dbb22753850ed1ff820bba71b4"
+    },
+    {
+      "path": "Tops/artem_top_30.bundle",
+      "size": 2209554,
+      "sha256": "7ac77ab126eb8f0fdff800874b791d1c49688f163b75040c83497d771ae9ff05"
+    },
+    {
+      "path": "Tops/artem_top_31.bundle",
+      "size": 2365986,
+      "sha256": "b2dabadf923b9965afd4f83f6dfd7f44ca511e5efaa0bb15d15af825fd4488be"
+    },
+    {
+      "path": "Tops/artem_top_32.bundle",
+      "size": 11643423,
+      "sha256": "e0d8f15e8a5720544cfaa76ad7b96b554ed99d1337b07302c1e25f5a38480fe5"
+    },
+    {
+      "path": "Tops/artem_top_33.bundle",
+      "size": 5254952,
+      "sha256": "2d129905dac4d575612b4a0049a52d2ca2e3dc934f952c12125d759c27cac2cc"
+    },
+    {
+      "path": "Tops/artem_top_34.bundle",
+      "size": 4538321,
+      "sha256": "b5b211052f4051465f53e1e275c64a57f6644452de2a26d2e29aaddf08f3246e"
+    },
+    {
+      "path": "Tops/artem_top_35.bundle",
+      "size": 10266928,
+      "sha256": "1b4562b689e1864b2a8df2510c8d61374c99959a7d784d12f9de976948d8bd35"
+    },
+    {
+      "path": "Tops/artem_top_36.bundle",
+      "size": 4292983,
+      "sha256": "49ebadec7a6a81ee990392b34bfdd2da29eeb1e72bb4906139a59553d88d08af"
+    },
+    {
+      "path": "Tops/artem_top_4.bundle",
+      "size": 18441077,
+      "sha256": "ec5c45846becbe69fc38fa9aa65c092ae520411b4c56b258d4525a0ba4fd72f3"
+    },
+    {
+      "path": "Tops/artem_top_40.bundle",
+      "size": 1742824,
+      "sha256": "b2598b012929d94b1cf8e3b676392ed430665116b7ae1edfee7c74ce7a1dd146"
+    },
+    {
+      "path": "Tops/artem_top_41.bundle",
+      "size": 1745605,
+      "sha256": "cd0f2f84e63a430623dee2cc21d676ef8d5db414faf8cb0b90bfb27f5e7f14fd"
+    },
+    {
+      "path": "Tops/artem_top_42.bundle",
+      "size": 1745638,
+      "sha256": "da053361e8c08c4c7f4ca838ab6e58437520edd322aada4ea758cc6119a25394"
+    },
+    {
+      "path": "Tops/artem_top_43.bundle",
+      "size": 1711531,
+      "sha256": "b7c0fceb8a8677bdea01ec9dcdd3fa63b3da803625332257599a48c1a727c076"
+    },
+    {
+      "path": "Tops/artem_top_44.bundle",
+      "size": 3162116,
+      "sha256": "dd63e305c703518bcf339e5cf18966786eecc058530542bc063138cfd22a8f4f"
+    },
+    {
+      "path": "Tops/artem_top_45.bundle",
+      "size": 1829972,
+      "sha256": "2b26362ee24c702c59503cfd31deea7c1438a2c847eed26582bb8239752f380f"
+    },
+    {
+      "path": "Tops/artem_top_46.bundle",
+      "size": 3076069,
+      "sha256": "ab8442c5d1a9099cb6f290c9c83c1f23dfd057b5cb9c27a70674f2c859e714a6"
+    },
+    {
+      "path": "Tops/artem_top_47.bundle",
+      "size": 3102849,
+      "sha256": "a185919c193c102962236128d96f1fa2ce7769343857fb75b10d036b7f616fdc"
+    },
+    {
+      "path": "Tops/artem_top_48.bundle",
+      "size": 3031170,
+      "sha256": "497253103d15e05a53cd6ca7b2d87d9681bbdaf573c5186bbd5c7c882442a3ed"
+    },
+    {
+      "path": "Tops/artem_top_49.bundle",
+      "size": 2308335,
+      "sha256": "d4a25578b224507e6caf8a75b8ae0241e9886fa454ba681a593626ffe35bc2e5"
+    },
+    {
+      "path": "Tops/artem_top_5.bundle",
+      "size": 2855243,
+      "sha256": "66d20775b679b2f42930ed3084ef51a72687d58a56103ab7ee62a3932d13e7f5"
+    },
+    {
+      "path": "Tops/artem_top_50.bundle",
+      "size": 2274495,
+      "sha256": "9656665b3e5384cdabc10c6c77d2d1f9ff775f1a5adc76acef2422fc3a22dd35"
+    },
+    {
+      "path": "Tops/artem_top_51.bundle",
+      "size": 2197681,
+      "sha256": "90d93540bf88c93f7c5756e1a096d9e05096e003b523bde66f470541492495e6"
+    },
+    {
+      "path": "Tops/artem_top_6.bundle",
+      "size": 12181511,
+      "sha256": "78a15903d1b0c0968f934052180752f826786516d68f774e75eaff9d4fce66e3"
+    },
+    {
+      "path": "Tops/artem_top_7.bundle",
+      "size": 12341557,
+      "sha256": "d3045197d572b00415128e7852b04c51e01a7da773f667bde12ec078b0799d55"
+    },
+    {
+      "path": "Tops/artem_top_8.bundle",
+      "size": 6536452,
+      "sha256": "b334e5af462509127d9f3b80d561f1af8e2e4fb1169456c982bbf5e3456c9e47"
+    },
+    {
+      "path": "Tops/artem_top_9.bundle",
+      "size": 3081909,
+      "sha256": "4e50de49ceb7fc4e79d430237272d24f2b2ec8053cb503c83a3be32e126e2643"
+    },
+    {
+      "path": "Tops/artem_tracksuitred.bundle",
+      "size": 1966703,
+      "sha256": "21de0a6c5f124853af89228edb4a226b73124d9ea2d8b0fe884fb8166439d0b6"
+    },
+    {
+      "path": "Tops/artem_tracksuitwhite.bundle",
+      "size": 2050627,
+      "sha256": "4198119f2032e9d6672d6c14cbbfa7c884644f42cb44194e7d4b6e9cbf33b519"
+    },
+    {
+      "path": "Tops/artem_tracksuityellow.bundle",
+      "size": 1980723,
+      "sha256": "4c044d411b43ba63ad48c0856b497ab0c3ed7a2d256afafdbc45d68899864e78"
+    },
+    {
+      "path": "Tops/artem_voxshirt.bundle",
+      "size": 18118478,
+      "sha256": "1373db461023dd0aa550710bb50757eb957f12d4b250d305544c7898bbf79ea7"
+    },
+    {
+      "path": "Tops/artem_wttshirt.bundle",
+      "size": 1985420,
+      "sha256": "e228a3e0aae4b12174efff2ecbeb72e19b053b0d268c0b12257e3c7f665b43b3"
+    },
+    {
+      "path": "Tops/testshirt.bundle",
+      "size": 18203843,
+      "sha256": "40c7ed0fcbfd440687f4ff2e60e373928f72e77dc2d9781ca368ed7e355a94d3"
+    }
+  ]
+}

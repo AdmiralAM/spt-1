@@ -76,7 +76,7 @@ public sealed class PainterContentRegistration(
                     Weight = item.Weight,
                     Width = item.Width,
                     Height = item.Height,
-                    BackgroundColor = item.Width is null ? string.Empty : "blue",
+                    BackgroundColor = item.Width is null ? "default" : "blue",
                     CanRequireOnRagfair = false,
                     CanSellOnRagfair = item.Id == "672e2e75d78fe9e90c8cb393"
                 },

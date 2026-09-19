@@ -147,6 +147,25 @@ public sealed class LegacyTraderConsolidation(
                 logger.Warning($"Admiral skipped TGC storefront: {missing.Length} TGC templates are unavailable; core Admiral remains active");
         }
 
+        string packagedArtemAssort = IOPath.Combine(modPath, "external", "artem", "db", "assort.json");
+        if (File.Exists(packagedArtemAssort))
+        {
+            TraderAssort artemAssort = LoadExternal<TraderAssort>(modPath, packagedArtemAssort);
+            int roots = artemAssort.Items.Count(item => item.ParentId?.ToString() == "hideout");
+            if (roots != 281 || artemAssort.Items.Count != 703)
+                throw new InvalidDataException($"Embedded Artem 3.0.0 assort drift: roots={roots}, rows={artemAssort.Items.Count}");
+            MongoId[] missing = artemAssort.Items.Select(item => item.Template)
+                .Where(template => !templateTable.Items.ContainsKey(template)).Distinct().ToArray();
+            if (missing.Length > 0)
+                throw new InvalidDataException($"Embedded Artem content references {missing.Length} unavailable templates");
+            ValidateExternalAssort(artemAssort, "embedded Artem content");
+            result = result with
+            {
+                OfferRoots = result.OfferRoots + roots,
+                ItemRows = result.ItemRows + MergeAssort(admiral.Assort, artemAssort, "embedded Artem content")
+            };
+        }
+
         string packagedPainter = IOPath.Combine(modPath, "external", "painter");
         DirectoryInfo? painter = Directory.Exists(packagedPainter) && FindPainterQuestFile(packagedPainter) is not null
             ? new DirectoryInfo(packagedPainter)

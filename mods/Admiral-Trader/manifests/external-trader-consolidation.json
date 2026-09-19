@@ -33,11 +33,16 @@
       "release": "3.0.2",
       "asset": "WTT-Artem.7z",
       "sha256": "11e5bf532e591f5dedab72f44bc5f7fab886216c10288fc0ed13b3327b36318d",
-      "validatedRuntimeProvider": "Admiral-Artyom-Revival 3.0.0",
+      "validatedRuntimeProvider": "embedded Admiral Trader Artem content",
       "quests": 23,
       "rootOffers": 281,
+      "assortItemRows": 703,
       "questUnlocks": 41,
-      "suits": 64
+      "suits": 64,
+      "customItemFiles": 6,
+      "questZones": 21,
+      "bundles": 262,
+      "standaloneRuntimeRequired": false
     }
   ],
   "combinedExternalRuntime": {

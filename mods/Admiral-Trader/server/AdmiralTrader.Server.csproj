@@ -23,6 +23,10 @@
     <PackageReference Include="SPTushonka.Server.Core" Version="$(SptPublishedApiBaseline)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="WTT-ServerCommonLib" Version="3.0.6" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(UseExactSptRuntime)' == 'true'">
     <Reference Include="SPTarkov.Server.Core"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Server.Core.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="SPTarkov.Common"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Common.dll</HintPath><Private>false</Private></Reference>
@@ -49,6 +53,7 @@
     <Content Include="..\manifests\external-trader-consolidation.json" Link="manifests\external-trader-consolidation.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\external-content-identities.json" Link="manifests\external-content-identities.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\painter-special-delivery-pool.json" Link="manifests\painter-special-delivery-pool.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\artem-bundle-inventory.json" Link="manifests\artem-bundle-inventory.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\dialogue.json" Link="db\dialogue.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="Always" />
@@ -61,5 +66,11 @@
     <Content Include="..\db\optional\wtt-preset-catalog.json" Link="db\optional\wtt-preset-catalog.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\optional\wtt-reward-trades.json" Link="db\optional\wtt-reward-trades.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\rewards\*.json" Link="db\rewards\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomClothing\**\*.json" Link="db\CustomClothing\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomItems\**\*.json" Link="db\CustomItems\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomQuests\**\*.*" Link="db\CustomQuests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomQuestZones\**\*.json" Link="db\CustomQuestZones\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\bundles.json" Link="bundles.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\external\artem\**\*.*" Link="external\artem\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>

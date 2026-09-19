@@ -98,9 +98,11 @@ $modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
 Copy-Item $dll $modTarget
-foreach ($directory in 'db','assets') {
+foreach ($directory in 'db','assets','external') {
     Copy-Item (Join-Path $traderRoot $directory) (Join-Path $modTarget $directory) -Recurse
 }
+Copy-Item (Join-Path $traderRoot 'bundles.json') (Join-Path $modTarget 'bundles.json')
+& (Join-Path $traderRoot 'tools/Hydrate-ArtemBundles.ps1') -Destination (Join-Path $modTarget 'bundles') -WorkingDirectory (Join-Path $OutputDirectory '.artem-source')
 New-Item (Join-Path $modTarget 'manifests') -ItemType Directory -Force | Out-Null
 foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json') {
     Copy-Item (Join-Path $traderRoot "manifests/$manifest") (Join-Path $modTarget "manifests/$manifest")
@@ -125,6 +127,9 @@ if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count 
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 18) { throw 'Staged Trader lost the 18 quest-gated offers.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 172) { throw 'Staged Trader lost the 172-quest campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'bundles') -Filter '*.bundle' -File -Recurse).Count -ne 262) { throw 'Staged Trader lost the embedded 262-bundle Artem contract.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'db/CustomItems') -Filter '*.json' -File).Count -ne 6) { throw 'Staged Trader lost the embedded Artem item definitions.' }
+if (-not (Test-Path (Join-Path $modTarget 'external/artem/db/assort.json') -PathType Leaf)) { throw 'Staged Trader lost the embedded Artem assortment.' }
 
 $provenance = [ordered]@{
     schemaVersion = 1

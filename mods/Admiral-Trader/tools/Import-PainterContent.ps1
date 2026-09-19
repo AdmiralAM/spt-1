@@ -34,7 +34,7 @@ foreach ($bundle in $requiredBundles) {
 }
 
 if (Test-Path -LiteralPath (Join-Path $external 'Painter-4.0.dll')) {
-    throw 'Painter server DLL must not be present in the content-only layer.'
+    throw 'Painter-4.0.dll must not be present in the content-only layer.'
 }
 
 [pscustomobject]@{
