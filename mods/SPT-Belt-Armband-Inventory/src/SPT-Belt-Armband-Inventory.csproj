@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\assets\headband-rambo\runtime\icons\68ac0000000000000000000f.png" LogicalName="SPTBeltArmbandInventory.HeadBandIcon.png" />
+    <EmbeddedResource Include="..\server\assets\icons\6a3c0e9643138b61c8739586.png" LogicalName="SPTBeltArmbandInventory.PlateContainerIcon.png" />
     <Reference Include="BepInEx"><HintPath>..\..\..\deps\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <PackageReference Include="HarmonyX" Version="2.9.0"><PrivateAssets>all</PrivateAssets></PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33"><PrivateAssets>all</PrivateAssets></PackageReference>

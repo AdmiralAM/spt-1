@@ -9,18 +9,36 @@ namespace SPTBeltArmbandInventory
     internal static class HeadBandItemIconRuntime
     {
         const string ResourceName = "SPTBeltArmbandInventory.HeadBandIcon.png";
-        static Sprite sprite;
+        const string PlateContainerTemplateId = "6a3c0e9643138b61c8739586";
+        const string PlateContainerResourceName = "SPTBeltArmbandInventory.PlateContainerIcon.png";
+        static Sprite headBandSprite;
+        static Sprite plateContainerSprite;
         internal static Action<string> LogWarning;
 
         internal static bool Apply(object item, ref object itemIcon)
         {
             if (item == null) return true;
             object tpl = ReflectionTools.ReadMember(item, "StringTemplateId") ?? ReflectionTools.ReadMember(item, "TemplateId");
-            if (!string.Equals(tpl?.ToString(), RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal)) return true;
+            string templateId = tpl?.ToString();
+            bool isHeadBand = string.Equals(templateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal);
+            bool isPlateContainer = string.Equals(templateId, PlateContainerTemplateId, StringComparison.Ordinal);
+            if (!isHeadBand && !isPlateContainer) return true;
 
             try
             {
-                if (sprite == null) sprite = LoadSprite();
+                Sprite sprite;
+                if (isHeadBand)
+                {
+                    if (headBandSprite == null)
+                        headBandSprite = LoadSprite(ResourceName, "BAndHB_UtilityHeadBand_Icon");
+                    sprite = headBandSprite;
+                }
+                else
+                {
+                    if (plateContainerSprite == null)
+                        plateContainerSprite = LoadSprite(PlateContainerResourceName, "BAndHB_PlateContainer_Icon");
+                    sprite = plateContainerSprite;
+                }
                 itemIcon = Activator.CreateInstance(ReflectionTools.FindType("ItemIcon"), new object[] { 0 });
                 PropertyInfo property = ReflectionTools.FindInstanceProperty(itemIcon.GetType(), "Sprite", typeof(Sprite));
                 if (property != null && property.CanWrite) property.SetValue(itemIcon, sprite, null);
@@ -28,26 +46,26 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                LogWarning?.Invoke("B&A&HB Utility HeadBand item icon override failed safely: " + exception.Message);
+                LogWarning?.Invoke("B&A&HB owned item icon override failed safely for " + templateId + ": " + exception.Message);
                 return true;
             }
         }
 
-        static Sprite LoadSprite()
+        static Sprite LoadSprite(string resourceName, string textureName)
         {
-            using Stream stream = typeof(HeadBandItemIconRuntime).Assembly.GetManifestResourceStream(ResourceName)
-                ?? throw new FileNotFoundException("Embedded Utility HeadBand icon missing", ResourceName);
+            using Stream stream = typeof(HeadBandItemIconRuntime).Assembly.GetManifestResourceStream(resourceName)
+                ?? throw new FileNotFoundException("Embedded B&A&HB item icon missing", resourceName);
             byte[] bytes = new byte[stream.Length];
             int offset = 0;
             while (offset < bytes.Length)
             {
                 int read = stream.Read(bytes, offset, bytes.Length - offset);
-                if (read <= 0) throw new EndOfStreamException(ResourceName);
+                if (read <= 0) throw new EndOfStreamException(resourceName);
                 offset += read;
             }
             Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
             if (!ImageConversion.LoadImage(texture, bytes, false)) throw new InvalidDataException("Utility HeadBand PNG could not be decoded");
-            texture.name = "BAndHB_UtilityHeadBand_Icon";
+            texture.name = textureName;
             return Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
         }
 
@@ -89,7 +107,7 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 object prefix = harmonyMethodCtor.Invoke(new object[] { typeof(HeadBandItemIconPatches).GetMethod(nameof(CreatePrefix), BindingFlags.Static | BindingFlags.NonPublic) });
                 patch.Invoke(harmony, new object[] { target, prefix, null, null, null });
-                logInfo?.Invoke("B&A&HB owned Utility HeadBand inventory icon installed on ItemViewFactory.LoadItemIcon.");
+                logInfo?.Invoke("B&A&HB owned HeadBand and ballistic-plate-container inventory icons installed on ItemViewFactory.LoadItemIcon.");
                 return true;
             }
             catch (Exception exception) { Dispose(); logWarning?.Invoke("B&A&HB HeadBand icon patch failed safely: " + exception.ToString()); return false; }
