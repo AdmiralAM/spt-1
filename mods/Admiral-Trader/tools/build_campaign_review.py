@@ -188,10 +188,12 @@ def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, li
     m8 = load(root / "manifests/m8-campaign-expansion-runtime.json")
     access = load(root / "manifests/keys-authored-spec.json")
     weapons = load(root / "manifests/weapon-ammo-authored-spec.json")
+    rotation = load(root / "manifests/weapon-rotation-runtime.json")
     story_by_id = {str(row["id"]): row for row in story.get("quests") or []}
     m8_by_id = {str(row["id"]): row for row in m8.get("quests") or []}
     access_ids = {str(row["id"]) for row in access.get("quests") or []}
     weapon_ids = {str(row["id"]) for row in weapons.get("quests") or []}
+    rotation_by_id = {str(row["id"]): row for row in rotation.get("assignments") or []}
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for quest in quests:
         qid = str(quest["_id"])
@@ -200,6 +202,8 @@ def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, li
             label = f"Сюжет {int(row['chain'])}: {row['map']}"
         elif qid in access_ids:
             label = "Протоколы доступа"
+        elif qid in rotation_by_id:
+            label = f"Арсенал: ротация, линия {rotation_by_id[qid]['lane']}"
         elif qid in weapon_ids:
             label = "Арсенал: базовые категории"
         elif qid in m8_by_id:
@@ -216,7 +220,7 @@ def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, li
         else:
             label = "Операции: основная линия"
         groups[label].append(quest)
-    preferred = ["Протоколы доступа", "Арсенал: базовые категории", "Арсенал: ротация, линия A", "Арсенал: ротация, линия B", "Операции: Эпицентр", "Операции: экипировка", "Операции: основная линия"]
+    preferred = ["Протоколы доступа", "Арсенал: ротация, линия A", "Арсенал: ротация, линия B", "Арсенал: базовые категории", "Операции: Эпицентр", "Операции: экипировка", "Операции: основная линия"]
     preferred.extend(f"Сюжет {number}: {map_name}" for number, map_name in enumerate(["Эпицентр", "Таможня", "Лес", "Развязка", "Берег", "Резерв", "Маяк", "Улицы", "Завод", "Лаборатория"], 1))
     return [(name, groups[name]) for name in preferred if groups.get(name)]
 

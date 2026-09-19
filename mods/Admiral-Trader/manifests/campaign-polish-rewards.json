@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "policy": "Every quest has XP, standing, at least 10000 remaining roubles and one useful item or unlock after native and conditional reward layers are considered.",
+  "rewardedQuestCount": 40,
+  "minimumRemainingRoubles": 10000,
+  "rewards": [
+    {
+      "questId": "e81e5d79bfdf40efc87cdf99",
+      "level": 1,
+      "name": "Активные наушники ГСШ-01",
+      "tpl": "5b432b965acfc47a8774094e",
+      "quantity": 1,
+      "cashReductionRub": 1000,
+      "rewardId": "c40b7c74afa21062cfc4e39b"
+    },
+    {
+      "questId": "52cbb69039f63f3cfbad321a",
+      "level": 4,
+      "name": "Аптечка Salewa",
+      "tpl": "544fb45d4bdc2dee738b4568",
+      "quantity": 1,
+      "cashReductionRub": 5800,
+      "rewardId": "387f5794f340c54fbff07cd6"
+    },
+    {
+      "questId": "88c98ecb21d126970231b220",
+      "level": 6,
+      "name": "Коллиматор Aimpoint Micro H-2",
+      "tpl": "61657230d92c473c770213d7",
+      "quantity": 1,
+      "cashReductionRub": 7200,
+      "rewardId": "dff5ef7b795e3326d9c6a0c0"
+    },
+    {
+      "questId": "c28a9b8837dcf639ba524cc3",
+      "level": 8,
+      "name": "Бронежилет PACA",
+      "tpl": "5648a7494bdc2d9d488b4583",
+      "quantity": 1,
+      "cashReductionRub": 8600,
+      "rewardId": "2f6276558daa7ccdc3921c66"
+    },
+    {
+      "questId": "e69ffaae178e648aff9de3fd",
+      "level": 12,
+      "name": "Активные наушники MSA Sordin",
+      "tpl": "5aa2ba71e5b5b000137b758f",
+      "quantity": 1,
+      "cashReductionRub": 11400,
+      "rewardId": "ee3ca676f880b240d604ee10"
+    },
+    {
+      "questId": "e5c8b4080adfe4fa2caa7bc3",
+      "level": 14,
+      "name": "Оптический прицел SIG BRAVO4",
+      "tpl": "57adff4f24597737f373b6e6",
+      "quantity": 1,
+      "cashReductionRub": 12800,
+      "rewardId": "6d88aee6f17f9bf9c62421fb"
+    },
+    {
+      "questId": "65c67fd56ef827fd8f8e28ae",
+      "level": 15,
+      "name": "Аптечка Grizzly",
+      "tpl": "590c657e86f77412b013051d",
+      "quantity": 1,
+      "cashReductionRub": 13500,
+      "rewardId": "30e63bcedfc2bca4419c5748"
+    },
+    {
+      "questId": "837bdd0ab80a2a1382caeedd",
+      "level": 15,
+      "name": "Хирургический набор Surv12",
+      "tpl": "5d02797c86f774203f38e30a",
+      "quantity": 1,
+      "cashReductionRub": 13500,
+      "rewardId": "c45297b5fffe68b8c66f7463"
+    },
+    {
+      "questId": "94dfbf0ec29ab7391528f217",
+      "level": 17,
+      "name": "Стимулятор Пропитал",
+      "tpl": "5c0e530286f7747fa1419862",
+      "quantity": 1,
+      "cashReductionRub": 14900,
+      "rewardId": "7529b41e3dcee8d08f2cc94f"
+    },
+    {
+      "questId": "f0874dd26a7b1f76d86aad88",
+      "level": 18,
+      "name": "Стимулятор Загустин",
+      "tpl": "5c0e533786f7747fa23f4d47",
+      "quantity": 1,
+      "cashReductionRub": 15600,
+      "rewardId": "b7492e6892d56399f7b561ee"
+    },
+    {
+      "questId": "9b41c75e4d147894f087e2b2",
+      "level": 20,
+      "name": "Стимулятор eTG-c",
+      "tpl": "5c0e534186f7747fa1419867",
+      "quantity": 1,
+      "cashReductionRub": 17000,
+      "rewardId": "b03ed9e0c3517894591a5fb7"
+    },
+    {
+      "questId": "b713c4f910eb245be9cda205",
+      "level": 22,
+      "name": "Аптечка IFAK",
+      "tpl": "590c678286f77426c9660122",
+      "quantity": 1,
+      "cashReductionRub": 18400,
+      "rewardId": "6128e72d1ad19774b72c4b21"
+    },
+    {
+      "questId": "cddcd386eb050dbc936ef629",
+      "level": 22,
+      "name": "Аптечка Salewa",
+      "tpl": "544fb45d4bdc2dee738b4568",
+      "quantity": 1,
+      "cashReductionRub": 18400,
+      "rewardId": "72910859d979475fe08c1e2c"
+    },
+    {
+      "questId": "4b4bcd640d8659dd0e2e7fba",
+      "level": 24,
+      "name": "Коллиматор Aimpoint Micro H-2",
+      "tpl": "61657230d92c473c770213d7",
+      "quantity": 1,
+      "cashReductionRub": 19800,
+      "rewardId": "b83f31f691188c9dde502618"
+    },
+    {
+      "questId": "5d2360d47e11dfcb81acbdb5",
+      "level": 24,
+      "name": "Голографический прицел EOTech 553",
+      "tpl": "570fd6c2d2720bc6458b457f",
+      "quantity": 1,
+      "cashReductionRub": 19800,
+      "rewardId": "0a9e5f8607f3a7561ae98350"
+    },
+    {
+      "questId": "3002161cfabbdcb40699a1df",
+      "level": 26,
+      "name": "Аптечка AFAK",
+      "tpl": "60098ad7c2240c0fe85c570a",
+      "quantity": 1,
+      "cashReductionRub": 21200,
+      "rewardId": "58ade9758b98a359de1169f4"
+    },
+    {
+      "questId": "e0fbd59d0be5c10d2ade5fb3",
+      "level": 26,
+      "name": "Хирургический набор CMS",
+      "tpl": "5d02778e86f774203e7dedbe",
+      "quantity": 1,
+      "cashReductionRub": 21200,
+      "rewardId": "9ffb3f649a14880770496f96"
+    },
+    {
+      "questId": "315693d54d1bec87808d640a",
+      "level": 27,
+      "name": "Разгрузочный жилет BlackRock",
+      "tpl": "5648a69d4bdc2ded0b8b457b",
+      "quantity": 1,
+      "cashReductionRub": 21900,
+      "rewardId": "4d6e48b0874947d6d9dc8d50"
+    },
+    {
+      "questId": "1e8e5bbebe432ca73b19747d",
+      "level": 28,
+      "name": "Оптический прицел SIG BRAVO4",
+      "tpl": "57adff4f24597737f373b6e6",
+      "quantity": 1,
+      "cashReductionRub": 22600,
+      "rewardId": "eb42622d6f05281903793e8a"
+    },
+    {
+      "questId": "4c2cc3f85d60170907642d9e",
+      "level": 28,
+      "name": "Гибридный прицел EOTech HHS-1",
+      "tpl": "5c07dd120db834001c39092d",
+      "quantity": 1,
+      "cashReductionRub": 22600,
+      "rewardId": "8ab0ca04415c5adb22e8ecc5"
+    },
+    {
+      "questId": "aaf59cae44fc7164485287d9",
+      "level": 28,
+      "name": "Аптечка Grizzly",
+      "tpl": "590c657e86f77412b013051d",
+      "quantity": 1,
+      "cashReductionRub": 22600,
+      "rewardId": "5e918d8a6c3df810e55ebdcb"
+    },
+    {
+      "questId": "e0cc5330a34ff96bfb670820",
+      "level": 28,
+      "name": "Хирургический набор Surv12",
+      "tpl": "5d02797c86f774203f38e30a",
+      "quantity": 1,
+      "cashReductionRub": 22600,
+      "rewardId": "6f6445df11f5f05126b8b2c7"
+    },
+    {
+      "questId": "8f427e0e5719ea89688c08a9",
+      "level": 30,
+      "name": "Стимулятор Пропитал",
+      "tpl": "5c0e530286f7747fa1419862",
+      "quantity": 1,
+      "cashReductionRub": 24000,
+      "rewardId": "93a7947672192eaedec1497c"
+    },
+    {
+      "questId": "a8b05eb5c5f0e67ee881df52",
+      "level": 30,
+      "name": "Стимулятор Загустин",
+      "tpl": "5c0e533786f7747fa23f4d47",
+      "quantity": 1,
+      "cashReductionRub": 24000,
+      "rewardId": "16f77104ba222ab0f08a7ed8"
+    },
+    {
+      "questId": "b1b3d9e3a930a3eae47b2353",
+      "level": 30,
+      "name": "Стимулятор SJ6",
+      "tpl": "5c0e531d86f7747fa23f4d42",
+      "quantity": 1,
+      "cashReductionRub": 24000,
+      "rewardId": "c4d9a929a050a9d15082a479"
+    },
+    {
+      "questId": "47480d824cea0b80917cafa5",
+      "level": 31,
+      "name": "Активные наушники ГСШ-01",
+      "tpl": "5b432b965acfc47a8774094e",
+      "quantity": 1,
+      "cashReductionRub": 24700,
+      "rewardId": "b709d657c3ec0a774b3677c3"
+    },
+    {
+      "questId": "f62d8e1285027e336767513c",
+      "level": 31,
+      "name": "Аптечка IFAK",
+      "tpl": "590c678286f77426c9660122",
+      "quantity": 1,
+      "cashReductionRub": 24700,
+      "rewardId": "219fc8e0be8397c3f8fe4a29"
+    },
+    {
+      "questId": "42d9c21068539c9855e42daf",
+      "level": 32,
+      "name": "Аптечка Salewa",
+      "tpl": "544fb45d4bdc2dee738b4568",
+      "quantity": 1,
+      "cashReductionRub": 25400,
+      "rewardId": "f5f456e117a25bce72d4f1be"
+    },
+    {
+      "questId": "416b7201445436294eb53e42",
+      "level": 33,
+      "name": "Коллиматор Aimpoint Micro H-2",
+      "tpl": "61657230d92c473c770213d7",
+      "quantity": 1,
+      "cashReductionRub": 26100,
+      "rewardId": "267f7559d9dedde65bdd0a62"
+    },
+    {
+      "questId": "fe7337b9337a7b318619a432",
+      "level": 34,
+      "name": "Голографический прицел EOTech 553",
+      "tpl": "570fd6c2d2720bc6458b457f",
+      "quantity": 1,
+      "cashReductionRub": 26800,
+      "rewardId": "165555889649ba2d8476ff0b"
+    },
+    {
+      "questId": "68a6527a3c73b2e85977d7a1",
+      "level": 35,
+      "name": "Аптечка AFAK",
+      "tpl": "60098ad7c2240c0fe85c570a",
+      "quantity": 1,
+      "cashReductionRub": 27500,
+      "rewardId": "687dee679098496ce2001143"
+    },
+    {
+      "questId": "d3b6824cc5eda08126273277",
+      "level": 35,
+      "name": "Хирургический набор CMS",
+      "tpl": "5d02778e86f774203e7dedbe",
+      "quantity": 1,
+      "cashReductionRub": 27500,
+      "rewardId": "014483f0a7b33f96b1ec6abc"
+    },
+    {
+      "questId": "df9c920a04c11e9b8dc020d0",
+      "level": 35,
+      "name": "Активные наушники MSA Sordin",
+      "tpl": "5aa2ba71e5b5b000137b758f",
+      "quantity": 1,
+      "cashReductionRub": 27500,
+      "rewardId": "5e81ddecaa7206747704cc68"
+    },
+    {
+      "questId": "b5038fda630a18690bb52872",
+      "level": 36,
+      "name": "Разгрузочный жилет BlackRock",
+      "tpl": "5648a69d4bdc2ded0b8b457b",
+      "quantity": 1,
+      "cashReductionRub": 28200,
+      "rewardId": "80562d07b58780e8f04a8b51"
+    },
+    {
+      "questId": "4072a5e458946a243b886ad8",
+      "level": 37,
+      "name": "Гибридный прицел EOTech HHS-1",
+      "tpl": "5c07dd120db834001c39092d",
+      "quantity": 1,
+      "cashReductionRub": 28900,
+      "rewardId": "c3c80de0b6ef2b4a442b36f2"
+    },
+    {
+      "questId": "45a5aeb435d89e93b6e9484a",
+      "level": 37,
+      "name": "Аптечка Grizzly",
+      "tpl": "590c657e86f77412b013051d",
+      "quantity": 1,
+      "cashReductionRub": 28900,
+      "rewardId": "c19f1cf7dfee96d1dcc0fada"
+    },
+    {
+      "questId": "c705c50d6f524f36cd2cc8fe",
+      "level": 39,
+      "name": "Рюкзак Camelbak Tri-Zip",
+      "tpl": "545cdae64bdc2d39198b4568",
+      "quantity": 1,
+      "cashReductionRub": 30000,
+      "rewardId": "0b2f5a462c976931ce52c9bd"
+    },
+    {
+      "questId": "8024b7e157f21f5b35b6f38b",
+      "level": 40,
+      "name": "Стимулятор Пропитал",
+      "tpl": "5c0e530286f7747fa1419862",
+      "quantity": 1,
+      "cashReductionRub": 30000,
+      "rewardId": "23fd5ef345394893a432f8a3"
+    },
+    {
+      "questId": "786ce2de2cee30f3128aa04c",
+      "level": 44,
+      "name": "Стимулятор Загустин",
+      "tpl": "5c0e533786f7747fa23f4d47",
+      "quantity": 1,
+      "cashReductionRub": 30000,
+      "rewardId": "79b3e20429f0180f5b42c51d"
+    },
+    {
+      "questId": "c50d2ca0deca83e99e3d0d4a",
+      "level": 46,
+      "name": "Стимулятор SJ6",
+      "tpl": "5c0e531d86f7747fa23f4d42",
+      "quantity": 1,
+      "cashReductionRub": 30000,
+      "rewardId": "4f7a95561c77debd91f62d38"
+    }
+  ]
+}

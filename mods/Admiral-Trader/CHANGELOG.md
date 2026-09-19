@@ -28,6 +28,9 @@
 - Replace the old repetitive distance ladder with a three-step 100 m / 200 m / 300 m marksman chain and weapon-specific pools.
 - Rebalance all 40 Arsenal assignments into two simultaneous 20-step lines with contrasting weapon roles, complete 143-model native family coverage, optional WTT analogues, persistent quest IDs and progressively rarer late-game platforms.
 - Give every Arsenal assignment a useful item reward while trading away part of its rouble payout: 30 staged field-support rewards and ten complete configured weapons, one at every fourth step in each line.
+- Complete the reward pass across all 172 quests: the remaining 40 cash-only records now award a useful native field item while retaining at least ₽10,000, XP and Admiral standing.
+- Add vanilla-style cumulative sales requirements to Admiral loyalty progression: ₽500,000 at LL2, ₽1,200,000 at LL3 and ₽2,200,000 at LL4, alongside the existing level and standing requirements.
+- Correct the campaign review so both complete 20-step Arsenal lanes are shown and add release-readiness checks for rewards, parallel story openings, loyalty attainability and all four store tiers.
 
 ## 0.2.0 — stable campaign baseline
 

@@ -9,16 +9,16 @@ internal static class AdmiralTraderRelationshipManifestSmoke
         const string traderBase = """
         {"loyaltyLevels":[
           {"minLevel":1,"minSalesSum":0,"minStanding":0},
-          {"minLevel":15,"minSalesSum":0,"minStanding":0.1},
-          {"minLevel":25,"minSalesSum":0,"minStanding":0.3},
-          {"minLevel":35,"minSalesSum":0,"minStanding":0.55}
+          {"minLevel":15,"minSalesSum":500000,"minStanding":0.1},
+          {"minLevel":25,"minSalesSum":1200000,"minStanding":0.3},
+          {"minLevel":35,"minSalesSum":2200000,"minStanding":0.55}
         ]}
         """;
         const string disabled = """
-        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":false,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":false},"offers":[]}
+        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":true,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":false},"offers":[]}
         """;
         const string enabled = """
-        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":false,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":true},"offers":[{"offerId":"rel1","tpl":"tpl-rel","loyaltyLevel":3,"stockPerReset":4,"buyRestriction":2,"questGate":null}]}
+        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":true,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":true},"offers":[{"offerId":"rel1","tpl":"tpl-rel","loyaltyLevel":3,"stockPerReset":4,"buyRestriction":2,"questGate":null}]}
         """;
 
         Require(AdmiralTraderRelationshipManifest.Parse(null, true, traderBase).Count == 0, "missing optional manifest must preserve current frozen contract");
@@ -27,14 +27,14 @@ internal static class AdmiralTraderRelationshipManifestSmoke
         Require(parsed.Count == 1, "enabled manifest must classify one explicit offer");
         var offer = parsed[0];
         Require(offer.OfferId == "rel1" && offer.ItemTemplateId == "tpl-rel", "Relationship identity mismatch");
-        Require(offer.LoyaltyLevel == 3 && offer.RequiredStanding == 0.3 && offer.MinimumPlayerLevel == 25, "Relationship loyalty gate mismatch");
+        Require(offer.LoyaltyLevel == 3 && offer.RequiredStanding == 0.3 && offer.MinimumPlayerLevel == 25 && offer.MinimumSalesSum == 1200000, "Relationship loyalty gate mismatch");
         Require(offer.StockPerReset == 4 && offer.BuyRestrictionPerReset == 2, "Relationship bounded supply mismatch");
 
         MustFail("policy disabled", () => AdmiralTraderRelationshipManifest.Parse(enabled, false, traderBase));
-        MustFail("sales gate", () => AdmiralTraderRelationshipManifest.Parse(enabled.Replace("\"salesSumGateAllowed\":false", "\"salesSumGateAllowed\":true"), true, traderBase));
+        MustFail("sales gate policy", () => AdmiralTraderRelationshipManifest.Parse(enabled.Replace("\"salesSumGateAllowed\":true", "\"salesSumGateAllowed\":false"), true, traderBase));
         MustFail("quest gate", () => AdmiralTraderRelationshipManifest.Parse(enabled.Replace("\"questGate\":null", "\"questGate\":\"q1\""), true, traderBase));
         MustFail("unbounded logical buy", () => AdmiralTraderRelationshipManifest.Parse(enabled.Replace("\"buyRestriction\":2", "\"buyRestriction\":5"), true, traderBase));
-        MustFail("sales-sum drift", () => AdmiralTraderRelationshipManifest.Parse(enabled, true, traderBase.Replace("\"minSalesSum\":0,\"minStanding\":0.3", "\"minSalesSum\":1000,\"minStanding\":0.3")));
+        MustFail("sales-sum invalid", () => AdmiralTraderRelationshipManifest.Parse(enabled, true, traderBase.Replace("\"minSalesSum\":1200000,\"minStanding\":0.3", "\"minSalesSum\":0,\"minStanding\":0.3")));
         Console.WriteLine("Economy Admiral Admiral Trader Relationship manifest smoke PASS");
     }
 

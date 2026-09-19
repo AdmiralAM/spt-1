@@ -322,11 +322,12 @@ def main() -> None:
 
     loyalty_levels = base.get("loyaltyLevels") or []
     expected_standing = [0, 0.10, 0.30, 0.55]
+    expected_sales = [0, 500000, 1200000, 2200000]
     if len(loyalty_levels) != 4:
         fail("Admiral must retain four loyalty levels")
-    for index, (level, standing) in enumerate(zip(loyalty_levels, expected_standing), start=1):
-        if level.get("minSalesSum") != 0:
-            fail(f"Admiral LL{index}: sales-sum grind must remain disabled")
+    for index, (level, standing, sales) in enumerate(zip(loyalty_levels, expected_standing, expected_sales), start=1):
+        if level.get("minSalesSum") != sales:
+            fail(f"Admiral LL{index}: sales-sum threshold drift")
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 

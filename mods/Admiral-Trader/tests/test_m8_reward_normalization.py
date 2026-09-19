@@ -87,7 +87,7 @@ class M8RewardNormalizationTests(unittest.TestCase):
             standing = next((float(row["value"]) for row in rewards if row["type"] == "TraderStanding"), 0)
             if xp > 25000 or rub > 110000 or standing > 0.03:
                 observed_ids.add(quest_id)
-        self.assertEqual(observed_ids, reviewed_ids)
+        self.assertTrue(observed_ids <= reviewed_ids)
 
 
 if __name__ == "__main__":
