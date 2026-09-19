@@ -31,12 +31,10 @@ def item_name(item_id: str, items: dict[str, Any], locale: dict[str, str], optio
     return str(item.get("_name") or item.get("_id") or item_id)
 
 
-def names(values: Any, items: dict[str, Any], locale: dict[str, str], optional: dict[str, str], *, limit: int = 5) -> str:
+def names(values: Any, items: dict[str, Any], locale: dict[str, str], optional: dict[str, str]) -> str:
     if not isinstance(values, list):
         values = [values]
     resolved = [item_name(str(value), items, locale, optional) for value in values if value]
-    if len(resolved) > limit:
-        return ", ".join(resolved[:limit]) + f" и ещё {len(resolved) - limit}"
     return ", ".join(resolved) or "указанный игровой объект"
 
 
@@ -47,9 +45,50 @@ def map_name(raw: Any) -> str:
         "Customs": "Таможня", "bigmap": "Таможня", "Woods": "Лес", "woods": "Лес",
         "Shoreline": "Берег", "shoreline": "Берег", "Interchange": "Развязка", "interchange": "Развязка", "interchange": "Развязка", "Factory": "Завод", "factory4_day": "Завод (день)", "factory4_night": "Завод (ночь)",
         "Reserve": "Резерв", "RezervBase": "Резерв", "Lighthouse": "Маяк", "lighthouse": "Маяк", "Streets": "Улицы Таркова", "TarkovStreets": "Улицы Таркова",
-        "Laboratory": "Лаборатория", "The Lab": "Лаборатория", "any": "любая локация",
+        "Laboratory": "Лаборатория", "laboratory": "Лаборатория", "The Lab": "Лаборатория", "any": "Любая локация",
+        "5935e7b2a4b93217a25252d2": "Эпицентр", "653e6760052c01c1c805532f": "Эпицентр", "56f40101d2720b2a4d8b45d6": "Таможня",
+        "5704e3c2d2720bac5b8b4567": "Лес", "5714dbc024597771384a510d": "Развязка",
+        "5704e554d2720bac5b8b456e": "Берег", "55f2d3fd4bdc2d5f408b4567": "Завод",
+        "5704e5fad2720bc05b8b4567": "Резерв", "5704e4dad2720bb55b8b4567": "Маяк",
+        "5714dc692459777137212e12": "Улицы Таркова", "5b0fc42d86f7744a585f9105": "Лаборатория",
     }
     return ", ".join(mapping.get(str(value), str(value)) for value in values if value) or "указанная локация"
+
+
+def quest_map(quest: dict[str, Any]) -> str:
+    explicit = str(quest.get("location") or "any")
+    if explicit.lower() != "any":
+        return map_name(explicit)
+    locations: list[str] = []
+    for condition in (quest.get("conditions") or {}).get("AvailableForFinish") or []:
+        for rule in ((condition.get("counter") or {}).get("conditions") or []):
+            if rule.get("conditionType") == "Location":
+                locations.extend(str(value) for value in (rule.get("target") or []) if value)
+    return map_name(locations) if locations else "Любая локация"
+
+
+def availability(quest: dict[str, Any], quest_titles: dict[str, str]) -> str:
+    level = 1
+    prerequisites: list[str] = []
+    other: list[str] = []
+    for condition in (quest.get("conditions") or {}).get("AvailableForStart") or []:
+        kind = str(condition.get("conditionType") or "")
+        if kind == "Level":
+            level = max(level, int(condition.get("value") or 1))
+        elif kind == "Quest":
+            target = str(condition.get("target") or "")
+            title = quest_titles.get(target, target)
+            statuses = {int(value) for value in (condition.get("status") or [])}
+            status = "завершить" if 4 in statuses else "выполнить условие по"
+            delay = int(condition.get("availableAfter") or 0)
+            suffix = f"; задержка {delay // 3600} ч" if delay else ""
+            prerequisites.append(f"{status} «{title}»{suffix}")
+        else:
+            other.append(kind or "дополнительное условие")
+    result = [f"уровень {level}+"]
+    result.extend(prerequisites)
+    result.extend(other)
+    return "; ".join(result)
 
 
 def counter_requirement(condition: dict[str, Any], items: dict[str, Any], locale: dict[str, str], optional: dict[str, str]) -> str:
@@ -83,8 +122,9 @@ def counter_requirement(condition: dict[str, Any], items: dict[str, Any], locale
 
     if kind == "Elimination":
         result = f"Устранить {value} целей"
+        target_names = {"Savage": "Дикие", "AnyPmc": "ЧВК", "Any": "любые противники"}
         if target and target.lower() != "any":
-            result += f" ({target})"
+            result += f" ({target_names.get(target, target)})"
         if weapons:
             result += f" оружием: {names(weapons, items, locale, optional)}"
         if distance:
@@ -153,7 +193,9 @@ def reward(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, str],
         elif kind == "TraderStanding":
             standing += float(row.get("value") or 0)
         elif kind == "Item":
-            for item in row.get("items") or []:
+            reward_items = row.get("items") or []
+            roots = [item for item in reward_items if not item.get("parentId")]
+            for item in roots or reward_items[:1]:
                 quantity = int(((item.get("upd") or {}).get("StackObjectsCount") or 1))
                 if item.get("_tpl") == RUB_TPL:
                     rub += quantity
@@ -183,6 +225,28 @@ def reward(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, str],
     return "; ".join(result)
 
 
+def barter_rows(root: Path, items: dict[str, Any], locale: dict[str, str], optional: dict[str, str], quest_titles: dict[str, str]) -> list[str]:
+    policy = load(root / "manifests/storefront-barter-policy.json")
+    assort = load(root / "db/assort.json")
+    questassort = load(root / "db/questassort.json")
+    offers = {str(row.get("_id")): row for row in assort.get("items") or []}
+    loyalty = assort.get("loyal_level_items") or {}
+    unlocks = questassort.get("success") or {}
+    result: list[str] = []
+    for row in policy.get("offers") or []:
+        offer_id = str(row["offerId"])
+        offer = offers.get(offer_id) or {}
+        product = item_name(str(offer.get("_tpl") or offer_id), items, locale, optional)
+        requirements = "; ".join(
+            f"{item_name(str(req['tpl']), items, locale, optional)} ×{int(req['count'])}"
+            for req in row.get("requirements") or []
+        )
+        quest_id = str(unlocks.get(offer_id) or "")
+        gate = f"после «{quest_titles.get(quest_id, quest_id)}»" if quest_id else "доступен сразу"
+        result.append(f"| {product} | УЛ {int(loyalty.get(offer_id, 1))}; {gate} | {requirements} |")
+    return result
+
+
 def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, list[dict[str, Any]]]]:
     story = load(root / "manifests/story-campaign-runtime.json")
     m8 = load(root / "manifests/m8-campaign-expansion-runtime.json")
@@ -194,12 +258,14 @@ def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, li
     access_ids = {str(row["id"]) for row in access.get("quests") or []}
     weapon_ids = {str(row["id"]) for row in weapons.get("quests") or []}
     rotation_by_id = {str(row["id"]): row for row in rotation.get("assignments") or []}
+    story_labels = ["Вход в кампанию", "Таможня", "Лес", "Развязка", "Берег", "Резерв", "Маяк", "Улицы", "Завод", "Лаборатория"]
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for quest in quests:
         qid = str(quest["_id"])
         if qid in story_by_id:
             row = story_by_id[qid]
-            label = f"Сюжет {int(row['chain'])}: {row['map']}"
+            chain = int(row["chain"])
+            label = f"Сюжет {chain}: {story_labels[chain - 1]}"
         elif qid in access_ids:
             label = "Протоколы доступа"
         elif qid in rotation_by_id:
@@ -221,7 +287,7 @@ def group_quests(root: Path, quests: list[dict[str, Any]]) -> list[tuple[str, li
             label = "Операции: основная линия"
         groups[label].append(quest)
     preferred = ["Протоколы доступа", "Арсенал: ротация, линия A", "Арсенал: ротация, линия B", "Арсенал: базовые категории", "Операции: Эпицентр", "Операции: экипировка", "Операции: основная линия"]
-    preferred.extend(f"Сюжет {number}: {map_name}" for number, map_name in enumerate(["Эпицентр", "Таможня", "Лес", "Развязка", "Берег", "Резерв", "Маяк", "Улицы", "Завод", "Лаборатория"], 1))
+    preferred.extend(f"Сюжет {number}: {label}" for number, label in enumerate(story_labels, 1))
     return [(name, groups[name]) for name in preferred if groups.get(name)]
 
 
@@ -248,27 +314,43 @@ def main() -> int:
     tactical_rewards = {str(row["questId"]): row for row in reward_wave.get("tacticalRewardTrades") or []}
     pack_rewards = {str(row["questId"]): row for row in reward_wave.get("packNStrapTrades") or []}
     quests = [load(path) for path in sorted((root / "db/quests").glob("*.json"))]
+    quest_titles = {str(quest["_id"]): str(quest.get("QuestName") or quest["_id"]) for quest in quests}
     groups = group_quests(root, quests)
+    rendered_ids = [str(quest["_id"]) for _, rows in groups for quest in rows]
+    if len(rendered_ids) != len(quests) or len(set(rendered_ids)) != len(quests):
+        missing = sorted(set(quest_titles) - set(rendered_ids))
+        raise ValueError(f"campaign review did not render every quest exactly once; missing={missing}")
     lines = [
         "# Карта кампании Адмирала — условия и награды",
         "",
         f"Срез точного runtime: **{len(quests)} основных заданий**. Каждая строка получена из фактических SPT-условий и `Success`-наград, а не из рекламного описания квеста.",
         "",
-        "В таблице не показаны постоянный ID, служебные сообщения и технические поля. `Реп.` означает репутацию Адмирала. Открытие товара означает одноразовый unlock, а не бесплатный предмет.",
+        "В таблицах показаны постоянный ID, карта, условия появления, фактические условия завершения и полная награда. `Реп.` означает репутацию Адмирала. Открытие товара означает unlock покупки, а не бесплатный предмет.",
         "",
         "Для строк Pack ’n’ Strap показан вариант при установленном наборе: контейнер заменяет указанную часть рублей. Без его шаблонов контейнер не выдаётся, а денежная награда остаётся исходной.",
         "",
-        "## Состав",
+        "## Бартеры магазина",
+        "",
+        "Бартерных предложений ровно **6**. Обычный ассортимент и оружейные сборки Натальи остаются за рубли. Если клиент был открыт во время установки, требуется полный перезапуск клиента и сервера.",
+        "",
+        "| Получаемый товар | Доступ | Требуемые предметы |",
+        "| --- | --- | --- |",
+    ]
+    lines.extend(barter_rows(root, items, locale, optional, quest_titles))
+    lines.extend([
+        "",
+        "## Состав кампании",
         "",
         "| Кластер | Заданий |",
         "| --- | ---: |",
-    ]
+    ])
     lines.extend(f"| {name} | {len(rows)} |" for name, rows in groups)
     for name, rows in groups:
-        lines.extend(["", f"## {name}", "", "| Задание | Условие завершения | Награда |", "| --- | --- | --- |"])
+        lines.extend(["", f"## {name}", "", "| ID / задание | Карта | Доступ | Условия и требования | Награда |", "| --- | --- | --- | --- | --- |"])
         for quest in rows:
             title = str(quest.get("QuestName") or quest.get("_id"))
-            lines.append(f"| {title} | {requirement(quest, items, locale, optional, quest_locale)} | {reward(quest, items, locale, optional, optional_rewards, signature_rewards, early_rewards, tactical_rewards, pack_rewards)} |")
+            qid = str(quest.get("_id"))
+            lines.append(f"| `{qid}`<br>{title} | {quest_map(quest)} | {availability(quest, quest_titles)} | {requirement(quest, items, locale, optional, quest_locale)} | {reward(quest, items, locale, optional, optional_rewards, signature_rewards, early_rewards, tactical_rewards, pack_rewards)} |")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {args.output} with {len(quests)} quests in {len(groups)} clusters")

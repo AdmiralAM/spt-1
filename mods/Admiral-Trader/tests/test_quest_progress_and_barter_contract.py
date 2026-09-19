@@ -57,6 +57,18 @@ class QuestProgressAndBarterContractTests(unittest.TestCase):
             self.assertEqual(scheme, [[{"count": row["count"], "_tpl": row["tpl"]} for row in offer["requirements"]]])
             self.assertTrue(all(row["_tpl"] != ROUBLES for row in scheme[0]))
 
+    def test_flir_barter_uses_radar_array_virtex_and_military_cable(self):
+        policy = load("manifests/storefront-barter-policy.json")
+        offer = next(row for row in policy["offers"] if row["offerId"] == "6b0d153489b984ae9b940adb")
+        self.assertEqual(
+            [
+                {"tpl": "5d03775b86f774203e7e0c4b", "count": 1},
+                {"tpl": "5c05308086f7746b2101e90b", "count": 1},
+                {"tpl": "5d0375ff86f774186372f685", "count": 2},
+            ],
+            offer["requirements"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
