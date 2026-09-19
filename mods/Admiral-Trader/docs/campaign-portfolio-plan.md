@@ -149,3 +149,18 @@ The trial is bounded to two chains of three operations each:
 Both chains remain optional side content, use new persistent Admiral quest IDs, enter through one suitable post-stable campaign milestone and never gate the 172-quest core graph, loyalty or essential stock. At most one trial step per chain may be offered at once. Rewards replace part of the ordinary cash envelope rather than stacking free value, and every unlock must correspond to the capability or supply package just proven.
 
 Before runtime implementation, the six-operation bundle must be reviewed together at the product level for titles, story purpose, objective variety, exact location pools, requirements, rewards and storefront unlocks. Admission requires that neither chain duplicates an existing Arsenal rotation, map story, Natalya operation or Icebreaker branch. If the trial does not add a new player decision, it is dropped rather than expanded into a mastery grind.
+
+## Reward bundle architecture milestone
+
+After authored campaign content and reward intent are fixed, Admiral gains a reusable reward-composition layer. This milestone supplements the roadmap; it does not rewrite current quest rewards, assortment rows or profile data merely to demonstrate the engine.
+
+The implementation is limited to four capabilities:
+
+1. build coherent thematic kits from explicit required and optional roles, such as reconnaissance, assault, night, medical, repair and weapon-family support;
+2. select a weapon, compatible parts, magazines and ammunition inside one reviewed value tier and validate the complete result before publication;
+3. admit installed optional-mod templates by capability and exact template presence without making any third-party mod mandatory;
+4. fail explicitly and recoverably during catalogue loading, generation, validation or publication, while leaving final quest reward delivery to the native SPT lifecycle.
+
+Generation must support a deterministic seed for tests. Missing optional templates are omitted individually; they never erase a valid core pool or produce an empty reward silently. A generated bundle is published only after role, duplicate-function, compatibility and value-budget validation succeeds. Admiral must not maintain a second profile-progress or reward-claim store.
+
+ISB Aishi and Weekend Drops are research donors for implementation patterns only. Their traders, factions, stories, text, assets, permanent IDs and profile data are excluded. The detailed audit and accepted implementation boundary are recorded in `docs/reward-bundle-donor-audit.md`.
