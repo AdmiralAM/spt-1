@@ -50,12 +50,14 @@ namespace SPTItemIntelligence
                 Type senseClass = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseClass", false);
                 MethodInfo setSense = FindMethod(itemType, "SetSense", 1);
                 MethodInfo setContainerSense = FindMethod(containerType, "SetSense", 1);
+                MethodInfo updateContainerSense = FindMethod(containerType, "UpdateSense", 0);
                 MethodInfo remove = FindMethod(itemType, "RemoveLootItem", 1);
                 MethodInfo clear = FindMethod(senseClass, "Clear", 0);
-                if (setSense == null || setContainerSense == null || remove == null || clear == null)
+                if (setSense == null || setContainerSense == null || updateContainerSense == null || remove == null || clear == null)
                 {
                     if (logWarning != null) logWarning("Item Intelligence Sense bridge unavailable: Item.SetSense=" + (setSense != null) +
-                        ", Container.SetSense=" + (setContainerSense != null) + ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
+                        ", Container.SetSense=" + (setContainerSense != null) + ", Container.UpdateSense=" + (updateContainerSense != null) +
+                        ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
                     return false;
                 }
 
@@ -68,6 +70,7 @@ namespace SPTItemIntelligence
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 Patch(patch, hmCtor, setSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 Patch(patch, hmCtor, setContainerSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
+                Patch(patch, hmCtor, updateContainerSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(ContainerUpdatePostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 Patch(patch, hmCtor, remove, typeof(AmandsSenseIntegration).GetMethod(nameof(RemovePrefix), BindingFlags.Static | BindingFlags.NonPublic), null);
                 Patch(patch, hmCtor, clear, null, typeof(AmandsSenseIntegration).GetMethod(nameof(ClearPostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 active = this;
@@ -84,6 +87,7 @@ namespace SPTItemIntelligence
         }
 
         static void SetSensePostfix(object __instance) { AmandsSenseIntegration value = active; if (value != null) value.Apply(__instance); }
+        static void ContainerUpdatePostfix(object __instance) { AmandsSenseIntegration value = active; if (value != null) value.ApplyContainerNameScale(__instance); }
         static void RemovePrefix(object __instance, object __0) { AmandsSenseIntegration value = active; if (value != null) value.RecordPickup(__instance, __0); }
         static void ClearPostfix() { AmandsSenseIntegration value = active; if (value != null) value.ResetRaid(); }
 
@@ -136,6 +140,7 @@ namespace SPTItemIntelligence
                 if (evaluationCache.Count >= 512) evaluationCache.Clear();
                 evaluationCache[senseItem] = new SenseEvaluationCache(index, ledger.Revision, settings.Revision, policy, isContainer);
             }
+            if (isContainer) ApplyContainerNameScale(senseItem);
             if (!policy.HasItemIntelligence) return;
 
             Color primary = settings.GetSenseColor(policy.Category);
@@ -411,6 +416,14 @@ namespace SPTItemIntelligence
                    string.Equals(text, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase) ||
                    Number(status, -1) == 1;
+        }
+
+        void ApplyContainerNameScale(object senseItem)
+        {
+            if (!settings.SenseIntegration) return;
+            object nameText = Member(senseItem, "nameText");
+            if (nameText == null) return;
+            SetMember(nameText, "fontSize", settings.SenseContainerNameScale);
         }
 
         static object Member(object source, params string[] names)

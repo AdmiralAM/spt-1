@@ -22,9 +22,15 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "the adapter discovers the installed Sense runtime without a compile-time type dependency", ref assertions);
         Expect(adapter.Contains("FindMethod(itemType, \"SetSense\", 1)") &&
                adapter.Contains("FindMethod(containerType, \"SetSense\", 1)") &&
+               adapter.Contains("FindMethod(containerType, \"UpdateSense\", 0)") &&
                adapter.Contains("FindMethod(itemType, \"RemoveLootItem\", 1)") &&
                adapter.Contains("FindMethod(senseClass, \"Clear\", 0)"),
             "bounded lifecycle hooks cover presentation, pickup/drop and raid reset", ref assertions);
+        Expect(settings.Contains("config.Bind(\"Amands Sense\", \"Container Name Scale\", 0.86f") &&
+               adapter.Contains("ContainerUpdatePostfix") &&
+               adapter.Contains("ApplyContainerNameScale(senseItem)") &&
+               adapter.Contains("SetMember(nameText, \"fontSize\", settings.SenseContainerNameScale)"),
+            "only the native Sense container-name line receives the bounded smaller type size", ref assertions);
         Expect(adapter.Contains("!settings.SenseIntegration || !settings.SenseRequiredItems") &&
                plugin.Contains("senseIntegration.Dispose();"),
             "disabled integration exits immediately and removes its runtime patches", ref assertions);
