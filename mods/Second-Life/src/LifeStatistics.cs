@@ -45,20 +45,24 @@ namespace Admiral.SecondLife
         public LifeStatisticsSnapshot FirstLife { get; }
         public LifeStatisticsSnapshot SecondLife { get; }
 
-        public static LifeStatisticsReport Separate(LifeStatisticsSnapshot firstLife, LifeStatisticsSnapshot finalSnapshot)
+        public static LifeStatisticsReport Separate(
+            LifeStatisticsSnapshot firstLife,
+            LifeStatisticsSnapshot secondLifeStart,
+            LifeStatisticsSnapshot finalSnapshot)
         {
             if (firstLife == null) throw new ArgumentNullException(nameof(firstLife));
+            if (secondLifeStart == null) throw new ArgumentNullException(nameof(secondLifeStart));
             if (finalSnapshot == null) throw new ArgumentNullException(nameof(finalSnapshot));
 
-            bool killsAreCumulative = finalSnapshot.Kills.Count >= firstLife.Kills.Count &&
-                firstLife.Kills.Select(kill => kill.Identity)
-                    .SequenceEqual(finalSnapshot.Kills.Take(firstLife.Kills.Count).Select(kill => kill.Identity), StringComparer.Ordinal);
+            bool killsContainBaseline = finalSnapshot.Kills.Count >= secondLifeStart.Kills.Count &&
+                secondLifeStart.Kills.Select(kill => kill.Identity)
+                    .SequenceEqual(finalSnapshot.Kills.Take(secondLifeStart.Kills.Count).Select(kill => kill.Identity), StringComparer.Ordinal);
 
-            IReadOnlyList<LifeKill> secondKills = killsAreCumulative
-                ? finalSnapshot.Kills.Skip(firstLife.Kills.Count).ToArray()
+            IReadOnlyList<LifeKill> secondKills = killsContainBaseline
+                ? finalSnapshot.Kills.Skip(secondLifeStart.Kills.Count).ToArray()
                 : finalSnapshot.Kills.ToArray();
-            int secondExperience = finalSnapshot.Experience >= firstLife.Experience
-                ? finalSnapshot.Experience - firstLife.Experience
+            int secondExperience = finalSnapshot.Experience >= secondLifeStart.Experience
+                ? finalSnapshot.Experience - secondLifeStart.Experience
                 : finalSnapshot.Experience;
 
             return new LifeStatisticsReport(

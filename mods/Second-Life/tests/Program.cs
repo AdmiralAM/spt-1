@@ -289,15 +289,18 @@ var cumulativeStats = new LifeStatisticsSnapshot(2100, new[]
     new LifeKill("kill-b", "Scav B", "Glock 17", "Thorax", 18f),
     new LifeKill("kill-c", "PMC", "Glock 17", "Head", 31f)
 });
-LifeStatisticsReport separatedStats = LifeStatisticsReport.Separate(firstLifeStats, cumulativeStats);
+LifeStatisticsReport separatedStats = LifeStatisticsReport.Separate(firstLifeStats, firstLifeStats, cumulativeStats);
 Expect(separatedStats.FirstLife.Experience == 1250 && separatedStats.FirstLife.Kills.Count == 2, "first-life statistics remain intact");
 Expect(separatedStats.SecondLife.Experience == 850 && separatedStats.SecondLife.Kills.Single().Identity == "kill-c", "cumulative native statistics are separated into second-life deltas");
 var resetStats = new LifeStatisticsSnapshot(600, new[] { new LifeKill("kill-d", "Scav C", "Makarov", "Stomach", 9f) });
-LifeStatisticsReport separatedResetStats = LifeStatisticsReport.Separate(firstLifeStats, resetStats);
+LifeStatisticsReport separatedResetStats = LifeStatisticsReport.Separate(firstLifeStats, new LifeStatisticsSnapshot(0, Array.Empty<LifeKill>()), resetStats);
 Expect(separatedResetStats.SecondLife.Experience == 600 && separatedResetStats.SecondLife.Kills.Single().Identity == "kill-d", "reset replacement-player statistics remain a complete second-life snapshot");
 var mixedStats = new LifeStatisticsSnapshot(600, cumulativeStats.Kills);
-LifeStatisticsReport separatedMixedStats = LifeStatisticsReport.Separate(firstLifeStats, mixedStats);
+LifeStatisticsReport separatedMixedStats = LifeStatisticsReport.Separate(firstLifeStats, new LifeStatisticsSnapshot(0, firstLifeStats.Kills), mixedStats);
 Expect(separatedMixedStats.SecondLife.Experience == 600 && separatedMixedStats.SecondLife.Kills.Single().Identity == "kill-c", "kill and experience reset behavior are separated independently");
+var higherSecondLife = new LifeStatisticsSnapshot(2600, cumulativeStats.Kills);
+LifeStatisticsReport separatedHigherSecondLife = LifeStatisticsReport.Separate(firstLifeStats, firstLifeStats, higherSecondLife);
+Expect(separatedHigherSecondLife.SecondLife.Experience == 1350, "second-life experience is measured from its captured baseline even when it exceeds first-life experience");
 
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 

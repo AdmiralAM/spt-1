@@ -11,6 +11,7 @@ namespace Admiral.SecondLife.Client
     internal sealed class RuntimeLifeStatistics
     {
         LifeStatisticsSnapshot firstLife;
+        LifeStatisticsSnapshot secondLifeStart;
         bool finalReportStarted;
         bool finalReportCompleted;
 
@@ -19,8 +20,16 @@ namespace Admiral.SecondLife.Client
         internal void Reset()
         {
             firstLife = null;
+            secondLifeStart = null;
             finalReportStarted = false;
             finalReportCompleted = false;
+        }
+
+        internal void CaptureSecondLifeStart(object player, Action<string> trace)
+        {
+            if (firstLife == null || secondLifeStart != null || player == null) return;
+            secondLifeStart = Capture(player);
+            trace?.Invoke($"Recovery statistics: captured second-life baseline, xp={secondLifeStart.Experience}, kills={secondLifeStart.Kills.Count}.");
         }
 
         internal void CaptureFirstLife(object player, Action<string> trace)
@@ -32,7 +41,7 @@ namespace Admiral.SecondLife.Client
 
         internal bool TryBeginFinalReport()
         {
-            if (firstLife == null || finalReportStarted) return false;
+            if (firstLife == null || secondLifeStart == null || finalReportStarted) return false;
             finalReportStarted = true;
             return true;
         }
@@ -42,8 +51,8 @@ namespace Admiral.SecondLife.Client
             failure = null;
             try
             {
-                if (firstLife == null) return Fail("first-life snapshot is unavailable", out failure);
-                LifeStatisticsReport report = LifeStatisticsReport.Separate(firstLife, Capture(player));
+                if (firstLife == null || secondLifeStart == null) return Fail("life-statistics snapshots are unavailable", out failure);
+                LifeStatisticsReport report = LifeStatisticsReport.Separate(firstLife, secondLifeStart, Capture(player));
                 Type contextType = FindType("EFT.UI.ItemUiContext");
                 object context = contextType?.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)?.GetValue(null, null);
                 MethodInfo show = contextType?.GetMethods(BindingFlags.Instance | BindingFlags.Public)

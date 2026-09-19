@@ -231,14 +231,21 @@ namespace Admiral.SecondLife.Client
 
         async void OfferFinalStatisticsAfterInput(object localGame)
         {
-            await WaitForNeutralInput();
-            object player = runtimeContract?.LocalPlayer?.GetValue(localGame);
-            if (lifeStatistics.TryShow(player, () => ResumeNativeFinalization(localGame), out string failure))
+            try
             {
-                logInfo?.Invoke("Recovery statistics: showing separate first-life and second-life report.");
-                return;
+                await WaitForNeutralInput();
+                object player = runtimeContract?.LocalPlayer?.GetValue(localGame);
+                if (lifeStatistics.TryShow(player, () => ResumeNativeFinalization(localGame), out string failure))
+                {
+                    logInfo?.Invoke("Recovery statistics: showing separate first-life and second-life report.");
+                    return;
+                }
+                logWarning?.Invoke("Recovery statistics unavailable; continuing native finalization: " + failure);
             }
-            logWarning?.Invoke("Recovery statistics unavailable; continuing native finalization: " + failure);
+            catch (Exception exception)
+            {
+                logWarning?.Invoke("Recovery statistics failed before display; continuing native finalization: " + (exception.InnerException?.Message ?? exception.Message));
+            }
             lifeStatistics.CompleteFinalReport();
             ResumeNativeFinalization(localGame);
         }
@@ -324,9 +331,11 @@ namespace Admiral.SecondLife.Client
             }
 
             int neutralSamples = 0;
-            while (neutralSamples < 5)
+            for (int sample = 0; sample < 40 && neutralSamples < 5; sample++)
             {
-                bool pressed = anyKey.GetValue(null, null) is bool value && value;
+                bool pressed;
+                try { pressed = anyKey.GetValue(null, null) is bool value && value; }
+                catch { return; }
                 neutralSamples = pressed ? 0 : neutralSamples + 1;
                 await Task.Delay(50);
             }
@@ -339,6 +348,7 @@ namespace Admiral.SecondLife.Client
                 recoveryRootId => finalizationGate.ConfirmRecovery(recoveryRootId),
                 recoveryRootId =>
                 {
+                    lifeStatistics.CaptureSecondLifeStart(runtimeContract?.LocalPlayer?.GetValue(localGame), logInfo);
                     logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ", emergency armament=" + (plan.HasEmergencyArmament ? "owned pistol plus spare magazine" : "unarmed; no complete stash set") + ".");
                 },
                 exception =>
