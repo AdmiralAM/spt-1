@@ -13,7 +13,7 @@ internal static class AdmiralTraderGameplayAlphaSmoke
         {"schemaVersion":3,"product":"Admiral Trader","traderId":"d5c27bb3169f8dfbc13f6b69"}
         """;
         const string traderBase = """
-        {"_id":"d5c27bb3169f8dfbc13f6b69","name":"Admiral","nickname":"Admiral","avatar":"/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg","loyaltyLevels":[{"minLevel":1,"minSalesSum":0,"minStanding":0},{"minLevel":15,"minSalesSum":0,"minStanding":0.1},{"minLevel":25,"minSalesSum":0,"minStanding":0.3},{"minLevel":35,"minSalesSum":0,"minStanding":0.55}]}
+        {"_id":"d5c27bb3169f8dfbc13f6b69","name":"Admiral","nickname":"Admiral","avatar":"/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg","loyaltyLevels":[{"minLevel":1,"minSalesSum":0,"minStanding":0},{"minLevel":15,"minSalesSum":500000,"minStanding":0.1},{"minLevel":25,"minSalesSum":1200000,"minStanding":0.3},{"minLevel":35,"minSalesSum":2200000,"minStanding":0.55}]}
         """;
         const string policy = """
         {"schemaVersion":4,"productRole":"specialist-trader-and-capability-broker","traderStock":{"baselineStockRequired":true,"baselineOffersMustBeQuestGated":false,"baselineOffersMustBeFinite":true,"relationshipStockAllowed":true,"milestoneOffersMayBeQuestGated":true,"milestoneOffersMustBeFinite":true},"logistics":{"expectedMilestonePermanentOfferCount":1,"maximumPermanentOfferStockPerReset":80,"milestoneOffersMustBeQuestGated":true,"offersMustBeFinite":true,"specialWeaponsPermanentOfferAllowed":false,"specialWeaponsSampleOnly":true}}
@@ -22,7 +22,7 @@ internal static class AdmiralTraderGameplayAlphaSmoke
         {"schemaVersion":1,"stockClass":"Baseline","offers":[{"offerId":"base1","tpl":"tpl-base","stockPerReset":4,"buyRestriction":1,"loyaltyLevel":1,"questGate":null}]}
         """;
         const string relationship = """
-        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":false,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":true},"offers":[{"offerId":"rel1","tpl":"tpl-rel","loyaltyLevel":3,"stockPerReset":4,"buyRestriction":2,"questGate":null}]}
+        {"schemaVersion":1,"stockClass":"Relationship","authority":{"salesSumGateAllowed":true,"questGateAllowed":false,"capabilityAuthority":false,"finiteStockRequired":true},"materialization":{"enabled":true},"offers":[{"offerId":"rel1","tpl":"tpl-rel","loyaltyLevel":3,"stockPerReset":4,"buyRestriction":2,"questGate":null}]}
         """;
         const string assort = """
         {"items":[{"_id":"base1","_tpl":"tpl-base","upd":{"UnlimitedCount":false,"StackObjectsCount":4,"BuyRestrictionMax":1}},{"_id":"rel1","_tpl":"tpl-rel","upd":{"UnlimitedCount":false,"StackObjectsCount":4,"BuyRestrictionMax":2}},{"_id":"mile1","_tpl":"tpl-mile","upd":{"UnlimitedCount":false,"StackObjectsCount":10,"BuyRestrictionMax":2}}],"loyal_level_items":{"base1":1,"rel1":3,"mile1":1}}

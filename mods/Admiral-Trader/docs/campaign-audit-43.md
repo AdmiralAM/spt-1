@@ -1,6 +1,6 @@
-# Admiral Trader: authoritative 43-quest campaign audit
+# Admiral Trader: historical 43-quest campaign audit
 
-> Current audit snapshot: branch `feature/admiral-trader-canonical-milestones`, runtime baseline SPT 4.1.5, 43 committed quest templates. The four campaign corrections remain materialized, and M5 now adds relationship progression through the existing Admiral loyalty and assortment systems. Quest IDs, prerequisites, graph shape, runtime architecture and frozen 0.1.0 authority remain unchanged.
+> Historical M5 snapshot retained for identity and migration provenance. It is superseded as current campaign authority by `campaign-audit-172.md`.
 
 ## Executive findings
 

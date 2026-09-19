@@ -97,5 +97,53 @@
     "Container rewards consume the milestone special-reward budget and must replace other high-value generic rewards rather than stack with them.",
     "High-end ammunition quantity is never justified solely by difficulty; capability access is expressed primarily through controlled unlocks.",
     "Trader standing above normal vanilla bands requires explicit campaign rationale and must not be used as filler reward."
-  ]
+  ],
+  "runtimeNormalization": {
+    "scope": "172 core quests plus 10 optional Icebreaker quests",
+    "ordinaryFreeItemHandbookCeilingRub": 170600,
+    "storyFinaleUnlockCount": 10,
+    "storyFinaleFreeItemCount": 1,
+    "containerUnlockRule": "A quest-gated container may be purchased at approximately handbook value; the quest does not also award that container for free.",
+    "exceptionalFinale": {
+      "questId": "680c47f4c9a0e7b884a95908",
+      "reason": "Level-47 finale of the tenth ten-part investigation; one Labs access card sample and its finite purchase unlock replace the unusable classified quest-folder reward."
+    },
+    "optionalExceptionalFinale": {
+      "questId": "9e9a2e84abbe66b87ff5075a",
+      "reason": "Level-39 finale of the optional ten-part Icebreaker expedition; one moonshine bottle accompanies the final cash reward after the full high-risk map chain and creates no permanent unlock or repeatable source."
+    },
+    "removedFreeHighValueTemplates": [
+      "619cbf7d23893217ec30b689",
+      "591094e086f7747caa7bb2ef",
+      "5d1b5e94d7ad1a2b865a96b0",
+      "5d03794386f77420415576f5"
+    ],
+    "reviewedHighRewardQuests": [
+      {
+        "questId": "68a6527a3c73b2e85977d7a1",
+        "decision": "retain",
+        "reason": "Level-35 finale of the complete ten-step access chain; the retained-card possession check does not consume rare cards and the payout represents the whole access progression milestone."
+      },
+      {
+        "questId": "4072a5e458946a243b886ad8",
+        "decision": "retain",
+        "reason": "Level-37 operation requires four Lighthouse Rogues and survival in one raid; the high cash row compensates the concentrated combat and reset risk."
+      },
+      {
+        "questId": "786ce2de2cee30f3128aa04c",
+        "decision": "retain",
+        "reason": "Level-44 deep-Labs placement in the eighth step of the final chain; access cost and survival exposure justify the upper-quartile XP while cash and standing remain controlled."
+      },
+      {
+        "questId": "c50d2ca0deca83e99e3d0d4a",
+        "decision": "retain",
+        "reason": "Level-46 Labs retrieval requires a quest item, handover and survival in the same raid immediately before the campaign finale."
+      },
+      {
+        "questId": "680c47f4c9a0e7b884a95908",
+        "decision": "retain",
+        "reason": "Level-47 ten-chain campaign finale; its finite signature preset and Labs-card access unlock are deliberate endgame rewards, and neither creates a repeatable faucet."
+      }
+    ]
+  }
 }

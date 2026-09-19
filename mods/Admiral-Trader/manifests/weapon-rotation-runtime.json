@@ -1,0 +1,613 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "weaponQuestCount": 40,
+  "laneCounts": {
+    "A": 20,
+    "B": 20
+  },
+  "maximumConcurrentWeaponAssignments": 2,
+  "stableQuestIdsRetained": true,
+  "assignments": [
+    {
+      "id": "738588764e9531bdb8ccfc5f",
+      "lane": "A",
+      "order": 1,
+      "pool": "service-pistols",
+      "levelBand": "1-7",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Factory"
+      ],
+      "semantics": "ordinary eliminations",
+      "nativeWeaponCount": 6,
+      "optionalWeaponCount": 11
+    },
+    {
+      "id": "7ec59fd018a4332dc9cc598e",
+      "lane": "A",
+      "order": 2,
+      "pool": "compact-ak",
+      "levelBand": "5-11",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Woods"
+      ],
+      "semantics": "ordinary eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 2
+    },
+    {
+      "id": "3ccca027eeebaf0a4dcfbb6f",
+      "lane": "A",
+      "order": 3,
+      "pool": "manual-shotguns",
+      "levelBand": "7-13",
+      "locations": [
+        "Customs",
+        "Factory",
+        "Woods"
+      ],
+      "semantics": "close-range eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 1
+    },
+    {
+      "id": "9a2efe4c869cd41beb667e29",
+      "lane": "A",
+      "order": 4,
+      "pool": "early-smg",
+      "levelBand": "9-15",
+      "locations": [
+        "Customs",
+        "Factory",
+        "Interchange"
+      ],
+      "semantics": "Scav eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "5c7e60f203900e75aba3edc0",
+      "lane": "A",
+      "order": 5,
+      "pool": "forty-five-pistols",
+      "levelBand": "11-17",
+      "locations": [
+        "Customs",
+        "Shoreline",
+        "Interchange"
+      ],
+      "semantics": "PMC eliminations across raids",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 1
+    },
+    {
+      "id": "9620e5a3c17b30599df67730",
+      "lane": "A",
+      "order": 6,
+      "pool": "service-smg",
+      "levelBand": "13-19",
+      "locations": [
+        "Factory",
+        "Interchange",
+        "Streets"
+      ],
+      "semantics": "survive after eliminations",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 2
+    },
+    {
+      "id": "de92651782ad58fce6457af9",
+      "lane": "A",
+      "order": 7,
+      "pool": "automatic-pistols",
+      "levelBand": "15-21",
+      "locations": [
+        "Factory",
+        "Streets",
+        "Interchange"
+      ],
+      "semantics": "close-range PMC eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "8722d67f966ff1605393222a",
+      "lane": "A",
+      "order": 8,
+      "pool": "compact-pdw",
+      "levelBand": "17-23",
+      "locations": [
+        "Factory",
+        "Reserve",
+        "Streets"
+      ],
+      "semantics": "mixed-faction eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "d7f67e37b0c244878aa685e0",
+      "lane": "A",
+      "order": 9,
+      "pool": "autoloading-shotguns",
+      "levelBand": "19-25",
+      "locations": [
+        "Shoreline",
+        "Interchange",
+        "Streets"
+      ],
+      "semantics": "eliminations with one survived raid",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 2
+    },
+    {
+      "id": "a006fa3e96a9c967eda0f716",
+      "lane": "A",
+      "order": 10,
+      "pool": "modern-smg",
+      "levelBand": "21-27",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "suppressed eliminations",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 1
+    },
+    {
+      "id": "b016df9d2bea4269cc59d531",
+      "lane": "A",
+      "order": 11,
+      "pool": "high-velocity-pistols",
+      "levelBand": "23-29",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "armored-target eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "43d9544a09d068476a1a18df",
+      "lane": "A",
+      "order": 12,
+      "pool": "special-pdw",
+      "levelBand": "25-31",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "PMC eliminations across raids",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "8d8d81032315f4fdc5a06798",
+      "lane": "A",
+      "order": 13,
+      "pool": "unusual-shotguns",
+      "levelBand": "27-33",
+      "locations": [
+        "Customs",
+        "Shoreline",
+        "Streets"
+      ],
+      "semantics": "handling trial with survival",
+      "nativeWeaponCount": 6,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "8cba3e2ec639a4aa2c26c4da",
+      "lane": "A",
+      "order": 14,
+      "pool": "magnum-sidearms",
+      "levelBand": "29-35",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "high-risk close eliminations",
+      "nativeWeaponCount": 7,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "59ca4829e098dfafa03888d2",
+      "lane": "A",
+      "order": 15,
+      "pool": "suppressed-sidearms",
+      "levelBand": "31-37",
+      "locations": [
+        "Shoreline",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "night suppressed eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "cb8a202d7107f39d860ccb38",
+      "lane": "A",
+      "order": 16,
+      "pool": "light-machine-guns",
+      "levelBand": "33-39",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "sustained mixed-faction eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "73febe7f3f61ca0913410ffc",
+      "lane": "A",
+      "order": 17,
+      "pool": "general-machine-guns",
+      "levelBand": "35-41",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "elite-faction eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "f1368cb3b69c3a4917c4f206",
+      "lane": "A",
+      "order": 18,
+      "pool": "grenade-launchers",
+      "levelBand": "37-43",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "small controlled elimination count",
+      "nativeWeaponCount": 2,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "88118e994f26cab3bee1521d",
+      "lane": "A",
+      "order": 19,
+      "pool": "close-mastery",
+      "levelBand": "40+",
+      "locations": [
+        "Factory",
+        "Streets",
+        "The Lab"
+      ],
+      "semantics": "one-raid close mastery",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "5f62a924076e4b7c2320f2e8",
+      "lane": "A",
+      "order": 20,
+      "pool": "support-mastery",
+      "levelBand": "40+",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "late support mastery",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "eb93814dd020bdc131d526aa",
+      "lane": "B",
+      "order": 1,
+      "pool": "starter-service-rifles",
+      "levelBand": "1-7",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Woods"
+      ],
+      "semantics": "ordinary eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 5
+    },
+    {
+      "id": "551415adc72a84fa9e6bb571",
+      "lane": "B",
+      "order": 2,
+      "pool": "civilian-ak",
+      "levelBand": "5-11",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Woods"
+      ],
+      "semantics": "Scav eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "96ef708ef07d2b7bd8214653",
+      "lane": "B",
+      "order": 3,
+      "pool": "compact-rifles",
+      "levelBand": "7-13",
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Interchange"
+      ],
+      "semantics": "close-to-medium eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 1
+    },
+    {
+      "id": "5a9a0bb3ffddd538e6fe3842",
+      "lane": "B",
+      "order": 4,
+      "pool": "sks-hunter",
+      "levelBand": "9-15",
+      "locations": [
+        "Customs",
+        "Woods",
+        "Shoreline"
+      ],
+      "semantics": "medium-range eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "b15dc178e2982874350db164",
+      "lane": "B",
+      "order": 5,
+      "pool": "classic-ak-545",
+      "levelBand": "11-17",
+      "locations": [
+        "Customs",
+        "Woods",
+        "Shoreline"
+      ],
+      "semantics": "survive after eliminations",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "5d3a863ab1f890166c5d96ff",
+      "lane": "B",
+      "order": 6,
+      "pool": "classic-ak-762",
+      "levelBand": "13-19",
+      "locations": [
+        "Customs",
+        "Interchange",
+        "Shoreline"
+      ],
+      "semantics": "mixed-faction eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 2
+    },
+    {
+      "id": "80e2780458250c3aa00dbb35",
+      "lane": "B",
+      "order": 7,
+      "pool": "nato-service-rifles",
+      "levelBand": "15-21",
+      "locations": [
+        "Woods",
+        "Shoreline",
+        "Interchange"
+      ],
+      "semantics": "optic-assisted eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 15
+    },
+    {
+      "id": "fc14500bbc2900a04647083d",
+      "lane": "B",
+      "order": 8,
+      "pool": "nato-alternatives",
+      "levelBand": "17-23",
+      "locations": [
+        "Interchange",
+        "Reserve",
+        "Streets"
+      ],
+      "semantics": "PMC eliminations across raids",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 7
+    },
+    {
+      "id": "3def8dacb60f04f15fc2271d",
+      "lane": "B",
+      "order": 9,
+      "pool": "battle-rifles",
+      "levelBand": "19-25",
+      "locations": [
+        "Shoreline",
+        "Reserve",
+        "Lighthouse"
+      ],
+      "semantics": "full-power battle-rifle eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "7564e60e4c1c2f1b67a594a4",
+      "lane": "B",
+      "order": 10,
+      "pool": "nine-by-thirty-nine",
+      "levelBand": "21-27",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "suppressed eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "2568ee0bfe2ee12f24d78f45",
+      "lane": "B",
+      "order": 11,
+      "pool": "entry-dmr",
+      "levelBand": "23-29",
+      "locations": [
+        "Woods",
+        "Shoreline",
+        "Lighthouse"
+      ],
+      "semantics": "distance eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "33810921ad5c893b866b3951",
+      "lane": "B",
+      "order": 12,
+      "pool": "service-dmr",
+      "levelBand": "25-31",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "PMC distance eliminations",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "a0d05e28971f1ba57639b97d",
+      "lane": "B",
+      "order": 13,
+      "pool": "entry-bolt-action",
+      "levelBand": "27-33",
+      "locations": [
+        "Woods",
+        "Shoreline",
+        "Lighthouse"
+      ],
+      "semantics": "precision eliminations across raids",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "153839f368b80b6fbc36d29e",
+      "lane": "B",
+      "order": 14,
+      "pool": "nato-bolt-action",
+      "levelBand": "29-35",
+      "locations": [
+        "Woods",
+        "Reserve",
+        "Lighthouse"
+      ],
+      "semantics": "long-range eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "cd2641c70bede98dac3945d0",
+      "lane": "B",
+      "order": 15,
+      "pool": "magnum-precision",
+      "levelBand": "31-37",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "small high-value target count",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "f6e51dc4e50e47ee9af50a4d",
+      "lane": "B",
+      "order": 16,
+      "pool": "advanced-intermediate",
+      "levelBand": "33-39",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "mixed-distance PMC eliminations",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "4ada822d634041a721b346d5",
+      "lane": "B",
+      "order": 17,
+      "pool": "heavy-special-rifles",
+      "levelBand": "35-41",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "elite-faction eliminations",
+      "nativeWeaponCount": 3,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "570d250679328757614dcbcb",
+      "lane": "B",
+      "order": 18,
+      "pool": "modern-ak",
+      "levelBand": "37-43",
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ],
+      "semantics": "controlled fire with survival",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "ffb63228a333c8b0755741ea",
+      "lane": "B",
+      "order": 19,
+      "pool": "western-bullpup-modular",
+      "levelBand": "40+",
+      "locations": [
+        "Lighthouse",
+        "Streets",
+        "The Lab"
+      ],
+      "semantics": "one-raid modular-rifle mastery",
+      "nativeWeaponCount": 5,
+      "optionalWeaponCount": 0
+    },
+    {
+      "id": "ad9233f54a7132d905d6f29d",
+      "lane": "B",
+      "order": 20,
+      "pool": "precision-mastery",
+      "levelBand": "40+",
+      "locations": [
+        "Woods",
+        "Lighthouse",
+        "The Lab"
+      ],
+      "semantics": "late precision mastery",
+      "nativeWeaponCount": 4,
+      "optionalWeaponCount": 0
+    }
+  ]
+}

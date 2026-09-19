@@ -4,199 +4,199 @@
   "questCount": 43,
   "quests": {
     "5d404ebd654de4efecef71d2": {
-      "questName": "Access Protocol: Fundamentals",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u041e\u0441\u043d\u043e\u0432\u044b",
       "finishConditionIds": [
         "6f1312f5476c9a65eb582852"
       ]
     },
     "1b92e4cf212d895be4f70b2c": {
-      "questName": "Access Protocol: Factory",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0417\u0430\u0432\u043e\u0434",
       "finishConditionIds": [
         "686d8ecb6398102461164f35"
       ]
     },
     "cba3374f11375c4e7eea9efe": {
-      "questName": "Access Protocol: Customs",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0422\u0430\u043c\u043e\u0436\u043d\u044f",
       "finishConditionIds": [
         "487eb052e8d42c0af1d6da22"
       ]
     },
     "80c11744c2310e1bfe160a8b": {
-      "questName": "Access Protocol: Woods",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u041b\u0435\u0441",
       "finishConditionIds": [
         "a2b0e47fa77de4b540401d20"
       ]
     },
     "42ff30bc152b8212dc15b20a": {
-      "questName": "Access Protocol: Interchange",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430",
       "finishConditionIds": [
         "d81726267419b7468ca78184"
       ]
     },
     "d737e3b990c371708db369f0": {
-      "questName": "Access Protocol: Shoreline",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0411\u0435\u0440\u0435\u0433",
       "finishConditionIds": [
         "53e45250b01cd1b0e28cd476"
       ]
     },
     "9c438fa48f645044ddc75e8d": {
-      "questName": "Access Protocol: Reserve",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0420\u0435\u0437\u0435\u0440\u0432",
       "finishConditionIds": [
         "fd78d0034ef438a50d57bde7"
       ]
     },
     "59a36c5ee68210f9154d94d0": {
-      "questName": "Access Protocol: Lighthouse",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u041c\u0430\u044f\u043a",
       "finishConditionIds": [
         "7a6e134edb720933c4beb7ad"
       ]
     },
     "a8b05eb5c5f0e67ee881df52": {
-      "questName": "Access Protocol: Laboratory",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u0438\u044f",
       "finishConditionIds": [
         "fd5539a38fc34100a0fba6b7"
       ]
     },
     "68a6527a3c73b2e85977d7a1": {
-      "questName": "Access Protocol: Clearance",
+      "questName": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0434\u043e\u0441\u0442\u0443\u043f\u0430: \u0414\u043e\u043f\u0443\u0441\u043a",
       "finishConditionIds": [
         "5da6f0a37e5f24fed22d04f5"
       ]
     },
     "153839f368b80b6fbc36d29e": {
-      "questName": "Arsenal Protocol: Precision Rifles - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-14: \u0412\u0438\u043d\u0442\u043e\u0432\u043a\u0438 \u041d\u0410\u0422\u041e \u0441 \u043f\u0440\u043e\u0434\u043e\u043b\u044c\u043d\u043e-\u0441\u043a\u043e\u043b\u044c\u0437\u044f\u0449\u0438\u043c \u0437\u0430\u0442\u0432\u043e\u0440\u043e\u043c",
       "finishConditionIds": [
         "d30d20c597a522979a066460"
       ]
     },
     "2568ee0bfe2ee12f24d78f45": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-11: \u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0435 \u043c\u0430\u0440\u043a\u0441\u043c\u0430\u043d\u0441\u043a\u0438\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438",
       "finishConditionIds": [
         "fe8911621fabb421e6bce908"
       ]
     },
     "33810921ad5c893b866b3951": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-12: \u0421\u043b\u0443\u0436\u0435\u0431\u043d\u044b\u0435 \u043c\u0430\u0440\u043a\u0441\u043c\u0430\u043d\u0441\u043a\u0438\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438",
       "finishConditionIds": [
         "a21d4a93c1baef8fe71bb113"
       ]
     },
     "43d9544a09d068476a1a18df": {
-      "questName": "Arsenal Protocol: SMG / PDW - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-12: \u0421\u043f\u0435\u0446\u0438\u0430\u043b\u044c\u043d\u043e\u0435 \u043e\u0440\u0443\u0436\u0438\u0435 \u0441\u0430\u043c\u043e\u043e\u0431\u043e\u0440\u043e\u043d\u044b",
       "finishConditionIds": [
         "4aa61c5706270f44dcc264b2"
       ]
     },
     "4ada822d634041a721b346d5": {
-      "questName": "Arsenal Protocol: Assault Rifles - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-17: \u0422\u044f\u0436\u0451\u043b\u044b\u0435 \u0441\u043f\u0435\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438",
       "finishConditionIds": [
         "faa4624ecbb79343c8400c2a"
       ]
     },
     "570d250679328757614dcbcb": {
-      "questName": "Arsenal Protocol: Assault Rifles - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-18: \u0421\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u044b \u041a\u0430\u043b\u0430\u0448\u043d\u0438\u043a\u043e\u0432\u0430",
       "finishConditionIds": [
         "b556f68e6bd564065c405be8"
       ]
     },
     "59ca4829e098dfafa03888d2": {
-      "questName": "Arsenal Protocol: Sidearms - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-15: \u0411\u0435\u0441\u0448\u0443\u043c\u043d\u043e\u0435 \u043a\u043e\u0440\u043e\u0442\u043a\u043e\u0441\u0442\u0432\u043e\u043b\u044c\u043d\u043e\u0435 \u043e\u0440\u0443\u0436\u0438\u0435",
       "finishConditionIds": [
         "6b4875d80b04e43ce8aba265"
       ]
     },
     "5f62a924076e4b7c2320f2e8": {
-      "questName": "Arsenal Protocol: Shotguns - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-20: \u041c\u0430\u0441\u0442\u0435\u0440\u0441\u0442\u0432\u043e \u043e\u0440\u0443\u0436\u0438\u044f \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438",
       "finishConditionIds": [
         "52dda51c6632938b46e0ba34"
       ]
     },
     "73febe7f3f61ca0913410ffc": {
-      "questName": "Arsenal Protocol: Special Weapons - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-17: \u0415\u0434\u0438\u043d\u044b\u0435 \u043f\u0443\u043b\u0435\u043c\u0451\u0442\u044b",
       "finishConditionIds": [
         "da1541497f50cb43f92f7be8"
       ]
     },
     "7564e60e4c1c2f1b67a594a4": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-10: \u0421\u043f\u0435\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0435 \u0441\u0438\u0441\u0442\u0435\u043c\u044b 9\u00d739",
       "finishConditionIds": [
         "5b3f863bbdc829d3988964f1"
       ]
     },
     "88118e994f26cab3bee1521d": {
-      "questName": "Arsenal Protocol: Shotguns - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-19: \u041c\u0430\u0441\u0442\u0435\u0440\u0441\u0442\u0432\u043e \u0431\u043b\u0438\u0436\u043d\u0435\u0433\u043e \u0431\u043e\u044f",
       "finishConditionIds": [
         "01249763ca1a786874311b57"
       ]
     },
     "8cba3e2ec639a4aa2c26c4da": {
-      "questName": "Arsenal Protocol: Sidearms - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-14: \u041a\u0440\u0443\u043f\u043d\u043e\u043a\u0430\u043b\u0438\u0431\u0435\u0440\u043d\u043e\u0435 \u043a\u043e\u0440\u043e\u0442\u043a\u043e\u0441\u0442\u0432\u043e\u043b\u044c\u043d\u043e\u0435 \u043e\u0440\u0443\u0436\u0438\u0435",
       "finishConditionIds": [
         "bdf555e9736062fe9c9c265e"
       ]
     },
     "8d8d81032315f4fdc5a06798": {
-      "questName": "Arsenal Protocol: Shotguns - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-13: \u0421\u043f\u0435\u0446\u0438\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0434\u0440\u043e\u0431\u043e\u0432\u0438\u043a\u0438",
       "finishConditionIds": [
         "6bc5208b68a0dc2a41eefb80"
       ]
     },
     "a0d05e28971f1ba57639b97d": {
-      "questName": "Arsenal Protocol: Precision Rifles - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-13: \u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438 \u0441 \u043f\u0440\u043e\u0434\u043e\u043b\u044c\u043d\u043e-\u0441\u043a\u043e\u043b\u044c\u0437\u044f\u0449\u0438\u043c \u0437\u0430\u0442\u0432\u043e\u0440\u043e\u043c",
       "finishConditionIds": [
         "007e6c3eb1b9cf83ab0e235e"
       ]
     },
     "ad9233f54a7132d905d6f29d": {
-      "questName": "Arsenal Protocol: SMG / PDW - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-20: \u041c\u0430\u0441\u0442\u0435\u0440\u0441\u0442\u0432\u043e \u0442\u043e\u0447\u043d\u043e\u0439 \u0441\u0442\u0440\u0435\u043b\u044c\u0431\u044b",
       "finishConditionIds": [
         "cd22cfe6153adaeee7ae2d3a"
       ]
     },
     "b016df9d2bea4269cc59d531": {
-      "questName": "Arsenal Protocol: Sidearms - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-11: \u0412\u044b\u0441\u043e\u043a\u043e\u0441\u043a\u043e\u0440\u043e\u0441\u0442\u043d\u044b\u0435 \u043f\u0438\u0441\u0442\u043e\u043b\u0435\u0442\u044b",
       "finishConditionIds": [
         "ab61e9d13eea0b7f93d5c160"
       ]
     },
     "cb8a202d7107f39d860ccb38": {
-      "questName": "Arsenal Protocol: Special Weapons - Qualification",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-16: \u0420\u0443\u0447\u043d\u044b\u0435 \u043f\u0443\u043b\u0435\u043c\u0451\u0442\u044b",
       "finishConditionIds": [
         "1d8adadb81df57f4a4be83eb"
       ]
     },
     "cd2641c70bede98dac3945d0": {
-      "questName": "Arsenal Protocol: Precision Rifles - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-15: \u041a\u0440\u0443\u043f\u043d\u043e\u043a\u0430\u043b\u0438\u0431\u0435\u0440\u043d\u044b\u0435 \u0432\u044b\u0441\u043e\u043a\u043e\u0442\u043e\u0447\u043d\u044b\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438",
       "finishConditionIds": [
         "1461e863a341fc8bce2b225e"
       ]
     },
     "f1368cb3b69c3a4917c4f206": {
-      "questName": "Arsenal Protocol: Special Weapons - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb A-18: \u0413\u0440\u0430\u043d\u0430\u0442\u043e\u043c\u0451\u0442\u044b",
       "finishConditionIds": [
         "1d4ee68ca05784ae121e395e"
       ]
     },
     "f6e51dc4e50e47ee9af50a4d": {
-      "questName": "Arsenal Protocol: Assault Rifles - Munitions",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-16: \u0421\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u044b \u043f\u0440\u043e\u043c\u0435\u0436\u0443\u0442\u043e\u0447\u043d\u043e\u0433\u043e \u043a\u0430\u043b\u0438\u0431\u0440\u0430",
       "finishConditionIds": [
         "7674b35b55e8d3c6df54202f"
       ]
     },
     "ffb63228a333c8b0755741ea": {
-      "questName": "Arsenal Protocol: SMG / PDW - Fieldwork",
+      "questName": "\u0420\u043e\u0442\u0430\u0446\u0438\u044f \u00ab\u0410\u0440\u0441\u0435\u043d\u0430\u043b\u00bb B-19: \u041c\u043e\u0434\u0443\u043b\u044c\u043d\u044b\u0435 \u0432\u0438\u043d\u0442\u043e\u0432\u043a\u0438 \u0438 \u0431\u0443\u043b\u043b-\u043f\u0430\u043f\u044b",
       "finishConditionIds": [
         "54164d9db77aad7f7cb9ee9f"
       ]
     },
     "8dad0d354ac000b7bbf05b9a": {
-      "questName": "Acoustic Discipline",
+      "questName": "\u0410\u043a\u0443\u0441\u0442\u0438\u0447\u0435\u0441\u043a\u0430\u044f \u0434\u0438\u0441\u0446\u0438\u043f\u043b\u0438\u043d\u0430",
       "finishConditionIds": [
         "4aad9529573642ec30c9105c"
       ]
     },
     "56813681ae0690016376f163": {
-      "questName": "Forward Reserve",
+      "questName": "\u041f\u043e\u043b\u0435\u0432\u043e\u0439 \u0440\u0435\u0437\u0435\u0440\u0432",
       "finishConditionIds": [
         "d82d4ed891c929e0ba71488f",
         "00489f3d43ab4c05dce91e07",
@@ -204,73 +204,253 @@
       ]
     },
     "208db81b5ce195bf0c176852": {
-      "questName": "Low Profile",
+      "questName": "\u041d\u0438\u0437\u043a\u0438\u0439 \u043f\u0440\u043e\u0444\u0438\u043b\u044c",
       "finishConditionIds": [
         "96d629538203984d6a1ee835"
       ]
     },
     "6574a072f763d0b09a553401": {
-      "questName": "Mobility Doctrine",
+      "questName": "\u041c\u0430\u043d\u0451\u0432\u0440\u0435\u043d\u043d\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430",
       "finishConditionIds": [
         "1f59a3743e20869842a50162",
         "53de6446495ed86a6c2adaa1"
       ]
     },
     "8b6f2b25ab2e91e0540761e3": {
-      "questName": "Borrowed Access",
+      "questName": "\u0427\u0443\u0436\u043e\u0439 \u0434\u043e\u0441\u0442\u0443\u043f",
       "finishConditionIds": [
         "9dd34c17ab503c7bd7ea89aa",
         "6137c94c3ff44cf3413856be"
       ]
     },
     "41a41cb262ea084c1e110513": {
-      "questName": "Acoustic Contact",
+      "questName": "\u0410\u043a\u0443\u0441\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u043a\u043e\u043d\u0442\u0430\u043a\u0442",
       "finishConditionIds": [
         "060c9e16949fdda830dd9339",
         "e7a1dd9b3a542cc6eef2d7d8"
       ]
     },
     "133aa723b4695a3d93de92f1": {
-      "questName": "Route Security",
+      "questName": "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u043c\u0430\u0440\u0448\u0440\u0443\u0442",
       "finishConditionIds": [
         "d75e58abc206629b87f6dba9",
         "d4ee61abf4fb680435d98268"
       ]
     },
     "db220288bc8d5559a45feeb1": {
-      "questName": "Contractor Intercept",
+      "questName": "\u041f\u0435\u0440\u0435\u0445\u0432\u0430\u0442 \u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442\u043d\u0438\u043a\u043e\u0432",
       "finishConditionIds": [
         "7450986a44d2a76b79bdbb72",
         "39bade34f34f14db7d5e7fea"
       ]
     },
     "4c2cc3f85d60170907642d9e": {
-      "questName": "Observation Window",
+      "questName": "\u041e\u043a\u043d\u043e \u043d\u0430\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u044f",
       "finishConditionIds": [
         "bf98c6c0724a57ff24e02e03",
         "5a1b3bc77f42fa3f0bd3188f"
       ]
     },
     "b1b3d9e3a930a3eae47b2353": {
-      "questName": "Heavy Assault",
+      "questName": "\u0422\u044f\u0436\u0451\u043b\u044b\u0439 \u0448\u0442\u0443\u0440\u043c",
       "finishConditionIds": [
         "5cf677a3bbdbcd83519fc3d8",
         "06066e04699d7b6946044fc6"
       ]
     },
     "f62d8e1285027e336767513c": {
-      "questName": "Break the Perimeter",
+      "questName": "\u041f\u0440\u043e\u0440\u044b\u0432 \u043f\u0435\u0440\u0438\u043c\u0435\u0442\u0440\u0430",
       "finishConditionIds": [
         "d98b43cc7c2938a8233987c0",
         "be3636c5bae25c8a8c60c2cc"
       ]
     },
     "4072a5e458946a243b886ad8": {
-      "questName": "Internal Security",
+      "questName": "\u0412\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u044f\u044f \u043e\u0445\u0440\u0430\u043d\u0430",
       "finishConditionIds": [
         "7285e5a35357c79a8e84ef40",
         "df0727022013a5ad9aaea2ee"
       ]
     }
-  }
+  },
+  "equipmentObjectiveCount": 11,
+  "equipmentObjectives": [
+    {
+      "questId": "8dad0d354ac000b7bbf05b9a",
+      "conditionId": "4aad9529573642ec30c9105c",
+      "equipmentInclusive": [
+        [
+          "5b432b965acfc47a8774094e",
+          "5c165d832e2216398b5a7e36",
+          "5e4d34ca86f774264f758330",
+          "6033fa48ffd42c541047f728",
+          "628e4e576d783146b124c64d"
+        ]
+      ],
+      "en": "Woods: wear one of the listed equipment sets; visit the abandoned convoy; visit the USEC camp; survive and extract.",
+      "ru": "\u041b\u0435\u0441: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u043f\u043e\u0441\u0435\u0442\u0438\u0442\u044c \u0431\u0440\u043e\u0448\u0435\u043d\u043d\u0443\u044e \u043a\u043e\u043b\u043e\u043d\u043d\u0443; \u043f\u043e\u0441\u0435\u0442\u0438\u0442\u044c \u043b\u0430\u0433\u0435\u0440\u044c USEC; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Peltor Tactical Sport headset, Walker\u2019s Razor Digital headset, OPSMEN Earmor M32 headset, Peltor ComTac IV Hybrid headset (Coyote Brown)]; on Woods; visit the abandoned convoy; visit the USEC camp; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 \u0413\u0421\u0428-01, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Peltor Tactical Sport, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Walker\u2019s Razor Digital, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 OPSMEN Earmor M32, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Peltor ComTac IV Hybrid (Coyote Brown)]; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u041b\u0435\u0441; \u043f\u043e\u0441\u0435\u0442\u0438\u0442\u044c \u0431\u0440\u043e\u0448\u0435\u043d\u043d\u0443\u044e \u043a\u043e\u043b\u043e\u043d\u043d\u0443; \u043f\u043e\u0441\u0435\u0442\u0438\u0442\u044c \u043b\u0430\u0433\u0435\u0440\u044c USEC; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "208db81b5ce195bf0c176852",
+      "conditionId": "96d629538203984d6a1ee835",
+      "equipmentInclusive": [
+        [
+          "572b7adb24597762ae139821"
+        ],
+        [
+          "56e33680d2720be2748b4576"
+        ]
+      ],
+      "en": "Interchange: equipment: Scav Vest + Transformer Bag; survive and extract.",
+      "ru": "\u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430: \u044d\u043a\u0438\u043f\u0438\u0440\u043e\u0432\u043a\u0430: \u0416\u0438\u043b\u0435\u0442 \u0414\u0438\u043a\u043e\u0433\u043e + \u0421\u0443\u043c\u043a\u0430-\u0442\u0440\u0430\u043d\u0441\u0444\u043e\u0440\u043c\u0435\u0440; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear Scav Vest and Transformer Bag; on Interchange; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u0416\u0438\u043b\u0435\u0442 \u0414\u0438\u043a\u043e\u0433\u043e \u0438 \u0421\u0443\u043c\u043a\u0430-\u0442\u0440\u0430\u043d\u0441\u0444\u043e\u0440\u043c\u0435\u0440; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "6574a072f763d0b09a553401",
+      "conditionId": "1f59a3743e20869842a50162",
+      "equipmentInclusive": [
+        [
+          "5df8a2ca86f7740bfe6df777",
+          "5c0e5edb86f77461f55ed1f7",
+          "5c0e57ba86f7747fa141986d",
+          "5b44d22286f774172b0c9de8"
+        ]
+      ],
+      "en": "Shoreline: wear one of the listed equipment sets; eliminate 3 Scavs.",
+      "ru": "\u0411\u0435\u0440\u0435\u0433: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 3 \u0414\u0438\u043a\u0438\u0445.",
+      "detailsEn": "In one raid, wear one of [6B2 body armor (Flora), BNTI Zhuk body armor (Press), 6B23-2 body armor (Mountain Flora), BNTI Kirasa-N body armor]; eliminate 3 Scavs; on Shoreline. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 6\u04112 (\u0424\u043b\u043e\u0440\u0430), \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0411\u041d\u0422\u0418 \u0416\u0443\u043a (\u041f\u0440\u0435\u0441\u0441\u0430), \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 6\u041123-2 (\u0413\u043e\u0440\u043d\u0430\u044f \u0424\u043b\u043e\u0440\u0430), \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0411\u041d\u0422\u0418 \u041a\u0438\u0440\u0430\u0441\u0430-N]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 3 \u0414\u0438\u043a\u0438\u0445; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0411\u0435\u0440\u0435\u0433. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "41a41cb262ea084c1e110513",
+      "conditionId": "060c9e16949fdda830dd9339",
+      "equipmentInclusive": [
+        [
+          "5b432b965acfc47a8774094e",
+          "5c165d832e2216398b5a7e36",
+          "5e4d34ca86f774264f758330",
+          "6033fa48ffd42c541047f728",
+          "628e4e576d783146b124c64d"
+        ]
+      ],
+      "en": "Woods: wear one of the listed equipment sets; eliminate 2 Scavs.",
+      "ru": "\u041b\u0435\u0441: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 2 \u0414\u0438\u043a\u0438\u0445.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Peltor Tactical Sport headset, Walker\u2019s Razor Digital headset, OPSMEN Earmor M32 headset, Peltor ComTac IV Hybrid headset (Coyote Brown)]; eliminate 2 Scavs; on Woods. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 \u0413\u0421\u0428-01, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Peltor Tactical Sport, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Walker\u2019s Razor Digital, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 OPSMEN Earmor M32, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Peltor ComTac IV Hybrid (Coyote Brown)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 2 \u0414\u0438\u043a\u0438\u0445; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u041b\u0435\u0441. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "b1b3d9e3a930a3eae47b2353",
+      "conditionId": "5cf677a3bbdbcd83519fc3d8",
+      "equipmentInclusive": [
+        [
+          "5ca2151486f774244a3b8d30",
+          "5ca21c6986f77479963115a7",
+          "5e9dacf986f774054d6b89f4",
+          "5f5f41476bdad616ad46d631"
+        ],
+        [
+          "5aa7e276e5b5b000171d0647",
+          "5ca20ee186f774799474abc2",
+          "5f60c74e3b85f6263c145586"
+        ]
+      ],
+      "en": "Factory (day): wear one of the listed equipment sets; eliminate 4 Scavs.",
+      "ru": "\u0417\u0430\u0432\u043e\u0434 (\u0434\u0435\u043d\u044c): \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 4 \u0414\u0438\u043a\u0438\u0445.",
+      "detailsEn": "In one raid, wear one of [FORT Redut-M body armor, FORT Redut-T5 body armor (Smog), FORT Defender-2 body armor, NPP KlASS Korund-VM body armor (Black)] and one of [Altyn bulletproof helmet (Olive Drab), Vulkan-5 LShZ-5 bulletproof helmet (Black), Rys-T bulletproof helmet (Black)]; eliminate 4 Scavs; on Factory (day). Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0424\u041e\u0420\u0422 \u0420\u0435\u0434\u0443\u0442-\u041c, \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0424\u041e\u0420\u0422 \u0420\u0435\u0434\u0443\u0442-\u04225 (\u0421\u043c\u043e\u0433), \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0424\u041e\u0420\u0422 \u0414\u0435\u0444\u0435\u043d\u0434\u0435\u0440-2, \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u041d\u041f\u041f \u041a\u043b\u0410\u0421\u0421 \u041a\u043e\u0440\u0443\u043d\u0434-\u0412\u041c (\u0427\u0435\u0440\u043d\u044b\u0439)] \u0438 \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0411\u0440\u043e\u043d\u0435\u0448\u043b\u0435\u043c \u0410\u043b\u0442\u044b\u043d (\u041e\u043b\u0438\u0432\u0430), \u0411\u0440\u043e\u043d\u0435\u0448\u043b\u0435\u043c \u041b\u0428\u0417-5 \u0412\u0443\u043b\u043a\u0430\u043d-5 (\u0427\u0435\u0440\u043d\u044b\u0439), \u0411\u0440\u043e\u043d\u0435\u0448\u043b\u0435\u043c \u0420\u044b\u0441\u044c-\u0422 (\u0427\u0435\u0440\u043d\u044b\u0439)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 4 \u0414\u0438\u043a\u0438\u0445; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0417\u0430\u0432\u043e\u0434 (\u0434\u0435\u043d\u044c). \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "4a8f533e1ed458e83b41c01f",
+      "conditionId": "44032afbb94e8afb1c903ade",
+      "equipmentInclusive": [
+        [
+          "572b7adb24597762ae139821",
+          "5e4abc1f86f774069619fbaa",
+          "6034d0230ca681766b6a0fb5"
+        ],
+        [
+          "544a5cde4bdc2d39388b456b",
+          "56e33680d2720be2748b4576",
+          "56e335e4d2720b6c058b456d"
+        ]
+      ],
+      "en": "Ground Zero/Ground Zero (level 21+)/Customs/Woods: wear one of the listed equipment sets; survive and extract.",
+      "ru": "\u042d\u043f\u0438\u0446\u0435\u043d\u0442\u0440/\u042d\u043f\u0438\u0446\u0435\u043d\u0442\u0440 (\u0443\u0440\u043e\u0432\u0435\u043d\u044c 21+)/\u0422\u0430\u043c\u043e\u0436\u043d\u044f/\u041b\u0435\u0441: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [Scav Vest, Spiritus Systems Bank Robber chest rig (MultiCam Black), CSA chest rig (Black)] and one of [Flyye MBSS backpack (UCP), Transformer Bag, Scav backpack]; on Ground Zero/Ground Zero (level 21+)/Customs/Woods; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0416\u0438\u043b\u0435\u0442 \u0414\u0438\u043a\u043e\u0433\u043e, \u0420\u0430\u0437\u0433\u0440\u0443\u0437\u043e\u0447\u043d\u0430\u044f \u043d\u0430\u0433\u0440\u0443\u0434\u043d\u0430\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u0430 Spiritus Systems Bank Robber (MultiCam Black), \u0420\u0430\u0437\u0433\u0440\u0443\u0437\u043e\u0447\u043d\u0430\u044f \u043d\u0430\u0433\u0440\u0443\u0434\u043d\u0430\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u0430 CSA (\u0427\u0435\u0440\u043d\u0430\u044f)] \u0438 \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0420\u044e\u043a\u0437\u0430\u043a Flyye MBSS (UCP), \u0421\u0443\u043c\u043a\u0430-\u0442\u0440\u0430\u043d\u0441\u0444\u043e\u0440\u043c\u0435\u0440, \u0420\u044e\u043a\u0437\u0430\u043a \u0414\u0438\u043a\u043e\u0433\u043e]; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u042d\u043f\u0438\u0446\u0435\u043d\u0442\u0440/\u042d\u043f\u0438\u0446\u0435\u043d\u0442\u0440 (\u0443\u0440\u043e\u0432\u0435\u043d\u044c 21+)/\u0422\u0430\u043c\u043e\u0436\u043d\u044f/\u041b\u0435\u0441; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "4ab0b49478adb233ae900b33",
+      "conditionId": "c26e0b33a999feeec0746957",
+      "equipmentInclusive": [
+        [
+          "5b432b965acfc47a8774094e",
+          "5e4d34ca86f774264f758330"
+        ]
+      ],
+      "en": "Customs/Woods/Shoreline: wear one of the listed equipment sets; eliminate 4 targets; survive and extract.",
+      "ru": "\u0422\u0430\u043c\u043e\u0436\u043d\u044f/\u041b\u0435\u0441/\u0411\u0435\u0440\u0435\u0433: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 4 \u0446\u0435\u043b\u0435\u0439; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Walker\u2019s Razor Digital headset]; eliminate 4 targets; on Customs/Woods/Shoreline; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 \u0413\u0421\u0428-01, \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043d\u0430\u0443\u0448\u043d\u0438\u043a\u0438 Walker\u2019s Razor Digital]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 4 \u0446\u0435\u043b\u0435\u0439; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0422\u0430\u043c\u043e\u0436\u043d\u044f/\u041b\u0435\u0441/\u0411\u0435\u0440\u0435\u0433; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "ca33fab8b9cc5f5f5ad322c0",
+      "conditionId": "a571722285bad3e786626d46",
+      "equipmentInclusive": [
+        [
+          "5c06c6a80db834001b735491",
+          "5aa7cfc0e5b5b00015693143"
+        ]
+      ],
+      "en": "Woods/Shoreline/Interchange: wear one of the listed equipment sets; eliminate 5 targets; survive and extract.",
+      "ru": "\u041b\u0435\u0441/\u0411\u0435\u0440\u0435\u0433/\u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 5 \u0446\u0435\u043b\u0435\u0439; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [SSh-68 steel helmet (Olive Drab), 6B47 Ratnik-BSh helmet (EMR cover)]; eliminate 5 targets; on Woods/Shoreline/Interchange; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0428\u043b\u0435\u043c \u0441\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u0421\u0428-68 (\u041e\u043b\u0438\u0432\u0430), \u041e\u0431\u0449\u0435\u0432\u043e\u0439\u0441\u043a\u043e\u0432\u043e\u0439 \u0448\u043b\u0435\u043c 6\u041147 \u0420\u0430\u0442\u043d\u0438\u043a-\u0411\u0428 (\u0447\u0435\u0445\u043e\u043b \u0424\u043b\u043e\u0440\u0430 \u0426\u0438\u0444\u0440\u0430)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 5 \u0446\u0435\u043b\u0435\u0439; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u041b\u0435\u0441/\u0411\u0435\u0440\u0435\u0433/\u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "9c35b3ac22ede1a5a79118bc",
+      "conditionId": "333dfb6d5b587650d29e8fd8",
+      "equipmentInclusive": [
+        [
+          "5c0e655586f774045612eeb2",
+          "5c0e625a86f7742d77340f62"
+        ]
+      ],
+      "en": "Shoreline/Interchange/Streets of Tarkov: wear one of the listed equipment sets; eliminate 2 PMCs; survive and extract.",
+      "ru": "\u0411\u0435\u0440\u0435\u0433/\u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430/\u0423\u043b\u0438\u0446\u044b \u0422\u0430\u0440\u043a\u043e\u0432\u0430: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 2 \u0431\u043e\u0439\u0446\u043e\u0432 \u0427\u0412\u041a; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [HighCom Trooper TFO body armor (MultiCam), BNTI Zhuk body armor (EMR)]; eliminate 2 PMCs; on Shoreline/Interchange/Streets of Tarkov; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 HighCom Trooper TFO (MultiCam), \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0411\u041d\u0422\u0418 \u0416\u0443\u043a (\u0424\u043b\u043e\u0440\u0430 \u0426\u0438\u0444\u0440\u0430)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 2 \u0431\u043e\u0439\u0446\u043e\u0432 \u0427\u0412\u041a; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0411\u0435\u0440\u0435\u0433/\u0420\u0430\u0437\u0432\u044f\u0437\u043a\u0430/\u0423\u043b\u0438\u0446\u044b \u0422\u0430\u0440\u043a\u043e\u0432\u0430; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "ee813142de655daf2dedfebc",
+      "conditionId": "c27c39f2695ffb7ff59edb89",
+      "equipmentInclusive": [
+        [
+          "5df8a42886f77412640e2e75",
+          "5c0e9f2c86f77432297fe0a3"
+        ]
+      ],
+      "en": "Reserve/Lighthouse/Streets of Tarkov: wear one of the listed equipment sets; eliminate 7 targets; survive and extract.",
+      "ru": "\u0420\u0435\u0437\u0435\u0440\u0432/\u041c\u0430\u044f\u043a/\u0423\u043b\u0438\u0446\u044b \u0422\u0430\u0440\u043a\u043e\u0432\u0430: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 7 \u0446\u0435\u043b\u0435\u0439; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), BlackHawk! Commando chest harness (Black)]; eliminate 7 targets; on Reserve/Lighthouse/Streets of Tarkov; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0420\u0430\u0437\u0433\u0440\u0443\u0437\u043e\u0447\u043d\u044b\u0439 \u0436\u0438\u043b\u0435\u0442 Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), \u0420\u0430\u0437\u0433\u0440\u0443\u0437\u043e\u0447\u043d\u0430\u044f \u043d\u0430\u0433\u0440\u0443\u0434\u043d\u0430\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u0430 BlackHawk! Commando (\u0427\u0435\u0440\u043d\u0430\u044f)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 7 \u0446\u0435\u043b\u0435\u0439; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0420\u0435\u0437\u0435\u0440\u0432/\u041c\u0430\u044f\u043a/\u0423\u043b\u0438\u0446\u044b \u0422\u0430\u0440\u043a\u043e\u0432\u0430; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    },
+    {
+      "questId": "47480d824cea0b80917cafa5",
+      "conditionId": "6e0ad34d0d8a35ef24a765f2",
+      "equipmentInclusive": [
+        [
+          "5ca2151486f774244a3b8d30",
+          "5ca21c6986f77479963115a7"
+        ]
+      ],
+      "en": "Factory (day)/Factory (night)/Reserve/The Lab: wear one of the listed equipment sets; eliminate 3 PMCs; survive and extract.",
+      "ru": "\u0417\u0430\u0432\u043e\u0434 (\u0434\u0435\u043d\u044c)/\u0417\u0430\u0432\u043e\u0434 (\u043d\u043e\u0447\u044c)/\u0420\u0435\u0437\u0435\u0440\u0432/\u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u0438\u044f: \u043d\u0430\u0434\u0435\u0442\u044c \u043e\u0434\u0438\u043d \u0438\u0437 \u043f\u0435\u0440\u0435\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\u043e\u0432; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 3 \u0431\u043e\u0439\u0446\u043e\u0432 \u0427\u0412\u041a; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u044d\u0432\u0430\u043a\u0443\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f.",
+      "detailsEn": "In one raid, wear one of [FORT Redut-M body armor, FORT Redut-T5 body armor (Smog)]; eliminate 3 PMCs; on Factory (day)/Factory (night)/Reserve/The Lab; survive and extract. Found-in-raid status does not apply.",
+      "detailsRu": "\u0417\u0430 \u043e\u0434\u0438\u043d \u0440\u0435\u0439\u0434: \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u043e\u0434\u0438\u043d \u043f\u0440\u0435\u0434\u043c\u0435\u0442 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 [\u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0424\u041e\u0420\u0422 \u0420\u0435\u0434\u0443\u0442-\u041c, \u0411\u0440\u043e\u043d\u0435\u0436\u0438\u043b\u0435\u0442 \u0424\u041e\u0420\u0422 \u0420\u0435\u0434\u0443\u0442-\u04225 (\u0421\u043c\u043e\u0433)]; \u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c 3 \u0431\u043e\u0439\u0446\u043e\u0432 \u0427\u0412\u041a; \u043d\u0430 \u043b\u043e\u043a\u0430\u0446\u0438\u0438 \u0417\u0430\u0432\u043e\u0434 (\u0434\u0435\u043d\u044c)/\u0417\u0430\u0432\u043e\u0434 (\u043d\u043e\u0447\u044c)/\u0420\u0435\u0437\u0435\u0440\u0432/\u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u0438\u044f; \u0432\u044b\u0436\u0438\u0442\u044c \u0438 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0439\u0434\u0430. \u0421\u0442\u0430\u0442\u0443\u0441 \u00ab\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0432 \u0440\u0435\u0439\u0434\u0435\u00bb \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f."
+    }
+  ]
 }

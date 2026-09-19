@@ -15,16 +15,18 @@ if (Test-Path (Join-Path $candidate 'SPT_Runtime/user/mods/Admiral-Trader')) { t
 
 foreach ($relative in @(
     'Admiral Trader Server.dll', 'db/base.json', 'db/assort.json', 'db/natalya-signature-assort.json',
-    'db/questassort.json', 'manifests/runtime-manifest.json', 'manifests/m6-stable-release.json',
+    'db/questassort.json', 'manifests/campaign-manifest.json', 'manifests/relationship-stock.json',
+    'manifests/runtime-manifest.json', 'manifests/story-campaign-runtime.json',
     'README.md', 'CHANGELOG.md', 'INSTALL.md', 'POLISHING.md',
     'assets/d5c27bb3169f8dfbc13f6b69.jpg'
 )) {
     if (-not (Test-Path (Join-Path $canonical $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
 }
+if (@(Get-ChildItem (Join-Path $canonical 'manifests') -File).Count -ne 4) { throw 'Package contains non-runtime design manifests.' }
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
 if ($manifest.version -ne '0.3.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
-if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'release-candidate' -or $manifest.publicationMode -ne 'release-candidate') { throw 'Staged release gate is not the active M7 candidate line.' }
+if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'stable' -or $manifest.publicationMode -ne 'stable') { throw 'Staged package is not the stable Trader line.' }
 if ($manifest.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant()) { throw 'Staged manifest source HEAD mismatch.' }
 
 $provenancePath = Join-Path $candidate 'admiral-trader-provenance.json'
@@ -32,7 +34,8 @@ $inventoryPath = Join-Path $candidate 'admiral-trader-package-files.json'
 if ((-not (Test-Path $provenancePath -PathType Leaf)) -or (-not (Test-Path $inventoryPath -PathType Leaf))) { throw 'Package provenance or inventory is missing.' }
 $provenance = Get-Content $provenancePath -Raw | ConvertFrom-Json
 if ($provenance.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant() -or $provenance.version -ne '0.3.0') { throw 'Package provenance authority mismatch.' }
-if ($provenance.questCount -ne 43 -or $provenance.totalFiniteOffers -ne 41 -or $provenance.natalyaSignatureOffers -ne 4) { throw 'Active M7 campaign scope drifted.' }
+if ($provenance.questCount -ne 172 -or $provenance.totalFiniteOffers -ne 82 -or $provenance.milestoneOffers -ne 18 -or $provenance.natalyaSignatureOffers -ne 35) { throw 'Active campaign scope drifted.' }
+if ($provenance.sourceRegistrationEnabled -ne $true) { throw 'Provenance incorrectly reports the persistent trader registration as disabled.' }
 
 $forbidden = @(Get-ChildItem $candidate -Recurse -File | Where-Object {
     $_.FullName -match '[\\/]user[\\/]profiles[\\/]' -or

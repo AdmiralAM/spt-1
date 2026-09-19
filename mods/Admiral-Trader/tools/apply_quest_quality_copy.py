@@ -9,13 +9,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RUB = "5449016a4bdc2d6f028b456f"
-LOCALE_FILES = {"en": ["en.json", "arsenal-en.json", "m3-en.json"], "ru": ["ru.json", "arsenal-ru.json", "m3-ru.json"]}
+LOCALE_FILES = {
+    "en": ["en.json", "arsenal-en.json", "m3-en.json", "m8-en.json", "story-en.json"],
+    "ru": ["ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json", "story-ru.json"],
+}
 MAPS = {
     "Woods": ("Woods", "Лес"), "Interchange": ("Interchange", "Развязка"),
     "Shoreline": ("Shoreline", "Берег"), "bigmap": ("Customs", "Таможня"),
     "RezervBase": ("Reserve", "Резерв"), "factory4_day": ("Factory (day)", "Завод (день)"),
     "factory4_night": ("Factory (night)", "Завод (ночь)"), "Lighthouse": ("Lighthouse", "Маяк"),
-    "laboratory": ("The Lab", "Лаборатория"),
+    "laboratory": ("The Lab", "Лаборатория"), "Sandbox": ("Ground Zero", "Эпицентр"),
+    "Sandbox_high": ("Ground Zero (level 21+)", "Эпицентр (уровень 21+)"),
+    "TarkovStreets": ("Streets of Tarkov", "Улицы Таркова"),
 }
 
 
@@ -24,7 +29,8 @@ def load(path: Path):
 
 
 def item_name(locale: dict, tpl: str) -> str:
-    return locale.get(f"{tpl} Name") or locale.get(f"{tpl} ShortName") or tpl
+    value = locale.get(f"{tpl} Name") or locale.get(f"{tpl} ShortName") or tpl
+    return value.replace('"', '').replace("Walker's", "Walker’s")
 
 
 def join_names(names: list[str], lang: str) -> str:
@@ -35,8 +41,10 @@ def equipment_text(c: dict, locale: dict, lang: str) -> str:
     groups = c.get("equipmentInclusive", [])
     rendered = [join_names([item_name(locale, tpl) for tpl in group], lang) for group in groups]
     if lang == "en":
-        return "wear " + " and ".join(f"one of [{group}]" for group in rendered)
-    return "использовать " + " и ".join(f"один предмет из [{group}]" for group in rendered)
+        choices = [group if len(source) == 1 else f"one of [{group}]" for source, group in zip(groups, rendered)]
+        return "wear " + " and ".join(choices)
+    choices = [group if len(source) == 1 else f"один предмет из списка [{group}]" for source, group in zip(groups, rendered)]
+    return "использовать " + " и ".join(choices)
 
 
 def counter_text(condition: dict, locale: dict, lang: str) -> str:
@@ -67,7 +75,11 @@ def counter_text(condition: dict, locale: dict, lang: str) -> str:
         elif kind == "ExitStatus":
             pieces.append("survive and extract" if lang == "en" else "выжить и выйти из рейда")
         elif kind == "VisitPlace":
-            place = {"room206_water": ("Dorm room 206 in the two-storey dormitory", "комната 206 двухэтажного общежития")}.get(inner["target"], (inner["target"], inner["target"]))[lang == "ru"]
+            place = {
+                "room206_water": ("Dorm room 206 in the two-storey dormitory", "комнату 206 двухэтажного общежития"),
+                "pr_scout_col": ("the abandoned convoy", "брошенную колонну"),
+                "pr_scout_base": ("the USEC camp", "лагерь USEC"),
+            }.get(inner["target"], (inner["target"], inner["target"]))[lang == "ru"]
             pieces.append(("visit " if lang == "en" else "посетить ") + place)
         else:
             raise ValueError(f"unsupported inner condition {kind}")
@@ -80,6 +92,41 @@ def counter_text(condition: dict, locale: dict, lang: str) -> str:
         prefix = "За один рейд: " if condition.get("oneSessionOnly") else "За любое количество рейдов: "
         suffix = " Статус «Найдено в рейде» не применяется."
     return prefix + "; ".join(pieces) + "." + suffix
+
+
+def compact_equipment_objective(condition: dict, locale: dict, lang: str) -> str:
+    inner = condition["counter"]["conditions"]
+    equipment = next(row for row in inner if row["conditionType"] == "Equipment")
+    groups = equipment.get("equipmentInclusive", [])
+    locations = next((row.get("target", []) for row in inner if row["conditionType"] == "Location"), [])
+    maps = "/".join(MAPS.get(value, (value, value))[lang == "ru"] for value in locations)
+    kills = next((row for row in inner if row["conditionType"] == "Kills"), None)
+    visits = [row for row in inner if row["conditionType"] == "VisitPlace"]
+    survived = any(row["conditionType"] == "ExitStatus" for row in inner)
+
+    if all(len(group) == 1 for group in groups):
+        separator = " + "
+        gear = separator.join(item_name(locale, group[0]) for group in groups)
+        action = f"equipment: {gear}" if lang == "en" else f"экипировка: {gear}"
+    else:
+        action = "wear one of the listed equipment sets" if lang == "en" else "надеть один из перечисленных комплектов"
+
+    tasks = [action]
+    if kills:
+        count = condition["value"]
+        target = {"Savage": ("Scavs", "Диких"), "AnyPmc": ("PMCs", "бойцов ЧВК"), "Any": ("targets", "целей")}.get(kills["target"], (kills["target"], kills["target"]))[lang == "ru"]
+        tasks.append((f"eliminate {count} {target}" if lang == "en" else f"устранить {count} {target}"))
+    for visit in visits:
+        place = {
+            "room206_water": ("dorm room 206", "комнату 206 общежития"),
+            "pr_scout_col": ("the abandoned convoy", "брошенную колонну"),
+            "pr_scout_base": ("the USEC camp", "лагерь USEC"),
+        }.get(visit["target"], (visit["target"], visit["target"]))[lang == "ru"]
+        tasks.append((f"visit {place}" if lang == "en" else f"посетить {place}"))
+    if survived:
+        tasks.append("survive and extract" if lang == "en" else "выжить и эвакуироваться")
+    prefix = f"{maps}: " if maps else ""
+    return prefix + "; ".join(tasks) + "."
 
 
 def condition_text(condition: dict, locale: dict, lang: str) -> str:
@@ -139,7 +186,11 @@ def main():
     for offer, quest in qa.items():
         unlocks.setdefault(quest, []).append(offer)
     report = {"schemaVersion": 1, "status": "runtime-copy-audited", "questCount": 0, "quests": {}}
-    quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json"))]
+    # This pass owns the frozen 43-quest foundation. Later campaign generators
+    # own their copy and must not be rewritten through the legacy locale set.
+    historical_ids = set(load(ROOT / "manifests/quest-quality-runtime.json")["quests"])
+    access_ids = {row["id"] for row in load(ROOT / "manifests/keys-authored-spec.json")["quests"]}
+    quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json")) if load(path)["_id"] in historical_ids]
     for quest in quests:
         qid = quest["_id"]
         report["questCount"] += 1
@@ -147,24 +198,34 @@ def main():
         for lang in ("en", "ru"):
             locale = global_locales[lang]
             requirements = [condition_text(c, locale, lang) for c in quest["conditions"]["AvailableForFinish"]]
-            rewards = reward_text(quest, locale, unlocks, assort_tpl, lang)
             req_label = "Requirements" if lang == "en" else "Требования"
             rew_label = "Rewards" if lang == "en" else "Награды"
-            existing_description = authored[lang][f"{qid} description"].split(f"\n\n{req_label}:", 1)[0]
-            existing_started = authored[lang][f"{qid} startedMessageText"].split(f"\n\n{req_label}:", 1)[0]
-            existing_success = authored[lang][f"{qid} successMessageText"].split(f"\n\n{rew_label}:", 1)[0]
-            # EFT renders embedded newlines in quest copy. Keep each runtime objective
-            # on its own line so exact requirements stay readable at normal UI scale.
-            block = "\n".join(f"- {requirement}" for requirement in requirements)
+            existing_description = authored[lang][f"{qid} description"].replace("\r", "").split(f"\n\n{req_label}:", 1)[0]
+            existing_started = authored[lang][f"{qid} startedMessageText"].replace("\r", "").split(f"\n\n{req_label}:", 1)[0]
+            existing_success = authored[lang][f"{qid} successMessageText"].replace("\r", "").split(f"\n\n{rew_label}:", 1)[0]
+            if qid in access_ids:
+                detail_label = "Clarification" if lang == "en" else "Уточнение"
+                existing_description = existing_description.split(f"\n\n{detail_label}:", 1)[0]
+                existing_started = existing_started.split(f"\n\n{detail_label}:", 1)[0]
+                existing_description += f"\n\n{detail_label}:\n- " + "\n- ".join(requirements)
+                existing_started += f"\n\n{detail_label}:\n- " + "\n- ".join(requirements)
+            if qid == "cd2641c70bede98dac3945d0":
+                existing_success = ("Precision Rifles capability confirmed. The UCW ammunition authorization is now active."
+                                    if lang == "en" else
+                                    "Квалификация по высокоточным винтовкам подтверждена. Допуск к боеприпасу UCW активирован.")
             updates = {
-                f"{qid} description": f"{existing_description}\n\n{req_label}:\n{block}\n\n{rew_label}:\n- {rewards}",
-                f"{qid} startedMessageText": f"{existing_started}\n\n{req_label}:\n{block}",
-                f"{qid} acceptPlayerMessage": f"{existing_started}\n\n{req_label}:\n{block}",
-                f"{qid} successMessageText": f"{existing_success}\n\n{rew_label}: {rewards}",
-                f"{qid} completePlayerMessage": f"{existing_success}\n\n{rew_label}: {rewards}",
+                f"{qid} description": existing_description,
+                f"{qid} startedMessageText": existing_started,
+                f"{qid} acceptPlayerMessage": existing_started,
+                f"{qid} successMessageText": existing_success,
+                f"{qid} completePlayerMessage": existing_success,
             }
             for condition, objective in zip(quest["conditions"]["AvailableForFinish"], requirements):
-                updates[condition["id"]] = objective
+                # Preserve concise authored rows for ordinary conditions. The
+                # dedicated equipment pass below replaces only rows where a
+                # hidden loadout pool would otherwise force the player to guess.
+                if condition["id"] not in authored[lang]:
+                    updates[condition["id"]] = objective
             for key, value in updates.items():
                 filename = owners.get((lang, key)) or ("m3-en.json" if lang == "en" and qid in load(ROOT / "manifests/m3-runtime-materialization.json")["questIds"].values() else "m3-ru.json" if lang == "ru" and qid in load(ROOT / "manifests/m3-runtime-materialization.json")["questIds"].values() else "arsenal-en.json" if lang == "en" and quest["QuestName"].startswith("Arsenal") else "arsenal-ru.json" if lang == "ru" and quest["QuestName"].startswith("Arsenal") else f"{lang}.json")
                 path = ROOT / "db/locales" / filename
@@ -173,6 +234,64 @@ def main():
                 path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 owners[(lang, key)] = filename
                 authored[lang][key] = value
+
+    # Equipment objectives exist beyond the original 43-quest quality set.
+    # Keep every in-game objective row truthful without rewriting the story
+    # prose or expanding this tool's ownership of the wider campaign.
+    all_quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json"))]
+    equipment_objectives = []
+    for quest in all_quests:
+        for condition in quest["conditions"]["AvailableForFinish"]:
+            if condition.get("conditionType") != "CounterCreator":
+                continue
+            inner = condition.get("counter", {}).get("conditions", [])
+            if not any(row.get("conditionType") == "Equipment" for row in inner):
+                continue
+            localized = {}
+            details = {}
+            for lang in ("en", "ru"):
+                key = condition["id"]
+                filename = owners.get((lang, key))
+                if filename is None:
+                    filename = owners[(lang, f"{quest['_id']} name")]
+                path = ROOT / "db/locales" / filename
+                payload = load(path)
+                details[lang] = condition_text(condition, global_locales[lang], lang)
+                payload[key] = compact_equipment_objective(condition, global_locales[lang], lang)
+                localized[lang] = payload[key]
+                label = "Clarification" if lang == "en" else "Уточнение"
+                gear_label = "Allowed equipment" if lang == "en" else "Допуск по снаряжению"
+                task_label = "Task" if lang == "en" else "Задача"
+                equipment_line = equipment_text(next(row for row in inner if row["conditionType"] == "Equipment"), global_locales[lang], lang)
+                for field in ("description", "startedMessageText", "acceptPlayerMessage"):
+                    prose_key = f"{quest['_id']} {field}"
+                    prose_owner = owners[(lang, prose_key)]
+                    prose_path = ROOT / "db/locales" / prose_owner
+                    prose_payload = payload if prose_owner == filename else load(prose_path)
+                    base = prose_payload[prose_key].replace("\r", "").split(f"\n\n{label}:", 1)[0]
+                    prose_payload[prose_key] = (
+                        f"{base}\n\n{label}:\n"
+                        f"{gear_label}:\n- {equipment_line}.\n"
+                        f"{task_label}: {localized[lang]}"
+                    )
+                    if prose_owner != filename:
+                        prose_path.write_text(json.dumps(prose_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                    authored[lang][prose_key] = prose_payload[prose_key]
+                path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                owners[(lang, key)] = filename
+                authored[lang][key] = payload[key]
+            equipment = next(row for row in inner if row.get("conditionType") == "Equipment")
+            equipment_objectives.append({
+                "questId": quest["_id"],
+                "conditionId": condition["id"],
+                "equipmentInclusive": equipment.get("equipmentInclusive", []),
+                "en": localized["en"],
+                "ru": localized["ru"],
+                "detailsEn": details["en"],
+                "detailsRu": details["ru"],
+            })
+    report["equipmentObjectiveCount"] = len(equipment_objectives)
+    report["equipmentObjectives"] = equipment_objectives
     (ROOT / "manifests/quest-quality-runtime.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 

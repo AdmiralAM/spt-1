@@ -7,16 +7,14 @@ Official curated successor to the legacy Andrudis/QuestManiac ecosystem.
 Admiral Trader has **one active workstream**:
 
 - canonical issue: **#192**;
-- canonical PR: **#328**;
-- active branch: `feature/admiral-trader-canonical-milestones`;
 - current development/validation baseline: **SPT 4.1.5**;
 - runtime metadata compatibility range: **`~4.1.0`**;
 - stable gameplay baseline: **`0.2.0`**;
-- active Natalya-absorption candidate: **`0.3.0-rc`**, 43 quests / 41 finite offers;
+- stable campaign release: **`0.3.0`**, 172 core quests / 82 finite offers, plus 10 optional Icebreaker quests when its verified runtime is present;
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
-PRs #193, #297 and #327 are historical evidence only. Do not resume product work on them or create parallel Trader implementation branches for work that belongs to #328.
+PRs #193, #297, #327 and #328 are historical evidence only. Continue implementation only in the single live Admiral Trader PR discovered from GitHub; do not create a parallel Trader branch.
 
 ## SPT compatibility policy
 
@@ -44,19 +42,31 @@ Expected lifecycle:
 - **M3 — Runtime campaign expansion**
 - **M4 — Selective external-content absorption**
 - **M5 — Relationship / specialist storefront**
-- **M6 — Stable release**
+- **M6 — Playable 0.2.0 baseline hardening**
+- **M7 — Full campaign, retired-source and optional-content absorption — closed in `0.3.0`**
+- **M8 — Admiral insurance service — closed**: native SPT insurance with relationship-scaled prices, 90% return chance, a fast 6–12 hour return window, 120-hour storage and authored EN/RU messages; the existing trader identity owns every return.
+- **M9 — Editorial, technical and balance audit — closed in `0.3.0`**
+- **Final gate — coherent fresh-profile acceptance and stable release**
 
-Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **37 offers** (4 Baseline + 3 Relationship + 8 Milestone + 22 bounded core offers).
+Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.
 
-This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
+M7 content implementation is closed: the complete campaign, Natalya absorption, optional integrations, storefront and progressive reward layers are present in runtime. The release remains an RC until the later coherent fresh-profile review has exercised progression, pacing, rewards, unlocks and storefront tiers. Fixes from that review must preserve every persistent identity already in use.
 
-The next weapon milestone is fully scoped in [docs/weapon-rotation-expansion-plan.md](docs/weapon-rotation-expansion-plan.md): two paced 20-assignment lanes, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and optional WTT Armory alternatives that never become a core dependency.
+The active weapon campaign uses two synchronized 20-step lanes. At every step the player can choose between contrasting roles: sidearms, SMGs, shotguns and support weapons on one side; carbines, assault rifles, battle rifles, 9x39 systems, marksman rifles and bolt-actions on the other. The runtime family matrix covers 143 native weapon templates, progresses from common starter weapons to rare specialist platforms, avoids model-to-single-map locks, and accepts 50 verified WTT Armory/Content Backport alternatives when installed. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
+
+Every one of the 172 core quests now has XP, Admiral standing, at least ₽10,000 and a useful item, conditional item or permanent store unlock. Arsenal contributes 30 staged field-support items and ten complete configured weapons, one at every fourth step in both lanes. The wider campaign retains 20 native field-support trades, four early complete weapons, eleven native tactical rewards, ten Natalya signature presets and 32 conditional B&A&HB wrist/belt/head-band/container trades. Early container rewards remain front-loaded. Each item replaces a bounded part of the quest's rouble payout instead of stacking free value; optional rewards leave the corresponding cash untouched when their template is absent.
+
+The opening story keeps five focused Ground Zero operations, then follows the early vanilla map cadence through Customs, Woods, Factory and Interchange before closing its first circuit on Customs. These operations remain one persistent chain, but their client location metadata and native objective conditions now name the actual map so Dynamic Maps and the quest list can group them correctly.
+
+Admiral uses SPT's native insurance purchase, raid-loss, return scheduling and mail delivery. His defining advantage is the fast 6–12 hour return window; the return chance is 90%, while the price coefficient improves from 25% at LL1 to 16% at LL4. Labs and Labyrinth retain their native no-return behavior; no profile migration or parallel recovery store is introduced.
 
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 
-Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
+Relationship progression uses level, reputation and cumulative trade turnover like native traders. LL2 requires level 15, 0.10 standing and ₽500,000 turnover; LL3 requires level 25, 0.30 and ₽1,200,000; LL4 requires level 35, 0.55 and ₽2,200,000. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
 
-The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
+Routine field stock remains available for roubles. Six specialist offers use authored item barters so valuable raid loot retains a purpose: RAPTAR, injector case, military battery, FLIR and the two quest-gated Labs access-card offers. Their loyalty, quest unlock, stock and purchase limits remain unchanged.
+
+The original bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. M7 supersedes its old content boundary: Natalya now appears in 18 story beats and contributes all 35 compatible native weapon presets, while selected Andrudis capability and hunt themes are distributed across the ten story chains and Arsenal lanes. The retired traders, source quest IDs, repetitive count ladders, custom Natalya items/zones and unsafe armour presets remain excluded.
 
 ## Product-design scope — complete
 

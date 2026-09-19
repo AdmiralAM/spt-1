@@ -12,6 +12,12 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
         cls.plan = json.loads(
             (ROOT / "manifests" / "weapon-rotation-expansion-plan.json").read_text(encoding="utf-8")
         )
+        cls.runtime = json.loads(
+            (ROOT / "manifests" / "weapon-rotation-runtime.json").read_text(encoding="utf-8")
+        )
+        cls.rewards = json.loads(
+            (ROOT / "manifests" / "weapon-rotation-rewards.json").read_text(encoding="utf-8")
+        )
 
     def test_two_twenty_assignment_lanes_are_authored(self):
         lanes = self.plan["lanes"]
@@ -52,6 +58,102 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(set(early)))
 
+    def test_active_rotation_covers_complete_logical_families_at_sensible_stages(self):
+        lanes = self.plan["lanes"]
+        self.assertEqual(lanes["B-rifle-precision"][8][1], "battle-rifles")
+        self.assertEqual(lanes["B-rifle-precision"][9][1], "nine-by-thirty-nine")
+        self.assertEqual(
+            set(self.plan["pools"]["nine-by-thirty-nine"]),
+            {
+                "644674a13d52156624001fbc",  # 9A-91
+                "645e0c6b3b381ede770e1cc9",  # VSK-94
+                "651450ce0e00edc794068371",  # SR-3M
+                "57c44b372459772d2b39b8ce",  # AS VAL
+                "57838ad32459774a17445cd2",  # VSS Vintorez
+            },
+        )
+        self.assertEqual(
+            set(self.plan["pools"]["sks-hunter"]),
+            {"574d967124597745970e7c94", "587e02ff24597743df3deaeb", "5c501a4d2e221602b412b540"},
+        )
+        early_pools = {row[1] for lane in lanes.values() for row in lane[:4]}
+        late_pools = {row[1] for lane in lanes.values() for row in lane[8:]}
+        self.assertIn("service-pistols", early_pools)
+        self.assertIn("early-smg", early_pools)
+        self.assertIn("nine-by-thirty-nine", late_pools)
+        self.assertIn("magnum-precision", late_pools)
+
+    def test_all_forty_runtime_records_materialize_the_authored_family_matrix(self):
+        assignments = self.runtime["assignments"]
+        self.assertEqual(40, len(assignments))
+        self.assertEqual({"A": 20, "B": 20}, self.runtime["laneCounts"])
+        self.assertEqual(40, len({row["id"] for row in assignments}))
+        self.assertTrue(self.runtime["stableQuestIdsRetained"])
+        expected = []
+        for lane, key in (("A", "A-close-support"), ("B", "B-rifle-precision")):
+            expected.extend((lane, row[0], row[1]) for row in self.plan["lanes"][key])
+        actual = [(row["lane"], row["order"], row["pool"]) for row in assignments]
+        self.assertEqual(expected, actual)
+
+    def test_runtime_quests_use_the_complete_native_and_optional_family(self):
+        optional = json.loads((ROOT / "manifests" / "optional-weapon-runtime.json").read_text(encoding="utf-8"))
+        optional_by_pool = {}
+        for row in optional["acceptedWeapons"]:
+            optional_by_pool.setdefault(row["pool"], []).append(row["tpl"])
+        quest_by_id = {}
+        for path in (ROOT / "db" / "quests").glob("*.json"):
+            quest = json.loads(path.read_text(encoding="utf-8"))
+            quest_by_id[quest["_id"]] = quest
+        for row in self.runtime["assignments"]:
+            weapons = []
+            pending = [quest_by_id[row["id"]]["conditions"]["AvailableForFinish"]]
+            while pending:
+                value = pending.pop()
+                if isinstance(value, dict):
+                    if value.get("conditionType") == "Kills":
+                        weapons.extend(value.get("weapon") or [])
+                    pending.extend(value.values())
+                elif isinstance(value, list):
+                    pending.extend(value)
+            expected = self.plan["pools"][row["pool"]] + optional_by_pool.get(row["pool"], [])
+            self.assertEqual(expected, weapons, row["id"])
+
+    def test_each_stage_offers_contrasting_weapon_roles(self):
+        close_roles = {row[0]: row[1] for row in self.plan["lanes"]["A-close-support"]}
+        rifle_roles = {row[0]: row[1] for row in self.plan["lanes"]["B-rifle-precision"]}
+        for order in range(1, 21):
+            self.assertNotEqual(close_roles[order], rifle_roles[order])
+        self.assertEqual("service-pistols", close_roles[1])
+        self.assertEqual("starter-service-rifles", rifle_roles[1])
+        self.assertEqual("manual-shotguns", close_roles[3])
+        self.assertEqual("compact-rifles", rifle_roles[3])
+        self.assertEqual("light-machine-guns", close_roles[16])
+        self.assertEqual("advanced-intermediate", rifle_roles[16])
+
+    def test_every_weapon_assignment_has_a_staged_non_cash_reward(self):
+        rows = self.rewards["rewards"]
+        self.assertEqual(40, len(rows))
+        self.assertEqual(10, self.rewards["completeWeaponRewards"])
+        self.assertEqual(30, self.rewards["fieldSupportRewards"])
+        self.assertEqual({row["id"] for row in self.runtime["assignments"]}, {row["questId"] for row in rows})
+        self.assertEqual(
+            {(lane, order) for lane in ("A", "B") for order in (4, 8, 12, 16, 20)},
+            {(row["lane"], row["order"]) for row in rows if row["kind"] == "complete-weapon"},
+        )
+        quests = {}
+        for path in (ROOT / "db" / "quests").glob("*.json"):
+            quest = json.loads(path.read_text(encoding="utf-8"))
+            quests[quest["_id"]] = quest
+        for row in rows:
+            success = quests[row["questId"]]["rewards"]["Success"]
+            reward = next(reward for reward in success if reward["id"] == row["rewardId"])
+            cash = next(reward for reward in success if reward.get("items", [{}])[0].get("_tpl") == "5449016a4bdc2d6f028b456f")
+            self.assertGreaterEqual(cash["value"], self.rewards["minimumRemainingRoubles"])
+            self.assertEqual(row["rootTemplate"], reward["items"][0]["_tpl"])
+            self.assertEqual(row["itemTreeSize"], len(reward["items"]))
+            if row["kind"] == "complete-weapon":
+                self.assertGreater(len(reward["items"]), 1)
+
     def test_external_content_never_replaces_native_route(self):
         extension = self.plan["wttArmory"]
         self.assertFalse(extension["requiredDependency"])
@@ -69,7 +171,7 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
         self.assertEqual(0, candidates["stableCampaignChanges"]["dependencies"])
         self.assertEqual(0, candidates["compatibilityEvidence"]["crossModTemplateIdCollisions"])
         self.assertEqual(0, candidates["compatibilityEvidence"]["nativeTemplateIdCollisions"])
-        self.assertFalse(candidates["compatibilityEvidence"]["admiralRuntimeChangeRequired"])
+        self.assertTrue(candidates["compatibilityEvidence"]["admiralRuntimeChangeRequired"])
         self.assertFalse(candidates["compatibilityEvidence"]["economyContract"]["foreignTemplateMutationAllowed"])
 
 

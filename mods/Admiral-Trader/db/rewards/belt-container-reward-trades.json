@@ -1,0 +1,674 @@
+{
+  "4876c8bf7bb9677e3970b01c": {
+    "cashReductionRub": 6000,
+    "name": "Наручный кошелёк B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "aa52f01b4ed370009446d438",
+      "type": "Item",
+      "target": "46bb98e696102b4b98966b1f",
+      "index": 3,
+      "items": [
+        {
+          "_id": "46bb98e696102b4b98966b1f",
+          "_tpl": "68ac00000000000000000006",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "70a745d426d2ba09157eb734": {
+    "cashReductionRub": 12000,
+    "name": "Подсумок для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "68cf4d2dac247556b8ba174a",
+      "type": "Item",
+      "target": "be436bef1c0913b0055a4e14",
+      "index": 3,
+      "items": [
+        {
+          "_id": "be436bef1c0913b0055a4e14",
+          "_tpl": "68ac00000000000000000001",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "37475cbab1174e5619c16939": {
+    "cashReductionRub": 12000,
+    "name": "Пояс для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "69bf2049391bad46bd9c34fa",
+      "type": "Item",
+      "target": "bd82633b120230d032e2d2e8",
+      "index": 3,
+      "items": [
+        {
+          "_id": "bd82633b120230d032e2d2e8",
+          "_tpl": "68ac0000000000000000000c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "e74018c43dc3f47551445192": {
+    "cashReductionRub": 15000,
+    "name": "Утилитарная повязка B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "205816e794cb52089bd5d028",
+      "type": "Item",
+      "target": "56efbfd33b94d250bd80f90b",
+      "index": 3,
+      "items": [
+        {
+          "_id": "56efbfd33b94d250bd80f90b",
+          "_tpl": "68ac0000000000000000000f",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "aef99c7f97ca615cf101a654": {
+    "cashReductionRub": 15000,
+    "name": "Кейс для жетонов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "0010bf032eaaae554439f734",
+      "type": "Item",
+      "target": "1a996b46f114b3bebfff2bc2",
+      "index": 3,
+      "items": [
+        {
+          "_id": "1a996b46f114b3bebfff2bc2",
+          "_tpl": "68ac00000000000000000013",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "77622ff3eda4de9587dd55d8": {
+    "cashReductionRub": 35000,
+    "name": "Подсумок для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "6d22a34bb3326daa9cba4d34",
+      "type": "Item",
+      "target": "880642972e834c1aab249a8c",
+      "index": 3,
+      "items": [
+        {
+          "_id": "880642972e834c1aab249a8c",
+          "_tpl": "68ac00000000000000000001",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "4a8f533e1ed458e83b41c01f": {
+    "cashReductionRub": 6000,
+    "name": "Пояс для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "0a24165a8c4f2d9f221a9366",
+      "type": "Item",
+      "target": "b992659b6e5877f354193e57",
+      "index": 3,
+      "items": [
+        {
+          "_id": "b992659b6e5877f354193e57",
+          "_tpl": "68ac0000000000000000000c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "4ab0b49478adb233ae900b33": {
+    "cashReductionRub": 10000,
+    "name": "Наручный кошелёк B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "9b9aeb6acf1a34292e83a247",
+      "type": "Item",
+      "target": "7a3e4b53ed911f99d9fc455b",
+      "index": 3,
+      "items": [
+        {
+          "_id": "7a3e4b53ed911f99d9fc455b",
+          "_tpl": "68ac00000000000000000006",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "ca33fab8b9cc5f5f5ad322c0": {
+    "cashReductionRub": 12000,
+    "name": "Подсумок для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "1a615d25d012a775e014ab68",
+      "type": "Item",
+      "target": "e59a1d8c16fd8ef2c10d3534",
+      "index": 3,
+      "items": [
+        {
+          "_id": "e59a1d8c16fd8ef2c10d3534",
+          "_tpl": "68ac00000000000000000001",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "9c35b3ac22ede1a5a79118bc": {
+    "cashReductionRub": 15000,
+    "name": "Пояс для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "89a71e714e2ebf1ed292a987",
+      "type": "Item",
+      "target": "1596880f1c39a615076e6f38",
+      "index": 3,
+      "items": [
+        {
+          "_id": "1596880f1c39a615076e6f38",
+          "_tpl": "68ac0000000000000000000c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "ee813142de655daf2dedfebc": {
+    "cashReductionRub": 18000,
+    "name": "Утилитарная повязка B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "7f4fa1b36ca0b935a00fa46e",
+      "type": "Item",
+      "target": "107a0ced61cd00b687c31b8a",
+      "index": 3,
+      "items": [
+        {
+          "_id": "107a0ced61cd00b687c31b8a",
+          "_tpl": "68ac0000000000000000000f",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "8dad0d354ac000b7bbf05b9a": {
+    "cashReductionRub": 7000,
+    "name": "Подсумок для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "2c2e742dd101aea64b56b5de",
+      "type": "Item",
+      "target": "775e1e5cf23af88fcbc6e020",
+      "index": 3,
+      "items": [
+        {
+          "_id": "775e1e5cf23af88fcbc6e020",
+          "_tpl": "68ac00000000000000000001",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "56813681ae0690016376f163": {
+    "cashReductionRub": 10000,
+    "name": "Пояс для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "a977269daf587cb56642c3c9",
+      "type": "Item",
+      "target": "764ae1029358d29b406be7bc",
+      "index": 3,
+      "items": [
+        {
+          "_id": "764ae1029358d29b406be7bc",
+          "_tpl": "68ac0000000000000000000c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "208db81b5ce195bf0c176852": {
+    "cashReductionRub": 12000,
+    "name": "Наручный кошелёк B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "e129f8aa0da4e4addea53230",
+      "type": "Item",
+      "target": "543735b25744f707017f4acb",
+      "index": 3,
+      "items": [
+        {
+          "_id": "543735b25744f707017f4acb",
+          "_tpl": "68ac00000000000000000006",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "6574a072f763d0b09a553401": {
+    "cashReductionRub": 15000,
+    "name": "Подсумок для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "fe962a46191490fb656e8504",
+      "type": "Item",
+      "target": "ed5cc84e75dd4b20c243e04a",
+      "index": 3,
+      "items": [
+        {
+          "_id": "ed5cc84e75dd4b20c243e04a",
+          "_tpl": "68ac00000000000000000001",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "8b6f2b25ab2e91e0540761e3": {
+    "cashReductionRub": 22000,
+    "name": "Пояс для магазинов B&A&HB",
+    "reward": {
+      "value": 1,
+      "id": "03f7ffb86ab92cf24c9938a5",
+      "type": "Item",
+      "target": "1abdf6d55a67f2a3972f1284",
+      "index": 3,
+      "items": [
+        {
+          "_id": "1abdf6d55a67f2a3972f1284",
+          "_tpl": "68ac0000000000000000000c",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "41a41cb262ea084c1e110513": {
+    "cashReductionRub": 15000,
+    "name": "Малый медицинский подсумок",
+    "reward": {
+      "value": 1,
+      "id": "91ae70bcaba6496b25bf6ae2",
+      "type": "Item",
+      "target": "13b9c1d35cbe753811f51a56",
+      "index": 3,
+      "items": [
+        {
+          "_id": "13b9c1d35cbe753811f51a56",
+          "_tpl": "12403f74773f49be6a2d84b7",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "133aa723b4695a3d93de92f1": {
+    "cashReductionRub": 15000,
+    "name": "Малый подсумок для боеприпасов",
+    "reward": {
+      "value": 1,
+      "id": "670de787c50e04aebf528333",
+      "type": "Item",
+      "target": "17cc9b509584346dd6408152",
+      "index": 3,
+      "items": [
+        {
+          "_id": "17cc9b509584346dd6408152",
+          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "db220288bc8d5559a45feeb1": {
+    "cashReductionRub": 20000,
+    "name": "Малый денежный ящик",
+    "reward": {
+      "value": 1,
+      "id": "95cec075b843743e10694eb0",
+      "type": "Item",
+      "target": "c3d9487eb62e002325644622",
+      "index": 3,
+      "items": [
+        {
+          "_id": "c3d9487eb62e002325644622",
+          "_tpl": "669c10fa06c00c483c58537a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5d404ebd654de4efecef71d2": {
+    "cashReductionRub": 5000,
+    "name": "Поясная сумка",
+    "reward": {
+      "value": 1,
+      "id": "deabb95bef05861452308ba3",
+      "type": "Item",
+      "target": "b4bf6db2af36dba820eb5451",
+      "index": 3,
+      "items": [
+        {
+          "_id": "b4bf6db2af36dba820eb5451",
+          "_tpl": "6761b213607f9a6f79017aef",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "1b92e4cf212d895be4f70b2c": {
+    "cashReductionRub": 7000,
+    "name": "Малый подсумок для боеприпасов",
+    "reward": {
+      "value": 1,
+      "id": "e3c1eebeae40bfbdb7aa8133",
+      "type": "Item",
+      "target": "31e8b15aac3c1c1ca7f3b125",
+      "index": 3,
+      "items": [
+        {
+          "_id": "31e8b15aac3c1c1ca7f3b125",
+          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "cba3374f11375c4e7eea9efe": {
+    "cashReductionRub": 14000,
+    "name": "Малое кольцо для ключей",
+    "reward": {
+      "value": 1,
+      "id": "26c14edb2e74e707ef5f351e",
+      "type": "Item",
+      "target": "15a1a1987d9e4c5ca02a7bb3",
+      "index": 3,
+      "items": [
+        {
+          "_id": "15a1a1987d9e4c5ca02a7bb3",
+          "_tpl": "2eabd4da4ab194eb168e72d3",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "80c11744c2310e1bfe160a8b": {
+    "cashReductionRub": 9000,
+    "name": "Малая сумка для инструментов",
+    "reward": {
+      "value": 1,
+      "id": "2a8d5cddf2901b52527e2731",
+      "type": "Item",
+      "target": "f5ecfe0de3202d420cd19e4c",
+      "index": 3,
+      "items": [
+        {
+          "_id": "f5ecfe0de3202d420cd19e4c",
+          "_tpl": "9543bbe8083934dc3b1b1330",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "42ff30bc152b8212dc15b20a": {
+    "cashReductionRub": 12000,
+    "name": "Малый кожаный портфель",
+    "reward": {
+      "value": 1,
+      "id": "0ffe2af9c31e2d3f9740eb84",
+      "type": "Item",
+      "target": "779306b6851b728ebbab5466",
+      "index": 3,
+      "items": [
+        {
+          "_id": "779306b6851b728ebbab5466",
+          "_tpl": "c29f11b2e63a089916739c96",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "d737e3b990c371708db369f0": {
+    "cashReductionRub": 14000,
+    "name": "Малый медицинский подсумок",
+    "reward": {
+      "value": 1,
+      "id": "d10fdc4b14d1328b5534924c",
+      "type": "Item",
+      "target": "6a4700f1ebafdfcdef671010",
+      "index": 3,
+      "items": [
+        {
+          "_id": "6a4700f1ebafdfcdef671010",
+          "_tpl": "12403f74773f49be6a2d84b7",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "9c438fa48f645044ddc75e8d": {
+    "cashReductionRub": 25000,
+    "name": "Малый кейс для бронеплит",
+    "reward": {
+      "value": 1,
+      "id": "ea14799235aebba17c2862ca",
+      "type": "Item",
+      "target": "9c98c8f2e004957d46963faf",
+      "index": 3,
+      "items": [
+        {
+          "_id": "9c98c8f2e004957d46963faf",
+          "_tpl": "6a3c0e9643138b61c8739586",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "59a36c5ee68210f9154d94d0": {
+    "cashReductionRub": 24000,
+    "name": "Кейс для обвесов",
+    "reward": {
+      "value": 1,
+      "id": "ec61299feb0f138b9c3703fe",
+      "type": "Item",
+      "target": "36f9fe0261c694de00364386",
+      "index": 3,
+      "items": [
+        {
+          "_id": "36f9fe0261c694de00364386",
+          "_tpl": "681d1395a5c2308fdcbcda92",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "738588764e9531bdb8ccfc5f": {
+    "cashReductionRub": 1800,
+    "name": "Малый денежный ящик",
+    "reward": {
+      "value": 1,
+      "id": "a1c363cae219ab0e019f1b83",
+      "type": "Item",
+      "target": "afedca91640fac4c3318f5e4",
+      "index": 3,
+      "items": [
+        {
+          "_id": "afedca91640fac4c3318f5e4",
+          "_tpl": "669c10fa06c00c483c58537a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "3ccca027eeebaf0a4dcfbb6f": {
+    "cashReductionRub": 7000,
+    "name": "Малый подсумок для магазинов",
+    "reward": {
+      "value": 1,
+      "id": "ec1c725953652103c54433f2",
+      "type": "Item",
+      "target": "ee872b8797cc64b097862724",
+      "index": 3,
+      "items": [
+        {
+          "_id": "ee872b8797cc64b097862724",
+          "_tpl": "440de5d056825485a0cf3a19",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "eb93814dd020bdc131d526aa": {
+    "cashReductionRub": 1800,
+    "name": "Малый подсумок для боеприпасов",
+    "reward": {
+      "value": 1,
+      "id": "1e44d237962701076d3f58cf",
+      "type": "Item",
+      "target": "73e9d9da10450caa9bfeeeb9",
+      "index": 3,
+      "items": [
+        {
+          "_id": "73e9d9da10450caa9bfeeeb9",
+          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "551415adc72a84fa9e6bb571": {
+    "cashReductionRub": 9000,
+    "name": "Кейс для обвесов",
+    "reward": {
+      "value": 1,
+      "id": "5eee82a781116e39d6c6eeee",
+      "type": "Item",
+      "target": "85ef298f8d1b27f66baca182",
+      "index": 3,
+      "items": [
+        {
+          "_id": "85ef298f8d1b27f66baca182",
+          "_tpl": "681d1395a5c2308fdcbcda92",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5a9a0bb3ffddd538e6fe3842": {
+    "cashReductionRub": 11000,
+    "name": "Малый подсумок для магазинов",
+    "reward": {
+      "value": 1,
+      "id": "33c7e42a4b0ed314f7ad7d4b",
+      "type": "Item",
+      "target": "dd057bde83cdcafb506f5896",
+      "index": 3,
+      "items": [
+        {
+          "_id": "dd057bde83cdcafb506f5896",
+          "_tpl": "440de5d056825485a0cf3a19",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  }
+}

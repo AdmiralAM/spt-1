@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized-when-detected",
+  "requiredDependency": false,
+  "coreQuestCount": 172,
+  "optionalQuestCount": 10,
+  "location": {
+    "guid": "com.manimal.icebreaker",
+    "versionValidated": "1.1.0",
+    "key": "icebreaker",
+    "id": "882b2fa04bbd616567022938"
+  },
+  "detection": {
+    "serverDll": "icebreaker-server.dll",
+    "baseIdentityRequired": true
+  },
+  "entryPrerequisite": {
+    "questId": "9d5e3f7d6320a7fd139a2772",
+    "owner": "Manimal Icebreaker",
+    "name": "Boreas - Part 3"
+  },
+  "profileSafety": {
+    "customItemsRequired": false,
+    "coreGraphDependsOnOptional": false,
+    "optionalGraphDependsOnCore": false
+  },
+  "quests": [
+    {
+      "order": 1,
+      "id": "ee22a75b23ed122de846e350",
+      "prerequisite": "9d5e3f7d6320a7fd139a2772",
+      "level": 28,
+      "nameEn": "Cold Wake",
+      "nameRu": "Холодный след"
+    },
+    {
+      "order": 2,
+      "id": "6621da6db0f52d96c7ed024d",
+      "prerequisite": "ee22a75b23ed122de846e350",
+      "level": 29,
+      "nameEn": "Silent Manifest",
+      "nameRu": "Немой манифест"
+    },
+    {
+      "order": 3,
+      "id": "a8df16cdd95b964db9e24de1",
+      "prerequisite": "6621da6db0f52d96c7ed024d",
+      "level": 30,
+      "nameEn": "Outer Watch",
+      "nameRu": "Внешний дозор"
+    },
+    {
+      "order": 4,
+      "id": "608d941006026038d0680c1c",
+      "prerequisite": "a8df16cdd95b964db9e24de1",
+      "level": 31,
+      "nameEn": "Frozen Repair",
+      "nameRu": "Замёрзший ремонт"
+    },
+    {
+      "order": 5,
+      "id": "719296eb1ea92ee1117994e6",
+      "prerequisite": "608d941006026038d0680c1c",
+      "level": 32,
+      "nameEn": "Resort Relay",
+      "nameRu": "Курортный ретранслятор"
+    },
+    {
+      "order": 6,
+      "id": "0bd5262584805610a9369bb6",
+      "prerequisite": "719296eb1ea92ee1117994e6",
+      "level": 33,
+      "nameEn": "Broken Transit",
+      "nameRu": "Разорванный транзит"
+    },
+    {
+      "order": 7,
+      "id": "e731e96866c797a8e94d405b",
+      "prerequisite": "0bd5262584805610a9369bb6",
+      "level": 34,
+      "nameEn": "Close Quarters",
+      "nameRu": "Ближний борт"
+    },
+    {
+      "order": 8,
+      "id": "3eba3dc75ecb07eecb3b685a",
+      "prerequisite": "e731e96866c797a8e94d405b",
+      "level": 35,
+      "nameEn": "Fuel Ledger",
+      "nameRu": "Топливный реестр"
+    },
+    {
+      "order": 9,
+      "id": "4ff6cb73eb4a8ff19015d992",
+      "prerequisite": "3eba3dc75ecb07eecb3b685a",
+      "level": 37,
+      "nameEn": "Command Deck",
+      "nameRu": "Командная палуба"
+    },
+    {
+      "order": 10,
+      "id": "9e9a2e84abbe66b87ff5075a",
+      "prerequisite": "4ff6cb73eb4a8ff19015d992",
+      "level": 39,
+      "nameEn": "Boreas Protocol",
+      "nameRu": "Протокол «Борей»"
+    }
+  ]
+}

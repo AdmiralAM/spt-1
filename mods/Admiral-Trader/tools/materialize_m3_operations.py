@@ -73,7 +73,13 @@ def mechanics(key: str):
             "customs": "bigmap", "reserve": "RezervBase", "factory": "factory4_day",
             "lighthouse": "Lighthouse", "labs": "laboratory"}
     if key == "acoustic-discipline":
-        return [counter(key, 0, 1, "Exploration", [equipment(key, 0, [HEADSETS]), location(key, 1, maps["woods"]), exit_status(key, 2)])]
+        return [counter(key, 0, 1, "Exploration", [
+            equipment(key, 0, [HEADSETS]),
+            location(key, 1, maps["woods"]),
+            inner(key, 2, "VisitPlace", target="pr_scout_col", value=1),
+            inner(key, 3, "VisitPlace", target="pr_scout_base", value=1),
+            exit_status(key, 4),
+        ])]
     if key == "forward-reserve":
         return [handover(key, 0, "590c5bbd86f774785762df04", 2), handover(key, 1, "57347c1124597737fb1379e3", 3), handover(key, 2, "61bf83814088ec1a363d7097", 1)]
     if key == "low-profile":
@@ -111,6 +117,14 @@ def main():
                "questCount": 12, "totalCampaignQuestCount": 43, "baselineQuestCount": 31,
                "equipmentAllowlists": {"headsets": HEADSETS, "lightArmor": LIGHT_ARMOR,
                                        "heavyArmor": HEAVY_ARMOR, "heavyHelmets": HEAVY_HELMETS}}
+    quest_locations = {
+        "acoustic-discipline": "5704e3c2d2720bac5b8b4567", "low-profile": "5714dbc024597771384a510d",
+        "mobility-doctrine": "5704e554d2720bac5b8b456e", "borrowed-access": "56f40101d2720b2a4d8b45d6",
+        "acoustic-contact": "5704e3c2d2720bac5b8b4567", "route-security": "56f40101d2720b2a4d8b45d6",
+        "contractor-intercept": "5704e5fad2720bc05b8b4567", "observation-window": "5704e554d2720bac5b8b456e",
+        "heavy-assault": "55f2d3fd4bdc2d5f408b4567", "break-the-perimeter": "5704e4dad2720bb55b8b4567",
+        "internal-security": "5b0fc42d86f7744a585f9105",
+    }
     for order, key in enumerate(progression["levels"], 1):
         qid, text, entry = ids[key], copy_by_key[key], spec_by_key[key]
         finishes = mechanics(key)
@@ -131,10 +145,10 @@ def main():
              "items": [{"_id": oid(key, "reward", "rub-item"), "_tpl": RUB, "upd": {"StackObjectsCount": reward["rub"]}}]},
         ]
         quest_type = "Elimination" if any(c.get("type") == "Elimination" for c in finishes) else ("Completion" if key == "forward-reserve" else "Exploration")
-        quest = {"QuestName": text["title"]["en"], "_id": qid, "canShowNotificationsInGame": True,
+        quest = {"QuestName": text["title"]["ru"], "_id": qid, "canShowNotificationsInGame": True,
                  "conditions": {"AvailableForFinish": finishes, "AvailableForStart": starts, "Fail": []},
                  "description": f"{qid} description", "failMessageText": f"{qid} failMessageText", "name": f"{qid} name", "note": f"{qid} note",
-                 "traderId": TRADER, "location": "any", "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": quest_type,
+                 "traderId": TRADER, "location": quest_locations.get(key, "any"), "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": quest_type,
                  "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False,
                  "startedMessageText": f"{qid} startedMessageText", "successMessageText": f"{qid} successMessageText",
                  "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",

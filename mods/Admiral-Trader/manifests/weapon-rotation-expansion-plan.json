@@ -10,7 +10,8 @@
     "newAssignmentsRequired": 19,
     "currentRuntimeChangedByThisManifest": false,
     "existingQuestIdsRetained": true,
-    "maximumConcurrentWeaponAssignments": 2
+    "maximumConcurrentWeaponAssignments": 2,
+    "runtimeGraphRule": "The 19 expansion records are woven into the retained 21-record Arsenal graph, leaving exactly two roots across all 40 weapon quests."
   },
   "rules": {
     "nativeFallbackRequired": true,
@@ -111,7 +112,7 @@
       [6,"classic-ak-762","13-19",["Customs","Interchange","Shoreline"],"mixed-faction eliminations"],
       [7,"nato-service-rifles","15-21",["Woods","Shoreline","Interchange"],"optic-assisted eliminations"],
       [8,"nato-alternatives","17-23",["Interchange","Reserve","Streets"],"PMC eliminations across raids"],
-      [9,"battle-rifles","19-25",["Shoreline","Reserve","Lighthouse"],"armored-target eliminations"],
+      [9,"battle-rifles","19-25",["Shoreline","Reserve","Lighthouse"],"full-power battle-rifle eliminations"],
       [10,"nine-by-thirty-nine","21-27",["Reserve","Lighthouse","Streets"],"suppressed eliminations"],
       [11,"entry-dmr","23-29",["Woods","Shoreline","Lighthouse"],"distance eliminations"],
       [12,"service-dmr","25-31",["Reserve","Lighthouse","Streets"],"PMC distance eliminations"],
@@ -127,7 +128,7 @@
   },
   "laneTuple": ["order","pool","levelBand","locations","semantics"],
   "wttArmory": {
-    "status": "awaiting-installed-content-inventory",
+    "status": "runtime-verified-optional",
     "requiredDependency": false,
     "rule": "Add a verified model to the closest mechanical pool or an optional side assignment; every core assignment retains a native SPT weapon.",
     "categoricallyDifferent": "Use a later optional assignment rather than mislabeling the model as an existing native class.",
