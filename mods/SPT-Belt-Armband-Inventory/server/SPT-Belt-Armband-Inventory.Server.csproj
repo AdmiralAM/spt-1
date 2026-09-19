@@ -31,6 +31,7 @@
     <Compile Include="..\src\ArmBandLootPolicy.cs" Link="ArmBandLootPolicy.cs" />
     <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
     <Compile Include="..\src\PackNStrapCompatibility.cs" Link="PackNStrapCompatibility.cs" />
+    <Compile Include="..\src\SecureContainerCompatibilityPolicy.cs" Link="SecureContainerCompatibilityPolicy.cs" />
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
     <Compile Include="..\src\WearableProtectionContract.cs" Link="WearableProtectionContract.cs" />
   </ItemGroup>

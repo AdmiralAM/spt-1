@@ -13,6 +13,8 @@ namespace SPTBeltArmbandInventory
                 && WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.PaymentSource);
         }
 
+        internal static bool ShouldIncludeContainerRoot(bool hasContainers) => hasContainers;
+
         internal static bool ShouldIncludeBelt(bool hasItem, bool hasContainers)
         {
             return hasItem && ShouldIncludeWearable(RuntimeIdentity.CandidateItemId, hasContainers);
@@ -26,8 +28,10 @@ namespace SPTBeltArmbandInventory
         internal static Func<object, object> ReadContainedItem;
         internal static Func<object, string> ReadTemplateId;
         internal static object ArmBandValue;
+        internal static object BeltValue;
         internal static object HeadBandValue;
         static readonly RuntimeListOwnership ArmBandOwnership = new RuntimeListOwnership();
+        static readonly RuntimeListOwnership BeltOwnership = new RuntimeListOwnership();
         static readonly RuntimeListOwnership HeadBandOwnership = new RuntimeListOwnership();
         static bool runtimeFailureLogged;
 
@@ -41,6 +45,7 @@ namespace SPTBeltArmbandInventory
                 if (list == null || list.IsReadOnly || list.IsFixedSize) return;
 
                 NormalizeSlot(equipment, list, ArmBandValue, ArmBandOwnership);
+                NormalizeSlot(equipment, list, BeltValue, BeltOwnership);
                 NormalizeSlot(equipment, list, HeadBandValue, HeadBandOwnership);
             }
             catch (Exception exception)
@@ -61,7 +66,7 @@ namespace SPTBeltArmbandInventory
                 if (slot == null) return;
                 object item = ReadContainedItem(slot);
                 string templateId = item == null ? null : ReadTemplateId(item);
-                bool include = PaymentSlotPolicy.ShouldIncludeWearable(templateId, item != null && ReflectionTools.HasContainers(item));
+                bool include = PaymentSlotPolicy.ShouldIncludeContainerRoot(item != null && ReflectionTools.HasContainers(item));
                 int existing = IndexOfReference(list, slot);
                 bool owned = ownership.Owns(equipment, list, slot);
 
@@ -101,6 +106,7 @@ namespace SPTBeltArmbandInventory
             ReadContainedItem = null;
             ReadTemplateId = null;
             ArmBandValue = null;
+            BeltValue = null;
             HeadBandValue = null;
             runtimeFailureLogged = false;
         }
@@ -167,12 +173,13 @@ namespace SPTBeltArmbandInventory
                 PaymentSlotRuntime.ReadContainedItem = containedItemReader;
                 PaymentSlotRuntime.ReadTemplateId = templateIdReader;
                 PaymentSlotRuntime.ArmBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
+                PaymentSlotRuntime.BeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
                 PaymentSlotRuntime.HeadBandValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
 
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, getter, postfix);
 
-                logInfo?.Invoke("B&A&HB wearable payment-source compatibility installed with startup-bound item-descriptor delegates.");
+                logInfo?.Invoke("B&A&HB wearable payment roots installed for ArmBand, Belt and HeadBand; EFT GetAllItems traversal keeps nested money visible to BTR, paid extracts and their UI.");
                 return true;
             }
             catch (Exception exception)

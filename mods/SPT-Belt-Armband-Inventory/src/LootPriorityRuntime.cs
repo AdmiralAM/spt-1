@@ -63,19 +63,23 @@ namespace SPTBeltArmbandInventory
                 if (__args == null || __args.Length < 2 || __args[0] == null || __result == null) return;
                 object equipment = __args[0];
                 List<object> belt = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.LootPriority);
-                AppendUnique(belt, ReadCapabilityContainers(equipment, dedicatedBeltValue, AccessoryCapability.LootPriority));
+                // Slot15 is the product boundary. Accept the equipped Belt's real
+                // grids even when Pack 'n' Strap supplies the runtime item type/id.
+                AppendUnique(belt, ReadContainers(GetContainedItem(equipment, dedicatedBeltValue)));
                 List<object> wallet = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.PaymentSource);
                 AppendUnique(wallet, ReadCapabilityContainers(equipment, dedicatedHeadBandValue, AccessoryCapability.PaymentSource));
                 if (belt.Count == 0 && wallet.Count == 0) return;
 
                 if (walletOnly)
                 {
-                    if (!IsMoney(__args[1]) || wallet.Count == 0) return;
                     List<object> existing = ToObjects(__result);
                     IList augmented = createTypedList();
                     if (augmented == null) return;
-                    AddUnique(augmented, wallet);
+                    if (IsMoney(__args[1])) AddUnique(augmented, wallet);
                     AddUnique(augmented, existing);
+                    // Preserve Pack 'n' Strap/native ordering and add slot15 only as
+                    // the final compatible fallback when every earlier root is full.
+                    AddUnique(augmented, belt);
                     __result = augmented;
                     return;
                 }

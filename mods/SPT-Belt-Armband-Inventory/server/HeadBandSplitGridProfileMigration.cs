@@ -27,12 +27,6 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
         var items = inventory?["items"] as JsonArray;
         if (inventory == null || items == null) return false;
 
-        // PMC can preserve excess/unknown roots by moving them to sorting table.
-        // Scav usually has no sorting table. Those children are intentionally left
-        // untouched rather than deleted; therefore they must not keep this migration
-        // permanently pending after all actionable 1x1 normalization has completed.
-        bool canOffload = !string.IsNullOrEmpty(ReadString(inventory, "sortingTable"));
-
         foreach (var headBand in items.OfType<JsonObject>().Where(IsHeadBand))
         {
             string? headBandId = ReadString(headBand, "_id");
@@ -42,36 +36,20 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
             int cigaretteCount = 0;
             foreach (var child in ImmediateChildren(items, headBandId))
             {
+                string? currentSlot = ReadString(child, "slotId");
+                if (string.Equals(currentSlot, DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
+                    && IsOriginLocation(child["location"])) { currencyCount = 1; continue; }
+                if (string.Equals(currentSlot, DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal)
+                    && IsOriginLocation(child["location"])) { cigaretteCount = 1; continue; }
+
                 string? tpl = ReadString(child, "_tpl");
                 if (tpl != null && HeadBandUtilityPolicy.IsCurrencyOrWallet(tpl))
                 {
-                    currencyCount++;
-                    if (currencyCount == 1)
-                    {
-                        if (!string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
-                            || !IsOriginLocation(child["location"])) return true;
-                    }
-                    else if (canOffload)
-                    {
-                        return true;
-                    }
+                    if (currencyCount == 0) return true;
                 }
                 else if (tpl != null && HeadBandUtilityPolicy.IsCigarette(tpl))
                 {
-                    cigaretteCount++;
-                    if (cigaretteCount == 1)
-                    {
-                        if (!string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal)
-                            || !IsOriginLocation(child["location"])) return true;
-                    }
-                    else if (canOffload)
-                    {
-                        return true;
-                    }
-                }
-                else if (canOffload)
-                {
-                    return true;
+                    if (cigaretteCount == 0) return true;
                 }
             }
         }
@@ -84,16 +62,23 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
         var items = inventory?["items"] as JsonArray;
         if (inventory == null || items == null) return;
 
-        string? sortingTableId = ReadString(inventory, "sortingTable");
         foreach (var headBand in items.OfType<JsonObject>().Where(IsHeadBand).ToArray())
         {
             string? headBandId = ReadString(headBand, "_id");
             if (string.IsNullOrEmpty(headBandId)) continue;
 
-            bool currencyOccupied = false;
-            bool cigaretteOccupied = false;
-            foreach (var child in ImmediateChildren(items, headBandId).ToArray())
+            JsonObject[] children = ImmediateChildren(items, headBandId).ToArray();
+            bool currencyOccupied = children.Any(child =>
+                string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
+                && IsOriginLocation(child["location"]));
+            bool cigaretteOccupied = children.Any(child =>
+                string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal)
+                && IsOriginLocation(child["location"]));
+            foreach (var child in children)
             {
+                if ((string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
+                    || string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal))
+                    && IsOriginLocation(child["location"])) continue;
                 string? tpl = ReadString(child, "_tpl");
                 if (tpl != null && HeadBandUtilityPolicy.IsCurrencyOrWallet(tpl) && !currencyOccupied)
                 {
@@ -109,14 +94,8 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
                     continue;
                 }
 
-                // Never delete overflow or an unknown legacy child. PMC profiles have
-                // a sorting table; move the whole child subtree root there and leave
-                // descendants attached to it. Scav normally has no sorting table, so
-                // preserve an unclassifiable/overflow child untouched. NeedsMigration
-                // deliberately ignores such unfixable Scav roots after actionable
-                // normalization, preventing an endless pending-migration loop.
-                if (!string.IsNullOrEmpty(sortingTableId))
-                    MoveToSortingTable(child, sortingTableId);
+                // Unknown and overflow children stay attached. Startup migration must
+                // never surprise the player by ejecting HeadBand contents to sorting.
             }
         }
     }
@@ -149,13 +128,6 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
             ["y"] = 0,
             ["r"] = "Horizontal"
         };
-    }
-
-    private static void MoveToSortingTable(JsonObject item, string sortingTableId)
-    {
-        item["parentId"] = sortingTableId;
-        item["slotId"] = "hideout";
-        item.Remove("location");
     }
 
     private static bool IsOriginLocation(JsonNode? location)

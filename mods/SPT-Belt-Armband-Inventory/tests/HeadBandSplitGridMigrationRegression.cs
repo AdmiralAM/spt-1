@@ -55,8 +55,8 @@ internal static class HeadBandSplitGridMigrationRegression
         AssertOrigin(cigs1);
 
         var overflow = Find("cigs2");
-        if (overflow["parentId"]!.GetValue<string>() != "sorting" || overflow["slotId"]!.GetValue<string>() != "hideout" || overflow.ContainsKey("location"))
-            throw new InvalidOperationException("Same-category overflow was not preserved in the sorting table.");
+        if (overflow["parentId"]!.GetValue<string>() != "hb")
+            throw new InvalidOperationException("HeadBand overflow must never be ejected to sorting during startup.");
 
         var nested = Find("nested");
         if (nested["parentId"]!.GetValue<string>() != "cigs2")

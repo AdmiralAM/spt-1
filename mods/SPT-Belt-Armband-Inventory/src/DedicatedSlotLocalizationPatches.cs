@@ -30,7 +30,6 @@ namespace SPTBeltArmbandInventory
                         ReadHeader(slotView),
                         Application.systemLanguage == SystemLanguage.Russian);
                     RelabelKnownViews();
-                    HeadBandRenderSettle.OnHeadwearShown(slotView as Component);
                     return;
                 }
 
