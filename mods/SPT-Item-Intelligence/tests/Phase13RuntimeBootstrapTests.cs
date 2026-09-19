@@ -99,6 +99,13 @@ static class Phase13RuntimeBootstrapTests
         Expect(committedCurrent.Get("t").KeepCount == 3 && committedCurrent.Get("t").Allocation.HideoutFirRequired == 3 &&
                committedCurrent.Get("t").Allocation.HideoutMissing == 0,
             "components committed to the current hideout stage remain satisfied while FIR stock is reserved for a future stage", ref assertions);
+        RequirementIndex powerCord = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(
+            PowerCordLiveStateEnvelope()));
+        Expect(powerCord.Get("cable").KeepCount == 10 && powerCord.Get("cable").HideoutNeeded == 10,
+            "power cord aggregates only the two unfinished future stations after current queued upgrades are satisfied", ref assertions);
+        Expect(powerCord.Get("cable").OwnedCount == 1 && powerCord.Get("cable").Allocation.HideoutFirRequired == 10 &&
+               powerCord.Get("cable").Allocation.HideoutMissing == 9,
+            "power cord truth remains one FIR owned, ten FIR required, nine missing", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -202,6 +209,55 @@ static class Phase13RuntimeBootstrapTests
                 }
             }
         };
+    }
+
+    static RequirementDataEnvelope PowerCordLiveStateEnvelope()
+    {
+        object Area(string type, int level) => new Dictionary<string, object> { ["type"] = type, ["level"] = level };
+        object RequirementArea(string type, string stage, int count) => new Dictionary<string, object>
+        {
+            ["type"] = type,
+            ["stages"] = new Dictionary<string, object> { [stage] = Stage("CABLE", count, true) }
+        };
+        Dictionary<string, object> profile = new Dictionary<string, object>
+        {
+            ["Inventory"] = new Dictionary<string, object>
+            {
+                ["items"] = new object[]
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["_tpl"] = "CABLE",
+                        ["upd"] = new Dictionary<string, object> { ["SpawnedInSession"] = true }
+                    }
+                }
+            },
+            ["Hideout"] = new Dictionary<string, object>
+            {
+                ["Areas"] = new object[] { Area("8", 2), Area("9", 3), Area("11", 1), Area("12", 1), Area("16", 0), Area("20", 0) }
+            }
+        };
+        Dictionary<string, object> hideout = new Dictionary<string, object>
+        {
+            ["areas"] = new object[]
+            {
+                RequirementArea("8", "1", 1),
+                RequirementArea("9", "3", 3),
+                RequirementArea("11", "2", 7),
+                RequirementArea("12", "3", 5),
+                RequirementArea("16", "3", 5),
+                RequirementArea("20", "1", 10)
+            }
+        };
+        Dictionary<string, object> progress = new Dictionary<string, object>
+        {
+            ["areaProgresses"] = new Dictionary<string, object>
+            {
+                ["11"] = new Dictionary<string, object> { ["CABLE"] = 7 },
+                ["20"] = new Dictionary<string, object> { ["CABLE"] = 10 }
+            }
+        };
+        return new RequirementDataEnvelope(200, profile, Array.Empty<object>(), hideout, Array.Empty<object>(), progress);
     }
 
     static void Expect(bool condition, string message, ref int assertions)

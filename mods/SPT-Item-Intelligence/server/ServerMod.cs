@@ -54,7 +54,10 @@ public sealed class RequirementDataService(
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        object? profile = profileHelper.GetPmcProfile(sessionId);
+        // Freeze the mutable live profile before reading companion progress and calculating prices.
+        // Otherwise a hideout hand-in can mutate inventory while JsonUtil is still serializing the
+        // response, producing one envelope assembled from two different player states.
+        object? profile = FreezeProfile(profileHelper.GetPmcProfile(sessionId));
         var relevance = BuildRelevance(cancellationToken);
         List<ItemPriceSnapshotEntry> prices = BuildPrices(relevance.Craft, relevance.Barter, cancellationToken);
         RequirementDataEnvelope envelope = new(
@@ -67,6 +70,14 @@ public sealed class RequirementDataService(
             BuildLocales());
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private object? FreezeProfile(object? profile)
+    {
+        if (profile is null) return null;
+        string? json = jsonUtil.Serialize(profile);
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        return JsonSerializer.Deserialize<JsonElement>(json);
     }
 
     private Dictionary<string, object> BuildLocales()

@@ -106,6 +106,10 @@ namespace SPTItemIntelligence
                 (firRequired > 0
                     ? GameUiText.T(" · FIR ×", " · из рейда ×") + firRequired.ToString(CultureInfo.InvariantCulture)
                     : GameUiText.T(" · FIR not required", " · из рейда не требуется"));
+            int questRequired = Allocation.NowRequired + Allocation.LaterRequired;
+            RequirementSourcesLine = GameUiText.T("Sources: quests ×", "По источникам: квесты ×") +
+                questRequired.ToString(CultureInfo.InvariantCulture) +
+                GameUiText.T(" · hideout ×", " · убежище ×") + Allocation.HideoutRequired.ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
                 ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);
@@ -145,6 +149,7 @@ namespace SPTItemIntelligence
         public string SummaryOwnedLine { get; }
         public string OwnedBreakdownLine { get; }
         public string RequirementBreakdownLine { get; }
+        public string RequirementSourcesLine { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -219,6 +224,7 @@ namespace SPTItemIntelligence
             if (mode == ItemTooltipMode.Full && RaidSessionActive && SummaryLine.Length > 0 && TryLine(TotalOwnedLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(OwnedBreakdownLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementBreakdownLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementSourcesLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Full)
             {

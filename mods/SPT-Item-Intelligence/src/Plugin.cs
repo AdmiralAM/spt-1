@@ -9,6 +9,7 @@ namespace SPTItemIntelligence
 {
     [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.1")]
     [BepInDependency("xyz.drakia.Sense", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.awnova.compatibilityhighlighter", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -19,6 +20,7 @@ namespace SPTItemIntelligence
         Task dataTask;
         ItemIntelligenceUiSettings uiSettings;
         AmandsSenseIntegration senseIntegration;
+        CompatibilityHighlighterIntegration compatibilityIntegration;
         int moduleKey = -1;
         int dataKey = -1;
         readonly object loadLock = new object();
@@ -26,7 +28,10 @@ namespace SPTItemIntelligence
         RaidInventoryRuntimeScanner raidInventoryScanner;
         Coroutine inventoryRefreshCoroutine;
         float lastRaidInventoryScanAt = float.NegativeInfinity;
+        float lastSnapshotRefreshAt = float.NegativeInfinity;
         const float RaidInventoryMinimumScanSeconds = .35f;
+        const float InventorySnapshotSettleSeconds = .65f;
+        const float InventorySnapshotMinimumSeconds = 1.5f;
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -82,6 +87,8 @@ namespace SPTItemIntelligence
                 dataKey = -1;
                 if (hoverIntegration != null) hoverIntegration.Dispose();
                 hoverIntegration = null;
+                if (compatibilityIntegration != null) compatibilityIntegration.Dispose();
+                compatibilityIntegration = null;
                 hoverSink.ClearViews();
                 PresentationStore.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndex.Empty);
                 ItemRelevanceRegistry.Replace(null);
@@ -89,13 +96,19 @@ namespace SPTItemIntelligence
             }
             if (hoverIntegration == null)
             {
-            hoverIntegration = new EftItemViewHoverIntegration(
-                hoverController,
-                message => Logger.LogInfo(message),
-                message => Logger.LogWarning(message),
-                hoverSink,
-                hoverSink);
-            hoverIntegration.TryInstall();
+                hoverIntegration = new EftItemViewHoverIntegration(
+                    hoverController,
+                    message => Logger.LogInfo(message),
+                    message => Logger.LogWarning(message),
+                    hoverSink,
+                    hoverSink);
+                hoverIntegration.TryInstall();
+            }
+            if (compatibilityIntegration == null)
+            {
+                compatibilityIntegration = new CompatibilityHighlighterIntegration(
+                    message => Logger.LogInfo(message), message => Logger.LogWarning(message));
+                compatibilityIntegration.TryInstall();
             }
             if (dataKey == modules.DataKey) return;
             dataKey = modules.DataKey;
@@ -116,6 +129,7 @@ namespace SPTItemIntelligence
 
         void StartDataLoad()
         {
+            lastSnapshotRefreshAt = Time.realtimeSinceStartup;
             dataCancellation = new CancellationTokenSource();
             CancellationToken token = dataCancellation.Token;
             dataTask = Task.Run(() =>
@@ -136,18 +150,29 @@ namespace SPTItemIntelligence
         void RefreshInventorySession()
         {
             if (uiSettings == null || !uiSettings.Modules.AnyConsumer) return;
+            // A raid uses the event-driven local ledger. The server profile is deliberately a
+            // pre-raid snapshot, so repeatedly requesting it while looting is both stale and costly.
+            if (raidLedger.IsRaidSessionActive)
+            {
+                RefreshRaidInventory();
+                return;
+            }
             if (inventoryRefreshCoroutine != null) return;
             inventoryRefreshCoroutine = StartCoroutine(RefreshInventorySessionAfterBurst());
         }
 
         IEnumerator RefreshInventorySessionAfterBurst()
         {
-            // Item views are initialized in bursts. One delayed refresh keeps the profile snapshot
-            // current without beginning a network/projector pass for every cell in a new window.
-            yield return new WaitForSecondsRealtime(.15f);
+            // Hideout hand-in updates the profile and Hideout In Progress file in one UI burst.
+            // Wait until that burst settles, then coalesce repeated ItemView creation into one load.
+            yield return new WaitForSecondsRealtime(InventorySnapshotSettleSeconds);
+            float cooldown = InventorySnapshotMinimumSeconds - (Time.realtimeSinceStartup - lastSnapshotRefreshAt);
+            if (cooldown > 0f) yield return new WaitForSecondsRealtime(cooldown);
             inventoryRefreshCoroutine = null;
             if (uiSettings == null || !uiSettings.Modules.AnyConsumer) yield break;
-            if (dataTask == null || dataTask.IsCompleted) StartDataLoad();
+            if (raidLedger.IsRaidSessionActive) yield break;
+            while (dataTask != null && !dataTask.IsCompleted) yield return null;
+            if (uiSettings != null && uiSettings.Modules.AnyConsumer && !raidLedger.IsRaidSessionActive) StartDataLoad();
         }
 
         void CaptureRaidBaseline()
@@ -174,6 +199,7 @@ namespace SPTItemIntelligence
             if (inventoryRefreshCoroutine != null) StopCoroutine(inventoryRefreshCoroutine);
             if (hoverIntegration != null) hoverIntegration.Dispose();
             if (senseIntegration != null) senseIntegration.Dispose();
+            if (compatibilityIntegration != null) compatibilityIntegration.Dispose();
             FirRequirementRegistry.Clear();
             ItemRelevanceRegistry.Replace(null);
             dataTask = null;
@@ -184,6 +210,7 @@ namespace SPTItemIntelligence
             hoverSink = null;
             uiSettings = null;
             senseIntegration = null;
+            compatibilityIntegration = null;
             raidInventoryScanner = null;
             inventoryRefreshCoroutine = null;
             PresentationStore = null;

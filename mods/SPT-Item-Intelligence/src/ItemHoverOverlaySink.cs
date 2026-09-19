@@ -77,6 +77,7 @@ namespace SPTItemIntelligence
             int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
+            CompatibilityHighlighterIntegration.Track(itemView);
             GameLanguageDetector.ObserveNativeUi(target);
 
             TrackedItemView tracked;
@@ -100,6 +101,7 @@ namespace SPTItemIntelligence
         public void UnregisterView(object itemView)
         {
             if (itemView == null) return;
+            CompatibilityHighlighterIntegration.Untrack(itemView);
             TrackedItemView tracked;
             if (trackedViews.TryGetValue(itemView, out tracked)) tracked.Dispose();
             trackedViews.Remove(itemView);
@@ -113,6 +115,7 @@ namespace SPTItemIntelligence
 
         public void ClearViews()
         {
+            CompatibilityHighlighterIntegration.ClearTracked();
             foreach (TrackedItemView tracked in trackedViews.Values) tracked.Dispose();
             trackedViews.Clear();
             staleViews.Clear();

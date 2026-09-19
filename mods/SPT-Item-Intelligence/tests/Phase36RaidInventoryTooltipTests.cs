@@ -28,6 +28,8 @@ static class Phase36RaidInventoryTooltipTests
         Expect(text.TotalOwnedLine == "Total (stash + raid) ×5", "Full preserves the combined stash and raid total", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
         Expect(text.RequirementBreakdownLine == "Required: total ×4 · FIR ×2", "Full states the exact item total and its FIR-only portion", ref assertions);
+        Expect(text.RequirementSourcesLine == "Sources: quests ×3 · hideout ×1",
+            "Full makes the quest and hideout contribution to the total explicit", ref assertions);
         ItemHoverText unrestricted = new ItemHoverText("", "", "", "tpl", 0, 0, 0, 9, 9);
         Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9 · FIR not required", "unrestricted requirements never imply arbitrary item templates", ref assertions);
         ItemRequirementAllocation firHideout = new ItemRequirementAllocation(2, 1, 0, 0, 2, 0, 0, hideoutFir: 2);
@@ -43,7 +45,8 @@ static class Phase36RaidInventoryTooltipTests
                sink.Contains("RaidInventoryRefreshRequested?.Invoke();"),
             "an inspected item refreshes raid inventory without reopening the inventory window", ref assertions);
         string plugin = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "Plugin.cs"));
-        Expect(plugin.Contains("WaitForSecondsRealtime(.15f)") &&
+        Expect(plugin.Contains("WaitForSecondsRealtime(InventorySnapshotSettleSeconds)") &&
+               plugin.Contains("InventorySnapshotMinimumSeconds = 1.5f") &&
                plugin.Contains("RaidInventoryMinimumScanSeconds = .35f") &&
                plugin.Contains("now - lastRaidInventoryScanAt < RaidInventoryMinimumScanSeconds"),
             "view bursts coalesce into one snapshot refresh and visible raid scans are rate limited", ref assertions);

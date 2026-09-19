@@ -8,6 +8,10 @@ static class Phase24HotPathOptimizationTests
         int assertions = 0;
         string root = FindRepositoryRoot();
         string renderer = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "PolishedTooltipRenderer.cs"));
+        string plugin = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "Plugin.cs"));
+        string server = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "server", "ServerMod.cs"));
+        string compatibility = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "CompatibilityHighlighterIntegration.cs"));
+        string sink = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "ItemHoverOverlaySink.cs"));
 
         Expect(renderer.Contains("static string[] lineBuffer") && renderer.Contains("static float[] rowHeightBuffer"),
             "tooltip renderer reuses line and row-height buffers across repaint calls", ref assertions);
@@ -21,6 +25,18 @@ static class Phase24HotPathOptimizationTests
             "cached styles are rebuilt only when the active GUI skin changes", ref assertions);
         Expect(renderer.Contains("clipping = TextClipping.Clip") && renderer.Contains("wordWrap = true") && renderer.Contains("label.CalcHeight"),
             "performance pass preserves the established tooltip geometry contract", ref assertions);
+        Expect(plugin.Contains("if (raidLedger.IsRaidSessionActive)") && plugin.Contains("InventorySnapshotMinimumSeconds") &&
+               plugin.Contains("InventorySnapshotSettleSeconds"),
+            "full server snapshots are suppressed in raid and menu bursts are coalesced after hideout state settles", ref assertions);
+        Expect(server.Contains("FreezeProfile(profileHelper.GetPmcProfile(sessionId))") && server.Contains("Deserialize<JsonElement>"),
+            "server serializes an immutable profile generation instead of a mutating live object", ref assertions);
+        Expect(compatibility.Contains("GetAllItemViews") && compatibility.Contains("MergeRegisteredViews") &&
+               compatibility.Contains("activeInHierarchy") && !compatibility.Contains("FindObjectsOfType") &&
+               !compatibility.Contains("Resources.FindObjectsOfTypeAll"),
+            "CompatibilityHighlighter receives detached container views without a global Unity scan", ref assertions);
+        Expect(sink.Contains("CompatibilityHighlighterIntegration.Track(itemView)") &&
+               sink.Contains("CompatibilityHighlighterIntegration.Untrack(itemView)"),
+            "the compatibility bridge follows the existing ItemView lifecycle", ref assertions);
         return assertions;
     }
 
