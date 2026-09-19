@@ -73,6 +73,12 @@ def main() -> None:
     if args.tgc_assort:
         sources.append(("TGC runtime", args.tgc_assort, False))
 
+    effective_buy_limits = {
+        # Admiral applies this cap to the imported TGC record without mutating
+        # the independently installed TGC mod.
+        "672e2e75a8f42643cd43c4b8": 1,
+    }
+
     quest_gates = dict(load(ROOT / "db/questassort.json").get("success", {}))
     quest_gates.update(load(ROOT / "db/CustomQuests/66bf757f27d0b097db0acea5/QuestAssort/Artem_QuestAssort.json").get("success", {}))
     quest_gates.update({
@@ -126,8 +132,9 @@ def main() -> None:
                 flags.append("very-cheap")
             if ratio is not None and ratio > 3.0:
                 flags.append("very-expensive")
-            if upd.get("UnlimitedCount") is True and int(assort.get("loyal_level_items", {}).get(offer_id, 1)) < 4:
-                flags.append("early-unlimited")
+            player_limit = effective_buy_limits.get(offer_id, int(upd.get("BuyRestrictionMax") or 0))
+            if upd.get("UnlimitedCount") is True and player_limit == 0:
+                flags.append("unbounded-purchase")
             tpl = str(offer["_tpl"])
             rows.append({
                 "source": source,
@@ -136,8 +143,9 @@ def main() -> None:
                 "templateId": tpl,
                 "name": locales.get(f"{tpl} Name") or locales.get(f"{tpl} ShortName") or tpl,
                 "loyalty": int(assort.get("loyal_level_items", {}).get(offer_id, 1)),
+                "globalStock": "unlimited" if upd.get("UnlimitedCount") is True else "finite",
                 "stock": int(upd.get("StackObjectsCount") or 0),
-                "buyLimit": "unlimited" if upd.get("UnlimitedCount") is True else int(upd.get("BuyRestrictionMax") or 0),
+                "buyLimit": player_limit if player_limit else "none",
                 "route": route,
                 "questGate": str(quest_gates.get(offer_id) or ""),
                 "costRub": cost if priced_reqs == len(requirements) else "",

@@ -139,6 +139,7 @@ public sealed class LegacyTraderConsolidation(
                 int roots = assort.Items.Count(item => item.ParentId?.ToString() == "hideout");
                 if (roots != 114 || assort.Items.Count != 236 || externalSuits.Count != 4)
                     throw new InvalidDataException($"TGC 3.0.0 content shape drift: roots={roots}, rows={assort.Items.Count}, suits={externalSuits.Count}");
+                ApplyPurchaseLimit(assort, "672e2e75a8f42643cd43c4b8", 1, "TGC M4A1 preset");
                 ValidateExternalAssort(assort, "TGC content-only provider");
                 result = result with
                 {
@@ -376,6 +377,16 @@ public sealed class LegacyTraderConsolidation(
                 throw new InvalidDataException($"{sourceName} offer {root} is missing barter or loyalty data");
         if (assort.BarterScheme.Keys.Any(key => !roots.Contains(key)) || assort.LoyalLevelItems.Keys.Any(key => !roots.Contains(key)))
             throw new InvalidDataException($"{sourceName} has orphaned barter or loyalty keys");
+    }
+
+    private static void ApplyPurchaseLimit(TraderAssort assort, string offerIdText, int limit, string label)
+    {
+        MongoId offerId = new(offerIdText);
+        Item? root = assort.Items.SingleOrDefault(item => item.Id == offerId && item.ParentId?.ToString() == "hideout");
+        if (root?.Upd is null)
+            throw new InvalidDataException($"Cannot apply Admiral purchase limit to missing {label} offer {offerIdText}");
+        root.Upd.BuyRestrictionMax = limit;
+        root.Upd.BuyRestrictionCurrent = 0;
     }
 
     private void ValidateExternalQuestGraph(MongoId legacyId)

@@ -33,6 +33,7 @@ class StorefrontValueAuditTests(unittest.TestCase):
         for row in self.rows:
             self.assertNotIn("missing-payment", row["flags"], row["offerId"])
             self.assertIn(int(row["loyalty"]), range(1, 5), row["offerId"])
+            self.assertIn(row["globalStock"], {"finite", "unlimited"}, row["offerId"])
             self.assertTrue(row["stock"], row["offerId"])
             self.assertTrue(row["buyLimit"], row["offerId"])
             self.assertIn(row["route"].split("+")[0], {"cash", "barter"}, row["offerId"])
@@ -49,6 +50,20 @@ class StorefrontValueAuditTests(unittest.TestCase):
         for row in self.rows:
             expected = "true" if row["source"].startswith("WTT ") else "false"
             self.assertEqual(expected, row["optional"], row["offerId"])
+
+    def test_unbounded_rows_are_only_the_eight_inherited_basic_ammo_or_magazine_routes(self):
+        rows = [row for row in self.rows if "unbounded-purchase" in row["flags"]]
+        self.assertEqual(8, len(rows))
+        self.assertEqual({"Artem"}, {row["source"] for row in rows})
+        self.assertEqual({"unlimited"}, {row["globalStock"] for row in rows})
+        self.assertEqual({"none"}, {row["buyLimit"] for row in rows})
+
+    def test_high_value_external_rows_have_effective_player_caps(self):
+        rows = {row["offerId"]: row for row in self.rows}
+        self.assertEqual("1", rows["672e2804a0529208b4e10e18"]["buyLimit"])
+        self.assertEqual("1", rows["672e2e75a8f42643cd43c4b8"]["buyLimit"])
+        self.assertNotIn("unbounded-purchase", rows["672e2804a0529208b4e10e18"]["flags"])
+        self.assertNotIn("unbounded-purchase", rows["672e2e75a8f42643cd43c4b8"]["flags"])
 
 
 if __name__ == "__main__":
