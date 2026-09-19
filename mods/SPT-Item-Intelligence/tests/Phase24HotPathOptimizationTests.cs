@@ -40,6 +40,10 @@ static class Phase24HotPathOptimizationTests
         Expect(compatibility.Contains("if (postfix == null)") &&
                compatibility.Contains("runtime patch method was not finalized by Mono"),
             "CompatibilityHighlighter bridge cannot report installed when Mono returned no patch method", ref assertions);
+        Expect(compatibility.Contains("BindingFlags.Static | BindingFlags.Public") &&
+               compatibility.Contains("DefineParameter(1, ParameterAttributes.None, \"__result\")") &&
+               compatibility.Contains("if (merge == null) return null"),
+            "CompatibilityHighlighter bridge resolves its public merge callback and names Harmony's result parameter", ref assertions);
         Expect(sink.Contains("CompatibilityHighlighterIntegration.Track(itemView)") &&
                sink.Contains("CompatibilityHighlighterIntegration.Untrack(itemView)"),
             "the compatibility bridge follows the existing ItemView lifecycle", ref assertions);

@@ -127,11 +127,15 @@ namespace SPTItemIntelligence
                 MethodAttributes.Public | MethodAttributes.Static,
                 typeof(void),
                 new[] { arrayType.MakeByRefType() });
+            method.DefineParameter(1, ParameterAttributes.None, "__result");
+            MethodInfo merge = typeof(CompatibilityHighlighterIntegration).GetMethod(
+                nameof(MergeRegisteredViews), BindingFlags.Static | BindingFlags.Public);
+            if (merge == null) return null;
             ILGenerator il = method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldind_Ref);
-            il.Emit(OpCodes.Call, typeof(CompatibilityHighlighterIntegration).GetMethod(nameof(MergeRegisteredViews), BindingFlags.Static | BindingFlags.NonPublic));
+            il.Emit(OpCodes.Call, merge);
             il.Emit(OpCodes.Castclass, arrayType);
             il.Emit(OpCodes.Stind_Ref);
             il.Emit(OpCodes.Ret);
