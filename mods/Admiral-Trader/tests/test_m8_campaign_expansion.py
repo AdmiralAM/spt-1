@@ -65,6 +65,30 @@ class M8CampaignExpansionTests(unittest.TestCase):
         self.assertNotIn("WTT-ContentBackport.dll", csproj)
         self.assertEqual({x["guid"] for x in self.optional["sources"]}, {"com.wtt.armory", "com.wtt.contentbackport"})
 
+    def test_distance_rules_are_occasional_and_match_weapon_roles(self):
+        expected = {
+            "manual-shotguns": (25, "<="),
+            "automatic-pistols": (30, "<="),
+            "compact-rifles": (30, ">="),
+            "sks-hunter": (40, ">="),
+            "nato-service-rifles": (50, ">="),
+            "battle-rifles": (60, ">="),
+        }
+        weapon_rows = [row for row in self.runtime["quests"] if row["kind"] == "weapon"]
+        constrained = 0
+        for row in weapon_rows:
+            quest = self.by_id[row["id"]]
+            kill = quest["conditions"]["AvailableForFinish"][0]["counter"]["conditions"][0]
+            distance = kill["distance"]
+            if row["pool"] in expected:
+                constrained += 1
+                self.assertEqual((distance["value"], distance["compareMethod"]), expected[row["pool"]])
+                self.assertEqual(row["distance"], {"value": expected[row["pool"]][0], "compareMethod": expected[row["pool"]][1]})
+            else:
+                self.assertEqual(distance["value"], 0, row["pool"])
+                self.assertIsNone(row.get("distance"))
+        self.assertEqual(constrained, 6)
+
     def test_equipment_assignments_offer_a_small_map_pool(self):
         rows = [row for row in self.runtime["quests"] if row["kind"] == "equipment"]
         self.assertEqual(len(rows), 6)

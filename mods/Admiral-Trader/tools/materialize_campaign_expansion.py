@@ -50,8 +50,8 @@ def replace_prerequisite(quest: dict, previous: str | None):
 def counter(qid: str, value: int, conditions: list[dict], qtype="Elimination", one=False):
     return {"id":hid(qid+":finish"),"index":0,"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","value":value,"type":qtype,"oneSessionOnly":one,"isResetOnConditionFailed":False,"isNecessary":False,"doNotResetIfCounterCompleted":False,"counter":{"id":hid(qid+":counter"),"conditions":conditions},"completeInSeconds":0,"conditionType":"CounterCreator"}
 
-def kill(qid, weapons, locations, target="Any", distance=0):
-    rows=[{"id":hid(qid+":kill"),"dynamicLocale":False,"target":target,"compareMethod":">=","value":1,"weapon":weapons,"distance":{"value":distance,"compareMethod":">="},"weaponModsInclusive":[],"weaponModsExclusive":[],"enemyEquipmentInclusive":[],"enemyEquipmentExclusive":[],"weaponCaliber":[],"savageRole":[],"bodyPart":[],"daytime":{"from":0,"to":0},"conditionType":"Kills","enemyHealthEffects":[],"resetOnSessionEnd":False}]
+def kill(qid, weapons, locations, target="Any", distance=0, distance_compare=">="):
+    rows=[{"id":hid(qid+":kill"),"dynamicLocale":False,"target":target,"compareMethod":">=","value":1,"weapon":weapons,"distance":{"value":distance,"compareMethod":distance_compare},"weaponModsInclusive":[],"weaponModsExclusive":[],"enemyEquipmentInclusive":[],"enemyEquipmentExclusive":[],"weaponCaliber":[],"savageRole":[],"bodyPart":[],"daytime":{"from":0,"to":0},"conditionType":"Kills","enemyHealthEffects":[],"resetOnSessionEnd":False}]
     if locations: rows.append({"id":hid(qid+":location"),"dynamicLocale":False,"conditionType":"Location","target":locations})
     return rows
 
@@ -107,11 +107,21 @@ def main():
     expanded_by_lane={"A":[],"B":[]}
     for lane,row in [("A",x) for x in plan["lanes"]["A-close-support"][:10]]+[("B",x) for x in plan["lanes"]["B-rifle-precision"][:9]]:
         order,pool,band,locations,semantics=row; level=int(band.split('-')[0]); native_weapons=plan["pools"][pool]; optional_weapons=optional_by_pool.get(pool,[]); weapons=native_weapons+[x["tpl"] for x in optional_weapons]; runtime_locations=[x for label in locations for x in LOCATION_IDS[label]]; slug=f"rotation-{lane.lower()}-{order:02d}-{pool}"; name=f"Arsenal Rotation {lane}-{order}: {pool.replace('-',' ').title()}"
+        distance_rules = {
+            "manual-shotguns": (25, "<="),
+            "automatic-pistols": (30, "<="),
+            "compact-rifles": (30, ">="),
+            "sks-hunter": (40, ">="),
+            "nato-service-rifles": (50, ">="),
+            "battle-rifles": (60, ">="),
+        }
         target = "Savage" if pool == "sks-hunter" else "Any"
-        minimum_distance = 40 if pool == "sks-hunter" else 0
+        distance_value, distance_compare = distance_rules.get(pool, (0, ">="))
         required_count = 8 if pool == "sks-hunter" else min(6+order,15)
-        qid,q=quest(slug,name,level,previous[lane],lambda qid,w=weapons,l=runtime_locations,v=required_count,t=target,d=minimum_distance:counter(qid,v,kill(qid,w,l,t,d)),"Elimination")
-        previous[lane]=qid;out.append((qid,q));meta.append({"id":qid,"kind":"weapon","lane":lane,"order":order,"pool":pool})
+        qid,q=quest(slug,name,level,previous[lane],lambda qid,w=weapons,l=runtime_locations,v=required_count,t=target,d=distance_value,dc=distance_compare:counter(qid,v,kill(qid,w,l,t,d,dc)),"Elimination")
+        previous[lane]=qid;out.append((qid,q));metadata={"id":qid,"kind":"weapon","lane":lane,"order":order,"pool":pool}
+        if distance_value: metadata["distance"]={"value":distance_value,"compareMethod":distance_compare}
+        meta.append(metadata)
         expanded_by_lane[lane].append((level, qid, q))
         optional_names=", ".join(x["name"] for x in optional_weapons)
         optional_names_ru=", ".join(x["nameRu"] for x in optional_weapons)
@@ -119,8 +129,10 @@ def main():
         allowed_ru=item_list(native_weapons,'ru')+(f"; опционально WTT: {optional_names_ru}" if optional_names_ru else "")
         en_detail=f"Allowed weapons: {item_list(native_weapons,'en')}." + (f"\nOptional WTT additions: {optional_names}." if optional_names else "")
         ru_detail=f"Разрешённое оружие:\n- {item_list(native_weapons,'ru')}." + (f"\nДополнительные модели при установленном WTT:\n- {optional_names_ru}." if optional_names_ru else "")
-        objective_en = "Eliminate 8 Scavs from at least 40 metres with an allowed self-loading carbine on Customs, Woods, or Shoreline" if pool == "sks-hunter" else f"Eliminate {required_count} targets with the allowed weapon pool"
-        objective_ru = "Устранить 8 Диких с дистанции от 40 метров допустимым самозарядным карабином на Таможне, Лесу или Берегу" if pool == "sks-hunter" else f"Устранить {required_count} целей разрешённым оружием"
+        range_en = f" from {'no more than' if distance_compare == '<=' else 'at least'} {distance_value} metres" if distance_value else ""
+        range_ru = f" с дистанции {'не более' if distance_compare == '<=' else 'не менее'} {distance_value} м" if distance_value else ""
+        objective_en = "Eliminate 8 Scavs from at least 40 metres with an allowed self-loading carbine on Customs, Woods, or Shoreline" if pool == "sks-hunter" else f"Eliminate {required_count} targets with the allowed weapon pool{range_en}"
+        objective_ru = "Устранить 8 Диких с дистанции от 40 метров допустимым самозарядным карабином на Таможне, Лесу или Берегу" if pool == "sks-hunter" else f"Устранить {required_count} целей разрешённым оружием{range_ru}"
         if pool == "sks-hunter":
             name = "Arsenal Rotation B-4: Self-loading Carbines"
             q["QuestName"] = name
