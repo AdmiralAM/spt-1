@@ -33,6 +33,20 @@ def test_complete_artem_runtime_is_owned_by_admiral() -> None:
     assert len(list((ROOT / f"db/CustomQuests/{ARTEM_ID}/Locales").glob("*.json"))) == 3
 
 
+def test_painter_bundle_layer_is_reproducible_and_coexists_with_artem() -> None:
+    inventory = load(ROOT / "manifests/painter-bundle-inventory.json")
+    build = (ROOT / "tools/Build-Spt415Rc.ps1").read_text(encoding="utf-8")
+    registration = (ROOT / "server/ArtemContentRegistration.cs").read_text(encoding="utf-8")
+
+    assert inventory["bundleCount"] == 5
+    assert len(inventory["bundles"]) == 5
+    assert len({entry["path"] for entry in inventory["bundles"]}) == 5
+    assert all(len(entry["sha256"]) == 64 and entry["size"] > 0 for entry in inventory["bundles"])
+    assert "Hydrate-PainterBundles.ps1" in build
+    assert "262 Artem and 5 Painter" in build
+    assert "requiredBundles.Any" in registration
+
+
 def test_persistent_artem_id_sets_match_inventory() -> None:
     identities = load(ROOT / "manifests/external-content-identities.json")["artem"]
     assort = load(ROOT / "external/artem/db/assort.json")

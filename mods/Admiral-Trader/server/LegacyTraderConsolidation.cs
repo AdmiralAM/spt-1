@@ -119,18 +119,22 @@ public sealed class LegacyTraderConsolidation(
             return result;
 
         bool painterProviderLoaded = templateTable.Quests.Values.Any(quest => quest.TraderId.ToString() == PainterTraderId);
-        bool painterTraderHasStock = tradersTable.TryGetValue(new MongoId(PainterTraderId), out Trader? painterTrader)
-            && (painterTrader.Assort?.Items?.Count ?? 0) > 0;
+        tradersTable.TryGetValue(new MongoId(PainterTraderId), out Trader? painterTrader);
+        bool painterTraderHasStock = (painterTrader?.Assort?.Items?.Count ?? 0) > 0;
 
         DirectoryInfo? tgc = modsDirectory.EnumerateDirectories()
             .FirstOrDefault(candidate => File.Exists(IOPath.Combine(candidate.FullName, "db", "CustomItems", "modTGC_items.json"))
                 && File.Exists(IOPath.Combine(candidate.FullName, "db", "traders", PainterTraderId, "assort.json")));
-        if (tgc is not null && !painterTraderHasStock)
+        if (tgc is not null)
         {
             TraderAssort assort = LoadExternal<TraderAssort>(modPath, IOPath.Combine(tgc.FullName, "db", "traders", PainterTraderId, "assort.json"));
             List<Suit> externalSuits = LoadExternal<List<Suit>>(modPath, IOPath.Combine(tgc.FullName, "db", "traders", PainterTraderId, "suits.json"));
+            HashSet<MongoId> legacyPainterRoots = painterTrader?.Assort?.Items
+                .Where(item => item.ParentId?.ToString() == "hideout").Select(item => item.Id).ToHashSet() ?? [];
+            bool tgcAlreadyOwnedByLegacyPainter = assort.Items
+                .Where(item => item.ParentId?.ToString() == "hideout").Any(item => legacyPainterRoots.Contains(item.Id));
             MongoId[] missing = assort.Items.Select(item => item.Template).Where(template => !templateTable.Items.ContainsKey(template)).Distinct().ToArray();
-            if (missing.Length == 0)
+            if (missing.Length == 0 && !tgcAlreadyOwnedByLegacyPainter)
             {
                 int roots = assort.Items.Count(item => item.ParentId?.ToString() == "hideout");
                 if (roots != 114 || assort.Items.Count != 236 || externalSuits.Count != 4)
@@ -143,27 +147,8 @@ public sealed class LegacyTraderConsolidation(
                     Suits = MergeSuits(admiral, externalSuits)
                 };
             }
-            else
+            else if (missing.Length > 0)
                 logger.Warning($"Admiral skipped TGC storefront: {missing.Length} TGC templates are unavailable; core Admiral remains active");
-        }
-
-        string packagedArtemAssort = IOPath.Combine(modPath, "external", "artem", "db", "assort.json");
-        if (File.Exists(packagedArtemAssort))
-        {
-            TraderAssort artemAssort = LoadExternal<TraderAssort>(modPath, packagedArtemAssort);
-            int roots = artemAssort.Items.Count(item => item.ParentId?.ToString() == "hideout");
-            if (roots != 281 || artemAssort.Items.Count != 703)
-                throw new InvalidDataException($"Embedded Artem 3.0.0 assort drift: roots={roots}, rows={artemAssort.Items.Count}");
-            MongoId[] missing = artemAssort.Items.Select(item => item.Template)
-                .Where(template => !templateTable.Items.ContainsKey(template)).Distinct().ToArray();
-            if (missing.Length > 0)
-                throw new InvalidDataException($"Embedded Artem content references {missing.Length} unavailable templates");
-            ValidateExternalAssort(artemAssort, "embedded Artem content");
-            result = result with
-            {
-                OfferRoots = result.OfferRoots + roots,
-                ItemRows = result.ItemRows + MergeAssort(admiral.Assort, artemAssort, "embedded Artem content")
-            };
         }
 
         string packagedPainter = IOPath.Combine(modPath, "external", "painter");
@@ -171,8 +156,16 @@ public sealed class LegacyTraderConsolidation(
             ? new DirectoryInfo(packagedPainter)
             : modsDirectory.EnumerateDirectories()
             .FirstOrDefault(candidate => FindPainterQuestFile(candidate.FullName) is not null);
-        if (painter is not null && !painterProviderLoaded && !painterTraderHasStock)
-            result += AttachPainterContent(modPath, painter.FullName, admiral);
+        if (painter is not null)
+        {
+            if (!painterProviderLoaded && !painterTraderHasStock)
+                result += AttachPainterContent(modPath, painter.FullName, admiral);
+            else
+                result = result with
+                {
+                    QuestUnlocks = MergeQuestAssort(admiral.QuestAssort, PainterQuestUnlocks(), "packaged Painter unlocks")
+                };
+        }
         return result;
     }
 
@@ -200,19 +193,21 @@ public sealed class LegacyTraderConsolidation(
         int remapped = RemapQuests(new MongoId(PainterTraderId));
         RegisterPainterLocales(modPath, painterPath);
         RegisterPainterImages(painterPath);
-        int unlocks = MergeQuestAssort(admiral.QuestAssort, new Dictionary<string, Dictionary<MongoId, MongoId>>
-        {
-            ["started"] = [],
-            ["success"] = new()
-            {
-                [new MongoId("672e2804a0529208b4e10e18")] = new MongoId("668aad3c3ff8f5b258e3a65b"),
-                [new MongoId("672e284a363b798192b802af")] = new MongoId("668c18eb12542b3c3ff6e20f"),
-                [new MongoId("672e289bb4096716fcb918a7")] = new MongoId("668c18eb12542b3c3ff6e20f")
-            },
-            ["fail"] = []
-        }, "Painter content-only provider");
+        int unlocks = MergeQuestAssort(admiral.QuestAssort, PainterQuestUnlocks(), "Painter content-only provider");
         return new(7, MergeAssort(admiral.Assort, assort, "Painter content-only provider"), unlocks, 0, remapped);
     }
+
+    private static Dictionary<string, Dictionary<MongoId, MongoId>> PainterQuestUnlocks() => new()
+    {
+        ["started"] = [],
+        ["success"] = new()
+        {
+            [new MongoId("672e2804a0529208b4e10e18")] = new MongoId("668aad3c3ff8f5b258e3a65b"),
+            [new MongoId("672e284a363b798192b802af")] = new MongoId("668c18eb12542b3c3ff6e20f"),
+            [new MongoId("672e289bb4096716fcb918a7")] = new MongoId("668c18eb12542b3c3ff6e20f")
+        },
+        ["fail"] = []
+    };
 
     private T LoadExternal<T>(string modPath, string absolutePath) =>
         modHelper.GetJsonDataFromFile<T>(modPath, IOPath.GetRelativePath(modPath, absolutePath).Replace('\\', '/'));

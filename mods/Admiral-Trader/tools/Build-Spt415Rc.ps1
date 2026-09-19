@@ -103,8 +103,9 @@ foreach ($directory in 'db','assets','external') {
 }
 Copy-Item (Join-Path $traderRoot 'bundles.json') (Join-Path $modTarget 'bundles.json')
 & (Join-Path $traderRoot 'tools/Hydrate-ArtemBundles.ps1') -Destination (Join-Path $modTarget 'bundles') -WorkingDirectory (Join-Path $OutputDirectory '.artem-source')
+& (Join-Path $traderRoot 'tools/Hydrate-PainterBundles.ps1') -Destination (Join-Path $modTarget 'bundles') -WorkingDirectory (Join-Path $OutputDirectory '.painter-source')
 New-Item (Join-Path $modTarget 'manifests') -ItemType Directory -Force | Out-Null
-foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json') {
+foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json','reward-bundle-policy.json','external-trader-consolidation.json','external-content-identities.json','painter-special-delivery-pool.json','artem-bundle-inventory.json','painter-bundle-inventory.json') {
     Copy-Item (Join-Path $traderRoot "manifests/$manifest") (Join-Path $modTarget "manifests/$manifest")
 }
 if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $traderRoot 'README.md') $modTarget }
@@ -127,7 +128,7 @@ if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count 
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 18) { throw 'Staged Trader lost the 18 quest-gated offers.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 172) { throw 'Staged Trader lost the 172-quest campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
-if (@(Get-ChildItem (Join-Path $modTarget 'bundles') -Filter '*.bundle' -File -Recurse).Count -ne 262) { throw 'Staged Trader lost the embedded 262-bundle Artem contract.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'bundles') -Filter '*.bundle' -File -Recurse).Count -ne 267) { throw 'Staged Trader lost the embedded 262 Artem and 5 Painter bundle contracts.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/CustomItems') -Filter '*.json' -File).Count -ne 6) { throw 'Staged Trader lost the embedded Artem item definitions.' }
 if (-not (Test-Path (Join-Path $modTarget 'external/artem/db/assort.json') -PathType Leaf)) { throw 'Staged Trader lost the embedded Artem assortment.' }
 

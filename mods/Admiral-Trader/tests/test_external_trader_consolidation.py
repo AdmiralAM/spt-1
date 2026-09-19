@@ -13,6 +13,7 @@ IDENTITIES = json.loads((ROOT / "manifests" / "external-content-identities.json"
 PAINTER_POOL = json.loads((ROOT / "manifests" / "painter-special-delivery-pool.json").read_text(encoding="utf-8"))
 PAINTER_REGISTRATION = (ROOT / "server" / "PainterContentRegistration.cs").read_text(encoding="utf-8")
 IMPORT_TOOL = (ROOT / "tools" / "Import-PainterContent.ps1").read_text(encoding="utf-8")
+HYDRATE_TOOL = (ROOT / "tools" / "Hydrate-PainterBundles.ps1").read_text(encoding="utf-8")
 
 
 def test_persistent_ownership_and_measured_external_scope() -> None:
@@ -75,6 +76,7 @@ def test_exact_cross_pr_authority_and_content_only_painter_contract() -> None:
     assert IDENTITIES["authority"]["beltHead"] == "c48238023e0d1d0dc8fabcabafb79db66154b90b"
     assert "Painter-4.0.dll must not be present" in IMPORT_TOOL
     assert "PainterContentRegistration" in PAINTER_REGISTRATION
+    assert "Painter_3.0.0.7z" in HYDRATE_TOOL
     assert "CreateItemFromClone" in PAINTER_REGISTRATION
     assert "ValidateExternalAssort" in CONSOLIDATION
     assert "ValidateExternalQuestGraph" in CONSOLIDATION

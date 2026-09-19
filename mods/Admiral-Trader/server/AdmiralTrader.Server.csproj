@@ -54,6 +54,7 @@
     <Content Include="..\manifests\external-content-identities.json" Link="manifests\external-content-identities.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\painter-special-delivery-pool.json" Link="manifests\painter-special-delivery-pool.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\artem-bundle-inventory.json" Link="manifests\artem-bundle-inventory.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\painter-bundle-inventory.json" Link="manifests\painter-bundle-inventory.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\dialogue.json" Link="db\dialogue.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="Always" />
@@ -72,5 +73,6 @@
     <Content Include="..\db\CustomQuestZones\**\*.json" Link="db\CustomQuestZones\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\bundles.json" Link="bundles.json" CopyToOutputDirectory="Always" />
     <Content Include="..\external\artem\**\*.*" Link="external\artem\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\external\painter\**\*.*" Link="external\painter\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>
