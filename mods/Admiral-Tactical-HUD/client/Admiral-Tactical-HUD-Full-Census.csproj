@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Include="FullCensusPlugin.cs" />
     <Compile Include="HudIcons.cs" />
+    <Compile Include="CensusIntegrations.cs" />
     <EmbeddedResource Include="assets\botcensus\*.png">
       <LogicalName>AdmiralTacticalHUD.BotCensus.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>

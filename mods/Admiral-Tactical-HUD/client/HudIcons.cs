@@ -43,8 +43,13 @@ namespace SPTPopCounter
             {"left_leg",new Vector2Int(0,2)},{"right_leg",new Vector2Int(1,2)},{"self",new Vector2Int(2,2)}
         };
         Texture2D sheet;
+        readonly bool preferLegacyPopulationIcons;
 
-        public HudIcons() { LoadSheet(); }
+        public HudIcons(bool preferLegacyPopulationIcons = false)
+        {
+            this.preferLegacyPopulationIcons = preferLegacyPopulationIcons;
+            LoadSheet();
+        }
 
         void LoadSheet()
         {
@@ -98,14 +103,15 @@ namespace SPTPopCounter
             if (string.IsNullOrEmpty(key)) return null;
             if (cache.TryGetValue(key,out Texture2D cached)) return cached;
 
-            Texture2D preferred = IsLegacyPopulationIcon(key) ? LoadReserve(key) : LoadBotCensus(key);
+            bool legacy = preferLegacyPopulationIcons && IsLegacyPopulationIcon(key);
+            Texture2D preferred = legacy ? LoadReserve(key) : LoadBotCensus(key);
             if (preferred != null)
             {
                 cache[key] = preferred;
                 return preferred;
             }
 
-            Texture2D fallback = IsLegacyPopulationIcon(key) ? LoadBotCensus(key) : LoadReserve(key);
+            Texture2D fallback = legacy ? LoadBotCensus(key) : LoadReserve(key);
             cache[key] = fallback;
             return fallback;
         }

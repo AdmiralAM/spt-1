@@ -62,8 +62,16 @@ def main() -> int:
     for token in forbidden_kill_feed:
         if token in plugin or token in visual:
             raise SystemExit(f"removed kill-feed contract returned: {token}")
-    if "IsLegacyPopulationIcon(key) ? LoadReserve(key)" not in icons:
-        raise SystemExit("legacy role icons are not preferred for compact population roles")
+    if "new HudIcons(true)" not in visual or "new HudIcons(false)" not in full:
+        raise SystemExit("Compact and Full Census do not select independent role-icon policies")
+    integrations = (ROOT / "client" / "CensusIntegrations.cs").read_text(encoding="utf-8")
+    required_integrations = (
+        "GetFactionsByRole", "GetCustomWildSpawnTypeDict", "IsFollower",
+        "TryGetCoopHandler", "FactionHasBoss", "RangeFallback",
+    )
+    for token in required_integrations:
+        if token not in integrations:
+            raise SystemExit(f"incomplete optional census integration contract: {token}")
     bodies = {
         "Refresh": method_body(plugin, "Refresh"),
         "Update": method_body(plugin, "Update"),

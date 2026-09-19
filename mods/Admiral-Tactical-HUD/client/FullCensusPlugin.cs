@@ -10,6 +10,8 @@ using UnityEngine.SceneManagement;
 namespace SPTPopCounter
 {
     [BepInPlugin("com.admiralam.tacticalhud.fullcensus", "Admiral Tactical HUD - Full Census", "1.13.3")]
+    [BepInDependency("com.morebotsapi.tacticaltoaster", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class FullCensusPlugin : BaseUnityPlugin
     {
         enum Bucket { Pmc, Scav, Raider, Rogue, Boss, Guard, Goon, Cultist, Infected, Btr, Other }
@@ -35,7 +37,13 @@ namespace SPTPopCounter
             }
         }
 
-        ConfigEntry<bool> enabled, onlyInRaid, showIcons, useTarkovFont, splitRogue, splitBoss;
+        struct FactionTally
+        {
+            public int Bosses;
+            public int Escorts;
+        }
+
+        ConfigEntry<bool> censusEnabled, onlyInRaid, showIcons, useTarkovFont, splitRogue, splitBoss;
         ConfigEntry<int> fontSize, offsetRight, offsetTop;
         ConfigEntry<float> backgroundOpacity, iconScale;
         ConfigEntry<string> interval;
@@ -44,11 +52,11 @@ namespace SPTPopCounter
             showInfected, showBtr, showOther, showTotal;
 
         readonly int[] counts = new int[11];
-        readonly Dictionary<string, int> customFactions = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        readonly Dictionary<string, FactionTally> customFactions = new Dictionary<string, FactionTally>(StringComparer.OrdinalIgnoreCase);
         readonly List<CensusRow> rows = new List<CensusRow>(20);
         readonly Dictionary<Type, Dictionary<string, MemberInfo>> memberCache = new Dictionary<Type, Dictionary<string, MemberInfo>>();
         readonly Dictionary<string, Type> typeCache = new Dictionary<string, Type>(StringComparer.Ordinal);
-        readonly HudIcons icons = new HudIcons();
+        readonly HudIcons icons = new HudIcons(false);
 
         Type worldType, singletonType;
         PropertyInfo singletonInstance;
@@ -71,7 +79,7 @@ namespace SPTPopCounter
 
         void Awake()
         {
-            enabled = Config.Bind("1. General", "Enable Full Census", false,
+            censusEnabled = Config.Bind("1. General", "Enable Full Census", false,
                 "Full BotCensus-style population panel. Disable the compact Population section in Admiral Tactical HUD when using this mode.");
             onlyInRaid = Config.Bind("1. General", "Only In Raid", true, "Hide the full census outside raid/hideout.");
             toggleKey = Config.Bind("1. General", "Toggle Key", new KeyboardShortcut(KeyCode.None), "Optional key to toggle Full Census.");
@@ -111,9 +119,9 @@ namespace SPTPopCounter
         void Update()
         {
             KeyboardShortcut key = toggleKey.Value;
-            if (key.MainKey != KeyCode.None && key.IsDown()) enabled.Value = !enabled.Value;
+            if (key.MainKey != KeyCode.None && key.IsDown()) censusEnabled.Value = !censusEnabled.Value;
 
-            if (!enabled.Value)
+            if (!censusEnabled.Value)
             {
                 fade = 0f;
                 world = null;
@@ -160,21 +168,23 @@ namespace SPTPopCounter
         {
             Array.Clear(counts,0,counts.Length);
             customFactions.Clear();
-            IEnumerable players = GetPlayers(world);
+            CensusIntegrations.InvalidateMoreBots();
+            IEnumerable players;
+            bool fika = CensusIntegrations.TryGetFikaPlayers(out players);
+            if (!fika) players = GetPlayers(world);
             if (players == null) { BuildRows(); return; }
 
             foreach (object player in players)
-                Classify(player);
+                Classify(player, fika && IsTrue(ReadMember(player,"IsObservedAI")));
 
             BuildRows();
         }
 
-        void Classify(object player)
+        void Classify(object player, bool forceAi)
         {
             if (player == null || IsTrue(ReadMember(player,"IsYourPlayer"))) return;
             object ai = ReadMember(player,"IsAI");
-            bool observedAi = IsTrue(ReadMember(player,"IsObservedAI"));
-            if (ai is bool && !(bool)ai && !observedAi) return;
+            if (ai is bool && !(bool)ai && !forceAi) return;
 
             object health = ReadMember(player,"HealthController");
             object alive = ReadMember(health,"IsAlive") ?? ReadMember(player,"IsAlive");
@@ -189,9 +199,11 @@ namespace SPTPopCounter
 
             if (role > 67)
             {
-                string faction = RangeFallback(role) ?? "Custom";
-                customFactions.TryGetValue(faction,out int current);
-                customFactions[faction] = current + 1;
+                string faction = CensusIntegrations.FactionLabel(role);
+                customFactions.TryGetValue(faction,out FactionTally tally);
+                if (CensusIntegrations.IsEscort(role)) tally.Escorts++;
+                else tally.Bosses++;
+                customFactions[faction] = tally;
                 return;
             }
 
@@ -226,17 +238,6 @@ namespace SPTPopCounter
             return Bucket.Other;
         }
 
-        static string RangeFallback(int role)
-        {
-            if (role >= 848400 && role <= 848405) return "RUAF";
-            if (role == 848406) return "Remnant";
-            if (role >= 848420 && role <= 848423) return "Black Division";
-            if (role >= 848430 && role <= 848431) return "Wedge";
-            if (role >= 868588 && role <= 868589) return "Blackout";
-            if (role >= 1170 && role <= 1173) return "UNTAR";
-            return null;
-        }
-
         void BuildRows()
         {
             rows.Clear();
@@ -262,14 +263,27 @@ namespace SPTPopCounter
             Add("Infected", counts[(int)Bucket.Infected], showInfected, "infected");
             Add("BTR", counts[(int)Bucket.Btr], showBtr, "btr");
 
-            foreach (KeyValuePair<string,int> faction in customFactions)
-                if (faction.Value > 0) rows.Add(new CensusRow(faction.Key, faction.Value, "faction", true));
+            foreach (KeyValuePair<string,FactionTally> faction in customFactions)
+            {
+                FactionTally tally = faction.Value;
+                if (splitBoss.Value && CensusIntegrations.FactionHasBoss(faction.Key))
+                {
+                    if (tally.Bosses > 0) rows.Add(new CensusRow(faction.Key, tally.Bosses, FactionIcon(faction.Key, false), true));
+                    if (tally.Escorts > 0) rows.Add(new CensusRow(faction.Key + " Guard", tally.Escorts, FactionIcon(faction.Key, true), true));
+                }
+                else
+                {
+                    int totalFaction = tally.Bosses + tally.Escorts;
+                    if (totalFaction > 0) rows.Add(new CensusRow(faction.Key, totalFaction, FactionIcon(faction.Key, false), true));
+                }
+            }
 
             Add("Other", counts[(int)Bucket.Other], showOther, "other");
 
             int total = 0;
             for (int i=0;i<counts.Length;i++) total += counts[i];
-            foreach (KeyValuePair<string,int> faction in customFactions) total += faction.Value;
+            foreach (KeyValuePair<string,FactionTally> faction in customFactions)
+                total += faction.Value.Bosses + faction.Value.Escorts;
             if (showTotal.Value != RowVis.Hidden && (showTotal.Value == RowVis.Always || total > 0))
                 rows.Add(new CensusRow("Total Bots", total, "total", false, true));
         }
@@ -283,9 +297,16 @@ namespace SPTPopCounter
 
         void AddCombined(string label, int value, ConfigEntry<RowVis> vis, string icon) => Add(label,value,vis,icon);
 
+        static string FactionIcon(string faction, bool guard)
+        {
+            if (string.Equals(faction,"Black Division",StringComparison.OrdinalIgnoreCase)) return "blackdivision";
+            if (string.Equals(faction,"Wedge",StringComparison.OrdinalIgnoreCase)) return guard ? "faction" : "wedge";
+            return "faction";
+        }
+
         void OnGUI()
         {
-            if (!enabled.Value || fade <= 0f) return;
+            if (!censusEnabled.Value || fade <= 0f) return;
             if (onlyInRaid.Value && !inRaid) return;
             if (Event.current.type != EventType.Repaint) return;
             Draw();

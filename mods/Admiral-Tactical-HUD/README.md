@@ -24,17 +24,19 @@ The `1.13.3` line is the only maintained version. Legacy Tactical HUD versions a
 
 ### Compact
 
-`Admiral Tactical HUD.dll` contains the original compact population strip together with player status. Compact PMC, Scav, Boss and reinforced-enemy roles use the established Admiral atlas icons; the later Bot Census replacements remain available only as fallback for those roles.
+`Admiral Tactical HUD.dll` contains the original compact population strip together with player status. Compact PMC, Scav, Boss and reinforced-enemy roles use the established Admiral atlas icons; the later Bot Census replacements remain available only as fallback for those roles. Compact stays a short unbacked summary and does not acquire the detailed Full Census rows.
 
 ### Full Census
 
-`Admiral Tactical HUD Full Census.dll` is a separate optional BepInEx plugin and is disabled by default. Enable it from its F12 configuration when a detailed census is wanted. It provides separate rows for PMC, Scav, Raider, Rogue, Boss, Guard, Goons, Cultist, Infected, BTR, known custom-faction ranges, Other and Total Bots, with configurable row visibility and split/merge behavior.
+`Admiral Tactical HUD Full Census.dll` is a separate optional BepInEx plugin and is disabled by default. Enable it from its F12 configuration when a detailed census is wanted. It provides separate rows for PMC, Scav, Raider, Rogue, Boss, Guard, Goons, Cultist, Infected, BTR, discovered custom factions, Other and Total Bots, with configurable row visibility and split/merge behavior. It deliberately uses the original Bot Census glyph family and its own backed panel rather than the Compact visual language.
+
+MoreBotsAPI and Fika are soft integrations, never mandatory dependencies. With MoreBotsAPI present, Full Census reads its live role-to-faction registry and custom-role metadata, separates a registered custom boss from escorts when the faction actually has a leader, and still falls back to known role ranges if the bridge is unavailable. With Fika present, it prefers the shared player collection and includes observed AI; an incompatible or missing Fika bridge falls back to the local SPT player list.
 
 The two client DLLs are independent. For a single population presentation, keep Compact population enabled or enable Full Census and disable the Compact `Population > Enabled` setting.
 
 ## Icon architecture
 
-The Full Census glyph files are vendored unchanged from the MIT-licensed `CameronsWorks/BotCensus` project. Its vanilla role classification and known custom-faction range fallback inform the current Full Census implementation. This is not a complete Bot Census port: the upstream live MoreBotsAPI registry, custom boss/escort shaping and typed Fika source are not currently integrated. Attribution and the upstream license are preserved under `client/assets/botcensus/` and `THIRD-PARTY-LICENSES/`.
+The Full Census glyph files are vendored unchanged from the MIT-licensed `CameronsWorks/BotCensus` project. Its vanilla role classification, MoreBotsAPI discovery/boss-shaping behavior, Fika shared-player semantics and known custom-faction range fallback inform the Full Census implementation. Admiral uses reflection-only optional adapters so neither integration can prevent the base HUD from loading. Attribution and the upstream license are preserved under `client/assets/botcensus/` and `THIRD-PARTY-LICENSES/`.
 
 The original Admiral Tactical HUD sprite atlas and approved source cells are **retained, not deleted**. They remain the reserve/fallback source for status, body-part and self icons and for any population glyph that cannot be loaded from the embedded Bot Census set.
 

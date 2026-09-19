@@ -46,7 +46,7 @@ namespace SPTPopCounter
             public HudVisualRenderer(Plugin runtime)
             {
                 this.runtime = runtime;
-                icons = new HudIcons();
+                icons = new HudIcons(true);
                 try
                 {
                     hudFont = Font.CreateDynamicFontFromOSFont(

@@ -5,4 +5,4 @@ Original project copyright and license retained; see THIRD-PARTY-LICENSES/BotCen
 
 The files in this directory are unmodified BotCensus population glyphs. Admiral Tactical HUD uses them for extended Full Census roles and as fallback assets. The original Admiral Tactical HUD atlas remains authoritative for the compact PMC, Scav, Boss and reinforced-enemy roles.
 
-The current Full Census code reuses the upstream vanilla classification table and known custom-faction range fallback, but is not a complete source port. MoreBotsAPI registry discovery, custom boss/escort shaping and the typed Fika source remain upstream-only until deliberately integrated and validated.
+Full Census adapts the upstream vanilla classification table, known custom-faction range fallback, MoreBotsAPI registry discovery and custom boss/escort shaping. It also preserves the upstream Fika shared-player semantics through a reflection-only optional adapter. The adapters fail closed to the local SPT player list and known role ranges so neither third-party mod is mandatory.
