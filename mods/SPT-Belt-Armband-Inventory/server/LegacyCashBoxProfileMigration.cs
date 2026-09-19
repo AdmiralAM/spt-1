@@ -17,6 +17,8 @@ public sealed class LegacyCashBoxProfileMigration : AbstractProfileMigration
     public const string CompatibleWalletTemplateId = "60b0f6c058e0b0481a09ad11";
     public const string LegacyThermasterTemplateId = "669c1a420c8342338269dd86";
     public const string CompatibleHolodilnickTemplateId = "5c093db286f7740a1b2617e3";
+    public const string LegacyMobileInfirmaryTemplateId = "6761b213607f9a6f79017b65";
+    public const string CompatibleGammaTemplateId = "5857a8b324597729ab0a0e7d";
 
     public override string MigrationName => "BAndHBLegacyPackNStrapContainersV1";
 
@@ -35,15 +37,33 @@ public sealed class LegacyCashBoxProfileMigration : AbstractProfileMigration
 
     private static void Replace(JsonObject profile, string character)
     {
-        foreach (JsonObject item in Items(profile, character))
+        JsonObject[] items = Items(profile, character).ToArray();
+        string? sortingTable = profile["characters"]?[character]?["Inventory"]?["sortingTable"]?.GetValue<string>();
+        foreach (JsonObject item in items)
+        {
+            if (Read(item, "_tpl") == LegacyMobileInfirmaryTemplateId)
+            {
+                string? infirmaryId = Read(item, "_id");
+                if (sortingTable != null && infirmaryId != null)
+                {
+                    foreach (JsonObject child in items.Where(x => Read(x, "parentId") == infirmaryId))
+                    {
+                        child["parentId"] = sortingTable;
+                        child["slotId"] = "hideout";
+                        child.Remove("location");
+                    }
+                }
+            }
             if (ReplacementFor(Read(item, "_tpl")) is string replacement)
                 item["_tpl"] = replacement;
+        }
     }
 
     private static string? ReplacementFor(string? templateId) => templateId switch
     {
         LegacyCashBoxTemplateId => CompatibleWalletTemplateId,
         LegacyThermasterTemplateId => CompatibleHolodilnickTemplateId,
+        LegacyMobileInfirmaryTemplateId => CompatibleGammaTemplateId,
         _ => null
     };
 
