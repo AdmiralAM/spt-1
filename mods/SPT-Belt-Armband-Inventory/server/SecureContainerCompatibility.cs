@@ -118,8 +118,14 @@ public sealed class SecureContainerCompatibility(
             foreach (var filter in gamma.Properties?.Grids?.SelectMany(grid => grid.Properties?.Filters ?? []) ?? [])
             {
                 filter.Filter ??= [];
+                filter.ExcludedFilter ??= [];
+                foreach (MongoId parent in new[] { SimpleContainerParent, PackNStrapContainerParent })
+                    if (filter.ExcludedFilter.Remove(parent)) changed++;
                 foreach (MongoId id in compatible)
+                {
                     if (id != gammaId && filter.Filter.Add(id)) changed++;
+                    if (filter.ExcludedFilter.Remove(id)) changed++;
+                }
             }
         }
         return changed;
@@ -143,8 +149,22 @@ public sealed class SecureContainerCompatibility(
         IEnumerable<Grid> grids = host.Properties?.Grids ?? [];
         if (gridName != null) grids = grids.Where(grid => grid.Name == gridName);
         bool admitted = grids.SelectMany(grid => grid.Properties?.Filters ?? [])
-            .Any(filter => filter.Filter?.Contains(expected) == true && filter.ExcludedFilter?.Contains(expected) != true);
+            .Any(filter => filter.Filter?.Contains(expected) == true && !IsExcludedByAncestry(filter.ExcludedFilter, expected));
         if (!admitted)
             throw new InvalidOperationException($"B&A&HB final compatibility failed: {label} ({expected}) is not admitted by {hostId}/{gridName ?? "all grids"}.");
+    }
+
+    private bool IsExcludedByAncestry(HashSet<MongoId>? excluded, MongoId itemId)
+    {
+        if (excluded == null || excluded.Count == 0) return false;
+        MongoId? current = itemId;
+        var seen = new HashSet<MongoId>();
+        while (current != null && seen.Add(current.Value))
+        {
+            if (excluded.Contains(current.Value)) return true;
+            if (!templateTable.Items.TryGetValue(current.Value, out TemplateItem? item)) return false;
+            current = item.Parent;
+        }
+        return false;
     }
 }

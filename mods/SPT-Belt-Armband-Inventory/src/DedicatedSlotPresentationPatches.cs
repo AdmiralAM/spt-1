@@ -21,6 +21,7 @@ namespace SPTBeltArmbandInventory
         internal static Type SlotViewType;
         internal static Type EquipmentType;
         internal static object HeadBandSlotKey;
+        internal static object BeltSlotKey;
         internal static object ArmBandSlotKey;
         internal static object HeadwearSlotKey;
         internal static Func<object, object, object> GetSlot;
@@ -359,6 +360,7 @@ namespace SPTBeltArmbandInventory
             SlotViewType = null;
             EquipmentType = null;
             HeadBandSlotKey = null;
+            BeltSlotKey = null;
             ArmBandSlotKey = null;
             HeadwearSlotKey = null;
             GetSlot = null;
@@ -439,6 +441,9 @@ namespace SPTBeltArmbandInventory
                 DedicatedSlotPresentationRuntime.HeadBandSlotKey = Enum.ToObject(
                     equipmentSlotType,
                     RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
+                DedicatedSlotPresentationRuntime.BeltSlotKey = Enum.ToObject(
+                    equipmentSlotType,
+                    RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
                 DedicatedSlotPresentationRuntime.ArmBandSlotKey = armBandSlotKey;
                 DedicatedSlotPresentationRuntime.HeadwearSlotKey = headwearSlotKey;
                 DedicatedSlotPresentationRuntime.GetSlot = getSlotDelegate;
