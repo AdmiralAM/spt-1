@@ -8,7 +8,7 @@ namespace SPTItemIntelligence
 {
     // Optional bridge: CompatibilityHighlighter keeps ownership of compatibility rules and colors.
     // Item Intelligence only supplies the ItemViews it already tracks in detached container windows.
-    internal sealed class CompatibilityHighlighterIntegration : IDisposable
+    public sealed class CompatibilityHighlighterIntegration : IDisposable
     {
         const string HarmonyId = "com.admiralam.spt.itemintelligence.compatibilityhighlighter";
         static readonly object sync = new object();
@@ -45,7 +45,7 @@ namespace SPTItemIntelligence
                 ConstructorInfo patchConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 if (harmony == null || patchMethod == null || patchConstructor == null) return Unavailable("CompatibilityHighlighter bridge could not access Harmony.");
 
-                DynamicMethod postfix = BuildPostfix(getViews.ReturnType);
+                MethodInfo postfix = BuildPostfix(getViews.ReturnType);
                 object harmonyPostfix = patchConstructor.Invoke(new object[] { postfix });
                 InvokePatch(patchMethod, getViews, harmonyMethodType, harmonyPostfix);
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
@@ -56,7 +56,7 @@ namespace SPTItemIntelligence
             catch (Exception exception)
             {
                 SafeUnpatch();
-                return Unavailable("CompatibilityHighlighter container bridge failed safely: " + exception.Message);
+                return Unavailable("CompatibilityHighlighter container bridge failed safely: " + Describe(exception));
             }
         }
 
@@ -77,7 +77,7 @@ namespace SPTItemIntelligence
             lock (sync) registeredViews.Clear();
         }
 
-        static Array MergeRegisteredViews(Array original)
+        public static Array MergeRegisteredViews(Array original)
         {
             if (active == null || original == null) return original;
             Type elementType = original.GetType().GetElementType();
@@ -113,14 +113,19 @@ namespace SPTItemIntelligence
             catch { return false; }
         }
 
-        static DynamicMethod BuildPostfix(Type arrayType)
+        static MethodInfo BuildPostfix(Type arrayType)
         {
-            DynamicMethod method = new DynamicMethod(
-                "ItemIntelligenceMergeCompatibilityViews",
+            AssemblyName assemblyName = new AssemblyName("SPTItemIntelligence.CompatibilityHighlighter.RuntimePatch");
+            AssemblyBuilder assembly = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+            ModuleBuilder module = assembly.DefineDynamicModule(assemblyName.Name);
+            TypeBuilder type = module.DefineType(
+                "SPTItemIntelligence.CompatibilityHighlighterRuntimePatch",
+                TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.NotPublic);
+            MethodBuilder method = type.DefineMethod(
+                "MergeDetachedContainerViews",
+                MethodAttributes.Public | MethodAttributes.Static,
                 typeof(void),
-                new[] { arrayType.MakeByRefType() },
-                typeof(CompatibilityHighlighterIntegration),
-                true);
+                new[] { arrayType.MakeByRefType() });
             ILGenerator il = method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_0);
@@ -129,7 +134,15 @@ namespace SPTItemIntelligence
             il.Emit(OpCodes.Castclass, arrayType);
             il.Emit(OpCodes.Stind_Ref);
             il.Emit(OpCodes.Ret);
-            return method;
+            Type patchType = type.CreateType();
+            return patchType.GetMethod("MergeDetachedContainerViews", BindingFlags.Static | BindingFlags.Public);
+        }
+
+        static string Describe(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException && current.InnerException != null) current = current.InnerException;
+            return current.GetType().Name + ": " + current.Message;
         }
 
         static Type FindType(string fullName)

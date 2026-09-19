@@ -34,6 +34,9 @@ static class Phase24HotPathOptimizationTests
                compatibility.Contains("activeInHierarchy") && !compatibility.Contains("FindObjectsOfType") &&
                !compatibility.Contains("Resources.FindObjectsOfTypeAll"),
             "CompatibilityHighlighter receives detached container views without a global Unity scan", ref assertions);
+        Expect(compatibility.Contains("TypeBuilder") && compatibility.Contains("CreateType()") &&
+               !compatibility.Contains("DynamicMethod"),
+            "CompatibilityHighlighter bridge exposes a conventional runtime patch method that Harmony can install", ref assertions);
         Expect(sink.Contains("CompatibilityHighlighterIntegration.Track(itemView)") &&
                sink.Contains("CompatibilityHighlighterIntegration.Untrack(itemView)"),
             "the compatibility bridge follows the existing ItemView lifecycle", ref assertions);
