@@ -191,13 +191,13 @@
         {
           "id": "59230813b9f9e11ceed08033",
           "order": 6,
-          "name": "Незваные слушатели",
+          "name": "Перехват на Таможне",
           "level": 6,
           "locations": [
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Устранить небольшую группу Диких возле узла связи без ограничения одной конкретной пушкой.",
+          "brief": "После Эпицентра канал ушёл на Таможню. Сними наружное наблюдение у маршрута снабжения, пока оно не предупредило посредника.",
           "objectives": [
             {
               "kind": "eliminate",
@@ -215,18 +215,22 @@
             "itemRewardTheme": "communications components",
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Незваные слушатели"
+          "successMessageIntent": "Advance Эпицентр storyline: Незваные слушатели",
+          "mapOverride": "Таможня",
+          "runtimeLocationsOverride": [
+            "bigmap"
+          ]
         },
         {
           "id": "bb49cbdbae242ffef21f95b7",
           "order": 7,
-          "name": "Резервное питание",
+          "name": "Резервное питание в Лесу",
           "level": 7,
           "locations": [
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Найти аккумуляторный модуль в подземной зоне и доставить Адмиралу.",
+          "brief": "След привёл к резервному узлу в Лесу. Найди исправный автомобильный аккумулятор в рейде и передай его для автономного питания сети.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -246,18 +250,22 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Резервное питание"
+          "successMessageIntent": "Advance Эпицентр storyline: Резервное питание",
+          "mapOverride": "Лес",
+          "runtimeLocationsOverride": [
+            "Woods"
+          ]
         },
         {
           "id": "ac7bd06524b05c40da6f56ef",
           "order": 8,
-          "name": "Контрольный пакет",
+          "name": "Цеховой контроль",
           "level": 8,
           "locations": [
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Оставить защищённый контейнер в авторском тайнике и проверить соседний выход.",
+          "brief": "На Заводе осталась точка ретрансляции. Проверь назначенный участок, установи маркер и выйди живым, чтобы подтвердить рабочий маршрут.",
           "objectives": [
             {
               "kind": "visit",
@@ -284,18 +292,23 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Контрольный пакет"
+          "successMessageIntent": "Advance Эпицентр storyline: Контрольный пакет",
+          "mapOverride": "Завод",
+          "runtimeLocationsOverride": [
+            "factory4_day",
+            "factory4_night"
+          ]
         },
         {
           "id": "05c97b5823b0c42b7c25ccf9",
           "order": 9,
-          "name": "Открытый канал",
+          "name": "Открытый канал на Развязке",
           "level": 9,
           "locations": [
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Установить ретранслятор на крыше, затем подтвердить работу канала успешной эвакуацией.",
+          "brief": "Последний открытый передатчик работает на Развязке. Пометь узел связи и эвакуируйся: после выхода канал будет закрыт дистанционно.",
           "objectives": [
             {
               "kind": "placeOrMark",
@@ -318,18 +331,22 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Открытый канал"
+          "successMessageIntent": "Advance Эпицентр storyline: Открытый канал",
+          "mapOverride": "Развязка",
+          "runtimeLocationsOverride": [
+            "Interchange"
+          ]
         },
         {
           "id": "6d9fda8875aed2082b4da528",
           "order": 10,
-          "name": "Первый контур",
+          "name": "Замкнуть первый контур",
           "level": 10,
           "locations": [
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Забрать ответный пакет из ранее подготовленного тайника; открыть базовую служебную полку магазина.",
+          "brief": "Контур замыкается на Таможне. Проверь точку передачи, вынеси из рейда зашифрованную флешку и передай её Адмиралу.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -349,7 +366,11 @@
             "itemRewardTheme": "basic service assortment",
             "assortmentUnlock": "basic service assortment"
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Первый контур"
+          "successMessageIntent": "Advance Эпицентр storyline: Первый контур",
+          "mapOverride": "Таможня",
+          "runtimeLocationsOverride": [
+            "bigmap"
+          ]
         }
       ]
     },

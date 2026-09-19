@@ -163,35 +163,35 @@
       "id": "59230813b9f9e11ceed08033",
       "chain": 1,
       "order": 6,
-      "map": "Эпицентр",
+      "map": "Таможня",
       "natalya": false
     },
     {
       "id": "bb49cbdbae242ffef21f95b7",
       "chain": 1,
       "order": 7,
-      "map": "Эпицентр",
+      "map": "Лес",
       "natalya": true
     },
     {
       "id": "ac7bd06524b05c40da6f56ef",
       "chain": 1,
       "order": 8,
-      "map": "Эпицентр",
+      "map": "Завод",
       "natalya": false
     },
     {
       "id": "05c97b5823b0c42b7c25ccf9",
       "chain": 1,
       "order": 9,
-      "map": "Эпицентр",
+      "map": "Развязка",
       "natalya": false
     },
     {
       "id": "6d9fda8875aed2082b4da528",
       "chain": 1,
       "order": 10,
-      "map": "Эпицентр",
+      "map": "Таможня",
       "natalya": false
     },
     {

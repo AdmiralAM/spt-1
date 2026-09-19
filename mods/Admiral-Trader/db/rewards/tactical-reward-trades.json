@@ -1,0 +1,222 @@
+{
+  "ac7bd06524b05c40da6f56ef": {
+    "name": "Aimpoint Micro H-2",
+    "cashReductionRub": 12000,
+    "reward": {
+      "value": 1,
+      "id": "03b173303f47543ba8b407de",
+      "type": "Item",
+      "target": "192de6710d279862600e18a7",
+      "index": 3,
+      "items": [
+        {
+          "_id": "192de6710d279862600e18a7",
+          "_tpl": "61657230d92c473c770213d7",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "05c97b5823b0c42b7c25ccf9": {
+    "name": "пистолет ПБ с интегрированным глушителем",
+    "cashReductionRub": 9000,
+    "reward": {
+      "value": 1,
+      "id": "53953f1bdef021a2281f3966",
+      "type": "Item",
+      "target": "9ab4848553fe065fa6ecbca6",
+      "index": 3,
+      "items": [
+        {
+          "_id": "9ab4848553fe065fa6ecbca6",
+          "_tpl": "56e0598dd2720bb5668b45a6",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "3547b2765c993b58b04e6074": {
+    "name": "голографический прицел EOTech 553",
+    "cashReductionRub": 12000,
+    "reward": {
+      "value": 1,
+      "id": "eaaa7616b67b7777e5e5d01c",
+      "type": "Item",
+      "target": "c3b3edfdfcf850f0aebcfcc5",
+      "index": 3,
+      "items": [
+        {
+          "_id": "c3b3edfdfcf850f0aebcfcc5",
+          "_tpl": "570fd6c2d2720bc6458b457f",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "dcae6b2142ca93b7dd77df3e": {
+    "name": "оптический прицел ПСО-1",
+    "cashReductionRub": 14000,
+    "reward": {
+      "value": 1,
+      "id": "181c9280554c24fb6cfc4cb6",
+      "type": "Item",
+      "target": "cd4fceab9b80bcd26a8dceb6",
+      "index": 3,
+      "items": [
+        {
+          "_id": "cd4fceab9b80bcd26a8dceb6",
+          "_tpl": "5c82342f2e221644f31c060e",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "dde90a4fac0d58df868b8377": {
+    "name": "коллиматорный прицел Валдай ПК-120",
+    "cashReductionRub": 15000,
+    "reward": {
+      "value": 1,
+      "id": "b8fa5d8dea63c1a8961de132",
+      "type": "Item",
+      "target": "55af1e4756e58bc765275c0a",
+      "index": 3,
+      "items": [
+        {
+          "_id": "55af1e4756e58bc765275c0a",
+          "_tpl": "5c0505e00db834001b735073",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "0f6c7610aabb03785c8c29a1": {
+    "name": "глушитель SIG Sauer SRD9",
+    "cashReductionRub": 18000,
+    "reward": {
+      "value": 1,
+      "id": "c7e5aac7dec8c7037c50ee53",
+      "type": "Item",
+      "target": "ad23059a29b0d50e09e579ba",
+      "index": 3,
+      "items": [
+        {
+          "_id": "ad23059a29b0d50e09e579ba",
+          "_tpl": "5c6165902e22160010261b28",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "2897ca5464686729182d5c18": {
+    "name": "коллиматорный прицел Aimpoint CompM4",
+    "cashReductionRub": 20000,
+    "reward": {
+      "value": 1,
+      "id": "efc3a19227ae845a295742a4",
+      "type": "Item",
+      "target": "fef1b42ab21736fd37d3bc80",
+      "index": 3,
+      "items": [
+        {
+          "_id": "fef1b42ab21736fd37d3bc80",
+          "_tpl": "5c7d55de2e221644f31bff68",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "0401aa332dde8b64670a325b": {
+    "name": "оптический прицел SIG BRAVO4",
+    "cashReductionRub": 28000,
+    "reward": {
+      "value": 1,
+      "id": "46017c75b3cb37ac3273a8a7",
+      "type": "Item",
+      "target": "afbdd41af072fb586c395ae8",
+      "index": 3,
+      "items": [
+        {
+          "_id": "afbdd41af072fb586c395ae8",
+          "_tpl": "57adff4f24597737f373b6e6",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "c502dfe9542fc5d5c3dc7c60": {
+    "name": "пистолет Desert Eagle L5 .357",
+    "cashReductionRub": 26000,
+    "reward": {
+      "value": 1,
+      "id": "9f6855dc6aded44d09c1ba7e",
+      "type": "Item",
+      "target": "0ff5fc91b62d8f87c304e3d1",
+      "index": 3,
+      "items": [
+        {
+          "_id": "0ff5fc91b62d8f87c304e3d1",
+          "_tpl": "669fa409933e898cce0c2166",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "deab0605df9ef9ba0bd0ccc1": {
+    "name": "автоматический пистолет Glock 18C",
+    "cashReductionRub": 11000,
+    "reward": {
+      "value": 1,
+      "id": "97e747854881d1a6796dcace",
+      "type": "Item",
+      "target": "f3a13181f73626da86963ae9",
+      "index": 3,
+      "items": [
+        {
+          "_id": "f3a13181f73626da86963ae9",
+          "_tpl": "5b1fa9b25acfc40018633c01",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "06b32886806bf50896eb4ff8": {
+    "name": "гибридный прицел EOTech HHS-1",
+    "cashReductionRub": 34000,
+    "reward": {
+      "value": 1,
+      "id": "7bd72e715dd4a12c77a651e6",
+      "type": "Item",
+      "target": "32834c4717d110005d5586b6",
+      "index": 3,
+      "items": [
+        {
+          "_id": "32834c4717d110005d5586b6",
+          "_tpl": "5c07dd120db834001c39092d",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  }
+}

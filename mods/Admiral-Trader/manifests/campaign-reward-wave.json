@@ -8,7 +8,7 @@
   "directBeltProductRewardTrades": 16,
   "additionalBeltPackCandidateRewardTrades": 16,
   "requiredDependencies": false,
-  "policy": "Story operations progressively trade part of their rouble reward for practical native field-support equipment; early operations also use optional B&A&HB wrist, belt and head-band equipment while later contracts may award its small container catalogue; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
+  "policy": "Story operations progressively trade part of their rouble reward for practical native field-support equipment, complete weapons, optics and suppressors; early operations also use optional B&A&HB wrist, belt and head-band equipment while later contracts may award its small container catalogue; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
   "absenceBehavior": "When a B&A&HB template is unavailable, no cash is removed and the core quest reward remains unchanged.",
   "signatureFinales": [
     {
@@ -392,6 +392,75 @@
       "tpl": "5c0e534186f7747fa1419867",
       "name": "Стимулятор eTG-c",
       "cashReductionRub": 50000
+    }
+  ],
+  "nativeTacticalRewardTrades": 11,
+  "tacticalRewardTrades": [
+    {
+      "questId": "ac7bd06524b05c40da6f56ef",
+      "tpl": "61657230d92c473c770213d7",
+      "name": "Aimpoint Micro H-2",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "05c97b5823b0c42b7c25ccf9",
+      "tpl": "56e0598dd2720bb5668b45a6",
+      "name": "пистолет ПБ с интегрированным глушителем",
+      "cashReductionRub": 9000
+    },
+    {
+      "questId": "3547b2765c993b58b04e6074",
+      "tpl": "570fd6c2d2720bc6458b457f",
+      "name": "голографический прицел EOTech 553",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "dcae6b2142ca93b7dd77df3e",
+      "tpl": "5c82342f2e221644f31c060e",
+      "name": "оптический прицел ПСО-1",
+      "cashReductionRub": 14000
+    },
+    {
+      "questId": "dde90a4fac0d58df868b8377",
+      "tpl": "5c0505e00db834001b735073",
+      "name": "коллиматорный прицел Валдай ПК-120",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "0f6c7610aabb03785c8c29a1",
+      "tpl": "5c6165902e22160010261b28",
+      "name": "глушитель SIG Sauer SRD9",
+      "cashReductionRub": 18000
+    },
+    {
+      "questId": "2897ca5464686729182d5c18",
+      "tpl": "5c7d55de2e221644f31bff68",
+      "name": "коллиматорный прицел Aimpoint CompM4",
+      "cashReductionRub": 20000
+    },
+    {
+      "questId": "0401aa332dde8b64670a325b",
+      "tpl": "57adff4f24597737f373b6e6",
+      "name": "оптический прицел SIG BRAVO4",
+      "cashReductionRub": 28000
+    },
+    {
+      "questId": "c502dfe9542fc5d5c3dc7c60",
+      "tpl": "669fa409933e898cce0c2166",
+      "name": "пистолет Desert Eagle L5 .357",
+      "cashReductionRub": 26000
+    },
+    {
+      "questId": "deab0605df9ef9ba0bd0ccc1",
+      "tpl": "5b1fa9b25acfc40018633c01",
+      "name": "автоматический пистолет Glock 18C",
+      "cashReductionRub": 11000
+    },
+    {
+      "questId": "06b32886806bf50896eb4ff8",
+      "tpl": "5c07dd120db834001c39092d",
+      "name": "гибридный прицел EOTech HHS-1",
+      "cashReductionRub": 34000
     }
   ]
 }

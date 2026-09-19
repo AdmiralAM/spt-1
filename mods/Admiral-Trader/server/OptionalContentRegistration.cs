@@ -35,8 +35,9 @@ public sealed class OptionalContentRegistration(
         int signatureRewards = ApplyItemRewardReplacements(modPath, "db/rewards/natalya-signature-replacements.json", optional: false);
         int earlyWeaponRewards = ApplyCashTrades(modPath, "db/rewards/early-weapon-reward-trades.json", optional: false);
         int fieldSupportRewards = ApplyCashTrades(modPath, "db/rewards/field-support-reward-trades.json", optional: false);
+        int tacticalRewards = ApplyCashTrades(modPath, "db/rewards/tactical-reward-trades.json", optional: false);
         int beltRewards = ApplyCashTrades(modPath, "db/rewards/belt-container-reward-trades.json", optional: true);
-        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
+        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
         return Task.CompletedTask;
     }
 

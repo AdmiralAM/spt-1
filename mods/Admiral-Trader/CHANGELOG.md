@@ -23,6 +23,9 @@
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
 - Complete the M7 reward layer with 20 progressive native field-support items, four early complete weapons, ten Natalya signature presets and conditional B&A&HB equipment/container trades; every added item replaces a bounded share of roubles.
 - Add Admiral as a native SPT insurer with a 90% return chance, fast 6–12 hour delivery, 120-hour storage, relationship-scaled 25/22/19/16% pricing and complete EN/RU lifecycle mail.
+- Move the latter half of the opening story from Ground Zero into Customs, Woods, Factory and Interchange cadence while preserving all quest IDs and prerequisites.
+- Add eleven bounded native tactical rewards: two pistols, five optics and four weapon-support packages, each replacing part of the original rouble payout.
+- Replace the old repetitive distance ladder with a three-step 100 m / 200 m / 300 m marksman chain and weapon-specific pools.
 
 ## 0.2.0 — stable campaign baseline
 

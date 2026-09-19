@@ -166,6 +166,16 @@ def key_pool_condition(qid: str, targets: list[str], index: int) -> dict:
     return {"conditionType": "FindItem", "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:access-key:FindItem"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": True, "parentId": "", "target": targets, "value": 1, "visibilityConditions": []}
 
 
+def operation_context(q: dict, chain: dict) -> dict:
+    """Allow an authored operation to move with the early vanilla map cadence."""
+    map_name = q.get("mapOverride", chain["map"])
+    return {
+        **chain,
+        "map": map_name,
+        "runtimeLocations": q.get("runtimeLocationsOverride", chain["runtimeLocations"]),
+    }
+
+
 def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[list[dict], list[str], list[str]]:
     qid, map_name, maps = q["id"], chain["map"], chain["runtimeLocations"]
     visits, places = VISIT_ZONES[map_name], PLACE_ZONES[map_name]
@@ -312,19 +322,20 @@ def main() -> None:
     runtime_rows, en, ru = [], {}, {}
     for chain in chains:
         for quest_index, q in enumerate(chain["quests"]):
+            quest_context = operation_context(q, chain)
             start = [level_condition(q["id"], q["level"])]
             prereqs = ([q["prerequisite"]] if q["prerequisite"] else []) + [quest_ids[row["chain"]][row["questOrder"]] for row in q["crossChainPrerequisites"]]
             start.extend(prerequisite(q["id"], target, index + 1) for index, target in enumerate(prereqs))
-            finish, objective_en, objective_ru = build_finish(q, chain, names_en, names_ru)
+            finish, objective_en, objective_ru = build_finish(q, quest_context, names_en, names_ru)
             q["runtimeFinish"] = finish
             specialist = (chain["chain"], q["order"]) in NATALYA_QUESTS
-            template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": QUEST_LOCATIONS[chain["map"]], "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
-            runtime_rows.append((chain, q, template, specialist))
+            template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": QUEST_LOCATIONS[quest_context["map"]], "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
+            runtime_rows.append((quest_context, q, template, specialist))
             en_name = f"{CHAIN_EN[chain['chain'] - 1]} {q['order']}: {CODENAMES_EN[chain['chain'] - 1][q['order'] - 1]}"
             next_q = chain["quests"][quest_index + 1] if quest_index + 1 < len(chain["quests"]) else None
             next_en = f"{CHAIN_EN[chain['chain'] - 1]} {next_q['order']}: {CODENAMES_EN[chain['chain'] - 1][next_q['order'] - 1]}" if next_q else None
             next_ru = next_q["name"] if next_q else None
-            en_set, ru_set = locale_set(q, chain, en_name, objective_en, objective_ru, specialist, names_en, names_ru, next_en, next_ru)
+            en_set, ru_set = locale_set(q, quest_context, en_name, objective_en, objective_ru, specialist, names_en, names_ru, next_en, next_ru)
             en.update(en_set); ru.update(ru_set)
 
     quest_dir = ROOT / "db/quests"

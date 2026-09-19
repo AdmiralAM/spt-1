@@ -54,7 +54,9 @@ M7 content implementation is closed: the complete campaign, Natalya absorption, 
 
 The active weapon campaign uses two paced lanes with 40 assignments in total, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and 50 verified WTT Armory/Content Backport alternatives. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
 
-Campaign rewards now include 20 progressive native field-support trades, four early complete weapons, ten Natalya signature presets and 32 conditional B&A&HB wrist/belt/head-band/container trades. Nine B&A&HB rewards arrive by level 10 and 24 by level 20. Each trade replaces a bounded part of the quest's rouble payout instead of stacking free value; optional rewards leave the original cash untouched when their template is absent.
+Campaign rewards now include 20 progressive native field-support trades, four early complete weapons, eleven native tactical rewards (pistols, optics and suppressors), ten Natalya signature presets and 32 conditional B&A&HB wrist/belt/head-band/container trades. Nine B&A&HB rewards arrive by level 10 and 24 by level 20. Each trade replaces a bounded part of the quest's rouble payout instead of stacking free value; optional rewards leave the original cash untouched when their template is absent.
+
+The opening story keeps five focused Ground Zero operations, then follows the early vanilla map cadence through Customs, Woods, Factory and Interchange before closing its first circuit on Customs. These operations remain one persistent chain, but their client location metadata and native objective conditions now name the actual map so Dynamic Maps and the quest list can group them correctly.
 
 Admiral uses SPT's native insurance purchase, raid-loss, return scheduling and mail delivery. His defining advantage is the fast 6–12 hour return window; the return chance is 90%, while the price coefficient improves from 25% at LL1 to 16% at LL4. Labs and Labyrinth retain their native no-return behavior; no profile migration or parallel recovery store is introduced.
 

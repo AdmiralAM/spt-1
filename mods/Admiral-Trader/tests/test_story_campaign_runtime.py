@@ -56,7 +56,8 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         }
         for chain in self.authored["chains"]:
             for row in chain["quests"]:
-                self.assertEqual(self.by_id[row["id"]]["location"], expected[chain["map"]], row["id"])
+                map_name = row.get("mapOverride", chain["map"])
+                self.assertEqual(self.by_id[row["id"]]["location"], expected[map_name], row["id"])
 
     def test_objective_mix_is_story_led_and_bounded(self):
         kinds = {kind: 0 for kind in ("visit", "retrieveQuestItem", "placeOrMark", "eliminate", "surviveExtract", "handover", "possessAccessKey")}
@@ -226,6 +227,31 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 continue
             recovery = next(objective for objective in row["objectives"] if objective["kind"] == "retrieveQuestItem")
             self.assertEqual(recovery["itemTpl"], expected[row["id"]])
+
+    def test_opening_campaign_moves_with_the_early_vanilla_map_cadence(self):
+        expected = {
+            "e81e5d79bfdf40efc87cdf99": ("Эпицентр", ["Sandbox", "Sandbox_high"]),
+            "4876c8bf7bb9677e3970b01c": ("Эпицентр", ["Sandbox", "Sandbox_high"]),
+            "59230813b9f9e11ceed08033": ("Таможня", ["bigmap"]),
+            "bb49cbdbae242ffef21f95b7": ("Лес", ["Woods"]),
+            "ac7bd06524b05c40da6f56ef": ("Завод", ["factory4_day", "factory4_night"]),
+            "05c97b5823b0c42b7c25ccf9": ("Развязка", ["Interchange"]),
+            "6d9fda8875aed2082b4da528": ("Таможня", ["bigmap"]),
+        }
+        authored = {q["id"]: q for q in self.authored["chains"][0]["quests"]}
+        runtime = {q["_id"]: q for q in self.story}
+        for quest_id, (map_name, runtime_locations) in expected.items():
+            row = authored[quest_id]
+            self.assertEqual(row.get("mapOverride", "Эпицентр"), map_name)
+            nested_locations = {
+                target
+                for finish in runtime[quest_id]["conditions"]["AvailableForFinish"]
+                for condition in finish.get("counter", {}).get("conditions", [])
+                if condition.get("conditionType") == "Location"
+                for target in condition["target"]
+            }
+            self.assertTrue(nested_locations <= set(runtime_locations), quest_id)
+        self.assertEqual(sum(q.get("mapOverride", "Эпицентр") == "Эпицентр" for q in authored.values()), 5)
 
     def test_promised_field_actions_are_materialized(self):
         expected = {
