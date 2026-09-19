@@ -88,7 +88,7 @@ def test_exact_cross_pr_authority_and_content_only_painter_contract() -> None:
 def test_post_consolidation_audit_names_bounded_candidates_before_removal() -> None:
     assert "no offers or quests removed by this audit" in POST_CONSOLIDATION_AUDIT
     assert "13 exact product-tree overlaps" in POST_CONSOLIDATION_AUDIT
-    assert "authorizes **no offer deletion yet**" in POST_CONSOLIDATION_AUDIT
+    assert "authorize **no offer deletion**" in POST_CONSOLIDATION_AUDIT
     assert "M61/M62 are explicitly protected" in POST_CONSOLIDATION_AUDIT
     for quest_id in (
         "208db81b5ce195bf0c176852",

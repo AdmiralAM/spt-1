@@ -1,6 +1,6 @@
 # Admiral Trader post-consolidation content audit
 
-Status: **decision report; no offers or quests removed by this audit**. Runtime snapshot: Admiral Trader 0.3.0 at `f78831376200133bb7b081f9e323b35dfad668ef`, SPT 4.1.6 with the exact SPT 4.1.5-built server DLL.
+Status: **implemented content audit; no offers or quests removed by this audit**. No persistent quest IDs were retired. Runtime baseline: Admiral Trader 0.3.0, exact SPT 4.1.5 data and the current SPT 4.1.6 integration set.
 
 ## Measured scope
 
@@ -26,21 +26,35 @@ The root-template comparison found 23 template overlaps and 49 involved offers. 
 
 No Natalya/TGC weapon row is an exact assembled-tree duplicate. Shared base weapon templates are different presets and remain outside the removal set.
 
+### Full value, stock and progression pass
+
+The machine-readable [offer audit](storefront-value-audit.csv) covers all 546 possible roots: 47 Admiral core, 35 Natalya presets, 281 Artem, 7 Painter, 114 TGC runtime and 62 optional WTT roots. Every row records its source, persistent offer and template IDs, loyalty level, stock, purchase limit, cash/barter route, quest gate, resolved rouble cost, complete-tree handbook value where possible, and explicit flags. The generator uses exact SPT 4.1.5 handbook/prices and accepts TGC as an explicit runtime input; it does not mutate the store.
+
+| Check | Result | Decision |
+| --- | --- | --- |
+| Loyalty distribution | Every retained source spans its authored tiers; core has 21/12/12/2 roots at LL1–4, Natalya 9/9/9/8, Artem 84/103/67/27, TGC 8/30/49/27, optional WTT 23/25/13/1. | Retain. Moving offers merely to make tiers visually uniform would destroy authored progression. |
+| Acquisition routes | 516 cash and 12 barter roots before quest gating; 62 offers are gated by a completed quest (18 Admiral, 41 Artem, 3 Painter). | Retain. Quest and barter alternatives remain materially distinct acquisition paths. |
+| Stock and limits | Admiral and Natalya are finite. Artem preserves 108 early unlimited roots from its source data; these are now explicit audit findings rather than silent defaults. | Defer a bounded Artem stock-normalization pass. It requires category-aware limits so ammunition, magazines, equipment and presets are not given one arbitrary cap. |
+| Price comparison | 24 fully priced rows exceed 3× SPT handbook value. Most are deliberate premium access items, signals, quest goods, high-grade ammunition/magazines or late containers; no fully priced row falls below 0.35× handbook value. | Do not bulk-normalize. Handbook price is not sufficient evidence for access cards, signals or quest-gated scarcity. Review only named rows against vanilla trader/flea availability before changing balance. |
+| Modded valuation | 307 roots contain at least one custom template absent from the vanilla SPT handbook: all TGC/WTT roots and part of Artem/Painter. | Keep them fail-safe and source-priced. A fabricated vanilla value would be less truthful than the explicit `partial-product-value` flag. |
+
+The pass therefore authorizes no blind deletion, global multiplier or blanket stock cap. It does expose the one coherent next storefront task: classify the 108 inherited unlimited Artem offers by item role and convert only inappropriate equipment/preset rows to finite limits while leaving stackable consumables category-aware.
+
 ## Quest portfolio decisions
 
 The 172 authored records divide into 10 access protocols, 40 paced Arsenal tasks, 4 Ground Zero introductory operations, 6 equipment-set operations, 12 cross-chain operations and 100 map-story quests. The access protocols and Arsenal lanes are repetitive by category but have distinct progression jobs; they are not deletion candidates in this pass.
 
-### High-confidence merge or removal candidates
+### Audited candidate resolutions
 
-| Quest | Decision candidate | Graph-safe replacement direction |
+| Quest | Implemented decision | Runtime distinction |
 | --- | --- | --- |
-| `208db81b5ce195bf0c176852` — **Низкий профиль** | merge into the equipment lane | It repeats the earlier “enter in cheap rig/backpack and survive” contract without an additional action. Move any useful Interchange flavour into `Комплект: Первый выход` or its successor, then point `Манёвренная защита` to the retained equipment step. |
-| `8dad0d354ac000b7bbf05b9a` — **Акустическая дисциплина** | merge with `41a41cb262ea084c1e110513` — **Акустический контакт** | Both require the same headset pool on Woods. One coherent task can combine the two visits, limited combat and successful extraction. Rewire the retained task to `Комплект: Акустический контроль`; keep `Окно наблюдения` behind the retained result. |
-| `3c6e085fc02f0597efdb5d5a` — **Операция: Открытый коридор** | fold into Ground Zero introduction | It is the second plain Scav counter on the same early map and does not introduce a new decision. |
-| `31ab6a69a8436df6b3834b0a` — **Операция: Спорная территория** | fold into Ground Zero introduction | Replacing Scavs with two PMCs changes target type but still forms a short isolated kill ladder beside the ten-step Ground Zero story. |
-| `e520cec55b83621928e9e4ec` — **Операция: Правильный выход** | fold or retire | It returns to an unrestricted five-target counter and is the weakest final step of the four-quest ladder. |
+| `208db81b5ce195bf0c176852` — **Низкий профиль** | rewritten inside the existing ID | One Interchange raid in Scav Vest + Transformer Bag now requires the KOSTIN service area, first warehouse sector and survived extraction in the same equipment. It is a route discipline task rather than an empty loadout check. |
+| `8dad0d354ac000b7bbf05b9a` — **Акустическая дисциплина** | retained | This is the non-combat headset reconnaissance route through the abandoned convoy and USEC camp. `Акустический контакт` remains its later combat application. |
+| `3c6e085fc02f0597efdb5d5a` — **Операция: Открытый коридор** | rewritten inside the existing ID | Four Scavs from at least 30 metres plus survived extraction in one Ground Zero raid. This introduces spacing and raid completion instead of another plain counter. |
+| `31ab6a69a8436df6b3834b0a` — **Операция: Спорная территория** | retained | Its early PMC target is distinct from the Scav clearance before it and the mixed-target extraction test after it. |
+| `e520cec55b83621928e9e4ec` — **Операция: Правильный выход** | rewritten inside the existing ID | Five mixed targets and survived extraction must now occur in one Ground Zero raid; combat progress without returning no longer completes it. |
 
-`02c07ee31821696597ceabef` — **Операция: Первый контакт** should remain as the single combat onboarding record because the access protocol already uses it as an entry gate. Any collapse must preserve that ID and redirect dependants before the other three templates are retired.
+`02c07ee31821696597ceabef` — **Операция: Первый контакт** remains the combat onboarding record because the access protocol uses it as an entry gate. The revised three-step continuation preserves all IDs, prerequisites and early physical rewards, so existing profile history and graph references remain valid.
 
 ### Retain, but rewrite or value-check
 
@@ -51,6 +65,6 @@ The 172 authored records divide into 10 access protocols, 40 paced Arsenal tasks
 
 ## Approved implementation boundary
 
-The exact-tree duplicate pass authorizes **no offer deletion yet**. The apparently redundant ammunition rows are separated by quest unlocks or loyalty progression; M61/M62 are explicitly protected by preserved Artem unlocks, and the Admiral `.45 ACP AP` row is protected by Arsenal A-12. The next store pass must compare prices, stock limits, quest gates and retained-trader availability across every category before proposing removals. Quest work may consolidate only the five listed candidates after successor prerequisites and rewards are explicitly mapped. Persistent IDs remain recorded as retired identities; completed profile history is not rewritten. No broad reward increase and no generated replacement filler are allowed.
+The exact-tree duplicate and full storefront passes authorize **no offer deletion**. The apparently redundant ammunition rows are separated by quest unlocks or loyalty progression; M61/M62 are explicitly protected by preserved Artem unlocks, and the Admiral `.45 ACP AP` row is protected by Arsenal A-12. All five quest candidates now have an explicit keep/rewrite decision without retiring an ID, changing the graph or removing an early reward. No broad reward increase and no generated replacement filler are authorized by this audit.
 
 Painter item localization is independent of those deletion decisions. All five preserved Painter templates require complete Russian name, short name and description records while retaining their IDs and English fallback.

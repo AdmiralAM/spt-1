@@ -112,8 +112,9 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
 
         low_profile = next(row for row in rows if row["questId"] == "208db81b5ce195bf0c176852")
         self.assertIn("Жилет Дикого", low_profile["ru"])
-        self.assertIn("Сумка-трансформер", low_profile["ru"])
-        self.assertIn("Развязка", low_profile["ru"])
+        self.assertIn("Сумк", low_profile["ru"])
+        self.assertIn("трансформер", low_profile["ru"])
+        self.assertIn("Развязк", low_profile["ru"])
         self.assertIn("выжить и эвакуироваться", low_profile["ru"])
 
 

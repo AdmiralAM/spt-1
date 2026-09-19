@@ -1,0 +1,547 @@
+﻿source,optional,offerId,templateId,name,loyalty,stock,buyLimit,route,questGate,costRub,productValueRub,costValueRatio,pricedNodes,flags
+Admiral core,false,07efd6dee267ec18ed830dd6,5a608bf24f39f98ffc77720e,7.62x51мм M62 Tracer,1,60,60,cash+quest,7564e60e4c1c2f1b67a594a4,550,440,1.250,1/1,
+Admiral core,false,210b1e0eb2d100d2cdf8a6a6,590a358486f77429692b2790,Аккумуляторная батарея,1,4,2,cash+quest,6d9fda8875aed2082b4da528,18500,17035,1.086,1/1,
+Admiral core,false,32bdf9f1175fe841d44c87da,5d5e9c74a4b9364855191c40,"Шлем MSA ""ACH TC-2002 MICH Series"" (Олива)",1,4,1,cash,,28000,49251,0.569,3/3,
+Admiral core,false,3500e7b76f097a98ced5d61b,5ede475339ee016e8c534742,Выстрел 40x46мм M576 (MP-APERS),1,2,2,cash+quest,f1368cb3b69c3a4917c4f206,12450,256,48.633,1/1,very-expensive
+Admiral core,false,3e6f816c41a9c73328116881,619cbf7d23893217ec30b689,Кейс для инъекторов,1,1,1,barter+quest,bcf61611e9723c765e07a740,211663,415000,0.510,1/1,
+Admiral core,false,41f4fcb92e6eda0e2dc4fbfe,5e21a3c67e40bd02257a008a,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 7.62x39 для АК (Банановый)",1,8,2,cash,,9000,5183,1.736,1/1,
+Admiral core,false,576766464a96c193b6f654b1,5a7882dcc5856700177af662,Затычка магазина на 4 патрона 12к для M870,1,10,2,cash,,1800,1030,1.748,1/1,
+Admiral core,false,67d5501fb925a7836b99f112,5efb0cabfb3e451d70735af5,.45 ACP AP,1,80,80,cash+quest,43d9544a09d068476a1a18df,850,670,1.269,1/1,
+Admiral core,false,6cf0fc22a55417075c5af23e,5cc80f53e4a949000e1ea4f8,5.7x28мм L191,1,80,80,cash+quest,8cba3e2ec639a4aa2c26c4da,400,310,1.290,1/1,
+Admiral core,false,731e65964d324bc545a1b839,5fc382c1016cce60e8341b20,.338 Lapua Magnum УПЗ,1,40,40,cash+quest,cd2641c70bede98dac3945d0,1050,830,1.265,1/1,
+Admiral core,false,8d265ce56e28f5aafa0f34a2,56deee15d2720bee328b4567,Заглушка магазина на 4 патрона 12к для MP-153,1,10,2,cash,,1500,500,3.000,1/1,
+Admiral core,false,ad1000000000000000000001,5c94bbff86f7747ee735c08f,Ключ-карта доступа в TerraGroup Labs,1,1,1,barter+quest,68a6527a3c73b2e85977d7a1,510760,100000,5.108,1/1,very-expensive
+Admiral core,false,ad2000000000000000000001,5f4f9eb969cdc30ff33f09db,Профессиональный ручной компас EYE MK.2,1,4,1,cash,,42000,65700,0.639,1/1,
+Admiral core,false,ad2000000000000000000002,5c12688486f77426843c7d32,Моток паракорда,1,6,2,cash,,32000,22500,1.422,1/1,
+Admiral core,false,ad2000000000000000000003,590c60fc86f77412b13fddcf,Планшет для документов,1,1,1,barter,,165122,167469,0.986,1/1,
+Admiral core,false,ad2000000000000000000004,5991b51486f77447b112d44f,Маркер MS2000,1,12,4,cash,,16500,13923,1.185,1/1,
+Admiral core,false,aee3d2ef24cab4e0539e153d,5fd4c5477a8d854fa0105061,Жилет охранника,1,10,2,cash,,9000,3900,2.308,1/1,
+Admiral core,false,b71182859e5958fd12c02e89,59e6906286f7746c9f75e847,5.56x45мм M856A1,1,80,80,cash+quest,f6e51dc4e50e47ee9af50a4d,550,426,1.291,1/1,
+Admiral core,false,ecd1ad1cfea7bf81ca7be827,5f3e77b26cda304dcc634057,Магазин Wilson Combat на 7 патронов .45 ACP для M1911A1,1,12,3,cash,,2500,1200,2.083,1/1,
+Admiral core,false,ece0342652b331ac065d2e5a,5d6e68a8a4b9360b6c0d54e2,12/70 бронебойная пуля AP-20,1,40,40,cash+quest,8d8d81032315f4fdc5a06798,1150,890,1.292,1/1,
+Admiral core,false,f8da71976975811ca49a91b7,618ba27d9008e4636a67f61d,"Оптический прицел 30мм Vortex ""Razor HD Gen.2 1-6x24""",1,2,1,cash+quest,60df546a03bdc74ca45fb8ca,68000,72000,0.944,1/1,
+Admiral core,false,00b1246f68ad593404d24a5c,60a272cc93ef783291411d8e,"Рюкзак Hazard 4 ""Drawbridge"" (Coyote Tan)",2,4,1,cash,,65000,30000,2.167,1/1,
+Admiral core,false,068cab4ca6f6a9cf251adf7b,624c09da2cec124eb67c1046,Реактивная осветительная ракета (Белая),2,4,2,cash,,12000,74,162.162,1/1,very-expensive
+Admiral core,false,23fd08b2d0507e549e1db4a2,5c0e9f2c86f77432297fe0a3,"Разгрузочная нагрудная система BlackHawk! ""Commando"" (Черная)",2,5,1,cash,,45000,28618,1.572,1/1,
+Admiral core,false,43ec217ecfe37c650cad3103,5bf3e0490db83400196199af,Автомат Калашникова АКС-74 5.45x39,2,3,1,cash,,65000,33098,1.964,9/9,
+Admiral core,false,6a966bf04a5dea4d6988cb44,5755383e24597772cb798966,Вазелиновая мазь,2,5,1,cash,,25000,14844,1.684,1/1,
+Admiral core,false,785520899c2b648912471cbb,619636be6db0f2477964e710,.300 Blackout M62 Tracer,2,80,40,cash,,700,413,1.695,1/1,
+Admiral core,false,b0984cb2c8974270c28b2f1f,5751a89d24597722aa0e8db0,"Мазь ""Золотая Звезда""",2,5,1,cash,,45000,28889,1.558,1/1,
+Admiral core,false,b5b55194b4a76ce0ce71a409,5d03794386f77420415576f5,Военный аккумулятор 6-СТЭН-140-М,2,1,1,barter+quest,6a24e1ca978938c1d4a8839f,297968,330000,0.903,1/1,
+Admiral core,false,b754aa18bd970cfc3343dcd7,60098ad7c2240c0fe85c570a,Индивидуальная тактическая аптечка AFAK,2,2,1,cash+quest,70258f2cc084c335a0542207,72000,41600,1.731,1/1,
+Admiral core,false,edeb23cb34bd25451fddfd04,5f5f41f56760b4138443b352,"Разгрузочная нагрудная система Direct Action ""Thunderbolt"" (Shadow Grey)",2,5,1,cash,,40000,25160,1.590,1/1,
+Admiral core,false,f530321b38abb5a472788c19,5e2aee0a86f774755a234b62,"Аккумуляторная батарея ""Циклон""",2,3,1,cash+quest,181f902c56dab247a1f49d0c,55000,85000,0.647,1/1,
+Admiral core,false,faab55335de42ed340d87fb8,5c1127bdd174af44217ab8b9,Пачка патронов 9x19мм RIP (20 штук),2,6,2,cash,,20000,1422,14.065,2/2,very-expensive
+Admiral core,false,2d000c9208cd64ad066c30c9,660bbc47c38b837877075e47,Зашифрованная флешка,3,2,1,cash+quest,734ce8b802ca6a629387ca5b,85000,10000,8.500,1/1,very-expensive
+Admiral core,false,4db787b0de7a1cb553e27892,5ed515e03a40a50460332579,Шприц с L1 (Норадреналин),3,4,1,cash,,55000,37570,1.464,1/1,
+Admiral core,false,5bfa51760237a85be34db0b0,5fca138c2a7b221b2852a5c6,Антидот xTG-12,3,3,1,cash,,100000,80600,1.241,1/1,
+Admiral core,false,6b0d153489b984ae9b940adb,5d1b5e94d7ad1a2b865a96b0,"Тепловизионный прицел FLIR ""RS-32 2.25-9x 35mm 60Hz""",3,1,1,barter+quest,df6c5b8f5660efd1b4c6d06c,343388,144794,2.372,1/1,
+Admiral core,false,7b316634b30868626d6dccb0,624c09e49b98e019a3315b66,Реактивная сигнальная ракета (Желтая),3,3,1,cash,,18000,74,243.243,1/1,very-expensive
+Admiral core,false,7c7325d2b0efa12b2ad4eea4,62e910aaf957f2915e0a5e36,Цифровой защищенный DSP радиопередатчик,3,2,1,cash+quest,0f650f5ba44bfd17404b7ad6,78000,0,,1/1,
+Admiral core,false,837fba2b3d8b5e4d7d274e9b,5ea058e01dbce517f324b3e2,"Дополнительный модуль Tac-Kek ""Heavy Trooper"" для шлемов типа Ops-Core",3,3,1,cash,,75000,61000,1.230,1/1,
+Admiral core,false,bb47b68c39d86a0f8a082d18,5b44cad286f77402a54ae7e5,"Разгрузочный жилет с бронепластинами 5.11 Tactical ""TacTec"" (Ranger Green)",3,3,1,cash,,120000,180000,0.667,5/5,
+Admiral core,false,d96a58824bb06b37bb1bb6f1,5ed515ece452db0eb56fc028,P22 (Препарат 22),3,4,1,cash,,60000,40300,1.489,1/1,
+Admiral core,false,f5a50959ede25e5b2e1ddbb1,5d5d87f786f77427997cfaef,"Разгрузочный жилет с бронепластинами Ars Arma ""A18 Сканда"" (MultiCam)",3,3,1,cash,,100000,97200,1.029,7/7,
+Admiral core,false,f9914f33ecc433d619ddacba,5ed5160a87bb8443d10680b5,Препарат Мельдонин,3,4,1,cash,,75000,55900,1.342,1/1,
+Admiral core,false,fce21a530202a999075a27af,5ea18c84ecf1982c7712d9a2,"Дополнительное бронирование для шлема Diamond Age ""Bastion""",3,3,1,cash,,145000,121330,1.195,1/1,
+Admiral core,false,0e6ac10c4adc789996086c63,66d97834d2985e11480d5c1e,Реактивная сигнальная ракета (Синий),4,2,1,cash,,30000,74,405.405,1/1,very-expensive
+Admiral core,false,e76db2cbe4b00c66047ccb27,5c94bbff86f7747ee735c08f,Ключ-карта доступа в TerraGroup Labs,4,1,1,barter+quest,680c47f4c9a0e7b884a95908,1014750,100000,10.148,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acee8,66bf757f27d0b097db0ace3d,66bf757f27d0b097db0ace3d,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acee9,66bf757f27d0b097db0ace3e,66bf757f27d0b097db0ace3e,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceea,66bf757f27d0b097db0ace3f,66bf757f27d0b097db0ace3f,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceeb,66bf757f27d0b097db0ace40,66bf757f27d0b097db0ace40,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceec,66bf757f27d0b097db0ace41,66bf757f27d0b097db0ace41,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceed,66bf757f27d0b097db0ace42,66bf757f27d0b097db0ace42,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceee,66bf757f27d0b097db0ace43,66bf757f27d0b097db0ace43,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0aceef,66bf757f27d0b097db0ace47,66bf757f27d0b097db0ace47,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef2,66bf757f27d0b097db0ace50,66bf757f27d0b097db0ace50,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef3,66bf757f27d0b097db0ace51,66bf757f27d0b097db0ace51,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef4,66bf757f27d0b097db0ace52,66bf757f27d0b097db0ace52,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef5,66bf757f27d0b097db0ace53,66bf757f27d0b097db0ace53,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef6,66bf757f27d0b097db0ace54,66bf757f27d0b097db0ace54,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef8,66bf757f27d0b097db0ace4d,66bf757f27d0b097db0ace4d,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acef9,66bf757f27d0b097db0ace55,66bf757f27d0b097db0ace55,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acefa,66bf757f27d0b097db0ace56,66bf757f27d0b097db0ace56,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acefb,66bf757f27d0b097db0ace57,66bf757f27d0b097db0ace57,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acefc,66bf757f27d0b097db0ace64,66bf757f27d0b097db0ace64,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acefd,66bf757f27d0b097db0ace65,66bf757f27d0b097db0ace65,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf6a,5e8488fa988a8701445df1e4,Гемостатик CALOK-B,1,99999,unlimited,cash,,12582,5712,2.203,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf6b,5b432b2f5acfc4771e1c6622,Легкая армированная маска Shattered,1,99999,unlimited,barter,,30152,7500,4.020,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf6c,54527a984bdc2d4e668b4567,5.56x45мм M855,1,99999,unlimited,cash+quest,673f0b6c85753ffd03ad5f34,285,180,1.583,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf6d,5fc64ea372b0dd78d51159dc,Нож сектанта,1,99999,unlimited,barter,,22500,35000,0.643,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf6e,56d59d3ad2720bdb418b4577,9x19мм Пст гж,1,99999,unlimited,cash,,65,62,1.048,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf6f,5644bd2b4bdc2d3b4c8b4572,Автомат Калашникова АК-74Н 5.45x39,1,99999,unlimited,cash,,32712,32898,0.994,9/9,early-unlimited
+Artem,false,66bf757f27d0b097db0acf70,5656d7c34bdc2d9d198b4587,7.62x39мм ПС гж,1,99999,unlimited,cash+quest,673f0daebb711e9700b60899,142,240,0.592,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf71,55d482194bdc2d1d4e8b456b,Магазин 6Л31 на 60 патронов 5.45x39 для АК-74,1,99999,unlimited,barter,,19439,18319,1.061,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf72,5a7ad2e851dfba0016153692,Магазин Big Stick на 33 патрона 9x19 для Glock,1,99999,unlimited,cash,,6425,3956,1.624,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf73,5af0454c86f7746bf20992e8,Алюминиевая шина для переломов,1,99999,unlimited,cash,,10993,8320,1.321,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf74,56dff4ecd2720b5f5a8b4568,5.45x39мм УС гс,1,2391,120,cash,,91,88,1.034,1/1,
+Artem,false,66bf757f27d0b097db0acf75,5447a9cd4bdc2dbd208b4567,Штурмовая винтовка Colt M4A1 5.56x45,1,99999,unlimited,cash,,52712,64191,0.821,13/13,early-unlimited
+Artem,false,66bf757f27d0b097db0acf76,5cc86840d7f00c002412c56c,5.7x28мм R37.X,1,99999,unlimited,cash,,172,220,0.782,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf77,5c1bc7752e221602b1779b34,"Тактическая рукоятка Зенит ""РК-6""",1,99999,unlimited,cash,,4741,5540,0.856,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf78,56d59856d2720bd8418b456a,Пистолет SIG P226R 9x19,1,99999,unlimited,cash,,15423,15213,1.014,7/7,early-unlimited
+Artem,false,66bf757f27d0b097db0acf79,56d59948d2720bb7418b4582,Магазин на 15 патронов 9x19 для P226,1,9400,6,cash,,7544,2096,3.599,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf7a,583990e32459771419544dd2,Автомат Калашникова АКС-74УН 5.45x39,1,99999,unlimited,cash,,74112,69899,1.060,9/9,early-unlimited
+Artem,false,66bf757f27d0b097db0acf7b,59e7715586f7742ee5789605,Респираторная маска,1,99999,unlimited,cash,,4302,1786,2.409,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf7c,5b432b965acfc47a8774094e,Активные наушники ГСШ-01,1,99999,unlimited,cash,,31625,16056,1.970,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf7d,5aaa4194e5b5b055d06310a5,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 5.45x39 для АК-74",1,72,15,cash,,11000,2658,4.138,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf7e,5d1340b3d7ad1a0b52682ed7,"Магазин Magpul ""PMAG 30 GEN M3 STANAG"" на 30 патронов 5.56x45 для AR-15 (FDE)",1,99999,unlimited,cash,,11500,3113,3.694,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf7f,55802d5f4bdc2dac148b458e,"Магазин Magpul ""PMAG 30 GEN M3 W STANAG"" на 30 патронов 5.56x45 для AR-15",1,99999,unlimited,cash,,11500,3797,3.029,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf80,6193d338de3cdf1d2614a6fc,Магазин на 12 патронов .45 ACP для HK USP,1,59,12,cash,,1700,2200,0.773,1/1,
+Artem,false,66bf757f27d0b097db0acf81,5a718da68dc32e000d46d264,"Магазин Magpul ""PMAG GL9"" на 21 патрон 9x19 для Glock",1,99999,unlimited,cash,,4125,1731,2.383,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf82,6571bde39837cc51b800c212,Полумаска Призрак,1,99999,unlimited,cash,,3412,6523,0.523,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf83,6193a720f8ee7e52e42109ed,Пистолет HK USP .45 ACP,1,99999,unlimited,cash,,12432,20250,0.614,9/9,early-unlimited
+Artem,false,66bf757f27d0b097db0acf84,55d4887d4bdc2d962f8b4570,"Магазин Colt ""AR-15 STANAG"" на 30 патронов 5.56x45 для AR-15",1,99999,unlimited,cash,,4765,2012,2.368,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf85,59e6920f86f77411d82aa167,5.56x45мм FMJ,1,99999,unlimited,cash,,95,130,0.731,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf86,55d480c04bdc2d1d4e8b456a,Магазин 6Л23 на 30 патронов 5.45x39 для АК-74,1,99999,unlimited,cash,,2062,1999,1.032,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf87,56dff3afd2720bba668b4567,5.45x39мм ПС гс,1,99999,unlimited,cash,,120,140,0.857,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf88,5e81f423763d9f754677bf2e,.45 ACP Match FMJ,1,99999,unlimited,cash,,135,94,1.436,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf89,61c18d83b00456371a66814b,Защитные очки газосварщика,1,99999,unlimited,cash,,19020,30000,0.634,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf8a,5e9dcf5986f7746c417435b3,Рюкзак LBT-8005A Day Pack (MultiCam Black),1,99999,unlimited,cash,,14230,22600,0.630,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf8b,5ab8f39486f7745cd93a1cca,Инфракрасная балаклава Cold Fear,1,99999,unlimited,cash,,3500,3454,1.013,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf8c,5926c3b286f774640d189b6b,Магазин на 30 патронов 9x19 для HK MP5,1,99999,unlimited,cash,,2600,4010,0.648,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf8d,5a16b8a9fcdbcb00165aa6ca,"Крепление для навесных приборов Norotos ""Titanium Advanced Tactical Mount""",1,99999,unlimited,cash,,15523,3551,4.371,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf8e,590c657e86f77412b013051d,Аптечка Grizzly,1,99999,unlimited,barter,,164636,35042,4.698,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf8f,572b7fa524597762b747ce82,Нижняя полумаска,1,99999,unlimited,cash,,1734,2614,0.663,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf90,619bdef8c9546643a67df6f6,Повязка на плечо TerraGroup,1,99999,unlimited,barter,,40256,52000,0.774,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf91,5645bcc04bdc2d363b8b4572,"Активные наушники Peltor ""ComTac II"" (OD Green)",1,99999,unlimited,cash,,28920,38050,0.760,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf92,5fc3e272f8b6a877a729eac5,Пистолет-пулемет HK UMP .45 ACP,1,99999,unlimited,cash,,26842,45839,0.586,7/7,early-unlimited
+Artem,false,66bf757f27d0b097db0acf93,5ab8f4ff86f77431c60d91ba,Балаклава Призрак,1,99999,unlimited,cash,,5500,6788,0.810,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf94,5cadc190ae921500103bb3b6,Пистолет Beretta M9A3 9x19,1,99999,unlimited,cash,,12712,12675,1.003,8/8,early-unlimited
+Artem,false,66bf757f27d0b097db0acf95,5a7ae0c351dfba0017554310,Пистолет Glock 17 9x19,1,99999,unlimited,cash,,14000,13862,1.010,6/6,early-unlimited
+Artem,false,66bf757f27d0b097db0acf96,6673b1ac5cae0610f1079d73,6673b1ac5cae0610f1079d73,1,929,0,cash+quest,6740b5875ef4d62a019c51f2,15000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf97,6673b1ac5cae0610f1079d74,6673b1ac5cae0610f1079d74,1,920,0,cash+quest,6740b5875ef4d62a019c51f2,15000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf98,6673b1ac5cae0610f1079d75,6673b1ac5cae0610f1079d75,1,643,0,cash+quest,6740b5875ef4d62a019c51f2,15000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf99,66bf757f27d0b097db0ace6d,66bf757f27d0b097db0ace6d,1,643,0,cash+quest,6740b5875ef4d62a019c51f2,15000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf9a,66326bfd46817c660d015123,66326bfd46817c660d015123,1,86,2,barter,,22401183,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfd8,66326bfd46817c660d015130,66326bfd46817c660d015130,1,1042,10,cash,,6293,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfd9,66326bfd46817c660d01513f,66326bfd46817c660d01513f,1,75,10,cash,,2423,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfda,66326bfd46817c660d01513e,66326bfd46817c660d01513e,1,75,10,cash,,2323,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfdb,66326bfd46817c660d015140,66326bfd46817c660d015140,1,75,10,cash,,2333,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfdc,66bf757f27d0b097db0ace3a,66bf757f27d0b097db0ace3a,1,532,4,cash,,3000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfdd,66326bfd46817c660d015141,66326bfd46817c660d015141,1,75,10,cash,,2239,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe4,668bc5cd834c88e06b08b6a8,668bc5cd834c88e06b08b6a8,1,2050,10,cash,,4150,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe5,6673b1ac5cae0610f1079d7f,6673b1ac5cae0610f1079d7f,1,699,10,cash,,4150,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe6,668bc5cd834c88e06b08b6a4,668bc5cd834c88e06b08b6a4,1,395,10,cash,,4150,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe7,668bc5cd834c88e06b08b693,668bc5cd834c88e06b08b693,1,7849,10,cash,,5900,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe8,668bc5cd834c88e06b08b694,668bc5cd834c88e06b08b694,1,7849,10,cash,,5900,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfe9,66bf757f27d0b097db0ace63,66bf757f27d0b097db0ace63,1,7849,10,cash,,5900,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfea,66326bfd46817c660d01514e,66326bfd46817c660d01514e,1,758,10,cash,,6293,,,0/1,partial-product-value
+Artem,false,66eadd7a2e2dbc7ab4bafd74,5751a25924597722c463c472,Армейский бинт,1,99999,unlimited,cash,,1993,2049,0.973,1/1,early-unlimited
+Artem,false,675267324707588d57c75972,6752641b1470fc33b675d59a,6752641b1470fc33b675d59a,1,500,3,cash+quest,6740b1c44382955ae7e87eb9,200,,,0/1,partial-product-value
+Artem,false,677bb992edf2729af1734043,66326bfd46817c660d015122,66326bfd46817c660d015122,1,86,2,cash+quest,673f0b6c85753ffd03ad5f34,324250,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf37,5fbe3ffdf8b6a877a729ea82,.300 Blackout БПЗ FMJ,2,87534,240,cash+quest,6740b70d0c2f488b92d69575,296,288,1.028,1/1,
+Artem,false,66bf757f27d0b097db0acf38,544fb45d4bdc2dee738b4568,Аптечка Salewa First Aid Kit,2,99999,unlimited,cash,,35765,18863,1.896,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf39,5c0558060db834001b735271,Прибор ночного видения L3Harris GPNVG-18,2,99999,unlimited,barter,,129087,145004,0.890,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3a,6171407e50224f204c1da3c5,Крепление 30мм Recknagel Era-Tac для оптики,2,99999,unlimited,cash,,8100,7400,1.095,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3b,5c0695860db834001b735461,Переходник для ПНВ-10Т на современные крепления,2,99999,unlimited,cash,,2100,2310,0.909,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3c,5aa2ba71e5b5b000137b758f,"Активные наушники MSA ""Sordin Supreme PRO-X/L""",2,99999,unlimited,cash,,43627,45027,0.969,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3d,5d3eb5eca4b9363b1f22f8e4,Магазин на 20 патронов 5.7x28 для FN Five-seveN,2,99999,unlimited,cash,,3243,3660,0.886,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3e,59d6088586f774275f37482f,Автомат Калашникова АКМ 7.62x39,2,99999,unlimited,cash,,178584,138904,1.286,12/12,early-unlimited
+Artem,false,66bf757f27d0b097db0acf3f,590c657e86f77412b013051d,Аптечка Grizzly,2,56,3,cash,,32625,35042,0.931,1/1,
+Artem,false,66bf757f27d0b097db0acf40,5648a69d4bdc2ded0b8b457b,"Разгрузочный жилет ""BlackRock Chest Rig"" (Серый)",2,300,6,cash,,32239,40700,0.792,1/1,
+Artem,false,66bf757f27d0b097db0acf41,603409c80ca681766b6a0fb2,"Защитные очки НПП КлАСС ""Кондор""",2,99999,unlimited,cash,,12030,15600,0.771,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf42,5ba26383d4351e00334c93d9,Пистолет-пулемет HK MP7A1 4.6x30,2,99999,unlimited,cash,,26523,52741,0.503,6/6,early-unlimited
+Artem,false,66bf757f27d0b097db0acf43,5b2388675acfc4771e1be0be,"Оптический прицел 30мм Burris ""FullField TAC30 1-4x24""",2,99999,unlimited,cash,,41528,31468,1.320,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf44,5b3cbc235acfc4001863ac44,"Наглазник на прицел Armasight ""Vulcan MG""",2,99999,unlimited,cash,,464,704,0.659,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf45,64b6979341772715af0f9c39,4.6x30мм JSP SX ,2,99999,unlimited,cash,,326,280,1.164,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf46,5b099ac65acfc400186331e1,Магазин на 20 патронов 7.62x51 для SA58/FAL,2,99999,unlimited,cash,,10475,2780,3.768,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf47,55d614004bdc2d86028b4568,"Глушитель SureFire ""SOCOM556-MONSTER"" 5.56x45",2,173,4,cash,,45321,43000,1.054,1/1,
+Artem,false,66bf757f27d0b097db0acf48,5df25b6c0b92095fd441e4cf,Магазин на 5 патронов 7.62x51 для ОРСИС T-5000M,2,852,5,cash,,2221,1950,1.139,1/1,
+Artem,false,66bf757f27d0b097db0acf49,59d6272486f77466146386ff,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 7.62x39 для АК",2,52,6,cash,,12523,3183,3.934,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf4a,618bb76513f5097c8d5aa2d5,"Рюкзак Группа 99 ""Т20"" (Умбра)",2,99999,unlimited,cash,,39239,29410,1.334,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf4b,5c066e3a0db834001b7353f0,"Прибор ночного видения Armasight ""N-15""",2,8,1,cash,,43215,74800,0.578,1/1,
+Artem,false,66bf757f27d0b097db0acf4c,5c0696830db834001d23f5da,Прибор ночного видения ПНВ-10Т,2,13,1,cash,,32962,28000,1.177,1/1,
+Artem,false,66bf757f27d0b097db0acf4d,56dff2ced2720bb4668b4567,5.45x39мм ПП гс,2,99999,unlimited,cash,,172,220,0.782,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf4e,58948c8e86f77409493f7266,Пистолет-пулемет SIG MPX 9x19,2,99999,unlimited,cash,,74823,79040,0.947,15/15,early-unlimited
+Artem,false,66bf757f27d0b097db0acf4f,5ba2657ed4351e0035628ff2,Магазин на 30 патронов 4.6x30 для HK MP7,2,99999,unlimited,cash,,8453,6001,1.409,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf50,558022b54bdc2dac148b458d,"Голографический прицел EOTech ""EXPS3-0"" (Песочный)",2,99999,unlimited,cash,,24563,26250,0.936,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf51,545cdae64bdc2d39198b4568,"Рюкзак штурмовой Camelbak ""Tri-Zip"" (Foliage)",2,99999,unlimited,cash,,50359,61325,0.821,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf52,5a351711c4a282000b1521a4,"Магазин X Products ""X-5"" на 50 патронов 9x19 для HK MP5",2,99999,unlimited,cash,,26325,13946,1.888,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf53,5b3b6e495acfc4330140bd88,"Ночной прицел Armasight ""Vulcan MG 3.5x Bravo""",2,264,2,cash,,29102,46950,0.620,1/1,
+Artem,false,66bf757f27d0b097db0acf54,5888988e24597752fe43a6fa,Магазин на 10 патронов 7.62x51 для ДВЛ-10,2,99999,unlimited,cash,,5600,4493,1.246,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf55,5f2a9575926fd9352339381f,Винтовка Kel-Tec RFB 7.62x51,2,99999,unlimited,cash,,33490,57830,0.579,7/7,early-unlimited
+Artem,false,66bf757f27d0b097db0acf56,62e14904c2699c0ec93adc47,"Пистолет-пулемет СР-2М ""Вереск"" 9x21",2,99999,unlimited,cash,,35593,43977,0.809,8/8,early-unlimited
+Artem,false,66bf757f27d0b097db0acf57,5a0abb6e1526d8000a025282,"Переходник ""Тактика Тула"" для АК 7.62x39",2,99999,unlimited,cash,,693,615,1.127,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf58,5e4d34ca86f774264f758330,"Активные наушники Walker's ""Razor Digital""",2,99999,unlimited,cash,,31625,35100,0.901,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf59,5e9db13186f7742f845ee9d3,Разгрузочный жилет LBT-1961A Load Bearing Chest Rig (MAS Grey),2,99999,unlimited,cash,,73829,38250,1.930,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf5a,59fafc9386f774067d462453,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (FDE)",2,483,6,cash,,15675,4700,3.335,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf5b,58491f3324597764bc48fa02,"Голографический прицел EOTech ""XPS3-0""",2,99999,unlimited,cash,,24563,19985,1.229,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf5c,59fafc5086f7740dbe19f6c3,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (Черный)",2,483,6,cash,,15675,4387,3.573,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf5d,66326bfd46817c660d015154,66326bfd46817c660d015154,2,6844,0,cash+quest,67464750efd379bfffb1d539,75000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf5e,5c0e5edb86f77461f55ed1f7,"Бронежилет БНТИ ""Жук"" (Пресса)",2,99999,unlimited,cash,,97745,39522,2.473,8/8,early-unlimited
+Artem,false,66bf757f27d0b097db0acf5f,5c925fa22e221601da359b7b,9x19мм AP 6.3,2,99999,unlimited,cash,,795,210,3.786,1/1,very-expensive;early-unlimited
+Artem,false,66bf757f27d0b097db0acf60,5c0d668f86f7747ccb7f13b2,9x39мм СПП гс,2,2391,170,cash,,752,440,1.709,1/1,
+Artem,false,66bf757f27d0b097db0acf61,5e023e53d4353e3302577c4c,7.62x51мм БПЗ FMJ,2,99999,unlimited,cash,,212,240,0.883,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf62,5c7fb51d2e2216001219ce11,"Пламегаситель SureFire ""SF3P"" 5.56x45 для AR-15",2,99999,unlimited,cash,,6239,6420,0.972,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf63,55d482194bdc2d1d4e8b456b,Магазин 6Л31 на 60 патронов 5.45x39 для АК-74,2,24,3,cash,,26239,18319,1.432,1/1,
+Artem,false,66bf757f27d0b097db0acf64,6499849fc93611967b034949,Автомат Калашникова АК-12 5.45x39,2,99999,unlimited,cash,,49523,78397,0.632,12/12,early-unlimited
+Artem,false,66bf757f27d0b097db0acf65,590c60fc86f77412b13fddcf,Планшет для документов,2,99999,unlimited,barter,,206507,167469,1.233,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf66,5c1bc5612e221602b5429350,"Тактическая рукоятка Зенит ""РК-1""",2,125,4,cash,,12475,11380,1.096,1/1,
+Artem,false,66bf757f27d0b097db0acf67,5e54f79686f7744022011103,Маска Pestily,2,99999,unlimited,cash,,46300,94900,0.488,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf68,5710c24ad2720bc3458b45a3,Ручная граната Ф-1,2,182,6,cash,,8562,5600,1.529,1/1,
+Artem,false,66bf757f27d0b097db0acf69,58d3db5386f77426186285a0,Ручная граната M67,2,206,6,cash,,10292,8020,1.283,1/1,
+Artem,false,66bf757f27d0b097db0acfa6,66326bfd46817c660d015125,66326bfd46817c660d015125,2,952,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa7,66326bfd46817c660d015126,66326bfd46817c660d015126,2,435,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb6,66326bfd46817c660d015137,66326bfd46817c660d015137,2,895,3,cash,,169963,,,8/9,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc8,66326bfd46817c660d015131,66326bfd46817c660d015131,2,875,3,cash,,78465,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc9,66326bfd46817c660d015150,66326bfd46817c660d015150,2,60,2,cash,,30000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfcb,66326bfd46817c660d01512d,66326bfd46817c660d01512d,2,422,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfcc,6673b1ac5cae0610f1079d7e,6673b1ac5cae0610f1079d7e,2,220,4,cash,,100000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfcd,66bf757f27d0b097db0ace48,66bf757f27d0b097db0ace48,2,9999999,unlimited,cash,,50000,,,0/1,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfce,66bf757f27d0b097db0ace49,66bf757f27d0b097db0ace49,2,9999999,unlimited,cash,,50000,,,0/1,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfcf,66bf757f27d0b097db0ace4a,66bf757f27d0b097db0ace4a,2,9999999,unlimited,cash,,50000,,,0/1,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfd0,66bf757f27d0b097db0ace36,66bf757f27d0b097db0ace36,2,9999999,unlimited,cash,,170000,,,6/7,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfd1,66bf757f27d0b097db0ace38,66bf757f27d0b097db0ace38,2,9999999,unlimited,cash,,150000,,,4/5,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfd2,669819683571cb050b0b6391,669819683571cb050b0b6391,2,230,6,cash,,40000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfd3,669819683571cb050b0b6392,669819683571cb050b0b6392,2,230,6,cash,,40000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfd6,66326bfd46817c660d01512c,66326bfd46817c660d01512c,2,565,4,cash,,100000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfd7,66326bfd46817c660d01514f,66326bfd46817c660d01514f,2,453,10,cash,,6293,,,0/1,partial-product-value
+Artem,false,674e0b5c906e7939fa1ea4c2,674e0b363c4bc8bb29fe0984,674e0b363c4bc8bb29fe0984,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674e4f51af7d030c7583beeb,674e4ef58257d9804d145885,674e4ef58257d9804d145885,2,500,3,cash,,50000,,,0/1,partial-product-value
+Artem,false,674f345ece8d9b62b82833ea,674f340a7dba6c637c00a76c,674f340a7dba6c637c00a76c,2,500,3,cash,,50000,,,0/1,partial-product-value
+Artem,false,674f3602933e389d9dd1db9f,674f35e08578c7579fcb9970,674f35e08578c7579fcb9970,2,500,3,cash,,50000,,,0/1,partial-product-value
+Artem,false,674f49516c82decafeaba3be,674f48eaa2e633be4b4348c4,674f48eaa2e633be4b4348c4,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f5969c285639929cae167,674f592b98bc2083d3006264,674f592b98bc2083d3006264,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f5cb5f8eb9072af6f8a05,674f5c75a98cdbbe850e0fab,674f5c75a98cdbbe850e0fab,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f6298376c273da18d599a,674f627197d32e9e3b16d465,674f627197d32e9e3b16d465,2,693,2,cash,,50000,,,0/1,partial-product-value
+Artem,false,674f6846602c6170a098e4be,674f681bda9a0c381171ea25,674f681bda9a0c381171ea25,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f69407f69840deb854835,674f690a7abfbaac80fa2587,674f690a7abfbaac80fa2587,2,500,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f6ad4b6700dec3a2bc706,674f6a7a3b1cb546b93ebdee,674f6a7a3b1cb546b93ebdee,2,300,6,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f6b48b48fe4360b7ffa06,674f6b1747bec257e33712b4,674f6b1747bec257e33712b4,2,300,6,cash,,1000,,,0/1,partial-product-value
+Artem,false,674f6e426bc56e3a49345446,674f6e0ccc2f0292beb75c54,674f6e0ccc2f0292beb75c54,2,643,2,cash,,1000,,,0/1,partial-product-value
+Artem,false,6754997507c11171cc6454af,67548853f1ba8ca2b34fa4d0,67548853f1ba8ca2b34fa4d0,2,1493,2,cash,,40000,,,0/1,partial-product-value
+Artem,false,675499cb5057b52f4cb9b2a2,6754946b62f4db9c0404bd2b,6754946b62f4db9c0404bd2b,2,1493,2,cash,,40000,,,0/1,partial-product-value
+Artem,false,676a2600c1b43ce8a21c5267,676a24b5c3a24ed47d79720c,676a24b5c3a24ed47d79720c,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676a327500fd8c48f31b99c8,676a31defb84836a874777a6,676a31defb84836a874777a6,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676a35eb374851056b8f40d6,676a34d23980119d8d5461c0,676a34d23980119d8d5461c0,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676ab898a6dfffee6ea86925,676ab7e323e05eb20de89163,676ab7e323e05eb20de89163,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676aba3b89abd820b823d144,676ab93db29a95d6fb6fbf19,676ab93db29a95d6fb6fbf19,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676ac7b5558cdb44d740d037,676ac6e0769e44deb14a028a,676ac6e0769e44deb14a028a,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676ad665e25ae9db51cf952a,676ad644ed32115c8b46342d,676ad644ed32115c8b46342d,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,676ad8f67e751d17aaa9bbef,676ad83f4488c50df0ebb8ff,676ad83f4488c50df0ebb8ff,2,200,6,cash,,200,,,0/1,partial-product-value
+Artem,false,67709e87fa930c09f741fa0d,67708ffbd78ed00a0b03b271,67708ffbd78ed00a0b03b271,2,200,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,67709f074db173ee5a11a69e,67709e1ac9f65ea01033498b,67709e1ac9f65ea01033498b,2,200,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,67709f5a607644beb06f81a9,67709f35bcb7344a48a13c10,67709f35bcb7344a48a13c10,2,200,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,6770bca98bb57ad823acf2a0,6770ba90ecb0e684560d8184,6770ba90ecb0e684560d8184,2,200,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,6771be5a75dd1f5dcd39d8ff,6771bb1b8df8c956d414842c,6771bb1b8df8c956d414842c,2,200,4,cash,,200,,,0/1,partial-product-value
+Artem,false,6771be748078738c560c93c0,6771bd1c7cac7844d18b8aaa,6771bd1c7cac7844d18b8aaa,2,200,4,cash,,200,,,0/1,partial-product-value
+Artem,false,6771be8b99d5a730fe8797f9,6771bdde30136eb8171a4b36,6771bdde30136eb8171a4b36,2,200,4,cash,,200,,,0/1,partial-product-value
+Artem,false,6771bec28bd0da6592bf6cf7,6770852638b652c9b4e588a9,6770852638b652c9b4e588a9,2,1042,10,cash,,6293,,,0/1,partial-product-value
+Artem,false,6773fc308eaf3410d6dbf634,6773fbc54cafcf4c255207bd,6773fbc54cafcf4c255207bd,2,750,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,6773fc7f0c38a70d3f1d35da,6773f8527775544a1b59da0a,6773f8527775544a1b59da0a,2,750,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,6773fccf3bc3e808c87959a0,6773f6a441e9ad98ad1e00f8,6773f6a441e9ad98ad1e00f8,2,750,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,6773fcec3db991e925addd5c,6773f2fc34e508088a53800f,6773f2fc34e508088a53800f,2,750,3,cash,,1000,,,0/1,partial-product-value
+Artem,false,677412c3f612201acb64ab82,67741256f0101c0e0ff4eada,67741256f0101c0e0ff4eada,2,200,4,cash,,200,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf13,5d6e6911a4b9361bd5780d52,12/70 флешетта,3,8644,100,cash+quest,6740b5875ef4d62a019c51f2,330,334,0.988,1/1,
+Artem,false,66bf757f27d0b097db0acf14,5efb0da7a29a85116f6ea05f,9x19мм ПБП гж,3,99999,unlimited,cash,,581,600,0.968,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf15,606587252535c57a13424cfd,Штурмовая винтовка CMMG Mk47 Mutant 7.62x39,3,99999,unlimited,cash,,134520,106051,1.268,13/13,early-unlimited
+Artem,false,66bf757f27d0b097db0acf16,617fd91e5539a84ec44ce155,Ручная граната РГН,3,99999,unlimited,cash,,25200,13900,1.813,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf17,618a431df1eb8e24b8741deb,Ручная граната РГО,3,99999,unlimited,cash,,25200,10800,2.333,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf18,5447a9cd4bdc2dbd208b4567,Штурмовая винтовка Colt M4A1 5.56x45,3,99999,unlimited,cash,,312655,298948,1.046,21/21,early-unlimited
+Artem,false,66bf757f27d0b097db0acf19,6165ac306ef05c2ce828ef74,Штурмовая винтовка FN SCAR-H 7.62x51 (FDE),3,99999,unlimited,cash,,128530,118149,1.088,15/15,early-unlimited
+Artem,false,66bf757f27d0b097db0acf1a,57838f9f2459774a150289a0,Магазин 6Л25 на 20 патронов 9x39 для ВСС/Вал (Слива),3,99999,unlimited,cash,,8625,5999,1.438,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf1b,626673016f1edc06f30cf6d5,"Глушитель KAC ""QDC"" 5.56x45",3,270,2,cash,,92501,71000,1.303,1/1,
+Artem,false,66bf757f27d0b097db0acf1c,5e208b9842457a4a7a33d074,"Модератор звука Гексагон ""ДТКП MK.2"" 7.62x39 для АК",3,182,2,cash,,58239,51714,1.126,1/1,
+Artem,false,66bf757f27d0b097db0acf1d,5f60cd6cf2bcbb675b00dac6,"Активные наушники Walker's ""XCEL 500BT""",3,99999,unlimited,cash,,54600,60125,0.908,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf1e,5cc80f38e4a949001152b560,5.7x28мм SS190,3,99999,unlimited,cash,,532,460,1.157,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf1f,64b7af434b75259c590fa893,7.62x39мм ПП гж,3,99999,unlimited,cash,,442,710,0.623,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf20,59e6906286f7746c9f75e847,5.56x45мм M856A1,3,99999,unlimited,cash,,372,426,0.873,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf21,54527ac44bdc2d36668b4567,5.56x45мм M855A1,3,99999,unlimited,cash,,681,710,0.959,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf22,5aafbde786f774389d0cbc0f,Кейс для патронов,3,24,1,cash,,173582,162552,1.068,1/1,
+Artem,false,66bf757f27d0b097db0acf23,5b057b4f5acfc4771e1bd3e9,"Тактическая рукоятка Stark ""SE-5 Express Forward""",3,340,6,cash,,18475,15604,1.184,1/1,
+Artem,false,66bf757f27d0b097db0acf24,655df24fdf80b12750626d0a,"Тактическая рукоятка Stark ""SE-5 Express Forward"" (FDE)",3,340,6,cash,,18475,14823,1.246,1/1,
+Artem,false,66bf757f27d0b097db0acf25,5ba26586d4351e44f824b340,Магазин на 40 патронов 4.6x30 для HK MP7,3,99999,unlimited,cash,,13220,12142,1.089,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf26,64b8725c4b75259c590fa899,.300 Blackout CBJ,3,99999,unlimited,cash,,599,550,1.089,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf27,609e8540d5c319764c2bc2e9,"Бронежилет NFM ""THOR Concealable Reinforced Vest""",3,99999,unlimited,cash,,105795,62579,1.691,7/7,early-unlimited
+Artem,false,66bf757f27d0b097db0acf28,56dff026d2720bb8668b4567,5.45x39мм БС гс,3,99999,unlimited,cash,,672,780,0.862,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf29,60098ad7c2240c0fe85c570a,Индивидуальная тактическая аптечка AFAK,3,99999,unlimited,cash+quest,6741da44d68092ca9722521a,54829,41600,1.318,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf2a,5df8ce05b11454561e39243b,Марксманская винтовка Knight's Armament Company SR-25 7.62x51,3,99999,unlimited,cash,,95504,104149,0.917,13/13,early-unlimited
+Artem,false,66bf757f27d0b097db0acf2b,5b3b99475acfc432ff4dcbee,"Оптический прицел 30мм EOTech ""Vudu 1-6x24""",3,99999,unlimited,cash,,75900,44344,1.712,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf2c,6567e7681265c8a131069b0f,"Оптический прицел 30мм SIG Sauer ""TANGO6T 1-6x24""",3,99999,unlimited,cash,,50000,68601,0.729,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf2d,5e9dacf986f774054d6b89f4,"Бронежилет ФОРТ ""Дефендер-2""",3,99999,unlimited,cash,,205223,158901,1.292,9/9,early-unlimited
+Artem,false,66bf757f27d0b097db0acf2e,5c1cd46f2e22164bef5cfedb,"Тактическая рукоятка Зенит ""РК-1"" на креплении ""Б-25У""",3,40,2,cash,,38741,18890,2.051,1/1,
+Artem,false,66bf757f27d0b097db0acf2f,618168dc8004cc50514c34fc,Магазин на 20 патронов 7.62x51 для FN SCAR-H,3,875,5,cash,,21071,4000,5.268,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf30,6183d53f1cb55961fa0fdcda,Магазин на 20 патронов 7.62x51 для FN SCAR-H (FDE),3,875,5,cash,,21071,4500,4.682,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf31,619cbf7d23893217ec30b689,Кейс для инъекторов,3,99999,unlimited,barter,,222689,415000,0.537,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acf32,5bb2475ed4351e00853264e3,Штурмовая винтовка HK 416A5 5.56x45,3,99999,unlimited,cash,,46523,88157,0.528,12/12,early-unlimited
+Artem,false,66bf757f27d0b097db0acf33,5fbcc1d9016cce60e8341ab3,Штурмовая винтовка SIG MCX .300 Blackout,3,99999,unlimited,cash+quest,67464750efd379bfffb1d539,159653,179760,0.888,20/20,early-unlimited
+Artem,false,66bf757f27d0b097db0acf34,5fbcc1d9016cce60e8341ab3,Штурмовая винтовка SIG MCX .300 Blackout,3,99999,unlimited,cash,,47490,82202,0.578,13/13,early-unlimited
+Artem,false,66bf757f27d0b097db0acf35,5c0e655586f774045612eeb2,"Бронежилет HighCom ""Trooper TFO"" (MultiCam)",3,99999,unlimited,cash,,116523,113000,1.031,5/5,early-unlimited
+Artem,false,66bf757f27d0b097db0acf36,5cfe8010d7ad1a59283b14c6,"Магазин барабанный X Products ""X-47"" на 50 патронов 7.62x39 для АК",3,99999,unlimited,cash,,32563,29700,1.096,1/1,early-unlimited
+Artem,false,66bf757f27d0b097db0acfa0,66326bfd46817c660d015132,66326bfd46817c660d015132,3,490,3,cash,,78465,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa1,66bf757f27d0b097db0ace81,66bf757f27d0b097db0ace81,3,169,2,cash,,50000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa2,66326bfd46817c660d01512e,66326bfd46817c660d01512e,3,6843,2,cash,,124465,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa3,66326bfd46817c660d015146,66326bfd46817c660d015146,3,6843,2,cash,,124465,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa4,66326bfd46817c660d015148,66326bfd46817c660d015148,3,5343,2,cash,,124465,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa8,66326bfd46817c660d015127,66326bfd46817c660d015127,3,265,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfa9,66326bfd46817c660d015128,66326bfd46817c660d015128,3,876,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfaa,66326bfd46817c660d015129,66326bfd46817c660d015129,3,756,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfac,669819683571cb050b0b6393,669819683571cb050b0b6393,3,985,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfad,669819683571cb050b0b6394,669819683571cb050b0b6394,3,985,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfaf,66bf757f27d0b097db0ace44,66bf757f27d0b097db0ace44,3,985,4,cash,,65000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb2,66bf757f27d0b097db0ace58,66bf757f27d0b097db0ace58,3,985,4,cash,,65000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb3,66bf757f27d0b097db0ace61,66bf757f27d0b097db0ace61,3,985,4,cash,,65000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb5,66326bfd46817c660d015135,66326bfd46817c660d015135,3,789,3,cash,,170523,,,8/9,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb7,66326bfd46817c660d015138,66326bfd46817c660d015138,3,794,3,cash,,171024,,,8/9,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb8,66326bfd46817c660d015139,66326bfd46817c660d015139,3,1000,3,cash,,169354,,,4/5,partial-product-value
+Artem,false,66bf757f27d0b097db0acfb9,66326bfd46817c660d015145,66326bfd46817c660d015145,3,900,3,cash,,171024,,,4/5,partial-product-value
+Artem,false,66bf757f27d0b097db0acfba,66326bfd46817c660d015149,66326bfd46817c660d015149,3,1265,3,cash,,169354,,,8/9,partial-product-value
+Artem,false,66bf757f27d0b097db0acfbb,66326bfd46817c660d015151,66326bfd46817c660d015151,3,462,3,cash,,169354,,,4/5,partial-product-value
+Artem,false,66bf757f27d0b097db0acfbc,66326bfd46817c660d015152,66326bfd46817c660d015152,3,1000,3,cash,,171024,,,4/5,partial-product-value
+Artem,false,66bf757f27d0b097db0acfbd,66b94b886af54725ea0a4b93,66b94b886af54725ea0a4b93,3,99999,unlimited,cash,,205223,,,8/9,partial-product-value;early-unlimited
+Artem,false,66bf757f27d0b097db0acfc0,66326bfd46817c660d01513b,66326bfd46817c660d01513b,3,745,3,cash,,165234,,,6/7,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc1,66326bfd46817c660d01512a,66326bfd46817c660d01512a,3,918,4,cash,,140000,,,2/3,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc2,66326bfd46817c660d01512b,66326bfd46817c660d01512b,3,523,4,cash,,140000,,,3/4,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc3,66bf757f27d0b097db0ace46,66bf757f27d0b097db0ace46,3,255,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc4,66bf757f27d0b097db0ace45,66bf757f27d0b097db0ace45,3,255,4,cash,,1500,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc5,668bc5cd834c88e06b08b6a9,668bc5cd834c88e06b08b6a9,3,100,2,cash,,75000,,,5/6,partial-product-value
+Artem,false,66bf757f27d0b097db0acfc6,668bc5cd834c88e06b08b6aa,668bc5cd834c88e06b08b6aa,3,100,2,cash,,75000,,,5/6,partial-product-value
+Artem,false,67607840017f50377724dd95,6529302b8c26af6326029fb7,6.8x51мм SIG FMJ,3,9000,240,cash,,567,529,1.072,1/1,
+Artem,false,676a14f4d40f91f9958fd60d,676a1476242dea0ba69ebbd8,676a1476242dea0ba69ebbd8,3,985,4,cash,,150000,,,3/4,partial-product-value
+Artem,false,677158152f1f1899add594a2,677156cc0177798346cf341c,677156cc0177798346cf341c,3,1265,3,cash,,169354,,,8/9,partial-product-value
+Artem,false,66bf757f27d0b097db0acefe,5c94bbff86f7747ee735c08f,Ключ-карта доступа в TerraGroup Labs,4,100,4,cash+quest,6741dbba9e6d28c8ff0a700f,152385,100000,1.524,1/1,
+Artem,false,66bf757f27d0b097db0aceff,5cadf6ddae9215051e1c23b2,12.7x55мм ПС12,4,54900,180,cash+quest,6741d50ae7f5bd50d5034129,999,360,2.775,1/1,
+Artem,false,66bf757f27d0b097db0acf00,5fd20ff893a8961fc660a954,.300 Blackout AP,4,83494,160,cash+quest,6741d2a8ee39dbd555b6468d,801,870,0.921,1/1,
+Artem,false,66bf757f27d0b097db0acf01,59e690b686f7746c9f75e848,5.56x45мм M995,4,84595,160,cash+quest,6741de5af218c3a4a71f659e,975,1230,0.793,1/1,
+Artem,false,66bf757f27d0b097db0acf02,5c0d5e4486f77478390952fe,"5.45x39мм ППБС гс ""Игольник""",4,102595,180,cash+quest,6741d86720827d719dafa146,1120,1240,0.903,1/1,
+Artem,false,66bf757f27d0b097db0acf03,5fc275cf85fd526b824a571a,.338 Lapua Magnum FMJ,4,2391,60,cash,,1662,1800,0.923,1/1,
+Artem,false,66bf757f27d0b097db0acf04,5df24cf80dee1b22f862e9bc,Снайперская винтовка ОРСИС T-5000M 7.62x51,4,99999,unlimited,cash,,71239,85018,0.838,14/14,
+Artem,false,66bf757f27d0b097db0acf05,5df8a4d786f77412672a1e3b,Рюкзак рейдовый 6Ш118 (Флора Цифра),4,635,3,cash,,152000,144000,1.056,1/1,
+Artem,false,66bf757f27d0b097db0acf06,5a26ac0ec4a28200741e1e18,9x21мм БТ гж,4,9500,140,cash,,942,558,1.688,1/1,
+Artem,false,66bf757f27d0b097db0acf07,64ca3d3954fc657e230529cc,Пулемет Калашникова Пехотный ПКП 7.62x54R,4,99999,unlimited,cash,,89121,143432,0.621,7/7,
+Artem,false,66bf757f27d0b097db0acf08,588892092459774ac91d4b11,Снайперская винтовка Lobaev Arms ДВЛ-10 7.62x51,4,99999,unlimited,cash,,79830,104143,0.767,7/7,
+Artem,false,66bf757f27d0b097db0acf09,5ba26835d4351e0035628ff5,4.6x30мм AP SX,4,63004,140,cash+quest,6741d86720827d719dafa146,1580,745,2.121,1/1,
+Artem,false,66bf757f27d0b097db0acf0a,5a6086ea4f39f99cd479502f,7.62x51мм M61,4,12000,140,cash+quest,6741d6176c4b417a408d290f,1152,1050,1.097,1/1,
+Artem,false,66bf757f27d0b097db0acf0b,57c44b372459772d2b39b8ce,"Автомат Специальный АС ""Вал"" 9x39",4,99999,unlimited,cash,,104253,104536,0.997,8/8,
+Artem,false,66bf757f27d0b097db0acf0c,5efb0cabfb3e451d70735af5,.45 ACP AP,4,99999,unlimited,cash,,800,670,1.194,1/1,
+Artem,false,66bf757f27d0b097db0acf0d,59c1383d86f774290a37e0ca,"Магазин Magpul ""PMAG D-60 STANAG"" на 60 патронов 5.56x45 для AR-15",4,94,4,cash,,58163,15413,3.774,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf0e,544a37c44bdc2d25388b4567,"Магазин SureFire ""MAG5-60 STANAG"" на 60 патронов 5.56x45 для AR-15",4,54,3,cash,,52163,22755,2.292,1/1,
+Artem,false,66bf757f27d0b097db0acf0f,5fc23426900b1d5091531e15,Магазин на 10 патронов .338 LM для Mk-18,4,99999,unlimited,cash,,10122,14600,0.693,1/1,
+Artem,false,66bf757f27d0b097db0acf10,5a608bf24f39f98ffc77720e,7.62x51мм M62 Tracer,4,54276,140,cash+quest,6746319d051c463a810728fc,1050,440,2.386,1/1,
+Artem,false,66bf757f27d0b097db0acf11,59e0d99486f7744a32234762,7.62x39мм БП гж,4,84595,180,cash+quest,6741d2a8ee39dbd555b6468d,642,1111,0.578,1/1,
+Artem,false,66bf757f27d0b097db0acf12,5fc22d7c187fea44d52eda44,Марксманская винтовка SWORD International Mk-18 .338 LM,4,99999,unlimited,cash,,296558,220562,1.345,10/10,
+Artem,false,66bf757f27d0b097db0acf9b,6673b1ac5cae0610f1079d71,6673b1ac5cae0610f1079d71,4,240,2,cash,,152000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf9c,668bc5cd834c88e06b08b928,668bc5cd834c88e06b08b928,4,240,2,cash,,152000,,,0/1,partial-product-value
+Artem,false,66bf757f27d0b097db0acf9d,6673b1ac5cae0610f1079d7a,6673b1ac5cae0610f1079d7a,4,666,2,cash,,100000,,,6/7,partial-product-value
+Artem,false,66bf757f27d0b097db0acf9e,6673b1ac5cae0610f1079d7b,6673b1ac5cae0610f1079d7b,4,666,2,cash,,100000,,,6/7,partial-product-value
+Artem,false,66bf757f27d0b097db0acf9f,6673b1ac5cae0610f1079d7c,6673b1ac5cae0610f1079d7c,4,666,2,cash,,100000,,,6/7,partial-product-value
+Artem,false,67607879e853469ef6eb610e,6529243824cbe3c74a05e5c1,6.8x51мм SIG Hybrid,4,9000,120,cash,,1800,1124,1.601,1/1,
+Natalya,false,0c6ab890fea196a5fff798fb,624c2e8614da335f1e034d8c,Револьвер Chiappa Rhino 200DS 9x19,1,2,1,cash,,8000,8302,0.964,4/4,
+Natalya,false,0f89e40e7cd0bb8dcb126148,54491c4f4bdc2db1078b4568,Помповое ружье MP-133 12к,1,2,1,cash,,35000,27390,1.278,5/5,
+Natalya,false,2a0ac94f7e6dc21d192e21de,5beed0f50db834001c062b12,Ручной пулемет РПК-16 5.45x39,1,2,1,cash,,85000,104423,0.814,11/11,
+Natalya,false,3b107359294eb1a18b225939,59d6088586f774275f37482f,Автомат Калашникова АКМ 7.62x39,1,2,1,cash,,98000,119668,0.819,11/11,
+Natalya,false,3e7bae9d37ecc42173d49e01,5aafa857e5b5b00018480968,Винтовка Springfield Armory M1A 7.62x51,1,2,1,cash,,165241,190155,0.869,10/10,
+Natalya,false,9ee07ed24f7dbd298de55e8c,628b9c37a733087d0d7fe84b,Карабин SAG АК-545 Укороченный 5.45x39,1,2,1,cash,,97000,122153,0.794,11/11,
+Natalya,false,db5c8ba1f86a1fdae5e203ef,5de652c31b7e3716273428be,"Винтовка Молот ВПО-215 ""Горностай"" .366 ТКМ",1,2,1,cash,,67000,34674,1.932,8/8,
+Natalya,false,deb070dfa5e34cb629108c10,63088377b5cd696784087147,Пистолет Glock 19X 9x19,1,2,1,cash,,22000,24518,0.897,7/7,
+Natalya,false,e776c24c5006b7e04df98866,5926bb2186f7744b1c6c6e60,Пистолет-пулемет HK MP5 9x19 (Navy 3 Round Burst),1,2,1,cash,,48000,98497,0.487,9/9,
+Natalya,false,3ed4e323c9396cd617217e4f,58948c8e86f77409493f7266,Пистолет-пулемет SIG MPX 9x19,2,2,1,cash,,70000,89895,0.779,12/12,
+Natalya,false,3f1bf37a92afb062119378bd,5a7828548dc32e5a9c28b516,Помповое ружье Remington Model 870 12к,2,2,1,cash,,45000,34860,1.291,7/7,
+Natalya,false,52a6180d4a07d44358eaa574,61a4c8884f95bc3b2c5dc96f,Револьвер Chiappa Rhino 50DS .357,2,2,1,cash,,14000,14533,0.963,5/5,
+Natalya,false,669d4467c12cb304d8d57818,587e02ff24597743df3deaeb,Самозарядный карабин Симонова Молот СКС 7.62x39 Охотничье-Промысловый,2,2,1,cash,,89000,69269,1.285,12/12,
+Natalya,false,67e6bf650c1627bd671e784b,5df24cf80dee1b22f862e9bc,Снайперская винтовка ОРСИС T-5000M 7.62x51,2,2,1,cash,,165000,126002,1.310,16/16,
+Natalya,false,67e6bf65f74c6d7fd2b6730a,65268d8ecb944ff1e90ea385,Ручной пулемет Дегтярева РПДН 7.62x39,2,2,1,cash,,98000,70383,1.392,9/9,
+Natalya,false,9f19498d2e119e2bb60a4099,5447a9cd4bdc2dbd208b4567,Штурмовая винтовка Colt M4A1 5.56x45,2,2,1,cash,,240000,275254,0.872,18/18,
+Natalya,false,c8654df2b68160ae358b9ea4,6193a720f8ee7e52e42109ed,Пистолет HK USP .45 ACP,2,2,1,cash,,45000,40559,1.109,10/10,
+Natalya,false,db3193e6b38b6980a47b75c5,6176aca650224f204c1da3fb,Марксманская винтовка HK G28 7.62x51,2,2,1,cash,,235000,257334,0.913,16/16,
+Natalya,false,2212ba9328dc787cf6b5d489,606dae0ab0e443224b421bb7,Самозарядное ружье MP-155 12к,3,2,1,cash,,55000,36099,1.524,6/6,
+Natalya,false,23573f379614f45b187b80c3,59e6687d86f77411d949b251,Карабин Молот ВПО-209 .366 ТКМ,3,2,1,cash,,87500,114409,0.765,9/9,
+Natalya,false,29662a9be77c541f2a2f951e,633ec7c2a6918cb895019c6c,Револьвер РШ-12 12.7x55,3,2,1,cash,,50000,38343,1.304,3/3,
+Natalya,false,722832deba015a8e8f7ba7f5,661cec09b2c6356b4d0c7a36,Ручной пулемет U.S. Ordnance M60E6 7.62x51 (FDE),3,2,1,cash,,199000,217855,0.913,13/13,
+Natalya,false,735a54437c43907dd8323841,59984ab886f7743e98271174,"Пистолет-пулемет ПП-19-01 ""Витязь"" 9x19",3,2,1,cash,,55000,69638,0.790,12/12,
+Natalya,false,7da1af9fa5589da3c47f6102,5df8ce05b11454561e39243b,Марксманская винтовка Knight's Armament Company SR-25 7.62x51,3,2,1,cash,,245000,265211,0.924,20/20,
+Natalya,false,c1b3bf60e15e6ab9e4169ebc,5d67abc1a4b93614ec50137f,Пистолет FN Five-seveN MK2 5.7x28 (FDE),3,2,1,cash,,63000,88163,0.715,7/7,
+Natalya,false,dbdf8021334be73fd3f029a6,55801eed4bdc2d89578b4588,Снайперская винтовка СВ-98 7.62x54R,3,2,1,cash,,175000,140945,1.242,12/12,
+Natalya,false,f0fffea9c97960e9d6a6b333,5b0bbe4e5acfc40dc528a72d,Штурмовая винтовка DS Arms SA58 7.62x51,3,2,1,cash,,156000,151947,1.027,8/8,
+Natalya,false,38cf9bdfc67aed28b09c3687,669fa3d876116c89840b1217,Пистолет Magnum Research Desert Eagle L6 .50 AE (WTS),4,2,1,cash,,55000,60074,0.916,7/7,
+Natalya,false,58af0acb16c5568ab8259e72,5f2a9575926fd9352339381f,Винтовка Kel-Tec RFB 7.62x51,4,2,1,cash,,110000,100167,1.098,8/8,
+Natalya,false,67e6bf6525c53becfdba880e,5bfea6e90db834001b7347f3,Снайперская винтовка Remington Model 700 7.62x51,4,2,1,cash,,199999,171815,1.164,10/10,
+Natalya,false,67e6bf65c16dbddc52a3f240,6165ac306ef05c2ce828ef74,Штурмовая винтовка FN SCAR-H 7.62x51 (FDE),4,2,1,cash,,135000,134450,1.004,15/15,
+Natalya,false,69dbaf98fc561c6a4dae57ea,64ca3d3954fc657e230529cc,Пулемет Калашникова Пехотный ПКП 7.62x54R,4,2,1,cash,,245000,183864,1.333,11/11,
+Natalya,false,9afbcb5b425ceaaae7aad216,576165642459773c7a400233,Самозарядный карабин Сайга-12К исп.10,4,2,1,cash,,65000,102368,0.635,12/12,
+Natalya,false,c06efcb1b85ec0c44553e377,5fc3f2d5900b1d5091531e57,Пистолет-пулемет TDI KRISS Vector Gen.2 9x19,4,2,1,cash,,110000,110626,0.994,9/9,
+Natalya,false,fb3046b4269bc5cbfbca5f8f,5c46fbd72e2216398b5a8c9c,Снайперская винтовка СВДС 7.62x54R,4,2,1,cash,,199999,184261,1.085,18/18,
+Painter,false,67fef66cfdca1b1dd0eee5a1,668ff5bde41a0cce3b142464,668ff5bde41a0cce3b142464,2,999,0,cash,,500000,,,0/1,partial-product-value
+Painter,false,67fef6965e89bd6294ac0c05,6699546547ad52e0fccf6da9,6699546547ad52e0fccf6da9,2,999,0,cash,,400000,,,0/1,partial-product-value
+Painter,false,668ff5bde41a0cce3b142465,668ff5bde41a0cce3b142464,668ff5bde41a0cce3b142464,4,999,0,barter,,450000,,,0/1,partial-product-value
+Painter,false,6699546547ad52e0fccf6da0,6699546547ad52e0fccf6da9,6699546547ad52e0fccf6da9,4,999,0,barter,,375000,,,0/1,partial-product-value
+Painter,false,672e2804a0529208b4e10e18,5c0a840b86f7742ffa4f2482,Кейс для вещей T H I C C,4,2,unlimited,cash+quest,668aad3c3ff8f5b258e3a65b,17500000,3100000,5.645,1/1,very-expensive
+Painter,false,672e284a363b798192b802af,54527ac44bdc2d36668b4567,5.56x45мм M855A1,4,9999999,unlimited,cash+quest,668c18eb12542b3c3ff6e20f,680,710,0.958,1/1,
+Painter,false,672e289bb4096716fcb918a7,5a6086ea4f39f99cd479502f,7.62x51мм M61,4,9999999,unlimited,cash+quest,668c18eb12542b3c3ff6e20f,980,1050,0.933,1/1,
+TGC runtime,false,672e2e751f10a0271372c06d,672e2e75e2cb5715ab46ae15,672e2e75e2cb5715ab46ae15,1,1,0,cash,,9000,,,0/1,partial-product-value
+TGC runtime,false,672e2e7587457b57205a2835,672e2e75e12417d2656e8974,672e2e75e12417d2656e8974,1,1,0,cash,,42700,,,3/4,partial-product-value
+TGC runtime,false,672e2e75958ecad19aef75be,672e2e75aedb36663267e181,672e2e75aedb36663267e181,1,1,0,cash,,42800,,,3/4,partial-product-value
+TGC runtime,false,672e2e75a4485e805bebf991,672e2e7511180730151307bc,672e2e7511180730151307bc,1,14,0,cash,,1800,,,0/1,partial-product-value
+TGC runtime,false,672e2e75c9d2befdf7fe3b90,672e2e75ebb3b5f3e2cb6291,672e2e75ebb3b5f3e2cb6291,1,9,0,cash,,1400,,,0/1,partial-product-value
+TGC runtime,false,672e2e75d0f6e75cb9984810,672e2e75645f9ad09f4b949d,672e2e75645f9ad09f4b949d,1,7,0,cash,,1400,,,0/1,partial-product-value
+TGC runtime,false,672e2e75f29aff682528cf84,672e2e75ecdecad1471639ad,672e2e75ecdecad1471639ad,1,12,0,cash,,1400,,,0/1,partial-product-value
+TGC runtime,false,67462a39caa85fb8bb6d1024,674102e3b161458e6ee0531f,674102e3b161458e6ee0531f,1,3,0,cash,,4920,,,0/1,partial-product-value
+TGC runtime,false,672e2e750c0fdbe72745b893,672e2e75ed6ad7cc5028734f,672e2e75ed6ad7cc5028734f,2,4,0,cash,,108300,,,4/5,partial-product-value
+TGC runtime,false,672e2e751c351d35fe76dea9,672e2e75ba73d87a448e3f13,672e2e75ba73d87a448e3f13,2,6,0,cash,,5040,,,0/1,partial-product-value
+TGC runtime,false,672e2e751d1802e9eeb07db6,672e2e75033ea9ca8bef91bc,672e2e75033ea9ca8bef91bc,2,4,0,cash,,3022,,,0/1,partial-product-value
+TGC runtime,false,672e2e7523fc2b0c31b3877a,672e2e75848c5da68dd122f0,672e2e75848c5da68dd122f0,2,5,0,cash,,5040,,,0/1,partial-product-value
+TGC runtime,false,672e2e752b54ca7ea643296f,672e2e75a9332b620bdf4715,672e2e75a9332b620bdf4715,2,3,0,cash,,4022,,,0/1,partial-product-value
+TGC runtime,false,672e2e752baf2bb7d9d0483a,672e2e75c3973efd2d011d2f,672e2e75c3973efd2d011d2f,2,4,0,cash,,4600,,,0/1,partial-product-value
+TGC runtime,false,672e2e752e1e35eeb0c53c16,672e2e755cebe435a3b4dba5,672e2e755cebe435a3b4dba5,2,6,0,cash,,3600,,,0/1,partial-product-value
+TGC runtime,false,672e2e7538703ee571388f9a,672e2e759623bcd75fbfb04c,672e2e759623bcd75fbfb04c,2,4,0,cash,,2100,,,0/1,partial-product-value
+TGC runtime,false,672e2e754e63440e6a786f1c,672e2e75ec4a3496b64346c5,672e2e75ec4a3496b64346c5,2,5,0,cash,,17000,,,0/1,partial-product-value
+TGC runtime,false,672e2e755a04b375789d46f0,672e2e75c7c7c5232e513062,672e2e75c7c7c5232e513062,2,2,0,cash,,29000,,,0/1,partial-product-value
+TGC runtime,false,672e2e756031c6669691f48f,672e2e75d122de1a20db31a5,672e2e75d122de1a20db31a5,2,9,0,cash,,9500,,,0/1,partial-product-value
+TGC runtime,false,672e2e7561015a894b91a6d0,672e2e754f01ef56b4aa66a3,672e2e754f01ef56b4aa66a3,2,3,0,cash,,39059,,,0/1,partial-product-value
+TGC runtime,false,672e2e7563b448ee6111ad4c,672e2e753a1ea309958b56cc,672e2e753a1ea309958b56cc,2,4,0,cash,,15000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75647b903248edd77f,672e2e75bd4a44818c26b1b0,672e2e75bd4a44818c26b1b0,2,4,0,cash,,15000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75830851fda5037cd7,672e2e75ea372126f4fcb874,672e2e75ea372126f4fcb874,2,5,0,cash,,4800,,,0/1,partial-product-value
+TGC runtime,false,672e2e759de749348021929e,672e2e750ea81b3b93b943ac,672e2e750ea81b3b93b943ac,2,4,0,cash,,71200,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b0f15e0f0622d1c5,672e2e75a16c1d2034c384cf,672e2e75a16c1d2034c384cf,2,4,0,cash,,71200,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b1905f8864a9cce4,672e2e75b0ab4fcbbf7dc471,672e2e75b0ab4fcbbf7dc471,2,2,0,cash,,316900,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b21dddc3ecef73e7,672e2e7553233ca6956e5358,672e2e7553233ca6956e5358,2,2,0,cash,,11000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b355ae3dea6fdab6,672e2e759b231e2b1a95516f,672e2e759b231e2b1a95516f,2,12,0,cash,,25000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b4ca4fa42198f0bf,672e2e75e352ae625453519b,672e2e75e352ae625453519b,2,4,0,cash,,20240,,,0/1,partial-product-value
+TGC runtime,false,672e2e75bf5ab9a5fc208daa,672e2e7503876d1630af50b0,672e2e7503876d1630af50b0,2,5,0,cash,,3022,,,0/1,partial-product-value
+TGC runtime,false,672e2e75c55aecadbaf47b16,672e2e757e294bf6e5ecb944,672e2e757e294bf6e5ecb944,2,12,0,cash,,1350,,,0/1,partial-product-value
+TGC runtime,false,672e2e75c6188e00e579ebf9,672e2e75f3418d66159240f8,672e2e75f3418d66159240f8,2,4,0,cash,,7025,,,0/1,partial-product-value
+TGC runtime,false,672e2e75eec26cfa5a589169,672e2e759342d416e10caa10,672e2e759342d416e10caa10,2,10,0,cash,,17500,,,0/1,partial-product-value
+TGC runtime,false,672e2e75f52340a33215da10,672e2e7500543603d91e0101,672e2e7500543603d91e0101,2,3,0,cash,,24000,,,0/1,partial-product-value
+TGC runtime,false,6746295c9880c7b514b3287e,67341526d1587cba81586e7f,67341526d1587cba81586e7f,2,5,0,cash,,4900,,,0/1,partial-product-value
+TGC runtime,false,674629ee20fc067894e3bb23,673d7aa5a2c68c0cfcec6b93,673d7aa5a2c68c0cfcec6b93,2,5,0,cash,,4900,,,0/1,partial-product-value
+TGC runtime,false,67462a8e5e47e0aee0486c73,67429a6fe31216a0757777e1,67429a6fe31216a0757777e1,2,3,0,cash,,5920,,,0/1,partial-product-value
+TGC runtime,false,67a2824bd756f87988df55ad,67a281fafa6f0dadd5211962,67a281fafa6f0dadd5211962,2,6,0,cash,,3600,,,0/1,partial-product-value
+TGC runtime,false,672e2e75006734ec1aa4af76,672e2e75e97f1888187ed37d,672e2e75e97f1888187ed37d,3,1,0,cash,,200912,,,5/6,partial-product-value
+TGC runtime,false,672e2e750a55f05ce2875e4b,672e2e754544ab54214fd56c,672e2e754544ab54214fd56c,3,2,0,cash,,45050,,,0/1,partial-product-value
+TGC runtime,false,672e2e750d7b425443b83343,672e2e75ba8f56d981dc6e2c,672e2e75ba8f56d981dc6e2c,3,4,0,cash,,21000,,,0/1,partial-product-value
+TGC runtime,false,672e2e752611c60f52b4312e,672e2e756bdff59d722213c9,672e2e756bdff59d722213c9,3,4,0,cash,,5400,,,0/1,partial-product-value
+TGC runtime,false,672e2e7527ebc52c86c160eb,672e2e755aa052b1e954dd68,672e2e755aa052b1e954dd68,3,2,0,cash,,40000,,,0/1,partial-product-value
+TGC runtime,false,672e2e752fdcc407fb0df93c,672e2e753c97527a5186e73f,672e2e753c97527a5186e73f,3,1,0,cash,,164912,,,5/6,partial-product-value
+TGC runtime,false,672e2e753559e5227a8f9923,672e2e75e04c9aca3536136b,672e2e75e04c9aca3536136b,3,2,0,cash,,10500,,,0/1,partial-product-value
+TGC runtime,false,672e2e75392f36a945033f52,672e2e755afaba52a4af5e45,672e2e755afaba52a4af5e45,3,4,0,cash,,135300,,,6/7,partial-product-value
+TGC runtime,false,672e2e7541aaed55b018c2e8,672e2e755c49aef3e8a3dd0c,672e2e755c49aef3e8a3dd0c,3,4,0,cash,,17000,,,0/1,partial-product-value
+TGC runtime,false,672e2e7544680f8da18644a6,672e2e751a561533f23a2635,672e2e751a561533f23a2635,3,3,0,cash,,16400,,,0/1,partial-product-value
+TGC runtime,false,672e2e7546da4b4acf751e73,672e2e7535b901cc0cb57e73,672e2e7535b901cc0cb57e73,3,8,0,cash,,13500,,,0/1,partial-product-value
+TGC runtime,false,672e2e754880beff0d834e84,672e2e759bff586ad22ecbc7,672e2e759bff586ad22ecbc7,3,5,0,cash,,8799,,,0/1,partial-product-value
+TGC runtime,false,672e2e754d6e7a602376dcf0,672e2e75c5ba9aeedbced57d,672e2e75c5ba9aeedbced57d,3,4,0,cash,,135300,,,6/7,partial-product-value
+TGC runtime,false,672e2e755c9e6d6f8c62c506,672e2e75b74647fc82da299c,672e2e75b74647fc82da299c,3,2,0,cash,,5699,,,0/1,partial-product-value
+TGC runtime,false,672e2e756c6ab586465a3faa,672e2e75e8c2736e43530008,672e2e75e8c2736e43530008,3,2,0,cash,,57200,,,0/1,partial-product-value
+TGC runtime,false,672e2e757336d327f7b04015,672e2e7595d3b3be0daf9055,672e2e7595d3b3be0daf9055,3,2,0,cash,,110976,,,2/3,partial-product-value
+TGC runtime,false,672e2e7573a320514e43ae07,672e2e756174d5e5e9f677ee,672e2e756174d5e5e9f677ee,3,4,0,cash,,14500,,,0/1,partial-product-value
+TGC runtime,false,672e2e757642fe1bb77c5aaa,672e2e755ab53b635a4d4f39,672e2e755ab53b635a4d4f39,3,2,0,cash,,32400,,,0/1,partial-product-value
+TGC runtime,false,672e2e757c7a88547b0d7c99,672e2e7546454a975e0b7a3b,672e2e7546454a975e0b7a3b,3,5,0,cash,,4800,,,0/1,partial-product-value
+TGC runtime,false,672e2e757db95f059f5940b7,672e2e75b14ae1b5c91474b4,672e2e75b14ae1b5c91474b4,3,2,0,cash,,110976,,,2/3,partial-product-value
+TGC runtime,false,672e2e7583c66849ea62cd63,672e2e755898793d805ec2c3,672e2e755898793d805ec2c3,3,5,0,cash,,5400,,,0/1,partial-product-value
+TGC runtime,false,672e2e758a9318889db91166,672e2e754e6844af8e197b00,672e2e754e6844af8e197b00,3,2,0,cash,,99975,,,3/4,partial-product-value
+TGC runtime,false,672e2e758cc5440640f91cab,672e2e75929d47eb157491c8,672e2e75929d47eb157491c8,3,2,0,cash,,17000,,,0/1,partial-product-value
+TGC runtime,false,672e2e758ff07447158e80cd,672e2e75b7f83e81f1dc5067,672e2e75b7f83e81f1dc5067,3,4,0,cash,,5699,,,0/1,partial-product-value
+TGC runtime,false,672e2e759806fc5157d84540,672e2e7526ba61dbb88be7ff,672e2e7526ba61dbb88be7ff,3,1,0,cash,,650000,,,0/1,partial-product-value
+TGC runtime,false,672e2e759a1712127c83fb69,672e2e756803734b60f5ac1e,672e2e756803734b60f5ac1e,3,4,0,cash,,14400,,,0/1,partial-product-value
+TGC runtime,false,672e2e759ab1a273108cc3fe,672e2e7505c0ffbaf790db95,672e2e7505c0ffbaf790db95,3,3,0,cash,,14500,,,0/1,partial-product-value
+TGC runtime,false,672e2e759ab3672ac0a92d70,672e2e7563b1a22a3c7b3895,672e2e7563b1a22a3c7b3895,3,3,0,cash,,45050,,,0/1,partial-product-value
+TGC runtime,false,672e2e759cbf97caa62cfb55,672e2e757e517ac4552086d1,672e2e757e517ac4552086d1,3,6,0,cash,,13000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75a45102c884792c79,672e2e75f863ac94cae32632,672e2e75f863ac94cae32632,3,3,0,cash,,15300,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b0bba60b65da3d90,672e2e75eae8c670d0f7740d,672e2e75eae8c670d0f7740d,3,4,0,cash,,4300,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b176833bd28d3371,672e2e7521f4ccc8cc6d8335,672e2e7521f4ccc8cc6d8335,3,3,0,cash,,17000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b35c95d1dc2664ca,672e2e7504b1f1d5b0e4209c,672e2e7504b1f1d5b0e4209c,3,4,0,cash,,17400,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b61258909af0b7fc,672e2e757a1e6eeae1841933,672e2e757a1e6eeae1841933,3,4,0,cash,,13500,,,0/1,partial-product-value
+TGC runtime,false,672e2e75bb483f39a62cab1d,672e2e758c2bcbf1b2421359,672e2e758c2bcbf1b2421359,3,2,0,cash,,198000,,,8/9,partial-product-value
+TGC runtime,false,672e2e75c049b8e533534335,672e2e750c562a5e650dc9b3,672e2e750c562a5e650dc9b3,3,5,0,cash,,5022,,,0/1,partial-product-value
+TGC runtime,false,672e2e75c11a80db397980c0,672e2e75dbf780f902fd6d68,672e2e75dbf780f902fd6d68,3,2,0,cash,,198000,,,8/9,partial-product-value
+TGC runtime,false,672e2e75c5830418f9ceb2c3,672e2e75071e71f8e4a59286,672e2e75071e71f8e4a59286,3,4,0,cash,,20200,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ce33dbe61a52cced,672e2e757efbbef26ff61046,672e2e757efbbef26ff61046,3,4,0,cash,,4800,,,0/1,partial-product-value
+TGC runtime,false,672e2e75d144db57b808d1c8,672e2e75a26efb53bc703d45,672e2e75a26efb53bc703d45,3,2,0,cash,,85069,,,0/1,partial-product-value
+TGC runtime,false,672e2e75d262926e7c11b24c,672e2e7533a70f23dfe4c8bb,672e2e7533a70f23dfe4c8bb,3,2,0,cash,,5699,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ed6e7bfc8b5a07df,672e2e7578374ac936625f9a,672e2e7578374ac936625f9a,3,3,0,cash,,16400,,,0/1,partial-product-value
+TGC runtime,false,672e2e75f66a288178c6a4d1,672e2e75b5b680c7ee6aa408,672e2e75b5b680c7ee6aa408,3,2,0,cash,,110976,,,2/3,partial-product-value
+TGC runtime,false,672e2e75fbcfbd874dff85f6,672e2e758808bacbb9d5abc4,672e2e758808bacbb9d5abc4,3,1,0,cash,,376900,,,0/1,partial-product-value
+TGC runtime,false,6733f913f9b1f7350bf85ed5,6733edbe21f258964d0d4c5a,6733edbe21f258964d0d4c5a,3,3,0,cash,,12500,,,0/1,partial-product-value
+TGC runtime,false,6733f9698b0fd160bcbcbc4c,6733edc58add9191997aec92,6733edc58add9191997aec92,3,2,0,cash,,13000,,,0/1,partial-product-value
+TGC runtime,false,67b09f8297728f0cb9677947,67b09f2f8bad925404cd80bb,67b09f2f8bad925404cd80bb,3,2,0,cash,,40059,,,0/1,partial-product-value
+TGC runtime,false,67b1ebb99fcc78b0da73fe05,67b1eb6d91f8e59bc799beb1,67b1eb6d91f8e59bc799beb1,3,10,0,cash,,17500,,,0/1,partial-product-value
+TGC runtime,false,6856fc39bb19d72b3105b255,685009b24c99357a3da143e4,685009b24c99357a3da143e4,3,4,0,cash,,6900,,,0/1,partial-product-value
+TGC runtime,false,672e2e750587f3dd5539c639,672e2e75592eb3c91e248717,672e2e75592eb3c91e248717,4,1,0,cash,,70050,,,0/1,partial-product-value
+TGC runtime,false,672e2e751ba89133474b8e98,672e2e75c24f8de5c9a1bdfc,672e2e75c24f8de5c9a1bdfc,4,3,0,cash,,26200,,,0/1,partial-product-value
+TGC runtime,false,672e2e7523e96a34ffb6b66d,672e2e75bfad327651a1a19b,672e2e75bfad327651a1a19b,4,2,0,cash,,172000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75394e327e87f684d8,672e2e75500922dee75bf400,672e2e75500922dee75bf400,4,2,0,cash,,16200,,,0/1,partial-product-value
+TGC runtime,false,672e2e7540f5a8522fdd23d2,672e2e758977f29e3a29cd9c,672e2e758977f29e3a29cd9c,4,2,0,cash,,56550,,,0/1,partial-product-value
+TGC runtime,false,672e2e756921b122126130ae,672e2e75a23a16d355754ef6,672e2e75a23a16d355754ef6,4,5,0,cash,,414500,,,12/13,partial-product-value
+TGC runtime,false,672e2e7597590749a56dcdc4,672e2e75afb25b57bd1d1455,672e2e75afb25b57bd1d1455,4,4,0,cash,,124000,,,5/6,partial-product-value
+TGC runtime,false,672e2e75a8140376d806b6a6,672e2e75195420ccca420a2f,672e2e75195420ccca420a2f,4,9999999,unlimited,cash,,722,,,0/1,partial-product-value
+TGC runtime,false,672e2e75a8f42643cd43c4b8,5447a9cd4bdc2dbd208b4567,Штурмовая винтовка Colt M4A1 5.56x45,4,1,unlimited,cash,,180260,,,7/18,partial-product-value
+TGC runtime,false,672e2e75a9a0ef4f686b924b,672e2e751ff683e9432cb5af,672e2e751ff683e9432cb5af,4,3,0,cash,,172000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ac16c5056d4de1cd,672e2e75ec239cfca3bedf6d,672e2e75ec239cfca3bedf6d,4,1,0,cash,,145000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ac804eec6a7097e1,672e2e75c076d2093b05c764,672e2e75c076d2093b05c764,4,1,0,cash,,343000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ac8bd5c88cde9828,672e2e75d276dfa8dd76770c,672e2e75d276dfa8dd76770c,4,2,0,cash,,70050,,,0/1,partial-product-value
+TGC runtime,false,672e2e75adf8ab4a448254bf,672e2e750cd8dfd1fee34a08,672e2e750cd8dfd1fee34a08,4,2,0,cash,,8212,,,0/1,partial-product-value
+TGC runtime,false,672e2e75b03fc7ef89f6e985,672e2e75d41d0e93c918096a,672e2e75d41d0e93c918096a,4,4,0,cash,,8500,,,0/1,partial-product-value
+TGC runtime,false,672e2e75ba6300317ce25c9f,672e2e75a8d84451e1b9d793,672e2e75a8d84451e1b9d793,4,2,0,cash,,17200,,,0/1,partial-product-value
+TGC runtime,false,672e2e75bbbd9b63a25f178d,672e2e75dad19c7115e2489e,672e2e75dad19c7115e2489e,4,4,0,cash,,11400,,,0/1,partial-product-value
+TGC runtime,false,672e2e75bf07a35ba609f807,672e2e75be2ea9998a388b8b,672e2e75be2ea9998a388b8b,4,5,0,cash,,414500,,,12/13,partial-product-value
+TGC runtime,false,672e2e75c4aa52551c01c543,672e2e75b9082dbf88dd1dbd,672e2e75b9082dbf88dd1dbd,4,1,0,cash,,343000,,,0/1,partial-product-value
+TGC runtime,false,672e2e75d3257a0e64ea955e,672e2e75fa61ef193bdbd7e6,672e2e75fa61ef193bdbd7e6,4,3,0,cash,,124000,,,5/6,partial-product-value
+TGC runtime,false,672e2e75deca715bb087aff9,672e2e7531ffa75ea676c3ea,672e2e7531ffa75ea676c3ea,4,3,0,cash,,124000,,,5/6,partial-product-value
+TGC runtime,false,672e2e75df6a769e89433530,672e2e75d89015cd6322030b,672e2e75d89015cd6322030b,4,1,0,cash,,230950,,,4/5,partial-product-value
+TGC runtime,false,67b230cadacab50c62451bb0,67b22feaecf38d826bb7dc43,67b22feaecf38d826bb7dc43,4,4,0,cash,,11600,,,0/1,partial-product-value
+TGC runtime,false,67b3256e1424a3aa7f57d812,67b3252d085fe3e32bc8eeb7,67b3252d085fe3e32bc8eeb7,4,4,0,cash,,11600,,,0/1,partial-product-value
+TGC runtime,false,67b9352d312c653b81cc37a2,67b8d6cd220640e6846aed85,67b8d6cd220640e6846aed85,4,2,0,cash,,124000,,,5/6,partial-product-value
+TGC runtime,false,684aebf25e67235238bb849e,684ae8ebb048d86cbdf8d5d9,684ae8ebb048d86cbdf8d5d9,4,4,0,cash,,65000,,,0/1,partial-product-value
+TGC runtime,false,684aec47e92234c138c50842,684ae9d928526b5c284aacb6,684ae9d928526b5c284aacb6,4,4,0,cash,,64800,,,0/1,partial-product-value
+WTT Armory optional,true,0774375505eb9365d76f8ed5,68fd53b6087e82ccf8586c51,68fd53b6087e82ccf8586c51,1,120,60,cash,,981,,,0/1,partial-product-value
+WTT Armory optional,true,13e447d2e535648616aa13f6,668070f11aff0d6b0cd7fb13,668070f11aff0d6b0cd7fb13,1,8,2,cash,,4387,,,0/1,partial-product-value
+WTT Armory optional,true,14f0a2adc61f7fb6d3540bdd,66ba29d44744d98a4df0073b,66ba29d44744d98a4df0073b,1,8,2,cash,,2632,,,0/1,partial-product-value
+WTT Armory optional,true,2ce32c43d8ac35c7dc114f90,66ba253030ea88abba95c7ed,66ba253030ea88abba95c7ed,1,8,2,cash,,6817,,,0/1,partial-product-value
+WTT Armory optional,true,340a679c0761215a3d5f7e01,66ba25755bd539b9238365b0,66ba25755bd539b9238365b0,1,8,2,cash,,6817,,,0/1,partial-product-value
+WTT Armory optional,true,40e225a29fae9882740dbecd,66ba297b859e57cf91e38a5d,66ba297b859e57cf91e38a5d,1,8,2,cash,,2632,,,0/1,partial-product-value
+WTT Armory optional,true,4832f13df8814030276896ec,66ba2a7583204e25695233c0,66ba2a7583204e25695233c0,1,8,2,cash,,2025,,,0/1,partial-product-value
+WTT Armory optional,true,4a5ca0e3192b802be4f974af,665fe0e865683281eb8e7ed6,665fe0e865683281eb8e7ed6,1,3,1,cash,,16000,,,0/9,partial-product-value
+WTT Armory optional,true,546d7e248c1e3a7373f1aedb,68452c3da87156b67d9ec538,68452c3da87156b67d9ec538,1,3,1,cash,,16275,,,0/8,partial-product-value
+WTT Armory optional,true,8a8ba0d2ea287389c8532f6a,68fd537f2965f74cf4a87894,68fd537f2965f74cf4a87894,1,120,60,cash,,981,,,0/1,partial-product-value
+WTT Armory optional,true,a14e297ff5072c43be7be275,6868d249cdee524f8c0ba45f,6868d249cdee524f8c0ba45f,1,3,1,cash,,16000,,,0/4,partial-product-value
+WTT Armory optional,true,a517d6c87b12fead4ba53b7c,682d014f0f0eb62eb4269012,682d014f0f0eb62eb4269012,1,8,2,cash,,5570,,,0/1,partial-product-value
+WTT Armory optional,true,a8978ad51fbfe531b5afdd4b,186b5c3e8ace3d9a1343bfeb,186b5c3e8ace3d9a1343bfeb,1,8,2,cash,,8100,,,0/1,partial-product-value
+WTT Armory optional,true,ab2cf4ddf32c1d36564791e1,6661012d16fbd2fb75408f87,6661012d16fbd2fb75408f87,1,3,1,cash,,16000,,,0/4,partial-product-value
+WTT Armory optional,true,d4d589b6d886b688dd7f4b6f,68fd53be7254b4b0b21f25b9,68fd53be7254b4b0b21f25b9,1,120,60,cash,,981,,,0/1,partial-product-value
+WTT Armory optional,true,e392c02f476aec7d9a211dc0,68d40fb07130ef271f60991f,68d40fb07130ef271f60991f,1,3,1,cash,,16000,,,0/4,partial-product-value
+WTT Armory optional,true,e8016ae3d20d79d193ab77b0,66ba2a6be18ed84221edd72d,66ba2a6be18ed84221edd72d,1,8,2,cash,,2025,,,0/1,partial-product-value
+WTT Armory optional,true,e97b5b9dea8d29e3bc391ff1,684e2de88bb7e9f52bfab35c,684e2de88bb7e9f52bfab35c,1,120,60,cash,,800,,,0/1,partial-product-value
+WTT Armory optional,true,0f7ebdc76e77cc19046c831d,669fca7f9ed4916116c76d5e,669fca7f9ed4916116c76d5e,2,3,1,cash,,24073,,,0/4,partial-product-value
+WTT Armory optional,true,3dbd3167d711dd111b776324,68b7f4060a4536984f82cf4b,68b7f4060a4536984f82cf4b,2,3,1,cash,,19840,,,0/9,partial-product-value
+WTT Armory optional,true,403e20c8d6a3843e5b794907,064a8c271a037b0c6a1b86f5,064a8c271a037b0c6a1b86f5,2,8,2,cash,,14715,,,0/1,partial-product-value
+WTT Armory optional,true,65da87005042f441f2d2e5a5,66a47e98c486ec9d1af3a4da,66a47e98c486ec9d1af3a4da,2,3,1,cash,,69750,,,2/8,partial-product-value
+WTT Armory optional,true,7b2f597188b6632e6f25c161,67b05e25d83f07b7b587c0b5,67b05e25d83f07b7b587c0b5,2,3,1,cash,,41075,,,4/7,partial-product-value
+WTT Armory optional,true,8f9fb816a0b52c5a81518363,6958447bfc5cad58acf95c0f,6958447bfc5cad58acf95c0f,2,3,1,cash,,26241,,,0/3,partial-product-value
+WTT Armory optional,true,9afa4e27812b52ae122c585d,696ce75f73805e693401aba0,696ce75f73805e693401aba0,2,3,1,cash,,37186,,,2/10,partial-product-value
+WTT Armory optional,true,a9a255c28f5bb679782fc550,2322ee962f6c77a1284abc1e,2322ee962f6c77a1284abc1e,2,8,2,cash,,16200,,,0/1,partial-product-value
+WTT Armory optional,true,b552aa7c791c727fcb8f6259,664a5b945636ce820472f225,664a5b945636ce820472f225,2,3,1,cash,,58900,,,3/13,partial-product-value
+WTT Armory optional,true,b572f3e9919ea1dbb48ecb9d,664b9a705538c7da4f026f22,664b9a705538c7da4f026f22,2,8,2,cash,,16200,,,0/1,partial-product-value
+WTT Armory optional,true,c7a12798c2e3e8337556e3f9,69236a0b2d1260dbca41ef92,69236a0b2d1260dbca41ef92,2,3,1,cash,,52558,,,4/5,partial-product-value
+WTT Armory optional,true,cde4d93b4466d340eb0782a1,0672adb8be2d7d5a552ab4f2,0672adb8be2d7d5a552ab4f2,2,8,2,cash,,22275,,,0/1,partial-product-value
+WTT Armory optional,true,dcf9212a1f91620128903223,5fa85819d2d2bfc0079e6b09,5fa85819d2d2bfc0079e6b09,2,8,2,cash,,23625,,,0/1,partial-product-value
+WTT Armory optional,true,e3cb0b2806c950323e7f95bf,5ae3d18efa17cbd51e898ced,5ae3d18efa17cbd51e898ced,2,8,2,cash,,28350,,,0/1,partial-product-value
+WTT Armory optional,true,ee321a0519025ac785fb3c7c,69417a3f787395b8cc0ab13e,69417a3f787395b8cc0ab13e,2,3,1,cash,,53667,,,1/10,partial-product-value
+WTT Armory optional,true,02f4b7baf984b11815d087c3,678fe4a4906c7bd23722c71f,678fe4a4906c7bd23722c71f,3,3,1,cash,,133300,,,2/4,partial-product-value
+WTT Armory optional,true,593492cfbe914e5c94752c27,03f6c86c56945862820e1006,03f6c86c56945862820e1006,3,8,2,cash,,35100,,,0/1,partial-product-value
+WTT Armory optional,true,91c725f365c395d8b18b08e6,6687512d9e062645579695cd,6687512d9e062645579695cd,3,8,2,cash,,43875,,,0/1,partial-product-value
+WTT Armory optional,true,9c8b38da2dbdb19af097ffe0,6671ebcdd32bd95eb398e920,6671ebcdd32bd95eb398e920,3,3,1,cash,,113460,,,0/10,partial-product-value
+WTT Armory optional,true,ac5057eea4cd5096f3853689,66ba249b102a9dd6040a6e7e,66ba249b102a9dd6040a6e7e,3,3,1,cash,,99665,,,1/9,partial-product-value
+WTT Armory optional,true,c4f1910490b5480b0ab0260e,6962f22fddc6698c6309b620,6962f22fddc6698c6309b620,3,3,1,cash,,139500,,,1/9,partial-product-value
+WTT Armory optional,true,ebc066cd8f79956420ccba25,664b9a4798222d80ce536df6,664b9a4798222d80ce536df6,3,8,2,cash,,61803,,,0/1,partial-product-value
+WTT Armory optional,true,f47ec4d712b348cbbe4ee259,666102ef2d367ec85ddd2030,666102ef2d367ec85ddd2030,3,8,2,cash,,50517,,,0/1,partial-product-value
+WTT Armory optional,true,f946e97bd124c1b5060802a1,0cb4a36dd2e587b46e813dbe,0cb4a36dd2e587b46e813dbe,3,3,1,cash,,133300,,,2/7,partial-product-value
+WTT Armory optional,true,852474f66d4250d9786ffb47,66e718dc498d978477e0ba75,66e718dc498d978477e0ba75,4,3,1,cash,,279000,,,0/8,partial-product-value
+WTT Backport optional,true,005bcf928ba20aa2ba5a277b,693bb59250fafa102607aeb7,693bb59250fafa102607aeb7,1,5,1,cash,,31937,,,0/1,partial-product-value
+WTT Backport optional,true,a284d917f839da8ae530612f,6937efd50543dcc2560a2c81,6937efd50543dcc2560a2c81,1,5,1,cash,,3000,,,0/1,partial-product-value
+WTT Backport optional,true,aa447289fd87ddf1c12b3d41,69b11f46f3783ec37c03a116,69b11f46f3783ec37c03a116,1,5,1,cash,,32708,,,0/1,partial-product-value
+WTT Backport optional,true,c3e2e7070dfd08f277e9d993,6937f02dfd6488bb27024839,6937f02dfd6488bb27024839,1,5,1,cash,,35101,,,0/1,partial-product-value
+WTT Backport optional,true,df87cf250e376974c8767739,68f263f099d2172e150d7ff8,68f263f099d2172e150d7ff8,1,5,1,cash,,4695,,,0/1,partial-product-value
+WTT Backport optional,true,0b6c04ba0eb8bf9a4d78a589,69c139c022093da1c50a8808,69c139c022093da1c50a8808,2,5,1,cash,,55048,,,0/1,partial-product-value
+WTT Backport optional,true,0f58ad527f2ff96a55b75315,69b124822c6ed131290d921f,69b124822c6ed131290d921f,2,5,1,cash,,49725,,,0/1,partial-product-value
+WTT Backport optional,true,0fe99582b009e6b01cdc0eaf,69c14fa8b33aad3beb036878,69c14fa8b33aad3beb036878,2,5,1,cash,,55048,,,0/1,partial-product-value
+WTT Backport optional,true,5380ab8c5df899f6bab5ca54,6937eccbfd921faceb0dfecd,6937eccbfd921faceb0dfecd,2,5,1,cash,,87100,,,0/1,partial-product-value
+WTT Backport optional,true,a68bfd9ac21a3ec9ca8dd5a7,69c14efe66c213ea750e1960,69c14efe66c213ea750e1960,2,5,1,cash,,55048,,,0/1,partial-product-value
+WTT Backport optional,true,b2920357efc0bf2805551770,69d37050705756116e0a9037,69d37050705756116e0a9037,2,5,1,cash,,41080,,,0/1,partial-product-value
+WTT Backport optional,true,c03368437cc23c16e4a1bd62,6937ecd37713b904480013ac,6937ecd37713b904480013ac,2,5,1,cash,,88400,,,0/1,partial-product-value
+WTT Backport optional,true,c3c8d2e813cc695a9aabfd49,69cfc2d7a9102bdca0080070,69cfc2d7a9102bdca0080070,2,5,1,cash,,49725,,,0/1,partial-product-value
+WTT Backport optional,true,d2feb18d2365680026098749,693fd1200ec97e98040bd3f9,693fd1200ec97e98040bd3f9,2,5,1,cash,,85546,,,0/1,partial-product-value
+WTT Backport optional,true,f7ca0239d08d3022d13c66e5,69cfbf627eaa38bd240704ad,69cfbf627eaa38bd240704ad,2,5,1,cash,,42120,,,0/1,partial-product-value
+WTT Backport optional,true,2ce826a8bc482e4f9adc84dd,693fd0e9deee848f70054999,693fd0e9deee848f70054999,3,5,1,cash,,143683,,,0/1,partial-product-value
+WTT Backport optional,true,8ca2799653f20a146836ed45,6937ecc3dbdccab44605fcf0,6937ecc3dbdccab44605fcf0,3,5,1,cash,,127400,,,0/1,partial-product-value
+WTT Backport optional,true,a0ca8a7ed9b2d3c2cc4a70eb,693fd13aa490096a05028cc8,693fd13aa490096a05028cc8,3,5,1,cash,,98822,,,0/1,partial-product-value
+WTT Backport optional,true,a80edda563d726474ef89371,69413241b1ce1e5fbb09ed0a,69413241b1ce1e5fbb09ed0a,3,5,1,cash,,111295,,,0/1,partial-product-value
