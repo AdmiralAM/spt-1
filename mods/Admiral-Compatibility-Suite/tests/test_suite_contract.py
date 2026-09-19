@@ -16,7 +16,7 @@ class SuiteContractTests(unittest.TestCase):
         self.assertEqual(rows["stackable-armor-plates"]["disposition"], "suite-component")
         for row in rows.values():
             source = row["sourcePath"]
-            if source != "unlocated-runtime-patch" and not source.startswith("external-worktree:"):
+            if not source.startswith("external-worktree:"):
                 self.assertTrue((ROOT / source).exists(), source)
 
     def test_audit_finds_known_external_boundaries(self):

@@ -21,14 +21,23 @@
       "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
       "target": "com.cj.useFromAnywhere",
       "disposition": "migrate-to-suite",
-      "status": "embedded"
+      "status": "embedded",
+      "runtimeEvidence": {
+        "upstreamVersion": "2.1.3",
+        "installedDllSha256": "AD0CFEDC1C87470FCF9C463D914D9DAA24116893D552C6D350F33C0F1BC1D2BB",
+        "note": "Installed upstream DLL is retained; Admiral behavior is an external Belt-side adapter."
+      }
     },
     {
       "id": "belt-ui-fixes",
       "sourcePath": "external-worktree:bahb-rc4/integrated-repair/Runtime/NativeBeltActions.cs",
       "target": "com.tyfon.uifixes",
       "disposition": "migrate-to-suite",
-      "status": "installed-private-runtime-not-in-live-pr-source"
+      "status": "installed-private-runtime-not-in-live-pr-source",
+      "runtimeEvidence": {
+        "sourceSha256": "C11F8A976694FCD49916B336F854681719824E598294F6A7DC60C2BF99529225",
+        "note": "NativeBeltActions patches the optional UIFixes SlowLoadingPatch boundary."
+      }
     },
     {
       "id": "belt-tgc",
@@ -43,13 +52,6 @@
       "target": "com.wtt.packnstrap",
       "disposition": "migrate-to-suite",
       "status": "embedded-private-import"
-    },
-    {
-      "id": "use-items-anywhere-core-fixes",
-      "sourcePath": "unlocated-runtime-patch",
-      "target": "com.cj.useFromAnywhere",
-      "disposition": "suite-component",
-      "status": "audit-required"
     },
     {
       "id": "item-intelligence-sense",

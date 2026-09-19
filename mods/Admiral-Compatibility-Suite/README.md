@@ -25,3 +25,7 @@ foreign integration.
 
 They retain their existing GUIDs and runtime paths while being distributed and
 versioned as Suite components.
+
+The installed Use Items Anywhere 2.1.3 DLL remains upstream-owned and
+unmodified. Admiral currently extends it from Belt-side compatibility code; the
+Suite will take over that adapter rather than forking the foreign DLL.
