@@ -7,6 +7,8 @@ Assert(FoldedGeometry.ForHelmet(2, 2), new(1, 2), "four-cell headwear");
 Assert(FoldedGeometry.ForFaceCover(2, 1), new(1, 1), "two-cell face cover");
 Assert(FoldedGeometry.ForFaceCover(2, 2), new(1, 2), "four-cell face cover");
 Assert(FoldedGeometry.ForPoster(2, 2), new(1, 1), "2x2 poster");
+Assert(FoldedGeometry.ForPoster(1, 4), new(1, 1), "1x4 poster");
+Assert(FoldedGeometry.ForPoster(4, 1), new(1, 1), "4x1 poster");
 
 Console.WriteLine("Foldables Extended geometry contract: PASS");
 

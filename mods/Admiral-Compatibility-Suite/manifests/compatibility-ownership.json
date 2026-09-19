@@ -21,7 +21,7 @@
       "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
       "target": "com.cj.useFromAnywhere",
       "disposition": "migrate-to-suite",
-      "status": "embedded",
+      "status": "suite-adapter-implemented-belt-removal-pending",
       "runtimeEvidence": {
         "upstreamVersion": "2.1.3",
         "installedDllSha256": "AD0CFEDC1C87470FCF9C463D914D9DAA24116893D552C6D350F33C0F1BC1D2BB",

@@ -29,5 +29,19 @@ class SuiteContractTests(unittest.TestCase):
         self.assertGreater(result["signalFileCounts"].get("harmony_patch", 0), 0)
         self.assertGreater(result["signalFileCounts"].get("reflection", 0), 0)
 
+    def test_use_items_anywhere_adapter_is_suite_owned_and_non_destructive(self):
+        source = (MODULE / "client/UseItemsAnywhereAdapter.cs").read_text(encoding="utf-8")
+        plugin = (MODULE / "client/Plugin.cs").read_text(encoding="utf-8")
+        self.assertIn('UpstreamPluginGuid = "com.cj.useFromAnywhere"', source)
+        self.assertIn("DedicatedBeltSlotValue = 15", source)
+        self.assertIn('Enum.Parse(equipmentSlot, "ArmBand", false)', source)
+        self.assertIn("entry.BoxedValue = list", source)
+        self.assertIn("alreadyExtended", source)
+        self.assertIn("if (eligible == 0)", source)
+        self.assertIn("SlotAccessSynchronizer.EnsureFollower", source)
+        self.assertNotIn("File.Write", source)
+        self.assertNotIn("Harmony", source)
+        self.assertIn("BepInDependency(UseItemsAnywhereAdapter.UpstreamPluginGuid", plugin)
+
 if __name__ == "__main__":
     unittest.main()

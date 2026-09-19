@@ -132,6 +132,17 @@ public sealed class FoldablePoster : Item, IFoldable
 
     public FoldablePoster(string id, FoldablePosterTemplate template) : base(id, template)
     {
+        // SPT 4.1.6 can materialize custom ItemTemplate descendants before
+        // extension-data fold geometry has been bound. The Folded flag then
+        // changes correctly while both reductions remain zero, leaving a 4-cell
+        // poster at its open size. Posters have one fixed contract, so restore
+        // that geometry from the native dimensions at the client boundary.
+        if (template.Width * template.Height == 4)
+        {
+            template.SizeReduceRight = System.Math.Max(0, template.Width - 1);
+            template.SizeReduceDown = System.Math.Max(0, template.Height - 1);
+        }
+
         if (template.Foldable)
         {
             Foldable = new ExtendedFoldableComponent(this, template);

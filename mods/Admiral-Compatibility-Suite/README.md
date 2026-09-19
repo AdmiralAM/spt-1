@@ -28,4 +28,7 @@ versioned as Suite components.
 
 The installed Use Items Anywhere 2.1.3 DLL remains upstream-owned and
 unmodified. Admiral currently extends it from Belt-side compatibility code; the
-Suite will take over that adapter rather than forking the foreign DLL.
+Suite now owns an idempotent external adapter that makes dedicated Belt slot15
+follow every ArmBand-enabled Use Items Anywhere list. The foreign DLL remains
+untouched. Removal of the superseded Belt-side copy is a separate Belt-owned
+change, so mixed-version installations remain safe during migration.
