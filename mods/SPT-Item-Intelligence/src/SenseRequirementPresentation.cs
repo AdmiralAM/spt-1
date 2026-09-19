@@ -8,7 +8,8 @@ namespace SPTItemIntelligence
         None,
         ActiveQuest,
         Hideout,
-        FutureQuest
+        FutureQuest,
+        Food
     }
 
     public enum ItemNeedIcon
@@ -16,7 +17,9 @@ namespace SPTItemIntelligence
         None,
         Quest,
         Hideout,
-        FutureQuest
+        FutureQuest,
+        Food,
+        Complete
     }
 
     public enum SenseStockState
@@ -31,15 +34,19 @@ namespace SPTItemIntelligence
     public sealed class SenseVisualPolicy
     {
         internal SenseVisualPolicy(ItemNeedIcon icon, ItemNeedReason category, ItemNeedReason secondary,
-            SenseStockState stock, int remaining)
-        { Icon = icon; Category = category; SecondaryCategory = secondary; Stock = stock; Remaining = Math.Max(0, remaining); }
+            SenseStockState stock, int remaining, int itemCount = 1)
+        { Icon = icon; Category = category; SecondaryCategory = secondary; Stock = stock; Remaining = Math.Max(0, remaining); ItemCount = Math.Max(0, itemCount); }
         public ItemNeedIcon Icon { get; }
         public ItemNeedReason Category { get; }
         public ItemNeedReason SecondaryCategory { get; }
         public SenseStockState Stock { get; }
         public int Remaining { get; }
+        public int ItemCount { get; }
         public bool HasItemIntelligence => Category != ItemNeedReason.None;
         public bool ShouldReplaceIcon(bool senseAlreadyHasMeaningfulIcon) => HasItemIntelligence && !senseAlreadyHasMeaningfulIcon;
+
+        internal static SenseVisualPolicy Food(int count) => new SenseVisualPolicy(
+            ItemNeedIcon.Food, ItemNeedReason.Food, ItemNeedReason.None, SenseStockState.None, 0, count);
     }
 
     public static class SenseVisualPolicyEngine
@@ -69,6 +76,7 @@ namespace SPTItemIntelligence
         {
             SenseVisualPolicy bestUnmet = null;
             SenseVisualPolicy bestComplete = null;
+            int usefulCount = 0;
             if (candidates != null)
             {
                 foreach (SenseVisualPolicy candidate in candidates)
@@ -80,10 +88,13 @@ namespace SPTItemIntelligence
                             bestComplete = candidate;
                         continue;
                     }
+                    usefulCount = checked(usefulCount + Math.Max(1, candidate.ItemCount));
                     if (bestUnmet == null || IsStronger(candidate, bestUnmet)) bestUnmet = candidate;
                 }
             }
-            return bestUnmet ?? bestComplete ??
+            if (bestUnmet != null) return new SenseVisualPolicy(bestUnmet.Icon, bestUnmet.Category,
+                bestUnmet.SecondaryCategory, bestUnmet.Stock, bestUnmet.Remaining, usefulCount);
+            return bestComplete ??
                 new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0);
         }
 

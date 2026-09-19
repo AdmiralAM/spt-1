@@ -20,14 +20,20 @@ static class Phase38SenseVisualPolicyTests
         Expect(!complete.ShouldReplaceIcon(true) && complete.ShouldReplaceIcon(false),
             "base policy leaves runtime ownership choice explicit", ref assertions);
         SenseVisualPolicy containerNeeded = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy> { complete, missing });
-        Expect(containerNeeded.Stock == SenseStockState.Missing && containerNeeded.Category == ItemNeedReason.ActiveQuest,
+        Expect(containerNeeded.Stock == SenseStockState.Missing && containerNeeded.Category == ItemNeedReason.ActiveQuest && containerNeeded.ItemCount == 1,
             "one unmet contained item overrides completed container contents", ref assertions);
+        SenseVisualPolicy containerMany = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy> { missing, partial, next, complete });
+        Expect(containerMany.ItemCount == 3 && containerMany.Stock == SenseStockState.Missing,
+            "container count includes useful unfinished items and excludes already-complete contents", ref assertions);
         SenseVisualPolicy containerComplete = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy> { complete });
         Expect(containerComplete.Stock == SenseStockState.Complete && containerComplete.HasItemIntelligence,
             "a container with only completed tracked contents remains visibly green", ref assertions);
         SenseVisualPolicy irrelevantContainer = SenseContainerPolicyEngine.Combine(new List<SenseVisualPolicy>());
         Expect(!irrelevantContainer.HasItemIntelligence,
             "a container without tracked contents remains owned by native Sense", ref assertions);
+        SenseVisualPolicy food = SenseVisualPolicy.Food(4);
+        Expect(food.Category == ItemNeedReason.Food && food.Icon == ItemNeedIcon.Food && food.ItemCount == 4,
+            "food is an independent Sense category with its own icon and item count", ref assertions);
         return assertions;
     }
     static void Expect(bool value, string message, ref int assertions) { assertions++; if (!value) throw new InvalidOperationException("Phase 38 assertion failed: " + message); }

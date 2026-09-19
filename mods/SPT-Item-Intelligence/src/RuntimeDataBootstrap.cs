@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -239,44 +240,62 @@ namespace SPTItemIntelligence
                 progress[id.Trim()] = new QuestProgress(JsonNode.ReadString(JsonNode.Get(quest, "status", "Status")), completed);
             }
 
+            HashSet<string> projectedQuestIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, object> pair in JsonNode.Pairs(questTable))
             {
                 object quest = pair.Value;
                 string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
                 if (string.IsNullOrWhiteSpace(questId)) questId = pair.Key;
                 if (string.IsNullOrWhiteSpace(questId)) continue;
-                string questLabel = Localized(locales, questId + " name",
-                    JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name"))).Trim();
-                if (questLabel.Length == 0) questLabel = "Quest " + questId;
-
                 QuestProgress state;
                 progress.TryGetValue(questId, out state);
-                if (state != null && state.IsComplete) continue;
-                RequirementSource source = state != null && state.IsCurrent ? RequirementSource.CurrentQuest : RequirementSource.FutureQuest;
+                ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
+                projectedQuestIds.Add(questId);
+            }
 
-                object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
-                List<QuestCondition> parsed = ParseQuestConditions(conditions);
-                HashSet<string> seenConditions = new HashSet<string>(StringComparer.Ordinal);
-                for (int i = 0; i < parsed.Count; i++)
+            // Daily/weekly operational quests are generated per profile and do not exist in the
+            // global quest template table. Project their active list through the exact same path.
+            foreach (object group in JsonNode.Values(JsonNode.Get(profile, "RepeatableQuests", "repeatableQuests")))
+            {
+                foreach (object quest in JsonNode.Values(JsonNode.Get(group, "activeQuests", "ActiveQuests")))
                 {
-                    QuestCondition condition = parsed[i];
-                    if (condition.Id.Length > 0 && !seenConditions.Add(condition.Id)) continue;
-                    if (state != null && state.IsConditionComplete(condition.Id)) continue;
-                    if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
-                        condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
+                    string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
+                    if (questId.Length == 0 || !projectedQuestIds.Add(questId)) continue;
+                    object status = JsonNode.Get(quest, "questStatus", "QuestStatus");
+                    QuestProgress state = new QuestProgress(JsonNode.ReadString(JsonNode.Get(status, "status", "Status")),
+                        JsonNode.Values(JsonNode.Get(status, "completedConditions", "CompletedConditions")).Select(JsonNode.ReadString));
+                    ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
+                }
+            }
+        }
 
-                    RegisterAlternativePool(condition, owned, alternativePools);
-
-                    HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
-                    for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
-                    {
-                        string target = condition.Targets[targetIndex];
-                        if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
-                        // Finding is observational; a matching consumptive objective owns the reserve.
-                        if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
-                        int satisfied = ReadSatisfied(profile, condition.Id);
-                        output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
-                    }
+        static void ProjectQuest(object profile, object quest, string questId, QuestProgress state, object locales,
+            List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
+        {
+            if (state != null && state.IsComplete) return;
+            string rawLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
+            string questLabel = Localized(locales, rawLabel, Localized(locales, questId + " name", rawLabel)).Trim();
+            if (questLabel.Length == 0) questLabel = "Quest " + questId;
+            RequirementSource source = state != null && state.IsCurrent ? RequirementSource.CurrentQuest : RequirementSource.FutureQuest;
+            object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
+            List<QuestCondition> parsed = ParseQuestConditions(conditions);
+            HashSet<string> seenConditions = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < parsed.Count; i++)
+            {
+                QuestCondition condition = parsed[i];
+                if (condition.Id.Length > 0 && !seenConditions.Add(condition.Id)) continue;
+                if (state != null && state.IsConditionComplete(condition.Id)) continue;
+                if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
+                    condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
+                RegisterAlternativePool(condition, owned, alternativePools);
+                HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
+                for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
+                {
+                    string target = condition.Targets[targetIndex];
+                    if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
+                    if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
+                    int satisfied = ReadSatisfied(profile, condition.Id);
+                    output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
                 }
             }
         }

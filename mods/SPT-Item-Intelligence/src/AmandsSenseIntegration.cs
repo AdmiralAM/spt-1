@@ -16,6 +16,7 @@ namespace SPTItemIntelligence
         readonly Action raidChanged;
         readonly Action raidStarted;
         readonly HashSet<string> pickedItemIds = new HashSet<string>(StringComparer.Ordinal);
+        readonly Dictionary<object, SenseEvaluationCache> evaluationCache = new Dictionary<object, SenseEvaluationCache>(ReferenceEqualityComparer.Instance);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
@@ -96,38 +97,62 @@ namespace SPTItemIntelligence
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");
             string itemId = Text(Member(item, "Id", "ID"));
-            if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId) && raidChanged != null) raidChanged();
-
-            List<SenseVisualPolicy> candidates = new List<SenseVisualPolicy>();
-            foreach (object contained in EnumerateSenseItemTree(senseItem, item))
+            if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId))
             {
-                string templateId = Text(Member(contained, "TemplateId", "Tpl"));
-                if (templateId.Length == 0) continue;
-                bool fir = Flag(Member(contained, "SpawnedInSession"));
-                ItemPresentationState state = index.Get(templateId);
-                ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
-                ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
-                candidates.Add(SenseVisualPolicyEngine.Evaluate(decision.Allocation));
+                evaluationCache.Clear();
+                if (raidChanged != null) raidChanged();
             }
-            SenseVisualPolicy policy = SenseContainerPolicyEngine.Combine(candidates);
+
+            SenseVisualPolicy policy;
+            bool isContainer;
+            SenseEvaluationCache cached;
+            if (evaluationCache.TryGetValue(senseItem, out cached) && ReferenceEquals(cached.Index, index) &&
+                cached.LedgerRevision == ledger.Revision && cached.SettingsRevision == settings.Revision)
+            {
+                policy = cached.Policy;
+                isContainer = cached.IsContainer;
+            }
+            else
+            {
+                List<SenseVisualPolicy> candidates = new List<SenseVisualPolicy>();
+                int foodCount = 0;
+                foreach (object contained in EnumerateSenseItemTree(senseItem, item))
+                {
+                    if (IsFood(contained)) foodCount++;
+                    string templateId = Text(Member(contained, "TemplateId", "Tpl"));
+                    if (templateId.Length == 0) continue;
+                    bool fir = Flag(Member(contained, "SpawnedInSession"));
+                    ItemPresentationState state = index.Get(templateId);
+                    ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
+                    ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
+                    candidates.Add(SenseVisualPolicyEngine.Evaluate(decision.Allocation));
+                }
+                policy = SenseContainerPolicyEngine.Combine(candidates);
+                isContainer = IsContainer(senseItem);
+                if (!policy.HasItemIntelligence && foodCount > 0) policy = SenseVisualPolicy.Food(foodCount);
+                if (evaluationCache.Count >= 512) evaluationCache.Clear();
+                evaluationCache[senseItem] = new SenseEvaluationCache(index, ledger.Revision, settings.Revision, policy, isContainer);
+            }
             if (!policy.HasItemIntelligence) return;
 
             Color primary = settings.GetSenseColor(policy.Category);
             Color stock = settings.GetSenseStockColor(policy.Stock);
-            bool preserveIcon = HasProtectedSenseVisual(senseItem) && policy.Stock != SenseStockState.Complete;
-            if (!preserveIcon) SetField(senseItem, "color", primary);
+            bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
+            bool preserveIcon = HasProtectedSenseVisual(senseItem) && !completedContainer && policy.Stock != SenseStockState.Complete && policy.Category != ItemNeedReason.Food;
+            if (!preserveIcon) SetField(senseItem, "color", completedContainer ? stock : primary);
             Color secondary = policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
                 ? primary : settings.GetSenseColor(policy.SecondaryCategory);
             SetField(senseItem, "outlineColor", secondary);
 
-            object sprite = preserveIcon ? Member(senseItem, "sprite") : FindSenseSprite(senseItem.GetType().Assembly, IconFile(policy.Icon));
+            ItemNeedIcon renderedIcon = completedContainer ? ItemNeedIcon.Complete : policy.Icon;
+            object sprite = preserveIcon ? Member(senseItem, "sprite") : FindSenseSprite(senseItem.GetType().Assembly, IconFile(renderedIcon));
             if (!preserveIcon && sprite != null) SetField(senseItem, "sprite", sprite);
             object nativeColor = Member(senseItem, "color");
-            Color renderColor = preserveIcon && nativeColor is Color ? (Color)nativeColor : primary;
+            Color renderColor = completedContainer ? stock : preserveIcon && nativeColor is Color ? (Color)nativeColor : primary;
             ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, renderColor);
-            ApplyLight(Member(senseItem, "light"), preserveIcon ? stock : primary);
+            ApplyLight(Member(senseItem, "light"), completedContainer || preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
-                ApplyText(Member(senseItem, "typeText"), CompactText(policy, primary, stock), Color.white, secondary);
+                ApplyText(Member(senseItem, "typeText"), CompactText(policy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount)), Color.white, secondary);
         }
 
         static IEnumerable<object> EnumerateSenseItemTree(object senseItem, object looseItem)
@@ -222,7 +247,11 @@ namespace SPTItemIntelligence
                 pickedItemIds.Add(id);
                 observed++;
             }
-            if (changed && raidChanged != null) raidChanged();
+            if (changed)
+            {
+                evaluationCache.Clear();
+                if (raidChanged != null) raidChanged();
+            }
             if (observed > 0 && System.Threading.Interlocked.Exchange(ref pickupObservedReported, 1) == 0 && logInfo != null)
                 logInfo("Item Intelligence raid inventory pickup tracking active; item tree records=" + observed + ".");
         }
@@ -232,6 +261,7 @@ namespace SPTItemIntelligence
             int revision = ledger.Revision;
             ledger.Reset();
             pickedItemIds.Clear();
+            evaluationCache.Clear();
             if (ledger.Revision != revision && raidChanged != null) raidChanged();
         }
 
@@ -239,11 +269,19 @@ namespace SPTItemIntelligence
         {
             if (reason == ItemNeedReason.ActiveQuest) return GameUiText.T("QUEST", "КВЕСТ");
             if (reason == ItemNeedReason.Hideout) return GameUiText.T("HIDEOUT", "УБЕЖИЩЕ");
+            if (reason == ItemNeedReason.Food) return GameUiText.T("FOOD", "ЕДА");
             return GameUiText.T("FUTURE", "ПОТОМ");
         }
 
-        static string CompactText(SenseVisualPolicy policy, Color category, Color stock)
+        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer, Color countColor)
         {
+            if (isContainer && policy.Stock == SenseStockState.Complete) return string.Empty;
+            if (policy.Category == ItemNeedReason.Food)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color>" +
+                       (isContainer ? " <color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" : string.Empty);
+            if (isContainer)
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color> " +
+                       "<color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>";
             if (policy.Stock == SenseStockState.Complete)
                 return "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + Label(policy.Category) + "</color>";
             return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category) + "</color> " +
@@ -266,7 +304,28 @@ namespace SPTItemIntelligence
         {
             if (icon == ItemNeedIcon.Quest) return "icon_quest.png";
             if (icon == ItemNeedIcon.Hideout) return "icon_barter_building.png";
+            if (icon == ItemNeedIcon.Food) return "icon_provisions_food.png";
+            if (icon == ItemNeedIcon.Complete) return "icon_fav_checked.png";
             return "icon_info.png";
+        }
+
+        static bool IsContainer(object senseItem)
+        {
+            return senseItem != null && (Member(senseItem, "lootableContainer") != null ||
+                senseItem.GetType().Name.IndexOf("Container", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        static bool IsFood(object item)
+        {
+            if (item == null) return false;
+            string itemType = item.GetType().Name;
+            object template = Member(item, "Template");
+            string templateType = template == null ? string.Empty : template.GetType().Name;
+            return itemType.IndexOf("Food", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   itemType.IndexOf("Drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   templateType.IndexOf("Food", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   templateType.IndexOf("Drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   Member(item, "FoodDrinkComponent") != null || Member(template, "FoodDrinkComponent") != null;
         }
 
         static object FindSenseSprite(Assembly assembly, string key)
@@ -358,6 +417,18 @@ namespace SPTItemIntelligence
         static string Text(object value) { return value == null ? string.Empty : value.ToString().Trim(); }
         static bool Flag(object value) { try { return value != null && Convert.ToBoolean(value); } catch { return false; } }
         static int Number(object value, int fallback) { try { return value == null ? fallback : Convert.ToInt32(value); } catch { return fallback; } }
+
+        sealed class SenseEvaluationCache
+        {
+            internal SenseEvaluationCache(ItemPresentationIndex index, int ledgerRevision, int settingsRevision,
+                SenseVisualPolicy policy, bool isContainer)
+            { Index = index; LedgerRevision = ledgerRevision; SettingsRevision = settingsRevision; Policy = policy; IsContainer = isContainer; }
+            internal ItemPresentationIndex Index { get; }
+            internal int LedgerRevision { get; }
+            internal int SettingsRevision { get; }
+            internal SenseVisualPolicy Policy { get; }
+            internal bool IsContainer { get; }
+        }
         static Assembly FindAssembly(string name) { foreach (Assembly value in AppDomain.CurrentDomain.GetAssemblies()) if (string.Equals(value.GetName().Name, name, StringComparison.OrdinalIgnoreCase)) return value; return null; }
         static MethodInfo FindMethod(Type type, string name, int parameters) { if (type == null) return null; foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) if (method.Name == name && method.GetParameters().Length == parameters) return method; return null; }
 

@@ -33,7 +33,8 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "the shared deterministic requirement decision is the only reason Sense presentation is changed", ref assertions);
         Expect(adapter.Contains("BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic"),
             "Sense 3.1 static Clear lifecycle method is discovered", ref assertions);
-        Expect(adapter.Contains("icon_quest.png") && adapter.Contains("icon_barter_building.png") && adapter.Contains("icon_info.png"),
+        Expect(adapter.Contains("icon_quest.png") && adapter.Contains("icon_barter_building.png") && adapter.Contains("icon_info.png") &&
+               adapter.Contains("icon_provisions_food.png") && adapter.Contains("icon_fav_checked.png"),
             "the adapter reuses Sense-owned runtime sprites instead of copying or shipping its assets", ref assertions);
         Expect(adapter.Contains("ledger.Observe(id, template, stack, fir)") &&
                adapter.Contains("pickedItemIds.Remove(itemId) && ledger.Remove(itemId)") &&
@@ -46,8 +47,12 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "the required Sense layers are independently configurable in Item Intelligence F12", ref assertions);
         Expect(settings.Contains("\"Amands Sense Colors\", \"Active Quest\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Hideout\"") &&
-               settings.Contains("\"Amands Sense Colors\", \"Future Quest\""),
-            "active quest, hideout and future quest colors remain independently configurable", ref assertions);
+               settings.Contains("\"Amands Sense Colors\", \"Future Quest\"") &&
+               settings.Contains("\"Amands Sense Colors\", \"Food\"") &&
+               settings.Contains("\"Amands Sense Count Colors\", \"One Item\"") &&
+               settings.Contains("\"Amands Sense Count Colors\", \"Two to Three\"") &&
+               settings.Contains("\"Amands Sense Count Colors\", \"Four Plus\""),
+            "Sense categories and container count ranges remain independently configurable", ref assertions);
         Expect(!project.Contains("AmandsSense", StringComparison.OrdinalIgnoreCase) &&
                !adapter.Contains("using AmandsSense", StringComparison.OrdinalIgnoreCase),
             "Amands Sense is not a build dependency and remains optional", ref assertions);
@@ -61,14 +66,17 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                adapter.Contains("Member(owner, \"RootItem\")") &&
                adapter.Contains("\"Items\", \"AllItems\", \"AllRealPlayerItems\""),
             "Sense world containers are evaluated from the lootable container item owner", ref assertions);
+        Expect(adapter.Contains("SenseEvaluationCache") && adapter.Contains("evaluationCache.Count >= 512") &&
+               adapter.Contains("cached.LedgerRevision == ledger.Revision") && adapter.Contains("ReferenceEquals(cached.Index, index)"),
+            "repeated Sense rendering reuses bounded evaluations until requirements or raid inventory change", ref assertions);
         Expect(adapter.Contains("\"Succeed\", \"Succeeded\", \"Success\", \"IsSuccess\"") &&
                adapter.Contains("if (status == null) return true"),
             "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
-        Expect(adapter.Contains("CompactText(policy, primary, stock)") &&
-               adapter.Contains("if (policy.Stock == SenseStockState.Complete)") &&
+        Expect(adapter.Contains("CompactText(policy, primary, stock, isContainer") &&
+               adapter.Contains("completedContainer") && adapter.Contains("return string.Empty") &&
                !adapter.Contains("ALL ✓") && !adapter.Contains("ВСЁ ✓") &&
                !adapter.Contains(">\\n<"),
-            "Sense status stays on one compact line and colors the category itself when complete", ref assertions);
+            "completed containers collapse to a green check while other Sense status stays on one compact line", ref assertions);
 
         return assertions;
     }

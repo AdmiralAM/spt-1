@@ -106,6 +106,12 @@ static class Phase13RuntimeBootstrapTests
         Expect(powerCord.Get("cable").OwnedCount == 1 && powerCord.Get("cable").Allocation.HideoutFirRequired == 10 &&
                powerCord.Get("cable").Allocation.HideoutMissing == 9,
             "power cord truth remains one FIR owned, ten FIR required, nine missing", ref assertions);
+        RequirementIndex operational = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(
+            OperationalQuestEnvelope()));
+        Expect(operational.Get("daily-item").QuestNeededNow == 3 &&
+               operational.Get("daily-item").Allocation.NowFirRequired == 3 &&
+               operational.Get("daily-item").Allocation.NowMissing == 2,
+            "accepted operational quest item requirements join the authoritative active-quest allocation", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -258,6 +264,56 @@ static class Phase13RuntimeBootstrapTests
             }
         };
         return new RequirementDataEnvelope(200, profile, Array.Empty<object>(), hideout, Array.Empty<object>(), progress);
+    }
+
+    static RequirementDataEnvelope OperationalQuestEnvelope()
+    {
+        Dictionary<string, object> profile = new Dictionary<string, object>
+        {
+            ["Inventory"] = new Dictionary<string, object>
+            {
+                ["items"] = new object[]
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["_tpl"] = "daily-item",
+                        ["upd"] = new Dictionary<string, object> { ["SpawnedInSession"] = true }
+                    }
+                }
+            },
+            ["Quests"] = Array.Empty<object>(),
+            ["RepeatableQuests"] = new object[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["activeQuests"] = new object[]
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["_id"] = "daily-quest",
+                            ["name"] = "Daily supplies",
+                            ["questStatus"] = new Dictionary<string, object> { ["status"] = 2 },
+                            ["conditions"] = new Dictionary<string, object>
+                            {
+                                ["AvailableForFinish"] = new object[]
+                                {
+                                    new Dictionary<string, object>
+                                    {
+                                        ["id"] = "daily-condition",
+                                        ["conditionType"] = "HandoverItem",
+                                        ["target"] = new object[] { "daily-item" },
+                                        ["value"] = 3,
+                                        ["onlyFoundInRaid"] = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        return new RequirementDataEnvelope(201, profile, new Dictionary<string, object>(),
+            new Dictionary<string, object> { ["areas"] = Array.Empty<object>() }, Array.Empty<object>());
     }
 
     static void Expect(bool condition, string message, ref int assertions)
