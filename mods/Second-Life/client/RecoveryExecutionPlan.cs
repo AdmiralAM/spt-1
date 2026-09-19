@@ -175,6 +175,7 @@ namespace Admiral.SecondLife.Client
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
+                LootNetCompatibility.MarkSuccessfulRecovery(trace, trace);
                 // The corpse and the dead Player share one GameObject. Player.Dispose
                 // invokes OnPlayerDeadOrUnspawn and disposes the composite subscription
                 // set; during an active raid those downstream cleanups can retire the

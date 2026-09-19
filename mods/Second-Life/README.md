@@ -42,6 +42,10 @@ nested wallets, then commits after recovery or refunds on decline and failure.
 The camera handoff retires the old PerfectCulling sampler, resets the retired
 FPS-camera entries, registers the replacement camera and awaits its new sampler. When
 Dynamic Maps is installed, its main-player marker is refreshed after handoff.
+When LootNet is installed, a successfully completed recovery clears only its
+provisional first-death result; LootNet's accumulated loot and kill counters
+remain intact. The compatibility path is inert when LootNet is absent and
+fails safely if a future LootNet version changes that optional contract.
 
 The exact pre-runtime settlement and neighboring-module audit is recorded in
 `docs/compatibility-spt-4.1.5.md`.
