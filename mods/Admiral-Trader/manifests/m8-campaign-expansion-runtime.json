@@ -43,11 +43,7 @@
       "kind": "weapon",
       "lane": "A",
       "order": 3,
-      "pool": "manual-shotguns",
-      "distance": {
-        "value": 25,
-        "compareMethod": "<="
-      }
+      "pool": "manual-shotguns"
     },
     {
       "id": "9a2efe4c869cd41beb667e29",
@@ -75,11 +71,7 @@
       "kind": "weapon",
       "lane": "A",
       "order": 7,
-      "pool": "automatic-pistols",
-      "distance": {
-        "value": 30,
-        "compareMethod": "<="
-      }
+      "pool": "automatic-pistols"
     },
     {
       "id": "8722d67f966ff1605393222a",
@@ -121,22 +113,14 @@
       "kind": "weapon",
       "lane": "B",
       "order": 3,
-      "pool": "compact-rifles",
-      "distance": {
-        "value": 30,
-        "compareMethod": ">="
-      }
+      "pool": "compact-rifles"
     },
     {
       "id": "5a9a0bb3ffddd538e6fe3842",
       "kind": "weapon",
       "lane": "B",
       "order": 4,
-      "pool": "sks-hunter",
-      "distance": {
-        "value": 40,
-        "compareMethod": ">="
-      }
+      "pool": "sks-hunter"
     },
     {
       "id": "b15dc178e2982874350db164",
@@ -157,11 +141,7 @@
       "kind": "weapon",
       "lane": "B",
       "order": 7,
-      "pool": "nato-service-rifles",
-      "distance": {
-        "value": 50,
-        "compareMethod": ">="
-      }
+      "pool": "nato-service-rifles"
     },
     {
       "id": "fc14500bbc2900a04647083d",
@@ -175,11 +155,7 @@
       "kind": "weapon",
       "lane": "B",
       "order": 9,
-      "pool": "battle-rifles",
-      "distance": {
-        "value": 60,
-        "compareMethod": ">="
-      }
+      "pool": "battle-rifles"
     },
     {
       "id": "02c07ee31821696597ceabef",

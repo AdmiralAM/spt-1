@@ -46,6 +46,25 @@ class CampaignAuditCorrectionTests(unittest.TestCase):
             self.assertIn("UCW", text)
             self.assertNotIn("UPZ", text)
 
+    def test_precision_track_uses_large_range_steps_and_meaningful_equipment_rewards(self):
+        expected = {
+            "a0d05e28971f1ba57639b97d": (3, 100, {"57ac965c24597706be5f975c"}),
+            "153839f368b80b6fbc36d29e": (2, 200, {"618b9643526131765025ab35", "5b3b99475acfc432ff4dcbee"}),
+            "cd2641c70bede98dac3945d0": (1, 300, {"673f0a9370a3ddcf0d0ee0b8"}),
+        }
+        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("20-*.json")}
+        for qid, (count, distance, reward_tpls) in expected.items():
+            quest = quests[qid]
+            finish = quest["conditions"]["AvailableForFinish"][0]
+            kill = next(row for row in finish["counter"]["conditions"] if row["conditionType"] == "Kills")
+            location = next(row for row in finish["counter"]["conditions"] if row["conditionType"] == "Location")
+            self.assertEqual(finish["value"], count)
+            self.assertEqual(kill["target"], "Savage")
+            self.assertEqual(kill["distance"], {"value": distance, "compareMethod": ">="})
+            self.assertGreaterEqual(len(location["target"]), 2)
+            awarded = {item["_tpl"] for reward in quest["rewards"]["Success"] for item in reward.get("items", [])}
+            self.assertTrue(reward_tpls <= awarded)
+
     def test_only_audited_operations_use_the_normalized_reward_table(self):
         expected = {
             "acoustic-discipline": (7000, 30000, .008), "forward-reserve": (5000, 30000, .008),
