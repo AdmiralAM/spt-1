@@ -8,6 +8,7 @@ namespace Admiral.SecondLife.Client
     {
         internal Type LocalGameType { get; private set; }
         internal MethodInfo CreateCorpse { get; private set; }
+        internal MethodInfo GameWorldOnGameStarted { get; private set; }
         internal MethodInfo InitiateGameStopping { get; private set; }
         internal FieldInfo ProfileInventory { get; private set; }
         internal FieldInfo InventoryEquipment { get; private set; }
@@ -73,6 +74,12 @@ namespace Admiral.SecondLife.Client
             Type baseLocalGame = localGame.BaseType;
 
             MethodInfo createCorpse = UniqueMethod(player, "CreateCorpse", isStatic: false, parameterCount: 0);
+            MethodInfo gameWorldOnGameStarted = gameWorld.GetMethod(
+                "OnGameStarted",
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                Type.EmptyTypes,
+                null);
             MethodInfo initiateGameStopping = localGame.BaseType?.GetMethod(
                 "InitiateGameStopping",
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
@@ -128,7 +135,7 @@ namespace Admiral.SecondLife.Client
                 null);
             object thirdPersonPointOfView = Enum.Parse(pointOfView, "ThirdPerson");
 
-            if (createCorpse == null || initiateGameStopping == null)
+            if (createCorpse == null || gameWorldOnGameStarted == null || initiateGameStopping == null)
                 return Fail("exact corpse/finalization boundary changed", out failure);
             if (profileInventory == null || profileInventory.IsInitOnly || profileInventory.FieldType != inventory)
                 return Fail("Profile.Inventory is no longer a replaceable Inventory field", out failure);
@@ -152,6 +159,7 @@ namespace Admiral.SecondLife.Client
             {
                 LocalGameType = localGame,
                 CreateCorpse = createCorpse,
+                GameWorldOnGameStarted = gameWorldOnGameStarted,
                 InitiateGameStopping = initiateGameStopping,
                 ProfileInventory = profileInventory,
                 InventoryEquipment = inventoryEquipment,

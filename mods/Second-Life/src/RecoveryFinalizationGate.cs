@@ -13,6 +13,16 @@ public sealed class RecoveryFinalizationGate
 
     public RecoverySnapshot Snapshot => lifecycle.Snapshot;
 
+    public bool StartRaid(string raidId)
+    {
+        RecoveryState state = lifecycle.Snapshot.State;
+        if (state is RecoveryState.Alive or RecoveryState.RecoverySpawned)
+            lifecycle.TryApply(RecoveryTransition.Extract);
+        else if (state is RecoveryState.FirstDeathCaptured or RecoveryState.RecoveryPending)
+            lifecycle.TryApply(RecoveryTransition.AbortToNativeDeath);
+        return EnsureRaid(raidId);
+    }
+
     public NativeFinalizationDecision HandleDeathBoundary(
         string raidId,
         string corpseId,

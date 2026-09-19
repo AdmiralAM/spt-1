@@ -68,6 +68,9 @@ namespace Admiral.SecondLife.Client
                     contract.CreateCorpse,
                     postfix: new HarmonyMethod(typeof(RuntimeBridge), nameof(CorpseCreatedPostfix)));
                 harmony.Patch(
+                    contract.GameWorldOnGameStarted,
+                    postfix: new HarmonyMethod(typeof(RuntimeBridge), nameof(GameWorldStartedPostfix)));
+                harmony.Patch(
                     contract.InitiateGameStopping,
                     prefix: new HarmonyMethod(typeof(RuntimeBridge), nameof(GameStoppingPrefix)));
                 harmony.Patch(
@@ -87,6 +90,11 @@ namespace Admiral.SecondLife.Client
         static void CorpseCreatedPostfix(object __instance, object __result)
         {
             active?.CaptureCorpse(__instance, __result);
+        }
+
+        static void GameWorldStartedPostfix(object __instance)
+        {
+            active?.BeginRaid(__instance);
         }
 
         static bool GameStoppingPrefix(object __instance)
@@ -130,18 +138,35 @@ namespace Admiral.SecondLife.Client
             pendingCorpseEquipmentRootId = ReadString(pendingCorpseEquipment, "Id");
             pendingProfileId = ReadString(player, "ProfileId");
             RecoveryState priorState = finalizationGate.Snapshot.State;
-            if (string.IsNullOrWhiteSpace(pendingRaidId) ||
-                priorState == RecoveryState.Disabled ||
-                priorState == RecoveryState.FinalDeath ||
-                priorState == RecoveryState.Extracted)
+            if (string.IsNullOrWhiteSpace(pendingRaidId))
             {
-                raidSequence++;
+                if (raidSequence == 0) raidSequence++;
                 pendingRaidId = pendingProfileId + ":raid-" + raidSequence;
                 warnedExecutorUnavailable = false;
             }
             logInfo?.Invoke("Recovery trace: captured local-player corpse for " + pendingRaidId + "; prior-state=" + priorState + ".");
             if (string.IsNullOrWhiteSpace(pendingCorpseEquipmentRootId))
                 logWarning?.Invoke("Native corpse has no stable equipment-root ID; recovery will fail closed.");
+        }
+
+        void BeginRaid(object gameWorld)
+        {
+            object mainPlayer = ReadObject(gameWorld, "MainPlayer");
+            if (mainPlayer == null || !ReadBoolean(mainPlayer, "IsYourPlayer")) return;
+            string profileId = ReadString(mainPlayer, "ProfileId");
+            if (string.IsNullOrWhiteSpace(profileId)) return;
+
+            raidSequence++;
+            pendingProfileId = profileId;
+            pendingRaidId = profileId + ":raid-" + raidSequence;
+            pendingCorpse = null;
+            pendingCorpseEquipment = null;
+            pendingCorpseEquipmentRootId = null;
+            warnedExecutorUnavailable = false;
+            if (!finalizationGate.StartRaid(pendingRaidId))
+                logWarning?.Invoke("Recovery lifecycle rejected native raid start " + pendingRaidId + ".");
+            else
+                logInfo?.Invoke("Recovery trace: native raid started " + pendingRaidId + ".");
         }
 
         bool ContinueNativeFinalization(object localGame)

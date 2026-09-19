@@ -35,6 +35,14 @@ Expect(lifecycle.Snapshot.RecoveryConsumed, "disable preserves consumed accounti
 Expect(lifecycle.TryApply(RecoveryTransition.EnableRaid, raidId: "raid-after-disable"), "a distinct later raid can start after disable");
 Expect(!lifecycle.Snapshot.RecoveryConsumed, "distinct later raid gets fresh accounting");
 
+var consecutiveRaids = new RecoveryFinalizationGate();
+Expect(consecutiveRaids.StartRaid("consecutive-a"), "native first raid start enables recovery");
+Expect(consecutiveRaids.HandleDeathBoundary("consecutive-a", "corpse-a", executorReady: true) == NativeFinalizationDecision.SuppressForRecovery, "first consecutive raid captures death");
+Expect(consecutiveRaids.ConfirmRecovery("loadout-a"), "first consecutive raid consumes its recovery");
+Expect(consecutiveRaids.StartRaid("consecutive-b"), "native next raid start resets a spawned prior recovery");
+Expect(consecutiveRaids.Snapshot.State == RecoveryState.Alive && !consecutiveRaids.Snapshot.RecoveryConsumed, "next raid receives a fresh recovery before any death");
+Expect(consecutiveRaids.HandleDeathBoundary("consecutive-b", "corpse-b", executorReady: true) == NativeFinalizationDecision.SuppressForRecovery, "next consecutive raid captures its own first death");
+
 var finalDeath = new RecoveryStateMachine();
 Expect(finalDeath.TryApply(RecoveryTransition.EnableRaid, raidId: "raid-final"), "final-death raid enables");
 Expect(finalDeath.TryApply(RecoveryTransition.CaptureFirstDeath, originalCorpseId: "corpse-final"), "final-death first death captured");
