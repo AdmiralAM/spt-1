@@ -36,6 +36,9 @@ public sealed record RewardBundleCatalogItem
     [JsonPropertyName("valueRub")]
     public int ValueRub { get; init; }
 
+    [JsonPropertyName("quantity")]
+    public int Quantity { get; init; } = 1;
+
     [JsonPropertyName("compatibilityFamily")]
     public string? CompatibilityFamily { get; init; }
 
@@ -83,6 +86,9 @@ public sealed record RewardBundleSlot
 
     [JsonPropertyName("chancePercent")]
     public int ChancePercent { get; init; } = 100;
+
+    [JsonPropertyName("compatibilityFamily")]
+    public string? CompatibilityFamily { get; init; }
 }
 
 public sealed record GeneratedRewardBundle(
@@ -97,6 +103,7 @@ public sealed record GeneratedRewardBundleItem(
     string Role,
     string Source,
     int ValueRub,
+    int Quantity,
     string? CompatibilityFamily,
     string? ParentRole,
     string? SlotId);
@@ -126,7 +133,7 @@ public static class RewardBundleEngine
                 throw new RewardBundleException("catalog", "policy", $"duplicate template id {item.TemplateId}");
             if (item.Roles.Count == 0 || item.Roles.Any(string.IsNullOrWhiteSpace))
                 throw new RewardBundleException("catalog", "policy", $"template {item.TemplateId} has no valid roles");
-            if (!SupportedTiers.Contains(item.Tier) || item.ValueRub <= 0)
+            if (!SupportedTiers.Contains(item.Tier) || item.ValueRub <= 0 || item.Quantity <= 0)
                 throw new RewardBundleException("catalog", "policy", $"template {item.TemplateId} has invalid tier/value");
         }
 
@@ -169,6 +176,9 @@ public static class RewardBundleEngine
                 && item.Roles.Contains(slot.Role, StringComparer.Ordinal)
                 && selected.All(chosen => chosen.TemplateId != item.TemplateId));
 
+            if (!string.IsNullOrWhiteSpace(slot.CompatibilityFamily))
+                candidates = candidates.Where(item => item.CompatibilityFamily == slot.CompatibilityFamily);
+
             if (compatibilityFamily is not null && IsWeaponSupportRole(slot.Role))
                 candidates = candidates.Where(item => item.CompatibilityFamily == compatibilityFamily);
 
@@ -192,7 +202,7 @@ public static class RewardBundleEngine
                 compatibilityFamily = picked.CompatibilityFamily;
             }
             selected.Add(new GeneratedRewardBundleItem(
-                picked.TemplateId, slot.Role, picked.Source, picked.ValueRub,
+                picked.TemplateId, slot.Role, picked.Source, picked.ValueRub, picked.Quantity,
                 picked.CompatibilityFamily, picked.ParentRole, picked.SlotId));
         }
 

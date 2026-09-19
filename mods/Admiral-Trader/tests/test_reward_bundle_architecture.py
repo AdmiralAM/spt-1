@@ -7,12 +7,19 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class RewardBundleArchitectureTests(unittest.TestCase):
-    def test_policy_is_non_publishing_until_authored_bundle_review(self):
+    def test_policy_contains_authored_native_bundles_without_publishing_them(self):
         policy = json.loads((ROOT / "manifests" / "reward-bundle-policy.json").read_text(encoding="utf-8"))
         self.assertEqual(policy["schemaVersion"], 1)
-        self.assertFalse(policy["enabled"])
-        self.assertEqual(policy["catalog"], [])
-        self.assertEqual(policy["bundles"], [])
+        self.assertTrue(policy["enabled"])
+        self.assertGreaterEqual(len(policy["catalog"]), 24)
+        self.assertGreaterEqual(len(policy["bundles"]), 6)
+        self.assertEqual({bundle["tier"] for bundle in policy["bundles"]}, {"common", "rare", "epic"})
+        self.assertTrue(all(item["source"] == "spt" for item in policy["catalog"]))
+        self.assertTrue(all(item["quantity"] > 0 for item in policy["catalog"]))
+        self.assertTrue(all({slot["role"] for slot in bundle["slots"]} >= {"weapon", "ammunition"}
+                            for bundle in policy["bundles"] if "weapon" in {slot["role"] for slot in bundle["slots"]}))
+        self.assertTrue(all(next(slot for slot in bundle["slots"] if slot["role"] == "weapon").get("compatibilityFamily")
+                            for bundle in policy["bundles"] if "weapon" in {slot["role"] for slot in bundle["slots"]}))
 
     def test_runtime_has_deterministic_and_fail_explicit_contracts(self):
         source = (ROOT / "server" / "RewardBundleEngine.cs").read_text(encoding="utf-8")
@@ -22,6 +29,7 @@ class RewardBundleArchitectureTests(unittest.TestCase):
         self.assertIn('RewardBundleException("validation"', source)
         self.assertIn("availableTemplates.Contains", source)
         self.assertIn("compatibilityFamily", source)
+        self.assertIn("slot.CompatibilityFamily", source)
         self.assertNotIn("new Random", source)
 
     def test_publication_failure_rolls_back_before_error_is_reported(self):
