@@ -16,6 +16,7 @@ RELATIONSHIP_STOCK_PATH = ROOT / "manifests" / "relationship-stock.json"
 STOREFRONT_CORE_PATH = ROOT / "manifests" / "storefront-core-expansion.json"
 M7_PATH = ROOT / "manifests" / "m7-natalya-absorption-program.json"
 STORY_PATH = ROOT / "manifests" / "story-campaign-runtime.json"
+BARTER_POLICY_PATH = ROOT / "manifests" / "storefront-barter-policy.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
 EXPECTED_RUNTIME_TARGET = "4.1.5"
@@ -24,6 +25,10 @@ LABS_OFFER_ID = "ad1000000000000000000001"
 LABS_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 LABS_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
+BARTER_BY_ID = {
+    row["offerId"]: [[{"count": requirement["count"], "_tpl": requirement["tpl"]} for requirement in row["requirements"]]]
+    for row in json.loads(BARTER_POLICY_PATH.read_text(encoding="utf-8"))["offers"]
+}
 BASELINE_OFFER_IDS = {
     "ad2000000000000000000001",
     "ad2000000000000000000002",
@@ -106,6 +111,12 @@ def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: 
     if upd.get("BuyRestrictionMax") != buy_limit or upd.get("BuyRestrictionCurrent") != 0:
         fail(f"{offer_id}: buy restriction drift")
     scheme = barter.get(offer_id)
+    if offer_id in BARTER_BY_ID:
+        if scheme != BARTER_BY_ID[offer_id]:
+            fail(f"{offer_id}: authored item barter drift: {scheme}")
+        if loyalty.get(offer_id) != loyalty_level:
+            fail(f"{offer_id}: loyalty level drift: {loyalty.get(offer_id)} != {loyalty_level}")
+        return
     if not isinstance(scheme, list) or len(scheme) != 1 or not isinstance(scheme[0], list) or len(scheme[0]) != 1:
         fail(f"{offer_id}: expected exactly one single-currency barter scheme")
     currency = scheme[0][0]

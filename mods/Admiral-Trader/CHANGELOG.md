@@ -31,6 +31,8 @@
 - Complete the reward pass across all 172 quests: the remaining 40 cash-only records now award a useful native field item while retaining at least ₽10,000, XP and Admiral standing.
 - Add vanilla-style cumulative sales requirements to Admiral loyalty progression: ₽500,000 at LL2, ₽1,200,000 at LL3 and ₽2,200,000 at LL4, alongside the existing level and standing requirements.
 - Correct the campaign review so both complete 20-step Arsenal lanes are shown and add release-readiness checks for rewards, parallel story openings, loyalty attainability and all four store tiers.
+- Replace the cash price on six specialist offers with bounded multi-item barters while retaining their existing loyalty, quest, stock and purchase gates.
+- Add regressions proving globally unique quest-progress identities and requiring every non-key FindItem objective to have a matching HandoverItem objective; keys remain retained intentionally.
 
 ## 0.2.0 — stable campaign baseline
 

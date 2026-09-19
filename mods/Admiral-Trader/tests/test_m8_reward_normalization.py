@@ -49,16 +49,19 @@ class M8RewardNormalizationTests(unittest.TestCase):
 
     def test_container_unlocks_use_bounded_stock_and_non_exploit_prices(self):
         expected = {
-            "3e6f816c41a9c73328116881": ("619cbf7d23893217ec30b689", 420000),
-            "b5b55194b4a76ce0ce71a409": ("5d03794386f77420415576f5", 330000),
-            "6b0d153489b984ae9b940adb": ("5d1b5e94d7ad1a2b865a96b0", 600000),
+            "3e6f816c41a9c73328116881": "619cbf7d23893217ec30b689",
+            "b5b55194b4a76ce0ce71a409": "5d03794386f77420415576f5",
+            "6b0d153489b984ae9b940adb": "5d1b5e94d7ad1a2b865a96b0",
         }
+        barter_policy = {row["offerId"]: row for row in load("manifests/storefront-barter-policy.json")["offers"]}
         roots = {row["_id"]: row for row in self.assort["items"] if row.get("parentId") == "hideout"}
-        for offer_id, (tpl, price) in expected.items():
+        for offer_id, tpl in expected.items():
             self.assertEqual(roots[offer_id]["_tpl"], tpl)
             self.assertEqual(roots[offer_id]["upd"]["StackObjectsCount"], 1)
             self.assertEqual(roots[offer_id]["upd"]["BuyRestrictionMax"], 1)
-            self.assertEqual(self.assort["barter_scheme"][offer_id], [[{"count": price, "_tpl": ROUBLES}]])
+            self.assertEqual(self.assort["barter_scheme"][offer_id], [[
+                {"count": row["count"], "_tpl": row["tpl"]} for row in barter_policy[offer_id]["requirements"]
+            ]])
 
     def test_final_classified_reward_is_a_usable_labs_card(self):
         finale = self.quests[self.policy["exceptionalFinale"]["questId"]]

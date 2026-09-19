@@ -64,6 +64,8 @@ Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. Th
 
 Relationship progression uses level, reputation and cumulative trade turnover like native traders. LL2 requires level 15, 0.10 standing and ₽500,000 turnover; LL3 requires level 25, 0.30 and ₽1,200,000; LL4 requires level 35, 0.55 and ₽2,200,000. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
 
+Routine field stock remains available for roubles. Six specialist offers use authored item barters so valuable raid loot retains a purpose: RAPTAR, injector case, military battery, FLIR and the two quest-gated Labs access-card offers. Their loyalty, quest unlock, stock and purchase limits remain unchanged.
+
 The original bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. M7 supersedes its old content boundary: Natalya now appears in 18 story beats and contributes all 35 compatible native weapon presets, while selected Andrudis capability and hunt themes are distributed across the ten story chains and Arsenal lanes. The retired traders, source quest IDs, repetitive count ladders, custom Natalya items/zones and unsafe armour presets remain excluded.
 
 ## Product-design scope — complete

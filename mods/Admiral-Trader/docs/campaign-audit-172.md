@@ -69,7 +69,7 @@ The final balance pass confirms that the four early complete-weapon rewards arri
 
 ## Storefront audit
 
-The core assortment is structurally valid: 47 base roots plus 35 complete Natalya weapon presets produce 82 finite offers. Every root has barter and loyalty metadata, every child points to an owned parent and no offer is unlimited. The combined loyalty distribution is LL1 30, LL2 21, LL3 21 and LL4 10; 18 base offers are quest-gated.
+The core assortment is structurally valid: 47 base roots plus 35 complete Natalya weapon presets produce 82 finite offers. Every root has payment and loyalty metadata, every child points to an owned parent and no offer is unlimited. Six specialist offers use bounded item barters; routine stock and all 35 Natalya presets retain rouble prices. The combined loyalty distribution is LL1 30, LL2 21, LL3 21 and LL4 10; 18 base offers are quest-gated.
 
 All 35 Natalya roots are assembled presets with two to nine child parts. The complex core armour roots retain their required child armour/plate trees. The red background visible on some equipment is therefore not evidence of a missing child by itself; no orphaned or structurally incomplete offer was found in the committed assortment.
 
