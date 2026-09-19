@@ -278,6 +278,27 @@ Expect(PaidHealingPolicy.PlanDebits(125, new[] { 50, 100 })!.SequenceEqual(new[]
 Expect(PaidHealingPolicy.PlanDebits(151, new[] { 50, 100 }) is null, "insufficient stash rubles reject recovery");
 Expect(PaidHealingPolicy.PlanDebits(0, Array.Empty<int>())!.Count == 0, "free native healing requires no ruble stack");
 
+var firstLifeStats = new LifeStatisticsSnapshot(1250, new[]
+{
+    new LifeKill("kill-a", "Scav A", "AKS-74U", "Head", 42f),
+    new LifeKill("kill-b", "Scav B", "Glock 17", "Thorax", 18f)
+});
+var cumulativeStats = new LifeStatisticsSnapshot(2100, new[]
+{
+    new LifeKill("kill-a", "Scav A", "AKS-74U", "Head", 42f),
+    new LifeKill("kill-b", "Scav B", "Glock 17", "Thorax", 18f),
+    new LifeKill("kill-c", "PMC", "Glock 17", "Head", 31f)
+});
+LifeStatisticsReport separatedStats = LifeStatisticsReport.Separate(firstLifeStats, cumulativeStats);
+Expect(separatedStats.FirstLife.Experience == 1250 && separatedStats.FirstLife.Kills.Count == 2, "first-life statistics remain intact");
+Expect(separatedStats.SecondLife.Experience == 850 && separatedStats.SecondLife.Kills.Single().Identity == "kill-c", "cumulative native statistics are separated into second-life deltas");
+var resetStats = new LifeStatisticsSnapshot(600, new[] { new LifeKill("kill-d", "Scav C", "Makarov", "Stomach", 9f) });
+LifeStatisticsReport separatedResetStats = LifeStatisticsReport.Separate(firstLifeStats, resetStats);
+Expect(separatedResetStats.SecondLife.Experience == 600 && separatedResetStats.SecondLife.Kills.Single().Identity == "kill-d", "reset replacement-player statistics remain a complete second-life snapshot");
+var mixedStats = new LifeStatisticsSnapshot(600, cumulativeStats.Kills);
+LifeStatisticsReport separatedMixedStats = LifeStatisticsReport.Separate(firstLifeStats, mixedStats);
+Expect(separatedMixedStats.SecondLife.Experience == 600 && separatedMixedStats.SecondLife.Kills.Single().Identity == "kill-c", "kill and experience reset behavior are separated independently");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 
 sealed class FakeMove : IReversibleInventoryMove

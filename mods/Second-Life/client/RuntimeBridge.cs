@@ -18,6 +18,7 @@ namespace Admiral.SecondLife.Client
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
+        readonly RuntimeLifeStatistics lifeStatistics = new RuntimeLifeStatistics();
         Harmony harmony;
         RecoveryRuntimeContract runtimeContract;
         RecoveryExecutor executor;
@@ -138,6 +139,8 @@ namespace Admiral.SecondLife.Client
             pendingCorpseEquipmentRootId = ReadString(pendingCorpseEquipment, "Id");
             pendingProfileId = ReadString(player, "ProfileId");
             RecoveryState priorState = finalizationGate.Snapshot.State;
+            if (priorState == RecoveryState.Alive)
+                lifeStatistics.CaptureFirstLife(player, logInfo);
             if (string.IsNullOrWhiteSpace(pendingRaidId))
             {
                 if (raidSequence == 0) raidSequence++;
@@ -163,6 +166,7 @@ namespace Admiral.SecondLife.Client
             pendingCorpseEquipment = null;
             pendingCorpseEquipmentRootId = null;
             warnedExecutorUnavailable = false;
+            lifeStatistics.Reset();
             if (!finalizationGate.StartRaid(pendingRaidId))
                 logWarning?.Invoke("Recovery lifecycle rejected native raid start " + pendingRaidId + ".");
             else
@@ -173,6 +177,7 @@ namespace Admiral.SecondLife.Client
         {
             if (nativeFinalizationReentry) return true;
             if (enabled == null || !enabled.Value) return true;
+            if (lifeStatistics.FinalReportPending) return false;
 
             string raidId = pendingRaidId;
             if (string.IsNullOrWhiteSpace(raidId))
@@ -211,12 +216,31 @@ namespace Admiral.SecondLife.Client
             }
 
             if (decision != NativeFinalizationDecision.ContinueNative) return false;
+            if (state == RecoveryState.RecoverySpawned && lifeStatistics.TryBeginFinalReport())
+            {
+                OfferFinalStatisticsAfterInput(localGame);
+                return false;
+            }
             if (!string.IsNullOrWhiteSpace(failure) && !warnedExecutorUnavailable)
             {
                 warnedExecutorUnavailable = true;
                 logWarning?.Invoke("Recovery preflight rejected; continuing native death: " + failure);
             }
             return true;
+        }
+
+        async void OfferFinalStatisticsAfterInput(object localGame)
+        {
+            await WaitForNeutralInput();
+            object player = runtimeContract?.LocalPlayer?.GetValue(localGame);
+            if (lifeStatistics.TryShow(player, () => ResumeNativeFinalization(localGame), out string failure))
+            {
+                logInfo?.Invoke("Recovery statistics: showing separate first-life and second-life report.");
+                return;
+            }
+            logWarning?.Invoke("Recovery statistics unavailable; continuing native finalization: " + failure);
+            lifeStatistics.CompleteFinalReport();
+            ResumeNativeFinalization(localGame);
         }
 
         async void OfferRecoveryAfterDelay(object localGame, RecoveryExecutionPlan plan)

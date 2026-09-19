@@ -46,6 +46,10 @@ When LootNet is installed, a successfully completed recovery clears only its
 provisional first-death result; LootNet's accumulated loot and kill counters
 remain intact. The compatibility path is inert when LootNet is absent and
 fails safely if a future LootNet version changes that optional contract.
+After a recovered raid reaches its final death or extraction boundary, Second
+Life shows a read-only two-section report for the first and second lives. It
+separates kill details and live session experience without changing EFT's
+native counters, profile settlement or ordinary post-raid screens.
 
 The exact pre-runtime settlement and neighboring-module audit is recorded in
 `docs/compatibility-spt-4.1.5.md`.
