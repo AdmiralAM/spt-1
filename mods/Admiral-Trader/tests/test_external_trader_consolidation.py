@@ -14,6 +14,7 @@ PAINTER_POOL = json.loads((ROOT / "manifests" / "painter-special-delivery-pool.j
 PAINTER_REGISTRATION = (ROOT / "server" / "PainterContentRegistration.cs").read_text(encoding="utf-8")
 IMPORT_TOOL = (ROOT / "tools" / "Import-PainterContent.ps1").read_text(encoding="utf-8")
 HYDRATE_TOOL = (ROOT / "tools" / "Hydrate-PainterBundles.ps1").read_text(encoding="utf-8")
+POST_CONSOLIDATION_AUDIT = (ROOT / "docs" / "post-consolidation-content-audit.md").read_text(encoding="utf-8")
 
 
 def test_persistent_ownership_and_measured_external_scope() -> None:
@@ -78,8 +79,29 @@ def test_exact_cross_pr_authority_and_content_only_painter_contract() -> None:
     assert "PainterContentRegistration" in PAINTER_REGISTRATION
     assert "Painter_3.0.0.7z" in HYDRATE_TOOL
     assert "CreateItemFromClone" in PAINTER_REGISTRATION
+    assert '["ru"] = PainterRussianLocales[item.Id]' in PAINTER_REGISTRATION
+    assert PAINTER_REGISTRATION.count('new() { Name = "') >= 5
     assert "ValidateExternalAssort" in CONSOLIDATION
     assert "ValidateExternalQuestGraph" in CONSOLIDATION
+
+
+def test_post_consolidation_audit_names_bounded_candidates_before_removal() -> None:
+    assert "no offers or quests removed by this audit" in POST_CONSOLIDATION_AUDIT
+    assert "13 exact product-tree overlaps" in POST_CONSOLIDATION_AUDIT
+    for offer_id in (
+        "66bf757f27d0b097db0acf0c",
+        "66bf757f27d0b097db0acf10",
+        "66bf757f27d0b097db0acf0a",
+    ):
+        assert offer_id in POST_CONSOLIDATION_AUDIT
+    for quest_id in (
+        "208db81b5ce195bf0c176852",
+        "8dad0d354ac000b7bbf05b9a",
+        "3c6e085fc02f0597efdb5d5a",
+        "31ab6a69a8436df6b3834b0a",
+        "e520cec55b83621928e9e4ec",
+    ):
+        assert quest_id in POST_CONSOLIDATION_AUDIT
     assert "PruneUnavailableOfferTrees" in CONSOLIDATION
 
 

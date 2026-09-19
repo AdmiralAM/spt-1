@@ -82,7 +82,8 @@ public sealed class PainterContentRegistration(
                 },
                 Locales = new Dictionary<string, LocaleDetails>
                 {
-                    ["en"] = new() { Name = item.Name, ShortName = item.ShortName, Description = item.Description }
+                    ["en"] = new() { Name = item.Name, ShortName = item.ShortName, Description = item.Description },
+                    ["ru"] = PainterRussianLocales[item.Id]
                 }
             }, Assembly.GetExecutingAssembly());
             created++;
@@ -142,6 +143,15 @@ public sealed class PainterContentRegistration(
     ];
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    private static readonly Dictionary<string, LocaleDetails> PainterRussianLocales = new()
+    {
+        ["672e2e75d78fe9e90c8cb393"] = new() { Name = "Фигурка Бэтмена", ShortName = "Бэтмен", Description = "Редкая крупная фигурка Бэтмена." },
+        ["684db00229850b2f1f7832c1"] = new() { Name = "Фигурка «Золотая какашка»", ShortName = "Зол. какашка", Description = "Награда для мастера особенно раздражающих поручений." },
+        ["685867727d49afb420c2b29e"] = new() { Name = "Московий («Материал 115»)", ShortName = "MC-115", Description = "Герметично упакованный состав на основе московия." },
+        ["668ff5bde41a0cce3b142464"] = new() { Name = "Особая посылка Маляра", ShortName = "Посылка Маляра", Description = "Запечатанная посылка с ценными бартерными предметами." },
+        ["6699546547ad52e0fccf6da9"] = new() { Name = "Боевой ящик Маляра", ShortName = "Боевой ящик", Description = "Запечатанный ящик с военным снаряжением." }
+    };
 }
 
 public sealed record PainterLootPool(
