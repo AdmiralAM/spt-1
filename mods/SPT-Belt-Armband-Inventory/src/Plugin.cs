@@ -138,6 +138,14 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
             }
 
+            compactFaceHeadBandPresentationPatches = new CompactFaceHeadBandPresentationPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!compactFaceHeadBandPresentationPatches.TryInstall())
+            {
+                compactFaceHeadBandPresentationPatches.Dispose();
+                compactFaceHeadBandPresentationPatches = null;
+                Logger.LogWarning("Accepted stable HeadBand presentation remains active; compact Face/HeadBand layout could not bind for this session.");
+            }
+
             firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(Logger.LogInfo, Logger.LogWarning);
             if (!firstOpenHeadBandLayoutPatches.TryInstall())
             {
