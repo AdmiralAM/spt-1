@@ -46,6 +46,7 @@ namespace SPTItemIntelligence
                 if (harmony == null || patchMethod == null || patchConstructor == null) return Unavailable("CompatibilityHighlighter bridge could not access Harmony.");
 
                 MethodInfo postfix = BuildPostfix(getViews.ReturnType);
+                if (postfix == null) return Unavailable("CompatibilityHighlighter runtime patch method was not finalized by Mono.");
                 object harmonyPostfix = patchConstructor.Invoke(new object[] { postfix });
                 InvokePatch(patchMethod, getViews, harmonyMethodType, harmonyPostfix);
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
@@ -134,7 +135,9 @@ namespace SPTItemIntelligence
             il.Emit(OpCodes.Castclass, arrayType);
             il.Emit(OpCodes.Stind_Ref);
             il.Emit(OpCodes.Ret);
-            Type patchType = type.CreateType();
+            TypeInfo patchInfo = type.CreateTypeInfo();
+            Type patchType = patchInfo == null ? null : patchInfo.AsType();
+            if (patchType == null) return null;
             return patchType.GetMethod("MergeDetachedContainerViews", BindingFlags.Static | BindingFlags.Public);
         }
 
