@@ -7,10 +7,9 @@ namespace SPTBeltArmbandInventory
 {
     internal static class EmbeddedAccessoryGridRuntime
     {
-        const float HorizontalGap = 6f;
         const float VerticalGap = 4f;
-        const float HeadBandRightOffset = 4f;
-        const float HeadBandDownOffset = 8f;
+        const float HeadBandDownOffset = 16f;
+        const float ArmBandDownGap = 14f;
         const float HeaderHeight = 22f;
         const float MinimumPanelWidth = 128f;
         internal static Action<string> LogInfo;
@@ -80,18 +79,19 @@ namespace SPTBeltArmbandInventory
                 Canvas.ForceUpdateCanvases();
 
                 Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
-                Vector3 beltTopRight = TopRightIn(content, belt);
+                RectTransform beltRect = belt.transform as RectTransform;
+                if (beltRect == null) yield break;
+                Vector3 beltBottomLeft = VisibleBottomLeftIn(content, beltRect);
                 Vector3 headBandAnchor = specialBottomLeft
-                    + Vector3.right * HeadBandRightOffset
                     + Vector3.down * (VerticalGap + HeadBandDownOffset);
-                Vector3 armBandAnchor = beltTopRight + Vector3.right * HorizontalGap;
+                Vector3 armBandAnchor = beltBottomLeft + Vector3.down * ArmBandDownGap;
                 PlaceNativeRow(headBand, content.TransformPoint(headBandAnchor));
                 PlaceNativeRow(armBand, content.TransformPoint(armBandAnchor));
             }
             if (!logged)
             {
                 logged = true;
-                LogInfo?.Invoke("B&A&HB ACCESSORY FLOW PROOF: HeadBand follows the live Special Slots lower-left edge; ArmBand follows the live Belt upper-right edge; fixed page offsets=False.");
+                LogInfo?.Invoke("B&A&HB ACCESSORY FLOW PROOF: HeadBand follows the live Special Slots left/lower edges; ArmBand follows the live Belt left/bottom edges; fixed page offsets=False.");
             }
         }
 
