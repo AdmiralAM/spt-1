@@ -23,7 +23,8 @@ public sealed class LegacyCashBoxProfileMigration : AbstractProfileMigration
     public override string MigrationName => "BAndHBLegacyPackNStrapContainersV1";
 
     public override bool CanMigrate(JsonObject profile, IEnumerable<IProfileMigration> previouslyRanMigrations)
-        => ContainsLegacyCashBox(profile, "pmc") || ContainsLegacyCashBox(profile, "scav");
+        => !LocalPackNStrapImportState.Enabled
+            && (ContainsLegacyCashBox(profile, "pmc") || ContainsLegacyCashBox(profile, "scav"));
 
     public override JsonObject? Migrate(JsonObject profile)
     {

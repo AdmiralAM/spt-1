@@ -52,5 +52,6 @@ internal static class LegacyCashBoxProfileMigrationRegression
             throw new InvalidOperationException("Legacy Mobile Infirmary was not converted to Gamma.");
         if (med["parentId"]!.GetValue<string>() != "sorting" || med["slotId"]!.GetValue<string>() != "hideout" || med.ContainsKey("location"))
             throw new InvalidOperationException("Mobile Infirmary contents were not preserved on the sorting table.");
+
     }
 }
