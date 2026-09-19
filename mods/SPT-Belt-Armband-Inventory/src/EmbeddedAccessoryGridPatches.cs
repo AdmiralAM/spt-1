@@ -16,6 +16,7 @@ namespace SPTBeltArmbandInventory
         internal static Action<string> LogWarning;
         internal static Type EquipmentSlotType;
         internal static Type EquipmentTabType;
+        internal static Type ContainersPanelType;
         internal static FieldInfo SlotViewsField;
         internal static FieldInfo SpecialSlotsPanelField;
         internal static FieldInfo SlotPlaceField;
@@ -79,12 +80,15 @@ namespace SPTBeltArmbandInventory
                 Canvas.ForceUpdateCanvases();
 
                 Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
-                RectTransform beltRect = belt.transform as RectTransform;
+                RectTransform beltRect = SlotPlaceField.GetValue(belt) as RectTransform;
                 if (beltRect == null) yield break;
-                Vector3 beltBottomLeft = VisibleBottomLeftIn(content, beltRect);
+                Vector3[] cardCorners = new Vector3[4];
+                beltRect.GetWorldCorners(cardCorners);
+                Vector3 beltBottomLeft = content.InverseTransformPoint(cardCorners[0]);
                 Vector3 headBandAnchor = specialBottomLeft
-                    + Vector3.down * (VerticalGap + HeadBandDownOffset);
-                Vector3 armBandAnchor = beltBottomLeft + Vector3.down * ArmBandDownGap;
+                    + Vector3.right * 3f + Vector3.down * 2f;
+                Vector3 armBandAnchor = beltBottomLeft + Vector3.left * 3f
+                    + Vector3.down * (ArmBandDownGap + 3f);
                 PlaceNativeRow(headBand, content.TransformPoint(headBandAnchor));
                 PlaceNativeRow(armBand, content.TransformPoint(armBandAnchor));
             }
@@ -227,12 +231,30 @@ namespace SPTBeltArmbandInventory
             return new Vector3(right, top, 0f);
         }
 
+        internal static void AfterSlotMutation(object slotViewObject)
+        {
+            Component slotView = slotViewObject as Component;
+            if (slotView == null || ContainersPanelType == null) return;
+            Component panel = slotView.GetComponentInParent(ContainersPanelType);
+            if (panel != null) AfterShow(panel);
+        }
+
         static void PlaceNativeRow(Component view, Vector3 worldPosition)
         {
             RectTransform rect = view.transform as RectTransform;
             if (rect == null) return;
             rect.pivot = new Vector2(0f, 1f);
             rect.position = new Vector3(worldPosition.x, worldPosition.y, rect.position.z);
+            // The native row root includes padding. Align the visible title bar,
+            // not its padded root, to the requested edge.
+            Component header = DedicatedSlotLocalizationRuntime.HeaderTextField?.GetValue(view) as Component;
+            RectTransform titleBar = header == null ? null : header.transform.parent as RectTransform;
+            if (titleBar != null)
+            {
+                Vector3[] corners = new Vector3[4];
+                titleBar.GetWorldCorners(corners);
+                rect.position += new Vector3(worldPosition.x - corners[1].x, worldPosition.y - corners[1].y, 0f);
+            }
             rect.SetAsLastSibling();
             view.gameObject.SetActive(true);
         }
@@ -254,7 +276,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
-            LogInfo = null; LogWarning = null; EquipmentSlotType = null; EquipmentTabType = null;
+            LogInfo = null; LogWarning = null; EquipmentSlotType = null; EquipmentTabType = null; ContainersPanelType = null;
             SlotViewsField = null; SpecialSlotsPanelField = null; SlotPlaceField = null; SlotBackgroundField = null;
             SearchableItemViewField = null; GridsContainerField = null; ContainedGridsViewField = null;
             logged = false; warned = false;
@@ -287,8 +309,11 @@ namespace SPTBeltArmbandInventory
                 if (harmonyType == null || harmonyMethodType == null || panel == null || equipmentTab == null || equipment == null || equipmentSlot == null || searchable == null || searchableItem == null)
                     return Fail("Native accessory-row boundary unavailable.");
                 MethodInfo show = FindShow(panel, equipment);
+                MethodInfo itemAdded = FastAccessBeltSyncPatches.FindHandler(searchable, "IAddHandler", "OnItemAdded");
+                MethodInfo itemRemoved = FastAccessBeltSyncPatches.FindHandler(searchable, "IRemoveHandler", "OnItemRemoved");
                 EmbeddedAccessoryGridRuntime.EquipmentSlotType = equipmentSlot;
                 EmbeddedAccessoryGridRuntime.EquipmentTabType = equipmentTab;
+                EmbeddedAccessoryGridRuntime.ContainersPanelType = panel;
                 EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -298,7 +323,7 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.ContainedGridsViewField = searchableItem.GetField("_containedGridsView", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null || EmbeddedAccessoryGridRuntime.SlotBackgroundField == null || EmbeddedAccessoryGridRuntime.SearchableItemViewField == null || EmbeddedAccessoryGridRuntime.GridsContainerField == null || EmbeddedAccessoryGridRuntime.ContainedGridsViewField == null)
+                if (show == null || itemAdded == null || itemRemoved == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null || EmbeddedAccessoryGridRuntime.SlotBackgroundField == null || EmbeddedAccessoryGridRuntime.SearchableItemViewField == null || EmbeddedAccessoryGridRuntime.GridsContainerField == null || EmbeddedAccessoryGridRuntime.ContainedGridsViewField == null)
                     return Fail("Exact ContainersPanel/SearchableSlotView fields unavailable.");
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
                 ConstructorInfo hm = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
@@ -306,13 +331,17 @@ namespace SPTBeltArmbandInventory
                 if (patch == null || hm == null || unpatchSelf == null) return Fail("Native accessory-row Harmony API unavailable.");
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 Patch(patch, harmonyMethodType, show, hm.Invoke(new object[] { Method(nameof(ShowPostfix)) }));
-                logInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows installed through the Pack 'n' Strap ContainersPanel pattern.");
+                object mutationPostfix = hm.Invoke(new object[] { Method(nameof(SlotMutationPostfix)) });
+                Patch(patch, harmonyMethodType, itemAdded, mutationPostfix);
+                Patch(patch, harmonyMethodType, itemRemoved, mutationPostfix);
+                logInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows installed with event-driven layout refresh.");
                 return true;
             }
             catch (Exception exception) { Dispose(); return Fail("Native accessory-row installation failed safely: " + exception.Message); }
         }
 
         static void ShowPostfix(object __instance) { EmbeddedAccessoryGridRuntime.AfterShow(__instance); }
+        static void SlotMutationPostfix(object __instance) { EmbeddedAccessoryGridRuntime.AfterSlotMutation(__instance); }
         static MethodInfo Method(string name) => typeof(EmbeddedAccessoryGridPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
         static MethodInfo FindShow(Type type, Type equipment) { foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { ParameterInfo[] p = method.GetParameters(); if (method.Name == "Show" && p.Length == 6 && p[1].ParameterType == equipment) return method; } return null; }
         static MethodInfo FindPatch(Type harmonyType, Type harmonyMethodType) { foreach (MethodInfo method in harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public)) { if (method.Name != "Patch") continue; ParameterInfo[] p = method.GetParameters(); if (p.Length > 2 && typeof(MethodBase).IsAssignableFrom(p[0].ParameterType)) return method; } return null; }

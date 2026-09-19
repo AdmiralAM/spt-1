@@ -27,6 +27,7 @@ internal static class EmbeddedAccessoryGridRegression
         Require(projection.Contains("IsProjectedWearable", StringComparison.Ordinal), "native row factory must accept Belt, HeadBand and ArmBand");
         Require(!source.Contains("GeneratedGridsView", StringComparison.Ordinal) && !source.Contains("Instantiate", StringComparison.Ordinal), "must not create detached decorative grid windows");
         Require(!source.Contains("Update(", StringComparison.Ordinal) && !source.Contains("FindObjectsOfType", StringComparison.Ordinal), "embedded panels must not poll or scan the scene");
+        Require(source.Contains("OnItemAdded", StringComparison.Ordinal) && source.Contains("OnItemRemoved", StringComparison.Ordinal) && source.Contains("AfterSlotMutation", StringComparison.Ordinal), "equipped-container changes must trigger an event-driven layout refresh");
         Require(plugin.Contains("new EmbeddedAccessoryGridPatches", StringComparison.Ordinal), "production plugin must install the embedded-grid owner");
         Require(plugin.Contains("embeddedAccessoryGridPatches.Dispose()", StringComparison.Ordinal), "production plugin must release the embedded-grid owner");
     }
