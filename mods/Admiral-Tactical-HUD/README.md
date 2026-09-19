@@ -53,6 +53,7 @@ Weapon text is normalized to compact forms such as `AK-105`, `M4A1` or `MP7A2` a
 
 - `client/` — Compact and Full Census BepInEx sources plus maintained HUD assets.
 - `server/` — SPT server companion.
+- `docs/compass-navigation-roadmap.md` — deferred compass, Dynamic Maps and mono-audio accessibility design draft.
 - `tools/` — deterministic asset, optics and hot-path validation tools.
 - `THIRD-PARTY-LICENSES/` — retained licenses for incorporated third-party material.
 
