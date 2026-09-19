@@ -2,6 +2,7 @@
 
 ## 0.3.0 — stable campaign and storefront
 
+- Add optional Painter/TGC and WTT Artem consolidation: preserve their persistent content identities, migrate existing relation/purchase/dialogue ownership to Admiral, expose 35 quests and 402 offer roots through Admiral, and remove the two redundant trader tabs only after successful profile saves.
 - Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
 - Integrates Natalya as an in-engine specialist across 18 story beats while preserving her 35 absorbed native weapon presets and avoiding a second trader/dependency.
 - Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 82 offers without external item dependencies.

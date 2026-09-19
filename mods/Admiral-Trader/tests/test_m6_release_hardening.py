@@ -23,11 +23,26 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertTrue(all(m6["physicalAcceptance"].values()))
 
     def test_runtime_sources_do_not_write_profiles_and_have_rollback(self):
-        sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "server").glob("*.cs"))
+        migration_path = ROOT / "server/LegacyTraderConsolidation.cs"
+        sources = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (ROOT / "server").glob("*.cs")
+            if path != migration_path
+        )
         for forbidden in ("user/profiles", "SetPmcProfile", "SaveProfile", "ProfileStore"):
             self.assertNotIn(forbidden, sources)
         self.assertIn("tradersTable.Remove(traderBase.Id)", sources)
         self.assertIn("templateTable.Quests.Remove(questId)", sources)
+
+        migration = migration_path.read_text(encoding="utf-8")
+        self.assertNotIn("user/profiles", migration)
+        self.assertNotIn("SetPmcProfile", migration)
+        self.assertNotIn("ProfileStore", migration)
+        self.assertIn("saveServer.GetProfiles()", migration)
+        self.assertLess(
+            migration.index("await saveServer.SaveProfileAsync"),
+            migration.index("tradersTable.Remove(legacyId)"),
+        )
 
     def test_install_and_build_contract_cover_aliases_and_inventory(self):
         install = (ROOT / "docs/INSTALL.md").read_text(encoding="utf-8")

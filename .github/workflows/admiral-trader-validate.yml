@@ -52,6 +52,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/optional-weapon-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/campaign-authored-100-review.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/story-campaign-runtime.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/external-trader-consolidation.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
@@ -112,6 +113,9 @@ jobs:
       - name: Build server runtime foundation against SPT 4.1.5
         run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
 
+      - name: Validate Painter and Artem profile migration
+        run: dotnet run --project mods/Admiral-Trader/tests/LegacyProfileMigrationSmoke/LegacyProfileMigrationSmoke.csproj -c Release
+
       - name: Validate built runtime package contract
         run: |
           python - <<'PY'
@@ -122,6 +126,7 @@ jobs:
               out / 'manifests/runtime-manifest.json',
               out / 'manifests/relationship-stock.json',
               out / 'manifests/story-campaign-runtime.json',
+              out / 'manifests/external-trader-consolidation.json',
               out / 'db/base.json',
               out / 'db/dialogue.json',
               out / 'db/assort.json',

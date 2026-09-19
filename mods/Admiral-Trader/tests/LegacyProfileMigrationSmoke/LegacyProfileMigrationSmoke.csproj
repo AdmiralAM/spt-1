@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SptPublishedApiBaseline>4.1.5</SptPublishedApiBaseline>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' != ''">true</UseExactSptRuntime>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' == ''">false</UseExactSptRuntime>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../server/AdmiralTrader.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseExactSptRuntime)' != 'true'">
+    <PackageReference Include="SPTushonka.Common" Version="$(SptPublishedApiBaseline)" />
+    <PackageReference Include="SPTushonka.DI" Version="$(SptPublishedApiBaseline)" />
+    <PackageReference Include="SPTushonka.Server.Core" Version="$(SptPublishedApiBaseline)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseExactSptRuntime)' == 'true'">
+    <Reference Include="SPTarkov.Server.Core"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Server.Core.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="SPTarkov.Common"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Common.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="SPTarkov.DI"><HintPath>$(SptRuntimeLibDir)/SPTarkov.DI.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>

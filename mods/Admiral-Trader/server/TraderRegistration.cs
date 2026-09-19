@@ -103,6 +103,7 @@ public sealed class AdmiralTraderRegistration(
                 throw new InvalidOperationException($"Cannot register Admiral Trader: insurance entry {traderBase.Id} already exists");
             imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
             AddLocales(traderBase);
+            RegisterLegacyCompatibilityShells(traderBase);
         }
         catch
         {
@@ -117,6 +118,43 @@ public sealed class AdmiralTraderRegistration(
             throw;
         }
         logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} core assort item records");
+    }
+
+    private void RegisterLegacyCompatibilityShells(TraderBase admiralBase)
+    {
+        foreach (string legacyIdText in LegacyTraderConsolidation.LegacyTraderIds)
+        {
+            MongoId legacyId = new(legacyIdText);
+            if (tradersTable.ContainsKey(legacyId))
+                continue;
+
+            TraderBase legacyBase = admiralBase with
+            {
+                Id = legacyId,
+                Name = $"Admiral compatibility {legacyIdText}",
+                Nickname = "Compatibility",
+                UnlockedByDefault = false,
+                Insurance = null,
+                Repair = null
+            };
+            tradersTable.Add(legacyId, new Trader
+            {
+                Base = legacyBase,
+                Assort = new TraderAssort
+                {
+                    Items = [],
+                    BarterScheme = [],
+                    LoyalLevelItems = []
+                },
+                QuestAssort = new Dictionary<string, Dictionary<MongoId, MongoId>>
+                {
+                    ["started"] = [],
+                    ["success"] = [],
+                    ["fail"] = []
+                },
+                Dialogue = []
+            });
+        }
     }
 
     private static void ValidateTraderData(
