@@ -48,5 +48,12 @@ class SuiteContractTests(unittest.TestCase):
         self.assertIn("FoldablePosterTemplate : CompoundItemTemplate", source)
         self.assertIn("FoldablePoster : CompoundItem, IFoldable", source)
 
+    def test_plate_drop_patch_targets_exact_item_overload(self):
+        source = (ROOT / "mods/SPT-Stackable-Armor-Plates/client/Plugin.cs").read_text(encoding="utf-8")
+        signature = "new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) }"
+        self.assertGreaterEqual(source.count(signature), 2)
+        self.assertIn("Harmony.GetPatchInfo(plateDropTarget)", source)
+        self.assertIn("Armor plate item-on-item action patch was not installed", source)
+
 if __name__ == "__main__":
     unittest.main()

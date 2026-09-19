@@ -2,6 +2,8 @@ using BepInEx;
 using Diz.LanguageExtensions;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using System;
+using System.Linq;
 
 namespace SPTStackableArmorPlates.Client;
 
@@ -11,8 +13,20 @@ public sealed class Plugin : BaseUnityPlugin
 {
     private void Awake()
     {
-        new Harmony("com.admiralam.stackable-armor-plates.client").PatchAll(typeof(Plugin).Assembly);
-        Logger.LogInfo("Armor plate stack durability guards enabled.");
+        const string harmonyId = "com.admiralam.stackable-armor-plates.client";
+        var harmony = new Harmony(harmonyId);
+        harmony.PatchAll(typeof(Plugin).Assembly);
+
+        var plateDropTarget = AccessTools.Method(
+            typeof(ItemController),
+            nameof(ItemController.ExecutePossibleAction),
+            new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) });
+        if (plateDropTarget == null || Harmony.GetPatchInfo(plateDropTarget)?.Owners.Contains(harmonyId) != true)
+        {
+            throw new InvalidOperationException("Armor plate item-on-item action patch was not installed.");
+        }
+
+        Logger.LogInfo("Armor plate stack durability guards and exact item-on-item merge action enabled.");
     }
 }
 
@@ -78,7 +92,8 @@ internal static class TransferDurabilityPatch
 // choose swap/move even after the server raises StackMaxSize. Route an exact
 // plate-on-plate action through the native merge operation; the durability guard
 // above remains the authority for whether the two instances may share a stack.
-[HarmonyPatch(typeof(ItemController), nameof(ItemController.ExecutePossibleAction))]
+[HarmonyPatch(typeof(ItemController), nameof(ItemController.ExecutePossibleAction),
+    new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) })]
 internal static class PlateCombineActionPatch
 {
     private static bool Prefix(
