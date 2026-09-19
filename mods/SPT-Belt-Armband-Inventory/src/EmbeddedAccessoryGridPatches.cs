@@ -57,6 +57,7 @@ namespace SPTBeltArmbandInventory
 
                 PrepareCompactRow(headBand);
                 PrepareCompactRow(armBand);
+                PlaceOnce(content, specialRect, belt, headBand, armBand);
                 coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, belt, headBand, armBand));
             }
             catch (Exception exception)
@@ -70,33 +71,39 @@ namespace SPTBeltArmbandInventory
 
         static IEnumerator PlaceAfterNativeLayout(RectTransform content, RectTransform specialRect, Component belt, Component headBand, Component armBand)
         {
-            for (int settle = 0; settle < 6; settle++)
+            for (int settle = 0; settle < 2; settle++)
             {
                 yield return new WaitForEndOfFrame();
-                CompactNativeRow(headBand);
-                CompactNativeRow(armBand);
-                Canvas.ForceUpdateCanvases();
-                ForceRebuild(content);
-                Canvas.ForceUpdateCanvases();
-
-                Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
-                RectTransform beltRect = SlotPlaceField.GetValue(belt) as RectTransform;
-                if (beltRect == null) yield break;
-                Vector3[] cardCorners = new Vector3[4];
-                beltRect.GetWorldCorners(cardCorners);
-                Vector3 beltBottomLeft = content.InverseTransformPoint(cardCorners[0]);
-                Vector3 headBandAnchor = specialBottomLeft
-                    + Vector3.right * 3f + Vector3.down * 2f;
-                Vector3 armBandAnchor = beltBottomLeft + Vector3.left * 3f
-                    + Vector3.down * (ArmBandDownGap + 3f);
-                PlaceNativeRow(headBand, content.TransformPoint(headBandAnchor));
-                PlaceNativeRow(armBand, content.TransformPoint(armBandAnchor));
+                if (!PlaceOnce(content, specialRect, belt, headBand, armBand)) yield break;
             }
             if (!logged)
             {
                 logged = true;
                 LogInfo?.Invoke("B&A&HB ACCESSORY FLOW PROOF: HeadBand follows the live Special Slots left/lower edges; ArmBand follows the live Belt left/bottom edges; fixed page offsets=False.");
             }
+        }
+
+        static bool PlaceOnce(RectTransform content, RectTransform specialRect, Component belt, Component headBand, Component armBand)
+        {
+            CompactNativeRow(headBand);
+            CompactNativeRow(armBand);
+            Canvas.ForceUpdateCanvases();
+            ForceRebuild(content);
+            Canvas.ForceUpdateCanvases();
+
+            Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
+            RectTransform beltRect = SlotPlaceField.GetValue(belt) as RectTransform;
+            if (beltRect == null) return false;
+            Vector3[] cardCorners = new Vector3[4];
+            beltRect.GetWorldCorners(cardCorners);
+            Vector3 beltBottomLeft = content.InverseTransformPoint(cardCorners[0]);
+            Vector3 headBandAnchor = specialBottomLeft
+                + Vector3.right * 3f + Vector3.down * 2f;
+            Vector3 armBandAnchor = beltBottomLeft + Vector3.left * 3f
+                + Vector3.down * (ArmBandDownGap + 3f);
+            PlaceNativeRow(headBand, content.TransformPoint(headBandAnchor));
+            PlaceNativeRow(armBand, content.TransformPoint(armBandAnchor));
+            return true;
         }
 
         static void PrepareCompactRow(Component view)
