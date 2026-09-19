@@ -81,6 +81,41 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
         self.assertEqual({}, quest_assort["started"])
         self.assertEqual({}, quest_assort["fail"])
 
+    def test_every_equipment_objective_has_explicit_runtime_copy(self):
+        contract = load("manifests/quest-quality-runtime.json")
+        rows = contract["equipmentObjectives"]
+        self.assertEqual(11, contract["equipmentObjectiveCount"])
+        self.assertEqual(11, len(rows))
+
+        locales = {"en": {}, "ru": {}}
+        for lang in locales:
+            for filename in (f"{lang}.json", f"arsenal-{lang}.json", f"m3-{lang}.json", f"m8-{lang}.json", f"story-{lang}.json"):
+                locales[lang].update(load(f"db/locales/{filename}"))
+
+        runtime_rows = {}
+        for quest_id, quest in self.quests.items():
+            for condition in quest["conditions"]["AvailableForFinish"]:
+                if condition.get("conditionType") != "CounterCreator":
+                    continue
+                inner = condition.get("counter", {}).get("conditions", [])
+                equipment = next((row for row in inner if row.get("conditionType") == "Equipment"), None)
+                if equipment:
+                    runtime_rows[(quest_id, condition["id"])] = equipment["equipmentInclusive"]
+
+        self.assertEqual(11, len(runtime_rows))
+        for row in rows:
+            key = (row["questId"], row["conditionId"])
+            self.assertEqual(runtime_rows[key], row["equipmentInclusive"], key)
+            self.assertEqual(row["en"], locales["en"][row["conditionId"]], key)
+            self.assertEqual(row["ru"], locales["ru"][row["conditionId"]], key)
+            self.assertNotIn("назначенн", row["ru"].lower(), key)
+
+        low_profile = next(row for row in rows if row["questId"] == "208db81b5ce195bf0c176852")
+        self.assertIn("Жилет Дикого", low_profile["ru"])
+        self.assertIn("Сумка-трансформер", low_profile["ru"])
+        self.assertIn("Развязка", low_profile["ru"])
+        self.assertIn("выжить и эвакуироваться", low_profile["ru"])
+
 
 if __name__ == "__main__":
     unittest.main()
