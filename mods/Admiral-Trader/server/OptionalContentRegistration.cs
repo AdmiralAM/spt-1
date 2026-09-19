@@ -38,7 +38,8 @@ public sealed class OptionalContentRegistration(
         int tacticalRewards = ApplyCashTrades(modPath, "db/rewards/tactical-reward-trades.json", optional: false);
         int beltRewards = ApplyCashTrades(modPath, "db/rewards/belt-container-reward-trades.json", optional: true);
         int wttPresets = ValidateWttPresetCatalog(modPath);
-        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {wttPresets} WTT complete presets available, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
+        int wttRewards = ApplyCashTrades(modPath, "db/optional/wtt-reward-trades.json", optional: true);
+        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {wttPresets} WTT complete presets available, {wttRewards} WTT curated rewards, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
         return Task.CompletedTask;
     }
 
@@ -50,7 +51,7 @@ public sealed class OptionalContentRegistration(
         int admitted = 0;
         foreach (WttRewardPreset preset in presets)
         {
-            if (preset.Items.Count == 0 || preset.Items[0].Template.ToString() != preset.RootTemplate)
+            if (preset.Items.Count == 0 || preset.Items[0].Template.ToString() != preset.RootTemplate || preset.ValueRub <= 0 || string.IsNullOrWhiteSpace(preset.NameRu))
                 throw new InvalidDataException($"WTT preset {preset.PresetId} has an invalid root");
             HashSet<string> ids = preset.Items.Select(item => item.Id.ToString()).ToHashSet(StringComparer.Ordinal);
             if (ids.Count != preset.Items.Count || preset.Items.Skip(1).Any(item => item.ParentId is null || !ids.Contains(item.ParentId)))
@@ -120,7 +121,7 @@ public sealed class OptionalContentRegistration(
         foreach (var (questId, trade) in trades)
         {
             Reward reward = trade.Reward;
-            if (trade.CashReductionRub <= 0 || reward.Items is null || reward.Items.Count == 0)
+            if (trade.CashReductionRub < 0 || reward.Items is null || reward.Items.Count == 0)
                 throw new InvalidDataException($"Optional reward trade for {questId} is malformed");
             if (reward.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
             {
@@ -129,13 +130,17 @@ public sealed class OptionalContentRegistration(
             }
             if (!templateTable.Quests.TryGetValue(questId, out Quest? quest) || quest.Rewards is null || !quest.Rewards.TryGetValue("Success", out List<Reward>? success))
                 throw new InvalidDataException($"Optional reward trade targets unknown quest {questId}");
-            Reward? cash = success.FirstOrDefault(candidate => candidate.Items is { Count: > 0 } && candidate.Items[0].Template.ToString() == "5449016a4bdc2d6f028b456f");
-            Item? cashItem = cash?.Items?.FirstOrDefault();
-            if (cash?.Value is null || cash.Value <= trade.CashReductionRub || cashItem?.Upd is null)
-                throw new InvalidDataException($"Optional reward trade for {questId} cannot preserve a positive rouble reward");
-            double reduced = cash.Value.Value - trade.CashReductionRub;
-            cash.Value = reduced;
-            cashItem.Upd.StackObjectsCount = reduced;
+            if (trade.CashReductionRub > 0)
+            {
+                Reward? cash = success.FirstOrDefault(candidate => candidate.Items is { Count: > 0 } && candidate.Items[0].Template.ToString() == "5449016a4bdc2d6f028b456f");
+                Item? cashItem = cash?.Items?.FirstOrDefault();
+                int minimumCashRub = Math.Max(1, trade.MinimumCashRub);
+                if (cash?.Value is null || cash.Value - trade.CashReductionRub < minimumCashRub || cashItem?.Upd is null)
+                    throw new InvalidDataException($"Optional reward trade for {questId} cannot preserve its {minimumCashRub:N0} rouble floor");
+                double reduced = cash.Value.Value - trade.CashReductionRub;
+                cash.Value = reduced;
+                cashItem.Upd.StackObjectsCount = reduced;
+            }
             reward.Index = success.Max(candidate => candidate.Index ?? 0) + 1;
             success.Add(reward);
             applied++;
@@ -149,6 +154,9 @@ public sealed record OptionalCashTrade
     [JsonPropertyName("cashReductionRub")]
     public int CashReductionRub { get; init; }
 
+    [JsonPropertyName("minimumCashRub")]
+    public int MinimumCashRub { get; init; }
+
     [JsonPropertyName("reward")]
     public required Reward Reward { get; init; }
 }
@@ -161,6 +169,12 @@ public sealed record WttRewardPreset
     public required string Source { get; init; }
     [JsonPropertyName("rootTemplate")]
     public required string RootTemplate { get; init; }
+    [JsonPropertyName("nameEn")]
+    public required string NameEn { get; init; }
+    [JsonPropertyName("nameRu")]
+    public required string NameRu { get; init; }
+    [JsonPropertyName("valueRub")]
+    public int ValueRub { get; init; }
     [JsonPropertyName("items")]
     public required List<Item> Items { get; init; }
 }

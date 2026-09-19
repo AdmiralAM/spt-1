@@ -3,6 +3,9 @@
     "presetId": "e10b161d36013427fff7971a",
     "source": "wtt-armory",
     "rootTemplate": "0cb4a36dd2e587b46e813dbe",
+    "nameEn": "KMZ AEK-971 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка АЕК-971 5.45x39",
+    "valueRub": 189000,
     "items": [
       {
         "_tpl": "0cb4a36dd2e587b46e813dbe",
@@ -95,6 +98,9 @@
     "presetId": "8927814aac43e6679e68ae99",
     "source": "wtt-armory",
     "rootTemplate": "664a5b945636ce820472f225",
+    "nameEn": "HK 417 7.62x51 assault rifle",
+    "nameRu": "Штурмовая винтовка HK 417 7.62x51",
+    "valueRub": 113240,
     "items": [
       {
         "_tpl": "664a5b945636ce820472f225",
@@ -248,6 +254,9 @@
     "presetId": "252b1526cd8502ddb9481ea9",
     "source": "wtt-armory",
     "rootTemplate": "6657bc8faeddd6b0a9b40224",
+    "nameEn": "SVD 7.62x54R sniper rifle",
+    "nameRu": "Снайперская винтовка СВД 7.62x54R",
+    "valueRub": 95995,
     "items": [
       {
         "_tpl": "6657bc8faeddd6b0a9b40224",
@@ -354,6 +363,9 @@
     "presetId": "0616305dd6f07820203554ee",
     "source": "wtt-armory",
     "rootTemplate": "665fe0e865683281eb8e7ed6",
+    "nameEn": "Springfield Armory DS Prodigy 9x19 pistol",
+    "nameRu": "Пистолет Springfield Armory DS Prodigy 9x19",
+    "valueRub": 23800,
     "items": [
       {
         "_tpl": "665fe0e865683281eb8e7ed6",
@@ -447,6 +459,9 @@
     "presetId": "0f4cff5fb9b0bd84ccabe9a3",
     "source": "wtt-armory",
     "rootTemplate": "6661012d16fbd2fb75408f87",
+    "nameEn": "CZ 75B 9x19mm Pistol",
+    "nameRu": "Пистолет CZ 75B 9x19",
+    "valueRub": 19220,
     "items": [
       {
         "_tpl": "6661012d16fbd2fb75408f87",
@@ -499,6 +514,9 @@
     "presetId": "046f882bc8e8189768d68e04",
     "source": "wtt-armory",
     "rootTemplate": "6671ebcdd32bd95eb398e920",
+    "nameEn": "Bofors Ak5C 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка Bofors Ak5C 5.56x45",
+    "valueRub": 176000,
     "items": [
       {
         "_tpl": "6671ebcdd32bd95eb398e920",
@@ -607,6 +625,9 @@
     "presetId": "9f38a8b529dfbeb29199dc10",
     "source": "wtt-armory",
     "rootTemplate": "66839591f4d0cba7b041b2af",
+    "nameEn": "Patriot M4A1 5.56x45 carbine",
+    "nameRu": "Карабин Patriot M4A1 5.56x45",
+    "valueRub": 49000,
     "items": [
       {
         "_tpl": "66839591f4d0cba7b041b2af",
@@ -669,6 +690,9 @@
     "presetId": "8bba61a7d490aeac337e9383",
     "source": "wtt-armory",
     "rootTemplate": "66a47e98c486ec9d1af3a4da",
+    "nameEn": "IWI Tavor X95 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка IWI Tavor X95 5.56x45",
+    "valueRub": 90000,
     "items": [
       {
         "_tpl": "66a47e98c486ec9d1af3a4da",
@@ -754,6 +778,9 @@
     "presetId": "e48d1805106f874d6713711f",
     "source": "wtt-armory",
     "rootTemplate": "66a544c956621d3364f6085e",
+    "nameEn": "IWI Tavor X95 5.56x45 assault rifle (FDE)",
+    "nameRu": "Штурмовая винтовка IWI Tavor X95 5.56x45 (FDE)",
+    "valueRub": 90000,
     "items": [
       {
         "_tpl": "66a544c956621d3364f6085e",
@@ -839,6 +866,9 @@
     "presetId": "ecafa5cc14d92673baa1fb62",
     "source": "wtt-armory",
     "rootTemplate": "66a545898022784400d6c836",
+    "nameEn": "IWI Tavor X95 5.56x45 assault rifle (OD)",
+    "nameRu": "Штурмовая винтовка IWI Tavor X95 5.56x45 (оливковая)",
+    "valueRub": 90000,
     "items": [
       {
         "_tpl": "66a545898022784400d6c836",
@@ -924,6 +954,9 @@
     "presetId": "63f68e0c285c10ee093cc1c2",
     "source": "wtt-armory",
     "rootTemplate": "66ba249b102a9dd6040a6e7e",
+    "nameEn": "IWI Carmel 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка IWI Carmel 5.56x45",
+    "valueRub": 121000,
     "items": [
       {
         "_tpl": "66ba249b102a9dd6040a6e7e",
@@ -1029,6 +1062,9 @@
     "presetId": "d203796189254ba5841cd0e5",
     "source": "wtt-armory",
     "rootTemplate": "66ba26a6925f9921573224c9",
+    "nameEn": "IWI Carmel 5.56x45 assault rifle (FDE)",
+    "nameRu": "Штурмовая винтовка IWI Carmel 5.56x45 (темно-землистая)",
+    "valueRub": 121000,
     "items": [
       {
         "_tpl": "66ba26a6925f9921573224c9",
@@ -1134,6 +1170,9 @@
     "presetId": "0e2c9ee210bf4277263e279f",
     "source": "wtt-armory",
     "rootTemplate": "66e88596febdcf9daade16a8",
+    "nameEn": "Zastava M76 7.92x57 marksman rifle",
+    "nameRu": "Снайперская винтовка Zastava М76 7.92x57",
+    "valueRub": 98500,
     "items": [
       {
         "_tpl": "66e88596febdcf9daade16a8",
@@ -1230,6 +1269,9 @@
     "presetId": "2a171a333e64a0f5a3d60db3",
     "source": "wtt-armory",
     "rootTemplate": "6761b213607f9a6f79017c7e",
+    "nameEn": "Knight's Armament Company PDW .300 Blackout assault rifle",
+    "nameRu": "Штурмовая винтовка Knight's Armament Company PDW .300 Blackout",
+    "valueRub": 110000,
     "items": [
       {
         "_tpl": "6761b213607f9a6f79017c7e",
@@ -1341,6 +1383,9 @@
     "presetId": "f6e6086ca461b1bfc608b0e8",
     "source": "wtt-armory",
     "rootTemplate": "6761b213607f9a6f79017cd8",
+    "nameEn": "Minebea PM-9 9x19 submachine gun",
+    "nameRu": "Пистолет-пулемет Minebea PM-9 9x19",
+    "valueRub": 39500,
     "items": [
       {
         "_tpl": "6761b213607f9a6f79017cd8",
@@ -1387,6 +1432,9 @@
     "presetId": "0b75ea2b9af72aa40e97191c",
     "source": "wtt-armory",
     "rootTemplate": "6761b213607f9a6f79017d40",
+    "nameEn": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (Anodized Red)",
+    "nameRu": "Штурмовая винтовка Singuard Arms \"Wages of Sin\" 5.56x45 (Anodized Red)",
+    "valueRub": 135000,
     "items": [
       {
         "_tpl": "6761b213607f9a6f79017d40",
@@ -1502,6 +1550,9 @@
     "presetId": "6b8ba1fb4ce097ebe36aef5d",
     "source": "wtt-armory",
     "rootTemplate": "6761b213607f9a6f79017d52",
+    "nameEn": "Wilson Combat EDC X9 9x19 pistol",
+    "nameRu": "Пистолет Wilson Combat EDC X9 9x19",
+    "valueRub": 28240,
     "items": [
       {
         "_tpl": "6761b213607f9a6f79017d52",
@@ -1572,6 +1623,9 @@
     "presetId": "ed5e69132c1b8bc932c6f780",
     "source": "wtt-armory",
     "rootTemplate": "676b4e2ff185a450a0b300b4",
+    "nameEn": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка Singuard Arms \"Wages of Sin\" 5.56x45",
+    "valueRub": 135000,
     "items": [
       {
         "_tpl": "676b4e2ff185a450a0b300b4",
@@ -1656,6 +1710,9 @@
     "presetId": "ecfac946e75a3208a0b3da69",
     "source": "wtt-armory",
     "rootTemplate": "676c3cac01023283e5f6a562",
+    "nameEn": "Singuard Arms \"Wages of Sin\" 5.56x45 assault rifle (FDE)",
+    "nameRu": "Штурмовая винтовка Singuard Arms \"Wages of Sin\" 5.56x45 (FDE)",
+    "valueRub": 135000,
     "items": [
       {
         "_tpl": "676c3cac01023283e5f6a562",
@@ -1810,6 +1867,9 @@
     "presetId": "174e294cd9586e6e680f097d",
     "source": "wtt-armory",
     "rootTemplate": "67748ec2e6a045dc97e2f978",
+    "nameEn": "CZ 75B Omega 9x19mm Pistol",
+    "nameRu": "Пистолет CZ 75B Omega 9x19",
+    "valueRub": 21670,
     "items": [
       {
         "_tpl": "67748ec2e6a045dc97e2f978",
@@ -1861,6 +1921,9 @@
     "presetId": "952aa8675a8ccb6f1a221d37",
     "source": "wtt-armory",
     "rootTemplate": "677c9a47baecf3c4b2453365",
+    "nameEn": "LAR Grizzly 50 Mark V .50 AE pistol",
+    "nameRu": "Пистолет LAR Grizzly 50 Mark V .50 AE",
+    "valueRub": 76000,
     "items": [
       {
         "_tpl": "677c9a47baecf3c4b2453365",
@@ -1986,6 +2049,9 @@
     "presetId": "24e8b8fb668f5608589abe69",
     "source": "wtt-armory",
     "rootTemplate": "678fe4a4906c7bd23722c71f",
+    "nameEn": "Kalashnikov AN-94 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка АН-94 \"Абакан\" 5.45x39",
+    "valueRub": 377000,
     "items": [
       {
         "_tpl": "678fe4a4906c7bd23722c71f",
@@ -2031,6 +2097,9 @@
     "presetId": "56391d7a57d67978deb92abf",
     "source": "wtt-armory",
     "rootTemplate": "679f2453d1970258c1df3fce",
+    "nameEn": "Hi-Point Model C-9 9x19 pistol",
+    "nameRu": "Пистолет Hi-Point Model C-9 9x19",
+    "valueRub": 8947,
     "items": [
       {
         "_tpl": "679f2453d1970258c1df3fce",
@@ -2076,6 +2145,9 @@
     "presetId": "e5c87725b6a42d62eca8878b",
     "source": "wtt-armory",
     "rootTemplate": "67b05e25d83f07b7b587c0b5",
+    "nameEn": "HK UMP 9x19 submachine gun",
+    "nameRu": "Пистолет-пулемет HK UMP-9 9x19",
+    "valueRub": 27842,
     "items": [
       {
         "_tpl": "67b05e25d83f07b7b587c0b5",
@@ -2158,6 +2230,9 @@
     "presetId": "38ce3004bfcb7c9a009d696f",
     "source": "wtt-armory",
     "rootTemplate": "67f425638b8cbfdc0cd1b5f2",
+    "nameEn": "IWI Tavor X95 9x19 submachine gun",
+    "nameRu": "Пистолет-пулемет IWI Tavor X95 9x19",
+    "valueRub": 90000,
     "items": [
       {
         "_tpl": "67f425638b8cbfdc0cd1b5f2",
@@ -2243,6 +2318,9 @@
     "presetId": "a3ca531427200be22973d264",
     "source": "wtt-armory",
     "rootTemplate": "682d3dd16900cb35564c8825",
+    "nameEn": "Bofors Ak5D 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка Bofors Ak5D 5.56x45",
+    "valueRub": 196000,
     "items": [
       {
         "_tpl": "682d3dd16900cb35564c8825",
@@ -2336,6 +2414,9 @@
     "presetId": "e44a428c332b4409dc9b55dc",
     "source": "wtt-armory",
     "rootTemplate": "68433b58a8f9a618b11082d4",
+    "nameEn": "HK UCP 4.6x30 pistol",
+    "nameRu": "Пистолет HK UCP 4.6x30",
+    "valueRub": 47000,
     "items": [
       {
         "_tpl": "68433b58a8f9a618b11082d4",
@@ -2375,6 +2456,9 @@
     "presetId": "ca1342e43a747e8f00c465dd",
     "source": "wtt-armory",
     "rootTemplate": "68452c3da87156b67d9ec538",
+    "nameEn": "Staccato XC 9x19 pistol",
+    "nameRu": "Пистолет Staccato XC 9x19",
+    "valueRub": 31800,
     "items": [
       {
         "_tpl": "68452c3da87156b67d9ec538",
@@ -2438,6 +2522,9 @@
     "presetId": "71db7a82a38a897a9dc275fc",
     "source": "wtt-armory",
     "rootTemplate": "684b257022b8260501141308",
+    "nameEn": "Taran Tactical JW4 Pit Viper 9x19 pistol",
+    "nameRu": "Пистолет Taran Tactical JW4 Pit Viper 9x19",
+    "valueRub": 31800,
     "items": [
       {
         "_tpl": "684b257022b8260501141308",
@@ -2510,6 +2597,9 @@
     "presetId": "16f4fcab1f6f84597ea7ae16",
     "source": "wtt-armory",
     "rootTemplate": "684b64658c4c5f37f2c4e56a",
+    "nameEn": "Taran Tactical JW4 Pit Viper 9x19 pistol (Stainless)",
+    "nameRu": "Пистолет из нержавеющей стали Taran Tactical JW4 Pit Viper 9x19",
+    "valueRub": 31800,
     "items": [
       {
         "_tpl": "684b64658c4c5f37f2c4e56a",
@@ -2582,6 +2672,9 @@
     "presetId": "201447a802b84643c5842fd5",
     "source": "wtt-armory",
     "rootTemplate": "684e32eaec9f5eb3cacc7ca7",
+    "nameEn": "Remington MSR .300 WM bolt-action sniper rifle",
+    "nameRu": "Снайперская винтовка Remington MSR .300",
+    "valueRub": 98500,
     "items": [
       {
         "_tpl": "684e32eaec9f5eb3cacc7ca7",
@@ -2679,6 +2772,9 @@
     "presetId": "6de67c9988cca4b35de1a417",
     "source": "wtt-armory",
     "rootTemplate": "68677d09339b397ed3d37522",
+    "nameEn": "SR-2 Udav 9x21 pistol",
+    "nameRu": "Пистолет СР-2 \"Удав\" 9x21",
+    "valueRub": 32500,
     "items": [
       {
         "_tpl": "68677d09339b397ed3d37522",
@@ -2760,6 +2856,9 @@
     "presetId": "d478497f4180b7e615607c74",
     "source": "wtt-armory",
     "rootTemplate": "6868d249cdee524f8c0ba45f",
+    "nameEn": "Beretta 92FS 9x19 pistol",
+    "nameRu": "Пистолет Beretta 92FS 9x19",
+    "valueRub": 13900,
     "items": [
       {
         "_tpl": "6868d249cdee524f8c0ba45f",
@@ -2802,6 +2901,9 @@
     "presetId": "76d3d95ff4b46ad3112ae90a",
     "source": "wtt-armory",
     "rootTemplate": "687afda52dc9fd6c0e14c602",
+    "nameEn": "CZ Scorpion EVO 3 A1 9x19 submachine gun",
+    "nameRu": "Пистолет-пулемет CZ Scorpion EVO 3 A1 9x19",
+    "valueRub": 139500,
     "items": [
       {
         "_tpl": "687afda52dc9fd6c0e14c602",
@@ -2928,6 +3030,9 @@
     "presetId": "81bcc99a5daf738cbc93a3b9",
     "source": "wtt-armory",
     "rootTemplate": "68a3836826dffa87b5767c04",
+    "nameEn": "Accuracy International AXMC .300 WM bolt-action sniper rifle",
+    "nameRu": "Снайперская винтовка Accuracy International AXMC .300 WM",
+    "valueRub": 98500,
     "items": [
       {
         "_tpl": "68a3836826dffa87b5767c04",
@@ -3047,6 +3152,9 @@
     "presetId": "49ca75aaa6451f16044095ce",
     "source": "wtt-armory",
     "rootTemplate": "68b7f4060a4536984f82cf4b",
+    "nameEn": "HK Mark 23 .45 ACP pistol",
+    "nameRu": "Пистолет HK MK23 .45 ACP",
+    "valueRub": 31256,
     "items": [
       {
         "_tpl": "68b7f4060a4536984f82cf4b",
@@ -3164,6 +3272,9 @@
     "presetId": "65e70254b74138c4664578d8",
     "source": "wtt-armory",
     "rootTemplate": "68bf41bbb786f6e9315a5cab",
+    "nameEn": "PSA 5.7 Rock 5.7x28 pistol",
+    "nameRu": "Пистолет Palmetto State Armory 5.7 Rock 5.7x28",
+    "valueRub": 37900,
     "items": [
       {
         "_tpl": "68bf41bbb786f6e9315a5cab",
@@ -3254,6 +3365,9 @@
     "presetId": "bc61625735965f43c70a42e7",
     "source": "wtt-armory",
     "rootTemplate": "68c23b960f579b9b5fe021e7",
+    "nameEn": "Simonov AG-042 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка Симонова АГ-042 5.45x39",
+    "valueRub": 22900,
     "items": [
       {
         "_tpl": "68c23b960f579b9b5fe021e7",
@@ -3316,6 +3430,9 @@
     "presetId": "4ca54c289aec1cd636e1842c",
     "source": "wtt-armory",
     "rootTemplate": "68cf56067ff6ceab0c2fd49e",
+    "nameEn": "Simonov AG-043 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка Симонова АГ-043 5.45x39",
+    "valueRub": 24900,
     "items": [
       {
         "_tpl": "68cf56067ff6ceab0c2fd49e",
@@ -3397,6 +3514,9 @@
     "presetId": "66c5f36d4ff4dec532839864",
     "source": "wtt-armory",
     "rootTemplate": "68d40fb07130ef271f60991f",
+    "nameEn": "PMM-12 9x18 pistol",
+    "nameRu": "Пистолет ПММ-12 9x18ПМ",
+    "valueRub": 8947,
     "items": [
       {
         "_tpl": "68d40fb07130ef271f60991f",
@@ -3491,6 +3611,9 @@
     "presetId": "705ea4be5103db64c5961986",
     "source": "wtt-armory",
     "rootTemplate": "68fd4feab87d77a5aaf6bf64",
+    "nameEn": "CheyTac M200 Intervention .408 CT bolt-action sniper rifle",
+    "nameRu": "Снайперская винтовка CheyTac M200 Intervention .408 CT",
+    "valueRub": 276540,
     "items": [
       {
         "_tpl": "68fd4feab87d77a5aaf6bf64",
@@ -3591,6 +3714,9 @@
     "presetId": "707318f23627f5a999fb64fc",
     "source": "wtt-armory",
     "rootTemplate": "68fd7a61f2b8d96bb3119b19",
+    "nameEn": "CheyTac M200 Intervention .408 CT bolt-action sniper rifle (FDE)",
+    "nameRu": "Снайперская винтовка CheyTac M200 Intervention .408 CT (FDE)",
+    "valueRub": 276540,
     "items": [
       {
         "_tpl": "68fd7a61f2b8d96bb3119b19",
@@ -3691,6 +3817,9 @@
     "presetId": "eeddd89cf1c3e7d14e68aa0d",
     "source": "wtt-armory",
     "rootTemplate": "69066bef905ee9e06c462009",
+    "nameEn": "Magpul Masada 5.56x45 assault rifle",
+    "nameRu": "Magpul Masada 5.56x45 assault rifle",
+    "valueRub": 110521,
     "items": [
       {
         "_tpl": "69066bef905ee9e06c462009",
@@ -3820,6 +3949,9 @@
     "presetId": "f3eb50f87049b1ecc24427fb",
     "source": "wtt-armory",
     "rootTemplate": "6906a1aeef59ca68d128e8b7",
+    "nameEn": "Magpul Masada 5.56x45 assault rifle (FDE)",
+    "nameRu": "Magpul Masada 5.56x45 assault rifle (FDE)",
+    "valueRub": 110521,
     "items": [
       {
         "_tpl": "6906a1aeef59ca68d128e8b7",
@@ -3919,6 +4051,9 @@
     "presetId": "d534f4bbb0b467ddbc051576",
     "source": "wtt-armory",
     "rootTemplate": "6920b28eabc4f9d229cb7e49",
+    "nameEn": "HK XM8 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка HK XM8 5.56x45",
+    "valueRub": 107756,
     "items": [
       {
         "_tpl": "6920b28eabc4f9d229cb7e49",
@@ -4001,6 +4136,9 @@
     "presetId": "3e2644263dd4990bc4c7eaca",
     "source": "wtt-armory",
     "rootTemplate": "69236a0b2d1260dbca41ef92",
+    "nameEn": "SV-98M 7.62x54R bolt-action sniper rifle",
+    "nameRu": "Снайперская винтовка СВ-98М 7.62x54RR",
+    "valueRub": 72010,
     "items": [
       {
         "_tpl": "69236a0b2d1260dbca41ef92",
@@ -4072,6 +4210,9 @@
     "presetId": "11371fb1ac64e9e352f54eb2",
     "source": "wtt-armory",
     "rootTemplate": "6924c2f800ff4b8d9d689a5c",
+    "nameEn": "Henry Big Boy Steel .357 lever-action rifle",
+    "nameRu": "Рычажная винтовка Henry Big Boy Steel .357",
+    "valueRub": 32770,
     "items": [
       {
         "_tpl": "6924c2f800ff4b8d9d689a5c",
@@ -4102,6 +4243,9 @@
     "presetId": "e3feae0cd5dcdcc219d73879",
     "source": "wtt-armory",
     "rootTemplate": "693742e7eab3af9d89349410",
+    "nameEn": "Barrett M107A1 .50 BMG anti-material rifle",
+    "nameRu": "Крупнокалиберная винтовка Barrett M107A1 .50 BMG",
+    "valueRub": 198703,
     "items": [
       {
         "_tpl": "693742e7eab3af9d89349410",
@@ -4192,6 +4336,9 @@
     "presetId": "f7c8a3c2ec501e4594995df3",
     "source": "wtt-armory",
     "rootTemplate": "69417a3f787395b8cc0ab13e",
+    "nameEn": "Marlin M1984 Dark-series .44 Magnum lever-action rifle",
+    "nameRu": "Рычажная винтовка Marlin M1984 Dark-series .44 Magnum",
+    "valueRub": 45252,
     "items": [
       {
         "_tpl": "69417a3f787395b8cc0ab13e",
@@ -4270,6 +4417,9 @@
     "presetId": "a5af5300895d47238c1b047b",
     "source": "wtt-armory",
     "rootTemplate": "69555be939fb0a1a6f0ad12e",
+    "nameEn": "ZiD A-545 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка A-545 5.45×39 мм",
+    "valueRub": 140000,
     "items": [
       {
         "_tpl": "69555be939fb0a1a6f0ad12e",
@@ -4333,6 +4483,9 @@
     "presetId": "106e42cc0f04cf6e1d872dc4",
     "source": "wtt-armory",
     "rootTemplate": "6958447bfc5cad58acf95c0f",
+    "nameEn": "HK USC .45 ACP carbine",
+    "nameRu": "Карабин HK USC .45 ACP",
+    "valueRub": 21142,
     "items": [
       {
         "_tpl": "6958447bfc5cad58acf95c0f",
@@ -4369,6 +4522,9 @@
     "presetId": "824b872c97e39faff543a5f2",
     "source": "wtt-armory",
     "rootTemplate": "695ab544a219218449041700",
+    "nameEn": "Kalashnikov AK-107 5.45x39 Assault Rifle",
+    "nameRu": "Автомат Калашникова AK-107 5.45×39",
+    "valueRub": 189000,
     "items": [
       {
         "_tpl": "695ab544a219218449041700",
@@ -4442,6 +4598,9 @@
     "presetId": "217427b932cac71f833eea72",
     "source": "wtt-armory",
     "rootTemplate": "6962f22fddc6698c6309b620",
+    "nameEn": "FN F2000 5.56x45 assault rifle",
+    "nameRu": "FN F2000 5.56x45 assault rifle",
+    "valueRub": 140000,
     "items": [
       {
         "_tpl": "6962f22fddc6698c6309b620",
@@ -4538,6 +4697,9 @@
     "presetId": "514c34fca996d95d70961750",
     "source": "wtt-armory",
     "rootTemplate": "6969867592a994a633084f70",
+    "nameEn": "FN F2000 5.56x45 assault rifle (FDE)",
+    "nameRu": "FN F2000 5.56x45 assault rifle (FDE)",
+    "valueRub": 140000,
     "items": [
       {
         "_tpl": "6969867592a994a633084f70",
@@ -4634,6 +4796,9 @@
     "presetId": "53811e8e4ac44324de497ae7",
     "source": "wtt-armory",
     "rootTemplate": "69777201f57d45a2ec02aafc",
+    "nameEn": "Konstantinov SA-1 7.62x39 assault rifle",
+    "nameRu": "69777201f57d45a2ec02aafc",
+    "valueRub": 25361,
     "items": [
       {
         "_tpl": "69777201f57d45a2ec02aafc",
@@ -4682,6 +4847,9 @@
     "presetId": "d16aaac8c859ee8fb52647bd",
     "source": "wtt-armory",
     "rootTemplate": "deee28079e76d537f532021c",
+    "nameEn": "Surgeon Rifles 1581 XL action .338 LM bolt-action sniper rifle",
+    "nameRu": "Снайперская винтовка Surgeon Rifles 1581 XL .338 Norma Magnum",
+    "valueRub": 312250,
     "items": [
       {
         "_tpl": "deee28079e76d537f532021c",
@@ -4743,6 +4911,9 @@
     "presetId": "7e1810aa9db1cc4d095dd55b",
     "source": "wtt-content-backport",
     "rootTemplate": "67c6de3ce39861860909e8e5",
+    "nameEn": "Marlin MXLR .308 ME lever-action rifle",
+    "nameRu": "Рычажная винтовка Marlin MXLR .308 ME",
+    "valueRub": 70144,
     "items": [
       {
         "_tpl": "67c6de3ce39861860909e8e5",
@@ -4839,6 +5010,9 @@
     "presetId": "b000b5636e21fcd7d072ce30",
     "source": "wtt-content-backport",
     "rootTemplate": "6871284e9a353bb50606f3ed",
+    "nameEn": "AS VAL MOD.4 9x39 special assault rifle",
+    "nameRu": "Автомат специальный АС \"Вал\" MOD.4 9x39 с интегрированным глушителем",
+    "valueRub": 124597,
     "items": [
       {
         "_tpl": "6871284e9a353bb50606f3ed",
@@ -5013,6 +5187,9 @@
     "presetId": "2f8345f87b645ae318070c0b",
     "source": "wtt-content-backport",
     "rootTemplate": "689166b6c2d6fa42e7044756",
+    "nameEn": "Kalashnikov AK-308 7.62x51 assault rifle",
+    "nameRu": "Автомат Калашникова АК-308 7.62x51",
+    "valueRub": 390756,
     "items": [
       {
         "_tpl": "689166b6c2d6fa42e7044756",
@@ -5155,6 +5332,9 @@
     "presetId": "e2f1296bb9e2292fd073f367",
     "source": "wtt-content-backport",
     "rootTemplate": "68a639748e1fe612970728e9",
+    "nameEn": "Colt M16A1 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка Colt M16A1 5.56x45",
+    "valueRub": 109250,
     "items": [
       {
         "_tpl": "68a639748e1fe612970728e9",
@@ -5248,6 +5428,9 @@
     "presetId": "a1dc132c9d57159978d1aa57",
     "source": "wtt-content-backport",
     "rootTemplate": "68a6399922b1e0bd360afe56",
+    "nameEn": "Colt M16A2 5.56x45 assault rifle",
+    "nameRu": "Штурмовая винтовка Colt M16A2 5.56x45",
+    "valueRub": 85254,
     "items": [
       {
         "_tpl": "68a6399922b1e0bd360afe56",
@@ -5348,6 +5531,9 @@
     "presetId": "ffdd06e6bef64ecc46d4411f",
     "source": "wtt-content-backport",
     "rootTemplate": "68aee763130c00663d08aea8",
+    "nameEn": "TKPD 9.3x64 carbine",
+    "nameRu": "Карабин ТКПД 9.3x64",
+    "valueRub": 213054,
     "items": [
       {
         "_tpl": "68aee763130c00663d08aea8",
@@ -5550,6 +5736,9 @@
     "presetId": "77dd6dbddd2a07cab5a0027f",
     "source": "wtt-content-backport",
     "rootTemplate": "68c16b9ab6b75a8a480520a6",
+    "nameEn": "Custom Guns NL545 (DI) 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка Custom Guns NL545 (DI) 5.45x39",
+    "valueRub": 188845,
     "items": [
       {
         "_tpl": "68c16b9ab6b75a8a480520a6",
@@ -5657,6 +5846,9 @@
     "presetId": "ef10ba27c984133521818f49",
     "source": "wtt-content-backport",
     "rootTemplate": "68c2940aecc41cc5490bd40e",
+    "nameEn": "Custom Guns NL545 (GP) 5.45x39 assault rifle",
+    "nameRu": "Штурмовая винтовка Custom Guns NL545 (GP) 5.45x39",
+    "valueRub": 230705,
     "items": [
       {
         "_tpl": "68c2940aecc41cc5490bd40e",
@@ -5771,6 +5963,9 @@
     "presetId": "8f519e3de23fcc229472118c",
     "source": "wtt-content-backport",
     "rootTemplate": "6932abeb5403890d0c09c926",
+    "nameEn": "Knight's Armament Company SR-25 7.62x51 marksman rifle (Taupe)",
+    "nameRu": "Марксманская винтовка Knight's Armament Company SR-25 7.62x51 (серовато-коричневая)",
+    "valueRub": 195000,
     "items": [
       {
         "_tpl": "6932abeb5403890d0c09c926",
@@ -5874,6 +6069,9 @@
     "presetId": "d5a609685bda3772989b8bb5",
     "source": "wtt-content-backport",
     "rootTemplate": "69f9ebbcaae020b0db02f65d",
+    "nameEn": "Norinco QBZ-191 5.8x42 assault rifle",
+    "nameRu": "Norinco QBZ-191 5.8x42 assault rifle",
+    "valueRub": 18900,
     "items": [
       {
         "_tpl": "69f9ebbcaae020b0db02f65d",
@@ -6009,6 +6207,9 @@
     "presetId": "b85cc7dd2bf0d8d9bb71fd2d",
     "source": "wtt-content-backport",
     "rootTemplate": "6a15ae2ae5267ba21c07f98f",
+    "nameEn": "HK 416A5 5.56x45 assault rifle (RAL 8000)",
+    "nameRu": "HK 416A5 5.56x45 assault rifle (RAL 8000)",
+    "valueRub": 47960,
     "items": [
       {
         "_tpl": "6a15ae2ae5267ba21c07f98f",
@@ -6112,6 +6313,9 @@
     "presetId": "49f4c7e3e5300bbae388e35c",
     "source": "wtt-content-backport",
     "rootTemplate": "6a3bffbebc377285900b85cf",
+    "nameEn": "Howa Type 20 5.56x45 assault rifle",
+    "nameRu": "Howa Type 20 5.56x45 assault rifle",
+    "valueRub": 9000,
     "items": [
       {
         "_tpl": "6a3bffbebc377285900b85cf",

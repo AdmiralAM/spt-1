@@ -48,6 +48,7 @@ class RewardBundleArchitectureTests(unittest.TestCase):
         project = (ROOT / "server" / "AdmiralTrader.Server.csproj").read_text(encoding="utf-8")
         self.assertIn("reward-bundle-policy.json", project)
         self.assertIn("wtt-preset-catalog.json", project)
+        self.assertIn("wtt-reward-trades.json", project)
 
     def test_wtt_preset_catalog_contains_complete_optional_trees(self):
         rows = json.loads((ROOT / "db" / "optional" / "wtt-preset-catalog.json").read_text(encoding="utf-8"))
@@ -55,9 +56,31 @@ class RewardBundleArchitectureTests(unittest.TestCase):
         self.assertEqual({row["source"] for row in rows}, {"wtt-armory", "wtt-content-backport"})
         for row in rows:
             self.assertEqual(row["items"][0]["_tpl"], row["rootTemplate"])
+            self.assertGreater(row["valueRub"], 0)
+            self.assertTrue(row["nameRu"])
             ids = {item["_id"] for item in row["items"]}
             self.assertEqual(len(ids), len(row["items"]))
             self.assertTrue(all(item.get("parentId") in ids for item in row["items"][1:]))
+
+    def test_wtt_rewards_are_curated_complete_arsenal_presets(self):
+        trades = json.loads((ROOT / "db" / "optional" / "wtt-reward-trades.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(trades), 24)
+        all_item_ids = []
+        for quest_id, trade in trades.items():
+            quest = json.loads(next((ROOT / "db" / "quests").glob(f"*-{quest_id}.json")).read_text(encoding="utf-8"))
+            self.assertIn("Арсенал", quest["QuestName"])
+            self.assertGreaterEqual(trade["cashReductionRub"], 0)
+            self.assertEqual(trade["minimumCashRub"], 10000)
+            cash = next(reward["value"] for reward in quest["rewards"]["Success"]
+                        if reward.get("items") and reward["items"][0].get("_tpl") == "5449016a4bdc2d6f028b456f")
+            self.assertGreaterEqual(cash - trade["cashReductionRub"], trade["minimumCashRub"])
+            items = trade["reward"]["items"]
+            self.assertGreater(len(items), 1)
+            ids = {item["_id"] for item in items}
+            self.assertEqual(len(ids), len(items))
+            self.assertTrue(all(item.get("parentId") in ids for item in items[1:]))
+            all_item_ids.extend(ids)
+        self.assertEqual(len(all_item_ids), len(set(all_item_ids)))
 
 
 if __name__ == "__main__":
