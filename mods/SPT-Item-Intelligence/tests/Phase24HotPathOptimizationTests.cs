@@ -12,6 +12,7 @@ static class Phase24HotPathOptimizationTests
         string server = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "server", "ServerMod.cs"));
         string compatibility = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "CompatibilityHighlighterIntegration.cs"));
         string sink = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "ItemHoverOverlaySink.cs"));
+        string sense = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "AmandsSenseIntegration.cs"));
 
         Expect(renderer.Contains("static string[] lineBuffer") && renderer.Contains("static float[] rowHeightBuffer"),
             "tooltip renderer reuses line and row-height buffers across repaint calls", ref assertions);
@@ -47,6 +48,15 @@ static class Phase24HotPathOptimizationTests
         Expect(sink.Contains("CompatibilityHighlighterIntegration.Track(itemView)") &&
                sink.Contains("CompatibilityHighlighterIntegration.Untrack(itemView)"),
             "the compatibility bridge follows the existing ItemView lifecycle", ref assertions);
+        Expect(plugin.Contains("RaidInventoryPollSeconds = .2f") &&
+               plugin.Contains("raidLedger.IsRaidSessionActive") &&
+               plugin.Contains("raidInventoryScanner.Refresh(raidLedger)) OnRaidInventoryChanged()") &&
+               plugin.Contains("senseIntegration.RefreshActive()"),
+            "raid inventory changes publish to Item Intelligence and active Sense visuals without reopening inventory", ref assertions);
+        Expect(sense.Contains("trackedSenseItems.Add(senseItem)") &&
+               sense.Contains("internal void RefreshActive()") &&
+               sense.Contains("Apply(senseItem)"),
+            "Sense retains and immediately reevaluates its active world markers after inventory changes", ref assertions);
         return assertions;
     }
 

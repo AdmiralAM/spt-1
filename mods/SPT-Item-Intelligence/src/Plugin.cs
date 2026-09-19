@@ -29,7 +29,10 @@ namespace SPTItemIntelligence
         Coroutine inventoryRefreshCoroutine;
         float lastRaidInventoryScanAt = float.NegativeInfinity;
         float lastSnapshotRefreshAt = float.NegativeInfinity;
-        const float RaidInventoryMinimumScanSeconds = .35f;
+        float nextRaidInventoryPollAt = float.NegativeInfinity;
+        bool raidPresentationRefreshPending;
+        const float RaidInventoryMinimumScanSeconds = .2f;
+        const float RaidInventoryPollSeconds = .2f;
         const float InventorySnapshotSettleSeconds = .65f;
         const float InventorySnapshotMinimumSeconds = 1.5f;
 
@@ -70,7 +73,7 @@ namespace SPTItemIntelligence
                 {
                     senseIntegration = new AmandsSenseIntegration(uiSettings, PresentationStore,
                         message => Logger.LogInfo(message), message => Logger.LogWarning(message),
-                        raidLedger, () => hoverSink.Invalidate(), CaptureRaidBaseline);
+                        raidLedger, OnRaidInventoryChanged, CaptureRaidBaseline);
                     senseIntegration.TryInstall();
                 }
             }
@@ -185,7 +188,30 @@ namespace SPTItemIntelligence
             float now = Time.realtimeSinceStartup;
             if (now - lastRaidInventoryScanAt < RaidInventoryMinimumScanSeconds) return;
             lastRaidInventoryScanAt = now;
-            if (raidInventoryScanner != null && raidInventoryScanner.Refresh(raidLedger) && hoverSink != null) hoverSink.Invalidate();
+            if (raidInventoryScanner != null && raidInventoryScanner.Refresh(raidLedger)) OnRaidInventoryChanged();
+        }
+
+        void OnRaidInventoryChanged()
+        {
+            raidPresentationRefreshPending = true;
+            if (hoverSink != null) hoverSink.Invalidate();
+        }
+
+        void Update()
+        {
+            if (uiSettings != null && uiSettings.Modules.AnyConsumer && raidLedger.IsRaidSessionActive)
+            {
+                float now = Time.realtimeSinceStartup;
+                if (now >= nextRaidInventoryPollAt)
+                {
+                    nextRaidInventoryPollAt = now + RaidInventoryPollSeconds;
+                    RefreshRaidInventory();
+                }
+            }
+            if (!raidPresentationRefreshPending) return;
+            raidPresentationRefreshPending = false;
+            if (hoverSink != null) hoverSink.Invalidate();
+            if (senseIntegration != null) senseIntegration.RefreshActive();
         }
 
         void OnGUI()
@@ -213,6 +239,7 @@ namespace SPTItemIntelligence
             compatibilityIntegration = null;
             raidInventoryScanner = null;
             inventoryRefreshCoroutine = null;
+            raidPresentationRefreshPending = false;
             PresentationStore = null;
         }
     }

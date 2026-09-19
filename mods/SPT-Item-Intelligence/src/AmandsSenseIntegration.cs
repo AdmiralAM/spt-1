@@ -16,6 +16,8 @@ namespace SPTItemIntelligence
         readonly Action raidChanged;
         readonly Action raidStarted;
         readonly HashSet<string> pickedItemIds = new HashSet<string>(StringComparer.Ordinal);
+        readonly HashSet<object> trackedSenseItems = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        readonly List<object> staleSenseItems = new List<object>();
         readonly Dictionary<object, SenseEvaluationCache> evaluationCache = new Dictionary<object, SenseEvaluationCache>(ReferenceEqualityComparer.Instance);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
@@ -88,6 +90,7 @@ namespace SPTItemIntelligence
         void Apply(object senseItem)
         {
             if (!settings.SenseIntegration || !settings.SenseRequiredItems || senseItem == null) return;
+            trackedSenseItems.Add(senseItem);
             if (ledger.BeginRaid())
             {
                 if (raidStarted != null) raidStarted();
@@ -153,6 +156,36 @@ namespace SPTItemIntelligence
             ApplyLight(Member(senseItem, "light"), completedContainer || preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
                 ApplyText(Member(senseItem, "typeText"), CompactText(policy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount)), Color.white, secondary);
+        }
+
+        internal void RefreshActive()
+        {
+            if (!IsInstalled || !settings.SenseIntegration || !settings.SenseRequiredItems) return;
+            staleSenseItems.Clear();
+            object[] snapshot = new object[trackedSenseItems.Count];
+            trackedSenseItems.CopyTo(snapshot);
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                object senseItem = snapshot[i];
+                if (!IsAlive(senseItem))
+                {
+                    staleSenseItems.Add(senseItem);
+                    continue;
+                }
+                try { Apply(senseItem); }
+                catch { staleSenseItems.Add(senseItem); }
+            }
+            for (int i = 0; i < staleSenseItems.Count; i++) trackedSenseItems.Remove(staleSenseItems[i]);
+            staleSenseItems.Clear();
+        }
+
+        static bool IsAlive(object value)
+        {
+            if (value == null) return false;
+            Component component = value as Component;
+            if (ReferenceEquals(component, null)) return true;
+            try { return component != null && component.gameObject != null && component.gameObject.activeInHierarchy; }
+            catch { return false; }
         }
 
         static IEnumerable<object> EnumerateSenseItemTree(object senseItem, object looseItem)
@@ -261,6 +294,8 @@ namespace SPTItemIntelligence
             int revision = ledger.Revision;
             ledger.Reset();
             pickedItemIds.Clear();
+            trackedSenseItems.Clear();
+            staleSenseItems.Clear();
             evaluationCache.Clear();
             if (ledger.Revision != revision && raidChanged != null) raidChanged();
         }

@@ -47,9 +47,10 @@ static class Phase36RaidInventoryTooltipTests
         string plugin = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "Plugin.cs"));
         Expect(plugin.Contains("WaitForSecondsRealtime(InventorySnapshotSettleSeconds)") &&
                plugin.Contains("InventorySnapshotMinimumSeconds = 1.5f") &&
-               plugin.Contains("RaidInventoryMinimumScanSeconds = .35f") &&
+               plugin.Contains("RaidInventoryMinimumScanSeconds = .2f") &&
+               plugin.Contains("RaidInventoryPollSeconds = .2f") &&
                plugin.Contains("now - lastRaidInventoryScanAt < RaidInventoryMinimumScanSeconds"),
-            "view bursts coalesce into one snapshot refresh and visible raid scans are rate limited", ref assertions);
+            "view bursts coalesce while the lightweight raid inventory scan stays responsive and rate limited", ref assertions);
         return assertions;
     }
 
