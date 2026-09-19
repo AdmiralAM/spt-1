@@ -43,6 +43,7 @@
     <Content Include="..\assets\d5c27bb3169f8dfbc13f6b69.jpg" Link="assets\d5c27bb3169f8dfbc13f6b69.jpg" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\runtime-manifest.json" Link="manifests\runtime-manifest.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\reward-bundle-policy.json" Link="manifests\reward-bundle-policy.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\story-campaign-runtime.json" Link="manifests\story-campaign-runtime.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
