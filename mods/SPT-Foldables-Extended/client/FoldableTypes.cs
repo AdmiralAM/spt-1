@@ -9,12 +9,6 @@ using JetBrains.Annotations;
 
 namespace SPTFoldablesExtended.Client;
 
-public abstract class ExtendedFoldableItemBase
-{
-    protected static ExtendedFoldableComponent Create(Item item, IExtendedFoldableComponentTemplate template)
-        => new(item, template);
-}
-
 public sealed class FoldableArmorTemplate : ArmorTemplate, IExtendedFoldableComponentTemplate
 {
     public bool Foldable { get; set; }

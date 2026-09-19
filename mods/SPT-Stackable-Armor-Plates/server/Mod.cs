@@ -31,9 +31,6 @@ public sealed class StackableArmorPlateRegistration(
     TemplateTable templateTable,
     ISptLogger<StackableArmorPlateRegistration> logger) : IOnLoad
 {
-    private static readonly MongoId ArmorPlateBase = new("644120aa86ffbe10ee032b6f");
-    private const int PlateStackSize = 4;
-
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         int changed = 0;
@@ -43,22 +40,25 @@ public sealed class StackableArmorPlateRegistration(
         {
             cancellationToken.ThrowIfCancellationRequested();
             TemplateItemProperties? properties = template.Properties;
-            if (template.Parent != ArmorPlateBase
-                || properties?.Width is not > 0
-                || properties.Height is not > 0
-                || properties.Weight is not > 0)
+            if (properties is null
+                || !PlateStackPolicy.IsStandalonePlate(
+                    template.Parent.ToString(),
+                    properties.Width.GetValueOrDefault(),
+                    properties.Height.GetValueOrDefault(),
+                    properties.Weight.GetValueOrDefault()))
             {
                 continue;
             }
 
             int current = properties.StackMaxSize.GetValueOrDefault(1);
-            if (current >= PlateStackSize)
+            int desired = PlateStackPolicy.DesiredStackSize(current);
+            if (desired == current)
             {
                 alreadyLarger++;
                 continue;
             }
 
-            properties.StackMaxSize = PlateStackSize;
+            properties.StackMaxSize = desired;
             changed++;
         }
 
@@ -67,7 +67,7 @@ public sealed class StackableArmorPlateRegistration(
             throw new InvalidDataException("No armor plate templates were resolved; refusing to load a silent no-op.");
         }
 
-        logger.Success($"Stackable Armor Plates enabled {PlateStackSize}-item stacks for {changed} plate templates; {alreadyLarger} templates already allowed at least that many.");
+        logger.Success($"Stackable Armor Plates enabled {PlateStackPolicy.StackSize}-item stacks for {changed} plate templates; {alreadyLarger} templates already allowed at least that many.");
         return Task.CompletedTask;
     }
 }

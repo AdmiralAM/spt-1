@@ -13,15 +13,24 @@ public sealed class Plugin : BaseUnityPlugin
 {
     private const string ArmorId = "5448e54d4bdc2dcc718b4568";
     private const string HeadwearId = "5a341c4086f77401f2541505";
-    private const string QuestItemId = "5448ecbe4bdc2d60728b4568";
     private const string PosterId = "6759673c76e93d8eb20b2080";
+    private static readonly string[] ArenaPosterPackIds =
+    [
+        "664a5775f3d3570fba06be64",
+        "664b69c5a082271bc46c4e11",
+        "664b69e8e1238e506d3630af",
+        "664b69f3a082271bc46c4e13"
+    ];
 
     private void Awake()
     {
         Register<FoldableArmor, FoldableArmorTemplate>(ArmorId, static (id, template) => new FoldableArmor(id, template));
         Register<FoldableHeadwear, FoldableHeadwearTemplate>(HeadwearId, static (id, template) => new FoldableHeadwear(id, template));
-        Register<FoldablePoster, FoldablePosterTemplate>(QuestItemId, static (id, template) => new FoldablePoster(id, template));
         Register<FoldablePoster, FoldablePosterTemplate>(PosterId, static (id, template) => new FoldablePoster(id, template));
+        foreach (string posterPackId in ArenaPosterPackIds)
+        {
+            Register<FoldablePoster, FoldablePosterTemplate>(posterPackId, static (id, template) => new FoldablePoster(id, template));
+        }
 
         var harmony = new Harmony("com.admiralam.foldables-extended");
         harmony.PatchAll(typeof(Plugin).Assembly);
