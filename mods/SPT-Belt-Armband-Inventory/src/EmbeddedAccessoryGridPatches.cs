@@ -7,9 +7,8 @@ namespace SPTBeltArmbandInventory
 {
     internal static class EmbeddedAccessoryGridRuntime
     {
-        const float AnchorGap = 20f;
-        const float VerticalGap = 35f;
-        const float PanelGap = 40f;
+        const float HorizontalGap = 4f;
+        const float VerticalGap = 4f;
         const float HeaderHeight = 22f;
         const float MinimumPanelWidth = 128f;
         internal static Action<string> LogInfo;
@@ -67,22 +66,23 @@ namespace SPTBeltArmbandInventory
             for (int settle = 0; settle < 6; settle++)
             {
                 yield return new WaitForEndOfFrame();
-                float headHeight = CompactNativeRow(headBand);
+                CompactNativeRow(headBand);
                 CompactNativeRow(armBand);
                 Canvas.ForceUpdateCanvases();
                 ForceRebuild(content);
                 Canvas.ForceUpdateCanvases();
 
                 Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
-                float beltRight = RightEdgeIn(content, belt);
-                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + AnchorGap), specialBottomLeft.y - VerticalGap, 0f);
-                PlaceNativeRow(headBand, content.TransformPoint(anchor));
-                PlaceNativeRow(armBand, content.TransformPoint(anchor + Vector3.down * (headHeight + PanelGap)));
+                Vector3 beltTopRight = TopRightIn(content, belt);
+                Vector3 headBandAnchor = specialBottomLeft + Vector3.down * VerticalGap;
+                Vector3 armBandAnchor = beltTopRight + Vector3.right * HorizontalGap;
+                PlaceNativeRow(headBand, content.TransformPoint(headBandAnchor));
+                PlaceNativeRow(armBand, content.TransformPoint(armBandAnchor));
             }
             if (!logged)
             {
                 logged = true;
-                LogInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows compacted and placed below the Pockets special-slot panel.");
+                LogInfo?.Invoke("B&A&HB ACCESSORY FLOW PROOF: HeadBand follows the live Special Slots lower-left edge; ArmBand follows the live Belt upper-right edge; fixed page offsets=False.");
             }
         }
 
@@ -182,13 +182,14 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static float RightEdgeIn(RectTransform space, Component view)
+        static Vector3 TopRightIn(RectTransform space, Component view)
         {
             Component searchableItem = SearchableItemViewField?.GetValue(view) as Component;
             object contained = searchableItem == null ? null : ContainedGridsViewField?.GetValue(searchableItem);
             IEnumerable grids = ReflectionTools.ReadMember(contained, "GridViews") as IEnumerable
                 ?? ReflectionTools.ReadMember(contained, "_gridViews") as IEnumerable;
             float right = float.MinValue;
+            float top = float.MinValue;
             Vector3[] corners = new Vector3[4];
             if (grids != null)
             {
@@ -197,15 +198,25 @@ namespace SPTBeltArmbandInventory
                     RectTransform grid = (entry as Component)?.transform as RectTransform;
                     if (grid == null || !grid.gameObject.activeInHierarchy) continue;
                     grid.GetWorldCorners(corners);
-                    for (int i = 0; i < corners.Length; i++) right = Math.Max(right, space.InverseTransformPoint(corners[i]).x);
+                    for (int i = 0; i < corners.Length; i++)
+                    {
+                        Vector3 point = space.InverseTransformPoint(corners[i]);
+                        right = Math.Max(right, point.x);
+                        top = Math.Max(top, point.y);
+                    }
                 }
             }
-            if (right > float.MinValue) return right;
+            if (right > float.MinValue && top > float.MinValue) return new Vector3(right, top, 0f);
             RectTransform fallback = view.transform as RectTransform;
-            if (fallback == null) return 0f;
+            if (fallback == null) return Vector3.zero;
             fallback.GetWorldCorners(corners);
-            for (int i = 0; i < corners.Length; i++) right = Math.Max(right, space.InverseTransformPoint(corners[i]).x);
-            return right;
+            for (int i = 0; i < corners.Length; i++)
+            {
+                Vector3 point = space.InverseTransformPoint(corners[i]);
+                right = Math.Max(right, point.x);
+                top = Math.Max(top, point.y);
+            }
+            return new Vector3(right, top, 0f);
         }
 
         static void PlaceNativeRow(Component view, Vector3 worldPosition)

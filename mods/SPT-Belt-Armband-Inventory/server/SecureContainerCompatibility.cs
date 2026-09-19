@@ -125,10 +125,28 @@ public sealed class SecureContainerCompatibility(
                 {
                     if (id != gammaId && filter.Filter.Add(id)) changed++;
                     if (filter.ExcludedFilter.Remove(id)) changed++;
+                    foreach (MongoId ancestor in AncestorsOf(id))
+                        if (filter.ExcludedFilter.Remove(ancestor)) changed++;
                 }
             }
+
+            foreach (MongoId id in compatible.Where(id => id != gammaId))
+                RequireAdmission(gammaId.ToString(), null, id, "compatible simple container");
         }
         return changed;
+    }
+
+    private IEnumerable<MongoId> AncestorsOf(MongoId itemId)
+    {
+        MongoId? current = itemId;
+        var seen = new HashSet<MongoId>();
+        while (current != null && seen.Add(current.Value)
+            && templateTable.Items.TryGetValue(current.Value, out TemplateItem? item)
+            && item.Parent != null)
+        {
+            current = item.Parent;
+            yield return current.Value;
+        }
     }
 
     private int ExtendHeadBand(string gridName, HashSet<MongoId> compatible)
