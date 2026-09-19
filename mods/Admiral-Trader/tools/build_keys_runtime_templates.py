@@ -195,6 +195,20 @@ def success_rewards(quest: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
             "items": [{"_id": item_id, "_tpl": RUB_TPL, "upd": {"StackObjectsCount": rub}}],
         })
 
+    item_reward = budget.get("itemReward")
+    if item_reward:
+        qid = str(quest["id"])
+        quantity = int(item_reward.get("quantity", 1))
+        item_id = mongo_id(f"{qid}:campaign-polish-item")
+        rewards.append({
+            "value": quantity,
+            "id": mongo_id(f"{qid}:campaign-polish-reward"),
+            "type": "Item",
+            "target": item_id,
+            "index": 21,
+            "items": [{"_id": item_id, "_tpl": str(item_reward["tpl"]), "upd": {"StackObjectsCount": quantity}}],
+        })
+
     return rewards, int(budget.get("unlockSlots", 0))
 
 

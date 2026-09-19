@@ -263,9 +263,13 @@
       },
       "rewardBudget": {
         "xp": 20000,
-        "rub": 80000,
+        "rub": 56000,
         "standing": 0.03,
-        "unlockSlots": 0
+        "unlockSlots": 0,
+        "itemReward": {
+          "tpl": "5c0e533786f7747fa23f4d47",
+          "quantity": 1
+        }
       }
     },
     {
@@ -291,9 +295,13 @@
       },
       "rewardBudget": {
         "xp": 28000,
-        "rub": 120000,
+        "rub": 92500,
         "standing": 0.03,
-        "unlockSlots": 1
+        "unlockSlots": 1,
+        "itemReward": {
+          "tpl": "60098ad7c2240c0fe85c570a",
+          "quantity": 1
+        }
       }
     }
   ]
