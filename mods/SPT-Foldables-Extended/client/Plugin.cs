@@ -13,6 +13,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     private const string ArmorId = "5448e54d4bdc2dcc718b4568";
     private const string HeadwearId = "5a341c4086f77401f2541505";
+    private const string FaceCoverId = "5a341c4686f77469e155819e";
     private const string PosterId = "6759673c76e93d8eb20b2080";
     private static readonly string[] ArenaPosterPackIds =
     [
@@ -26,6 +27,7 @@ public sealed class Plugin : BaseUnityPlugin
     {
         Register<FoldableArmor, FoldableArmorTemplate>(ArmorId, static (id, template) => new FoldableArmor(id, template));
         Register<FoldableHeadwear, FoldableHeadwearTemplate>(HeadwearId, static (id, template) => new FoldableHeadwear(id, template));
+        Register<FoldableFaceCover, FoldableFaceCoverTemplate>(FaceCoverId, static (id, template) => new FoldableFaceCover(id, template));
         Register<FoldablePoster, FoldablePosterTemplate>(PosterId, static (id, template) => new FoldablePoster(id, template));
         foreach (string posterPackId in ArenaPosterPackIds)
         {
@@ -54,11 +56,11 @@ public sealed class Plugin : BaseUnityPlugin
 }
 
 [HarmonyPatch(typeof(ItemManipulator), nameof(ItemManipulator.CanFold))]
-internal static class HeadwearCanFoldPatch
+internal static class ExtendedItemCanFoldPatch
 {
     private static void Postfix(Item item, ref FoldableComponent foldable, ref bool __result)
     {
-        if (__result || item is not FoldableHeadwear)
+        if (__result || item is not IFoldable)
         {
             return;
         }

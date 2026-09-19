@@ -36,6 +36,7 @@ public sealed class FoldablesExtendedRegistration(
     private static readonly MongoId ArmorBase = new("5448e54d4bdc2dcc718b4568");
     private static readonly MongoId VestBase = new("5448e5284bdc2dcb718b4567");
     private static readonly MongoId HeadwearBase = new("5a341c4086f77401f2541505");
+    private static readonly MongoId FaceCoverBase = new("5a341c4686f77469e155819e");
     private static readonly MongoId PosterBase = new("6759673c76e93d8eb20b2080");
 
     private static readonly HashSet<string> PosterTemplates =
@@ -83,6 +84,14 @@ public sealed class FoldablesExtendedRegistration(
             {
                 Apply(template, FoldedGeometry.ForArmor(width, height), FoldingTime(width, height));
                 armoredRigs++;
+                continue;
+            }
+
+            if (itemHelper.IsOfBaseclass(template.Id, FaceCoverBase)
+                && width * height > 1)
+            {
+                Apply(template, FoldedGeometry.ForFaceCover(width, height), 1d);
+                headwear++;
                 continue;
             }
 

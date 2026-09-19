@@ -73,3 +73,28 @@ internal static class TransferDurabilityPatch
         return false;
     }
 }
+
+// ArmorPlate is not a StackableItem, so the normal drag/drop action resolver can
+// choose swap/move even after the server raises StackMaxSize. Route an exact
+// plate-on-plate action through the native merge operation; the durability guard
+// above remains the authority for whether the two instances may share a stack.
+[HarmonyPatch(typeof(ItemController), nameof(ItemController.ExecutePossibleAction))]
+internal static class PlateCombineActionPatch
+{
+    private static bool Prefix(
+        ItemController __instance,
+        ItemContext itemContext,
+        Item targetItem,
+        bool simulate,
+        ref OperationResult __result)
+    {
+        Item sourceItem = itemContext?.Item;
+        if (sourceItem is not ArmorPlate || targetItem is not ArmorPlate)
+        {
+            return true;
+        }
+
+        __result = ItemManipulator.Merge(sourceItem, targetItem, __instance, simulate);
+        return false;
+    }
+}

@@ -9,7 +9,8 @@ Optional add-on for [ozen-m/SPT-Foldables](https://github.com/ozen-m/SPT-Foldabl
   - 3x4 -> 3x1;
   - 4x4 -> 2x2;
   - 3x5 -> 4x1;
-- all four-cell headwear, including four-cell face masks, folds to 1x2 vertically; smaller items are unaffected;
+- all four-cell headwear folds to 1x2 vertically;
+- every multi-cell face cover is foldable: two-cell masks fold to 1x1 and four-cell masks fold to 1x2; one-slot masks remain unaffected;
 - ordinary grid contents and every occupied unlocked slot are spilled through EFT inventory transactions before folding;
 - locked/integrated armor slots remain attached and do not block folding;
 - folded items keep their durability, integrated armor and original template identity.

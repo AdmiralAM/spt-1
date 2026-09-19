@@ -77,6 +77,40 @@ public sealed class FoldableHeadwear : Headwear, IFoldable
     public override int GetHashSum() => Foldable == null ? base.GetHashSum() : base.GetHashSum() * 27 + Foldable.Folded.GetHashCode();
 }
 
+public sealed class FoldableFaceCoverTemplate : FaceCoverTemplate, IExtendedFoldableComponentTemplate
+{
+    public bool Foldable { get; set; }
+    public string FoldedSlot { get; set; }
+    public int SizeReduceRight { get; set; }
+    public int SizeReduceDown { get; set; }
+    public float FoldingTime { get; set; }
+}
+
+public sealed class FoldableFaceCover : FaceCover, IFoldable
+{
+    [Component, UsedImplicitly]
+    public readonly ExtendedFoldableComponent Foldable;
+
+    public bool Folded => Foldable is { Folded: true };
+    public int SizeReduceRight => GetTemplate<FoldableFaceCoverTemplate>().SizeReduceRight;
+    public int SizeReduceDown => GetTemplate<FoldableFaceCoverTemplate>().SizeReduceDown;
+    public float FoldingTime => GetTemplate<FoldableFaceCoverTemplate>().FoldingTime;
+
+    public FoldableFaceCover(string id, FoldableFaceCoverTemplate template) : base(id, template)
+    {
+        if (template.Foldable)
+        {
+            Foldable = new ExtendedFoldableComponent(this, template);
+            Components.Add(Foldable);
+        }
+    }
+
+    public override OperationResult Apply(ItemController itemController, Item item, int count, bool simulate)
+        => Folded ? new Foldables.Models.FoldedInsertError(item) : base.Apply(itemController, item, count, simulate);
+
+    public override int GetHashSum() => Foldable == null ? base.GetHashSum() : base.GetHashSum() * 27 + Foldable.Folded.GetHashCode();
+}
+
 public sealed class FoldablePosterTemplate : ItemTemplate, IExtendedFoldableComponentTemplate
 {
     public bool Foldable { get; set; }

@@ -51,6 +51,24 @@ public static class FoldedGeometry
         return new FoldedSize(1, 2);
     }
 
+    public static FoldedSize ForFaceCover(int width, int height)
+    {
+        int area = width * height;
+        if (width <= 0 || height <= 0 || area <= 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), "Only multi-cell face covers are foldable.");
+        }
+
+        int cells = (int)Math.Ceiling(area / 2d);
+        if (cells <= 2)
+        {
+            return new FoldedSize(1, cells);
+        }
+
+        int foldedWidth = (int)Math.Ceiling(Math.Sqrt(cells));
+        return new FoldedSize(foldedWidth, (int)Math.Ceiling(cells / (double)foldedWidth));
+    }
+
     public static FoldedSize ForPoster(int width, int height)
     {
         if (width * height != 4)
