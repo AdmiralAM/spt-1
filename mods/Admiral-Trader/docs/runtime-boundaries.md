@@ -9,7 +9,7 @@
 
 ## Single trader registration boundary — current-generation evidence
 
-The maintained `mods/Admiral-Artyom-Revival` module demonstrates the current repository registration pattern using:
+The maintained Admiral Trader implementation uses the current repository registration pattern:
 
 - `ModHelper` for module path resolution;
 - `ImageRouter` for trader avatar route registration;
@@ -23,7 +23,7 @@ This is the preferred Admiral Trader baseline. We do not need legacy six-directo
 
 ## Quest loading boundary — proven for the 4.1 generation, exact target still gated
 
-Admiral Artyom Revival uses `WTT-ServerCommonLib` custom quest loading after trader registration. The SPT 4.1 Andrudis port and Scorpion C# reference also prove current-generation quest insertion/loading patterns. Admiral Trader should retain WTT only if the curated quest feature set actually requires it; native table insertion remains a viable alternative for ordinary quest records.
+The SPT 4.1 Andrudis port and Scorpion C# reference prove current-generation quest insertion/loading patterns. Admiral Trader should retain an external framework only when the curated quest feature set actually requires it; native table insertion remains the default for ordinary quest records.
 
 These references establish architecture shape, not exact SPT 4.1.5 behavior. Exact target validation remains mandatory where the implementation depends on a concrete signature or lifecycle detail.
 

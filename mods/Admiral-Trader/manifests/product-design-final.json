@@ -340,19 +340,6 @@
         "WTT dependency merely for fidelity"
       ]
     },
-    "AdmiralArtyomRevival": {
-      "repository": "AdmiralAM/spt-1/mods/Admiral-Artyom-Revival",
-      "use": [
-        "current in-repo SPT C# structure reference",
-        "clear load ordering",
-        "data/helper separation",
-        "trader image/base/assort/locales registration patterns"
-      ],
-      "reject": [
-        "copying WTT dependency when native Admiral implementation does not need it",
-        "copying unrelated custom-item/clothing scope"
-      ]
-    },
     "ScorpionCSharp": {
       "repository": "acidphantasm/scorpion-csharp",
       "use": [

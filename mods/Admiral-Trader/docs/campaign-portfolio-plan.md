@@ -4,16 +4,15 @@ This document sizes Admiral Trader against the complete intended SPT campaign in
 
 ## Measured installed portfolio
 
-The SPT 4.1.5 database contains 558 quest records. The installed sources add 122 Scorpion quests, 23 Artem Revival quests, and 43 Admiral quests. The 15 Ref quests are already part of the 558 SPT records. Ref Friendly Quests modifies six of those Ref records and adds no quest IDs.
+The SPT 4.1.5 database contains 558 quest records. The installed sources add 122 Scorpion quests and 43 Admiral quests. The 15 Ref quests are already part of the 558 SPT records. Ref Friendly Quests modifies six of those Ref records and adds no quest IDs.
 
 | Source | Quest records | Portfolio treatment |
 | --- | ---: | --- |
 | SPT 4.1.5, including Ref | 558 | Keep |
 | Scorpion 1.1.1 | 122 | Keep as an independent campaign |
-| Artem Revival 3.0.0 | 23 | Keep as an independent campaign |
 | Admiral Trader current runtime | 43 | Keep and continue curating |
 | Ref Friendly Quests 2.1.0 | 0 added / 6 modified | Keep as a compatibility patch |
-| **Intended total without QuestManiac runtime** | **746** | Target portfolio before future Admiral additions |
+| **Intended total without QuestManiac runtime** | **723** | Target portfolio before future Admiral additions |
 
 The physical 2026-09-07 server run also loaded Andrudis QuestManiac. Economy Admiral measured 5,362 final quest records from a pristine 558-record baseline: 4,804 mod-added records. With the current 12 additional Admiral Operations, the comparable installed total becomes approximately 5,374 records. QuestManiac must therefore be removed from the final runtime after selected content has been absorbed; leaving it enabled defeats campaign curation and can duplicate inherited quest IDs.
 
@@ -23,7 +22,7 @@ Total record count does not determine journal quality. The controlling measure i
 
 Admiral should normally expose 6-10 offered or active quests at once:
 
-- 2-4 location operations that can be paired with native, Scorpion, Artem, or Ref work;
+- 2-4 location operations that can be paired with native, Scorpion, or Ref work;
 - 2-3 equipment or weapon rotation assignments;
 - 1-2 acquisition, handover, reconnaissance, or access tasks;
 - no more than one high-risk one-raid operation in the same progression band.
@@ -64,7 +63,7 @@ Equipment constraints should normally use a small truthful pool rather than one 
 
 ## Expansion rule
 
-The 43-quest runtime is the current validated foundation, not the desired final volume. Future additions should be accepted only when they fill a measured map, level, objective, story, or equipment-rotation gap. The initial planning range is 60-80 Admiral quests, subject to a simulation of concurrent availability across the complete 746-record portfolio. The final count is secondary to keeping the Admiral layer near 6-10 concurrent tasks and avoiding duplicate objectives already supplied by SPT, Scorpion, Artem, or Ref.
+The 43-quest runtime is the current validated foundation, not the desired final volume. Future additions should be accepted only when they fill a measured map, level, objective, story, or equipment-rotation gap. The initial planning range is 60-80 Admiral quests, subject to a simulation of concurrent availability across the complete 723-record portfolio. The final count is secondary to keeping the Admiral layer near 6-10 concurrent tasks and avoiding duplicate objectives already supplied by SPT, Scorpion, or Ref.
 
 Runtime graph and rewards remain unchanged by this planning document.
 
@@ -113,7 +112,7 @@ Stock remains finite and useful items should have purchase limits. Loyalty provi
 
 Admiral's identity is operational supply: navigation and access support, field marking and signals, reconnaissance equipment, bounded specialist ammunition, and selected prepared gear for campaign tasks. The final assortment must avoid duplicating another trader at a better price and must contain enough exclusive or differently constrained utility that the player has a reason to visit Admiral throughout progression.
 
-Before expanding the storefront, build an exact effective-assort comparison after QuestManiac/Andrudis is disabled. The comparison set is SPT's native traders (including Ref), Admiral, Artem and Scorpion. Inventory that disappears with the retired Andrudis traders is a candidate source, but it is not imported automatically: retain only useful items absent from the remaining traders, or items whose Admiral-specific stock, price, loyalty tier or quest gate creates a distinct operational role. Preserve the finite-offer policy and reject duplicate commodity rows that merely inflate the grid.
+Before expanding the storefront, build an exact effective-assort comparison after QuestManiac/Andrudis is disabled. The comparison set is SPT's native traders (including Ref), Admiral and Scorpion. Inventory that disappears with the retired Andrudis traders is a candidate source, but it is not imported automatically: retain only useful items absent from the remaining traders, or items whose Admiral-specific stock, price, loyalty tier or quest gate creates a distinct operational role. Preserve the finite-offer policy and reject duplicate commodity rows that merely inflate the grid.
 
 The expanded shop must contain a bounded signature weapon rack. Each selected weapon or complete preset must provide a recognizable role and be unavailable as the same fixed purchase from the retained comparison set. Use native SPT items and the existing Admiral assort architecture; do not add an external weapon dependency. Signature weapons remain finite and are distributed across loyalty tiers and meaningful quest unlocks, so the shop is useful from the start without exposing its final inventory at level 1. A recolor, trivial attachment swap or cheaper copy of another trader's offer is not a signature weapon.
 

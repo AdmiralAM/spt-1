@@ -11,7 +11,6 @@ Development validation is module-specific. A pull request should trigger only th
 | Quest Planner | `Quest Planner Validate` | CI artifacts until deliberate runtime promotion |
 | Economy Admiral | Economy Admiral module-specific validation/package workflows | `runtime-economy-admiral` |
 | Admiral Trader | Admiral Trader module-specific validation workflows | CI artifacts until deliberate runtime promotion |
-| Admiral Artyom Revival | `Admiral Artyom Revival Validate` | `runtime-artem-revival` (retained publication compatibility identifier) |
 
 For Admiral Tactical HUD, Issue #71 and the single live HUD PR own the `1.13.3` replacement line. Until M1 is accepted and merged, `main` intentionally retains the previously accepted `mods/SPT-Tactical-HUD` tree and its `Tactical HUD Validate` workflow behavior, while the live replacement PR carries the Admiral-named path/workflow. This is one transitional workstream, not two independent HUD implementations.
 
