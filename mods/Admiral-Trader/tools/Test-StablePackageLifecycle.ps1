@@ -23,7 +23,7 @@ foreach ($relative in @(
     if (-not (Test-Path (Join-Path $canonical $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
 }
 $expectedRuntimeManifests = @(
-    'artem-bundle-inventory.json', 'campaign-manifest.json', 'external-content-identities.json',
+    'artem-bundle-inventory.json', 'belt-progression-policy.json', 'campaign-manifest.json', 'external-content-identities.json',
     'external-trader-consolidation.json', 'painter-bundle-inventory.json',
     'painter-special-delivery-pool.json', 'relationship-stock.json', 'reward-bundle-policy.json',
     'runtime-manifest.json', 'story-campaign-runtime.json'

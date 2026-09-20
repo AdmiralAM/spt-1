@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "owner": "SPT-Belt-Armband-Inventory",
+  "policyOwner": "Admiral Trader / Economy Admiral",
+  "fenceMayBypassProgression": false,
+  "ownerOverrideAllowed": true,
+  "firstAcquisition": "quest-reward",
+  "bands": [
+    { "loyaltyLevel": 1, "minimumCells": 4, "maximumCells": 7, "minimumPriceRub": 100000, "maximumPriceRub": 160000, "unlock": "early-quest", "maximumStock": 3, "minimumRestockSeconds": 7200 },
+    { "loyaltyLevel": 2, "minimumCells": 8, "maximumCells": 11, "minimumPriceRub": 170000, "maximumPriceRub": 230000, "unlock": "quest", "maximumStock": 2, "minimumRestockSeconds": 10800 },
+    { "loyaltyLevel": 3, "minimumCells": 12, "maximumCells": 14, "minimumPriceRub": 240000, "maximumPriceRub": 320000, "unlock": "quest-or-themed-barter", "maximumStock": 2, "minimumRestockSeconds": 14400 },
+    { "loyaltyLevel": 4, "minimumCells": 15, "maximumCells": 16, "minimumPriceRub": 325000, "maximumPriceRub": 400000, "unlock": "serious-quest", "maximumStock": 1, "minimumRestockSeconds": 21600 },
+    { "loyaltyLevel": 4, "minimumCells": 20, "maximumCells": 2147483647, "minimumPriceRub": 450000, "maximumPriceRub": 2147483647, "unlock": "final-reward-or-complex-barter", "maximumStock": 1, "minimumRestockSeconds": 43200 }
+  ],
+  "knownTemplates": [
+    { "templateId": "68ac0000000000000000000c", "internalCells": 4, "filterStrength": "narrow-magazine", "protected": true, "loyaltyLevel": 1, "minimumPriceRub": 100000 }
+  ],
+  "notes": "Only templates actually published by Belt receive offers. Missing size bands remain empty; Admiral must never invent or clone Belt template IDs. Universal filters and protected storage move a template upward within its band."
+}

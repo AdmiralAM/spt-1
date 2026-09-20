@@ -105,7 +105,7 @@ Copy-Item (Join-Path $traderRoot 'bundles.json') (Join-Path $modTarget 'bundles.
 & (Join-Path $traderRoot 'tools/Hydrate-ArtemBundles.ps1') -Destination (Join-Path $modTarget 'bundles') -WorkingDirectory (Join-Path $OutputDirectory '.artem-source')
 & (Join-Path $traderRoot 'tools/Hydrate-PainterBundles.ps1') -Destination (Join-Path $modTarget 'bundles') -WorkingDirectory (Join-Path $OutputDirectory '.painter-source')
 New-Item (Join-Path $modTarget 'manifests') -ItemType Directory -Force | Out-Null
-foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json','reward-bundle-policy.json','external-trader-consolidation.json','external-content-identities.json','painter-special-delivery-pool.json','artem-bundle-inventory.json','painter-bundle-inventory.json') {
+foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json','reward-bundle-policy.json','external-trader-consolidation.json','external-content-identities.json','painter-special-delivery-pool.json','artem-bundle-inventory.json','painter-bundle-inventory.json','belt-progression-policy.json') {
     Copy-Item (Join-Path $traderRoot "manifests/$manifest") (Join-Path $modTarget "manifests/$manifest")
 }
 if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $traderRoot 'README.md') $modTarget }
