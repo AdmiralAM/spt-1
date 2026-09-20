@@ -4,11 +4,9 @@ A source repository for independent SPT 4.1.x mods. Each maintained module owns 
 
 > **Before development:** read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-workflow.md`](docs/development-workflow.md). Independent module workstreams use separate branches, PRs, and module-specific validation while under active development. Repository-wide publication is a separate controlled operation.
 
-## Project authorship
+## Project ownership
 
-This repository and the active SPT Mod Suite development are maintained by **AdmiralAM**. Modules authored as part of this suite are developed and maintained here under AdmiralAM's project ownership unless a module explicitly documents different upstream authorship or provenance.
-
-**Admiral Artyom Revival** is the important provenance exception: it is the maintained revival/compatibility product based on the pre-existing WTT-Artem mod and its upstream content. Inclusion and maintenance of the revival do not claim original authorship of WTT-Artem or its upstream assets/content.
+This repository contains only the AdmiralAM SPT modules maintained as part of this suite. Third-party source packages, imported content archives, generated runtime packages, and large binary assets are kept outside Git.
 
 ## Modules
 
@@ -23,7 +21,6 @@ Versions below reflect the durable workstream roadmap when a module has an activ
 | [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
 | [Economy Admiral](https://github.com/AdmiralAM/spt-1/issues/262) | `0.1.0`; active product acceptance / published runtime baseline | Coherent Quest, Trader, Flea and Loot economy pressure with server-backed F12 controls and optional Admiral Trader compatibility | Single live implementation PR discovered from GitHub; `runtime-economy-admiral` remains the accepted publication channel |
 | [Admiral Trader](https://github.com/AdmiralAM/spt-1/issues/192) | `0.1.0 + milestones`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Single live implementation PR discovered from GitHub; CI artifacts until deliberate runtime promotion |
-| [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
 ### Admiral Tactical HUD Stable Beta
 
@@ -52,7 +49,6 @@ Issues #338 and PRs #341/#343 record the accepted consolidation through **v1.2.0
 - [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) — install-only B&A&HB Stable v0.1.0 package while v0.2 remains in development.
 - `runtime-item-valuation` — install-only Item Valuation MOD SPT 1.0.0 package for SPT 4.1.3.
 - `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 publication channel.
-- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
 - `archive/v1.13.0` — temporary Tactical HUD recovery reserve pending final Admiral Tactical HUD 1.13.3 stable cleanup; never development authority.
 
 Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
@@ -70,19 +66,17 @@ Runtime branches are publication/runtime channels, not development branches. The
 
 Installation: close SPT, download and unpack the ZIP, open the included `SPT_Runtime` directory, then copy its **contents** into the existing `SPT_Runtime` directory of the game. The package already contains both required parts: the BepInEx client DLL and the server mod DLL. Remove the obsolete `Trenchfoot-BeltSlot.dll` first if it is installed.
 
-Runtime branches provide the maintained install packages for Admiral Tactical HUD/Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. The old Tactical HUD `archive/v1.13.0` branch is only a temporary recovery point until final 1.13.3 cleanup.
+Runtime branches provide the maintained install packages for Admiral Tactical HUD/Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, and Economy Admiral. The old Tactical HUD `archive/v1.13.0` branch is only a temporary recovery point until final 1.13.3 cleanup.
 
 Item Valuation MOD SPT `1.0.0` is published on `runtime-item-valuation` as a server-only install package rooted at `SPT_Runtime/user/mods/Item Valuation MOD SPT/`.
 
 Economy Admiral `0.1.0` is published on `runtime-economy-admiral` as its maintained install-only publication channel.
 
-Admiral Artyom Revival differs from the self-contained runtime ZIP channels: `runtime-artem-revival` pins the accepted r5 server identity while repaired authored core data and the external Unity `Bundles/` set remain governed by the module's reconstruction/update contract.
-
 ## Repository policy
 
 `main` contains maintained source and durable documentation. Active-development modules may also keep deterministic validation suites and build definitions. Once a module is deliberately promoted to a stable production source line, obsolete RC-only tests, temporary diagnostics, evidence bundles and development-only tooling are removed rather than retained as runtime baggage.
 
-Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, and dependency caches do not belong in source history.
+Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, dependency caches, third-party source trees, imported content archives, and large runtime assets do not belong in source history.
 
 Temporary feature, fix, diagnostic, research, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved only while they serve current development.
 

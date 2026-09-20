@@ -15,7 +15,6 @@ This is a multi-mod source repository. `main` is the authoritative integrated tr
 | `runtime-pause` | Install-only Pause Admiral channel |
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
 | `runtime-economy-admiral` | Install-only Economy Admiral 0.1.0 channel for SPT 4.1.3 |
-| `runtime-artem-revival` | Stable Admiral Artyom Revival publication identity; retained compatibility branch name |
 | `archive/v1.13.0` | Temporary Tactical HUD recovery reserve until final Admiral Tactical HUD 1.13.3 cleanup; never active development authority |
 
 Feature, fix, diagnostic, research, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
@@ -31,7 +30,6 @@ Long-term source modules currently integrated under `mods/` include:
 - `Item-Valuation-MOD-SPT`;
 - `Economy-Admiral`;
 - `Admiral-Trader`;
-- `Admiral-Artyom-Revival`.
 
 ### Admiral Tactical HUD transition
 
@@ -57,7 +55,7 @@ Keep material required for development, review, maintenance, or reproducible pub
 
 - source code and project/build definitions;
 - tests and deterministic validation tools;
-- maintained runtime/source assets;
+- lightweight maintained source assets required for development;
 - GitHub workflow definitions;
 - durable architecture, compatibility, and maintenance documentation.
 
@@ -68,6 +66,7 @@ Do not persist:
 - CI run IDs or one-off trigger/evidence marker files;
 - temporary diagnostic dumps;
 - install ZIPs or duplicate compiled packages already represented by CI artifacts/runtime channels.
+- third-party source trees, imported content archives, and large/generated runtime assets maintained only in local installations.
 
 The root `.gitignore` is the baseline guardrail. Workflows must not force-add ignored/generated material back into source history.
 
@@ -76,10 +75,6 @@ The root `.gitignore` is the baseline guardrail. Workflows must not force-add ig
 CI may create `build-output/`, `build-status/`, dependency caches, previews, and other temporary files inside the runner workspace. Those paths are disposable CI state.
 
 Validated packages belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. The suite publication workflow advances `stable` to the validated source commit and rebuilds its managed self-contained runtime branches from package output produced during that run. Economy Admiral uses its own isolated publication workflow so publishing `runtime-economy-admiral` does not advance suite `stable` or republish unrelated runtime channels.
-
-`runtime-artem-revival` is an explicit module-specific compatibility identifier for **Admiral Artyom Revival**. The accepted runtime consists of the validated SPT 4.1.3 server build plus repaired authored upstream data/assets and approximately 1.5 GB of Unity Bundles. The authored core and Bundles originate from the external archived WTT-Artem source set and are reproducibly transformed by deterministic importer/repair/localization tooling in `main`; duplicating those binaries in Git would be inappropriate. The permanent runtime branch therefore pins the validated server identity and immutable manifest for the accepted `r5-RU-compat` candidate. The module README documents how that identity relates to the persistent installed core/Bundles set.
-
-Promotion of `runtime-artem-revival` must use a candidate that passed Admiral Artyom Revival module CI and required user runtime validation. The branch is a publication identity, not a development workspace or a claim that its Git archive is a standalone full installation.
 
 A generated asset may remain tracked only when it is an intentional maintained source/runtime asset and deterministic validation depends on the repository copy. Build logs and package copies are never evidence that needs a source commit; the Actions run already provides provenance.
 

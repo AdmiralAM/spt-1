@@ -4,7 +4,7 @@
 
 Natalya is being retired from the target SPT installation. Her useful gameplay and storefront material therefore belongs in the existing Admiral runtime. This is a continuation from the tagged `0.2.0` stable baseline, not a resurrection of a second trader.
 
-Artem, Scorpion and Ref remain installed. Their content is not copied. Native traders plus those three are the comparison set used to reject duplicate offers and duplicate quest roles.
+Scorpion and Ref remain installed. Their content is not copied. Native traders plus those two are the comparison set used to reject duplicate offers and duplicate quest roles.
 
 Andrudis/QuestManiac is already disabled. Its repository is a source library only; it must not be re-enabled or become a runtime dependency.
 
@@ -22,7 +22,7 @@ Natalya also carries 48 custom items, 26 custom zones and four armour presets. N
 
 ## Storefront handover
 
-Natalya's source assortment has 35 native weapon roots. A first comparison against the exact 4.1.5 native assortments and the installed Artem and Scorpion static assorts identifies useful source candidates including M700, T-5000, VPO-215, SR-25, G28, M1A, RPDN, M60E6, PKP, Mk17, SA-58, SAG AK-545, RFB, Vector, MPX, MP5, MP-155, M870, MR-133, USP, Five-seveN and the Rhino variants.
+Natalya's source assortment has 35 native weapon roots. A first comparison against the exact 4.1.5 native assortments and the installed Scorpion static assort identifies useful source candidates including M700, T-5000, VPO-215, SR-25, G28, M1A, RPDN, M60E6, PKP, Mk17, SA-58, SAG AK-545, RFB, Vector, MPX, MP5, MP-155, M870, MR-133, USP, Five-seveN and the Rhino variants.
 
 That list is an intake list, not a promise to add every row. Each admitted offer must be a complete native preset, have finite stock, fill a role that is not already supplied by the retained trader set, and have a price and loyalty or quest gate that does not undercut the source trader. Broken custom-armour rows and detached parts are excluded.
 
@@ -37,5 +37,5 @@ That list is an intake list, not a promise to add every row. Each admitted offer
 
 - no Natalya trader, WTT requirement, custom-zone router, custom-item pack or imported profile state;
 - no Andrudis runtime activation or wholesale quest import;
-- no migration of Artem, Scorpion or Ref inventory or quests;
+- no migration of Scorpion or Ref inventory or quests;
 - no empty weapon roots, incompatible armour assemblies or duplicate commodity grid padding.

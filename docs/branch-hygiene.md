@@ -12,7 +12,6 @@ This repository keeps branches only when they have a clear current role. Task br
 - `runtime-belt-armband` — Belt/Armband Inventory install-only publication channel.
 - `runtime-item-valuation` — Item Valuation MOD SPT install-only publication channel.
 - `runtime-economy-admiral` — Economy Admiral install-only publication channel.
-- `runtime-artem-revival` — Admiral Artyom Revival stable publication identity; retained compatibility branch name, with authored core data/Bundles external and reproducible from the module contract.
 
 `archive/v1.13.0` is **not permanent product authority**. It is a temporary Tactical HUD recovery reserve retained only while the Admiral Tactical HUD 1.13.3 line is not yet final. The final 1.13.3 stable cleanup should remove it unless the user explicitly decides to preserve that archive.
 
@@ -61,8 +60,6 @@ If a branch must be retained as a deliberate historical/recovery point:
 For Admiral Tactical HUD, `runtime` is the publication channel while the single live implementation PR/branch is temporary development state. A legacy integrated path, retired task branch, or temporary recovery archive is never a second active development authority.
 
 `runtime-item-intelligence`, `runtime-item-valuation`, `runtime-pause`, `runtime-belt-armband`, and `runtime-economy-admiral` are install-only product channels. An active successor roadmap does not make the previous accepted runtime package a development authority; it remains the published baseline until deliberate replacement.
-
-`runtime-artem-revival` is intentionally retained as the publication compatibility identifier for **Admiral Artyom Revival**. It pins the accepted server identity plus manifest/hashes for `r5-RU-compat`; authored upstream runtime data and approximately 1.5 GB Unity Bundles remain external source material. The branch is not a standalone full-install archive. It must remain publication-only and be updated only from a runtime-validated candidate.
 
 ## Safety rule
 

@@ -9,7 +9,7 @@
     "compatibility": "~4.1.0",
     "validatedRuntime": "4.1.5"
   },
-  "retainedRuntimeTraders": ["native", "Artem", "Scorpion", "Ref", "Admiral"],
+  "retainedRuntimeTraders": ["native", "Scorpion", "Ref", "Admiral"],
   "retiredSources": {
     "Natalya": {
       "repository": "Colobos9mm/Natalya",

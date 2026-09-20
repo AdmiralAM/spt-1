@@ -37,10 +37,6 @@
     "RefFriendlyQuestsCSharp": {
       "repository": "acidphantasm/reffriendlyquests-csharp",
       "role": "native quest-table integration reference only"
-    },
-    "AdmiralArtyomRevival": {
-      "repositoryPath": "mods/Admiral-Artyom-Revival",
-      "role": "in-repository load-order and data separation reference only"
     }
   },
   "absorbed": [

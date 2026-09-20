@@ -164,10 +164,6 @@ Do not recreate:
 - cosmetic map copies;
 - wholesale bundles or WTT dependency merely to preserve the old architecture.
 
-### Admiral Artyom Revival
-
-Use as an in-repository reference for current SPT C# organization: clear load order, helper separation, data-driven trader assets/base/assort/locales and focused orchestration. Do not copy unrelated custom-item/clothing scope or WTT dependency when Admiral does not need it.
-
 ### Scorpion C# / Ref Friendly Quests C#
 
 Use the maintained repositories as references for focused C# helper/config/model/data separation and native SPT table-oriented quest/trader integration. Add custom routers or compatibility machinery only when Admiral has the same demonstrated need.

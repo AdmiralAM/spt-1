@@ -149,7 +149,6 @@ than inferred from folder names:
 | Installed module | Runtime version | Runtime GUID | Result with B&A&HB companion |
 | --- | --- | --- | --- |
 | WTT Armory | `2.0.5` | `com.wtt.armory` | Loads; weapon/ammunition content has no B&A persistent-ID or protection-root overlap |
-| WTT Artem Revival | `3.0.0` | `com.crackbone.artem-wtt` | Loads; this is the installed WTT component that actually has version 3.0.0 |
 | WTT Content Backport | `2.0.1` | `com.wtt.contentbackport` | Loads; extends armbands, containers and dogtag classes without receiving Admiral protection |
 | WTT CommonLib | `3.0.6` | `com.wtt.commonlib` | Loads and serves its custom-parent/recipe/bundle endpoints; remains an external dependency of WTT, not a new B&A dependency |
 | WTT Pack 'n' Strap | `2.1.1` | `com.wtt.packnstrap` | Loads and selects B&A companion mode |

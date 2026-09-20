@@ -73,7 +73,7 @@ These two files define the final design outcome:
 - final `KEEP / REWRITE / MERGE / DROP` disposition of the original 15-operation wave;
 - final EN/RU voice and editorial policy;
 - reward envelope and progression model;
-- selective absorption map for Natalya, Andrudis/QuestManiac, Admiral Artyom Revival, Scorpion C#, Ref Friendly Quests C# and legacy acidphantasm sources;
+- selective absorption map for Natalya, Andrudis/QuestManiac, Scorpion C#, Ref Friendly Quests C# and legacy acidphantasm sources;
 - closed/deferred concepts and explicit implementation boundary.
 
 The detailed `m3-*` manifests remain supporting evidence and implementation detail. They are **not parallel design authorities** and should not create further design churn by default.
@@ -106,7 +106,6 @@ Admiral is a consolidation/adaptation product, not a greenfield trader framework
 
 Required implementation references include:
 
-- `mods/Admiral-Artyom-Revival`;
 - `Colobos9mm/Natalya`;
 - `laurentmekka/AndrudisQuestManiac`;
 - `acidphantasm/scorpion-csharp`;
