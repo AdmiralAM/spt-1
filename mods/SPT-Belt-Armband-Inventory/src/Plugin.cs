@@ -10,6 +10,7 @@ namespace SPTBeltArmbandInventory
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.admiralam.compatibility-suite", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
