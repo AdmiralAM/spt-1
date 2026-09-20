@@ -43,7 +43,9 @@
       "slotId": "hideout",
       "upd": {
         "UnlimitedCount": false,
-        "StackObjectsCount": 999
+        "StackObjectsCount": 6,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
       }
     },
     {
@@ -105,8 +107,16 @@
     "67fef66cfdca1b1dd0eee5a1": [
       [
         {
-          "count": 500000,
-          "_tpl": "5449016a4bdc2d6f028b456f"
+          "count": 12,
+          "_tpl": "57347c1124597737fb1379e3"
+        },
+        {
+          "count": 12,
+          "_tpl": "5734795124597738002c6176"
+        },
+        {
+          "count": 10,
+          "_tpl": "5d235b4d86f7742e017bc88a"
         }
       ]
     ],

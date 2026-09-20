@@ -3,6 +3,11 @@
   "sourceRelease": "3.0.2",
   "sourceAsset": "WTT-Artem.7z",
   "sourceAssetSha256": "11e5bf532e591f5dedab72f44bc5f7fab886216c10288fc0ed13b3327b36318d",
+  "verifiedOverrides": [
+    "artemgpnvgblack.bundle",
+    "artemgpnvgod.bundle",
+    "artemgpnvgwhite.bundle"
+  ],
   "bundleCount": 262,
   "bundles": [
     {

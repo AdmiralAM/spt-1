@@ -560,7 +560,6 @@
                 "assets/commonassets/physics/physicsmaterials.bundle"
             ]
         },
-
         {
             "key": "artemgpnvgwhite.bundle",
             "dependencyKeys": [
@@ -1748,7 +1747,6 @@
                 "cubemaps",
                 "shaders"
             ]
-        
         },
         {
             "key": "Hands/artem_hands_35.bundle",
@@ -1880,6 +1878,46 @@
             "dependencyKeys": [
                 "cubemaps",
                 "shaders"
+            ]
+        },
+        {
+            "key": "figurine_batman.bundle",
+            "dependencyKeys": [
+                "cubemaps",
+                "shaders",
+                "assets/commonassets/physics/physicsmaterials.bundle"
+            ]
+        },
+        {
+            "key": "dodo338383899.bundle",
+            "dependencyKeys": [
+                "cubemaps",
+                "shaders",
+                "assets/commonassets/physics/physicsmaterials.bundle"
+            ]
+        },
+        {
+            "key": "mos115.bundle",
+            "dependencyKeys": [
+                "cubemaps",
+                "shaders",
+                "assets/commonassets/physics/physicsmaterials.bundle"
+            ]
+        },
+        {
+            "key": "mysterybox.bundle",
+            "dependencyKeys": [
+                "cubemaps",
+                "shaders",
+                "assets/commonassets/physics/physicsmaterials.bundle"
+            ]
+        },
+        {
+            "key": "mysterybox_2.bundle",
+            "dependencyKeys": [
+                "cubemaps",
+                "shaders",
+                "assets/commonassets/physics/physicsmaterials.bundle"
             ]
         }
     ]

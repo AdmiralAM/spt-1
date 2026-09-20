@@ -182,6 +182,11 @@ $provenance = [ordered]@{
         sptBuild = '4.1.5-RELEASE+7d7add5.20260905'
     }
     runtimeDllSha256 = $runtimeHashes
+    artemBundleHydration = [ordered]@{
+        pinnedSourceAssetSha256 = '11e5bf532e591f5dedab72f44bc5f7fab886216c10288fc0ed13b3327b36318d'
+        verifiedBundleCount = 262
+        correctedGpnvgOverrides = @('artemgpnvgblack.bundle','artemgpnvgod.bundle','artemgpnvgwhite.bundle')
+    }
     exactItemDatabaseSha256 = (Get-FileHash $itemsPath -Algorithm SHA256).Hash.ToLowerInvariant()
     allAssortTplsPresentInExactItemDb = $true
     sourceRegistrationEnabled = $true

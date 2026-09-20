@@ -7,6 +7,8 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Spt.Config;
+using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using IOPath = System.IO.Path;
 
@@ -19,6 +21,7 @@ public sealed class OptionalContentRegistration(
     ModHelper modHelper,
     TradersTable tradersTable,
     TemplateTable templateTable,
+    LocaleTable localesTable,
     ISptLogger<OptionalContentRegistration> logger) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken)
@@ -39,8 +42,45 @@ public sealed class OptionalContentRegistration(
         int beltRewards = ApplyCashTrades(modPath, "db/rewards/belt-container-reward-trades.json", optional: true);
         int wttPresets = ValidateWttPresetCatalog(modPath);
         int wttRewards = ApplyCashTrades(modPath, "db/optional/wtt-reward-trades.json", optional: true);
+        int tgcLocaleFallbacks = RegisterTgcRussianLocaleFallbacks(modPath);
         logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {fieldSupportRewards} field-support rewards, {tacticalRewards} tactical rewards, {wttPresets} WTT complete presets available, {wttRewards} WTT curated rewards, {optionalRewards} optional equipment rewards and {beltRewards} B&A&HB equipment reward trades");
+        if (tgcLocaleFallbacks > 0)
+            logger.Info($"Admiral supplied {tgcLocaleFallbacks} non-empty Russian-locale fallbacks for available TGC items");
         return Task.CompletedTask;
+    }
+
+    private int RegisterTgcRussianLocaleFallbacks(string modPath)
+    {
+        const string relative = "db/optional/tgc-ru-fallback.json";
+        if (!File.Exists(IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar)))) return 0;
+        Dictionary<MongoId, LocaleDetails> catalogue = modHelper.GetJsonDataFromFile<Dictionary<MongoId, LocaleDetails>>(modPath, relative);
+        Dictionary<string, LocaleDetails> available = catalogue
+            .Where(row => templateTable.Items.ContainsKey(row.Key))
+            .ToDictionary(row => row.Key.ToString(), row => row.Value, StringComparer.Ordinal);
+        if (available.Values.Any(row => string.IsNullOrWhiteSpace(row.Name) || string.IsNullOrWhiteSpace(row.ShortName) || string.IsNullOrWhiteSpace(row.Description)))
+            throw new InvalidDataException("TGC locale fallback catalogue contains an empty player-facing field");
+        if (available.Count == 0) return 0;
+
+        var russian = localesTable.Global.FirstOrDefault(row => row.Key.Equals("ru", StringComparison.OrdinalIgnoreCase)).Value;
+        if (russian is null) throw new InvalidDataException("Russian locale table is unavailable");
+        russian.AddTransformer(data =>
+        {
+            if (data is null) return data;
+            foreach (var (itemId, locale) in available)
+            {
+                SetMissing(data, $"{itemId} Name", locale.Name!);
+                SetMissing(data, $"{itemId} ShortName", locale.ShortName!);
+                SetMissing(data, $"{itemId} Description", locale.Description!);
+            }
+            return data;
+        });
+        return available.Count;
+    }
+
+    private static void SetMissing(Dictionary<string, string> locale, string key, string fallback)
+    {
+        if (!locale.TryGetValue(key, out string? value) || string.IsNullOrWhiteSpace(value))
+            locale[key] = fallback;
     }
 
     private int ValidateWttPresetCatalog(string modPath)

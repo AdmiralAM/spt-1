@@ -332,18 +332,21 @@
             "CanPutIntoDuringTheRaid": true,
             "CantRemoveFromSlotsDuringRaid": [],
             "TagColor": 0,
-            "TagName": ""
+            "TagName": "",
+            "name": "Snacky-Z compact utility pouch",
+            "shortName": "Snacky-Z",
+            "description": "An Artem compact utility pouch. It occupies 2x1 stash cells and provides a 5x5 internal grid for small supplies and valuables."
         },
         "locales": {
             "en": {
-                "name": "Snacky-Z",
+                "name": "Snacky-Z compact utility pouch",
                 "shortName": "Snacky-Z",
-                "description": ""
+                "description": "An Artem compact utility pouch. It occupies 2x1 stash cells and provides a 5x5 internal grid for small supplies and valuables."
             },
             "ru": {
-                "name": "Сухпаёк Snacky-Z",
+                "name": "Компактный подсумок Snacky-Z",
                 "shortName": "Snacky-Z",
-                "description": "Особый предмет «Сухпаёк Snacky-Z»."
+                "description": "Компактный подсумок-контейнер из комплекта Artem. Занимает 2x1 ячейки в схроне и предоставляет внутреннюю сетку 5x5 для небольших припасов и ценностей."
             }
         },
         "addtoInventorySlots": [],

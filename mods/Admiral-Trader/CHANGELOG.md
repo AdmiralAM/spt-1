@@ -2,6 +2,8 @@
 
 ## 0.3.0 — stable campaign and storefront
 
+- Complete imported storefront presentation: every sold Artem item has a verified packaged prefab and non-empty Russian copy, all Painter prefabs are registered in the bundle manifest, and all 117 optional TGC templates receive non-destructive Russian-locale fallbacks when present.
+- Correct Snacky-Z as a 2x1/5x5 compact pouch and move it to a finite maintenance-material barter; move Painter's 20-draw Special Delivery from unrestricted cash purchase to a one-per-reset themed barter while preserving every template and offer ID.
 - Embed the complete WTT Artem runtime content directly in Admiral Trader while preserving all distributed identities; migrate existing relation/purchase/dialogue ownership to Admiral and remove the compatibility trader record only after successful profile saves. No separate Artem DLL or active mod folder remains.
 - Preserve Painter/TGC consolidation and the combined 35 quests, 402 offer roots / 946 assort rows, 44 unlocks and 68 suits under Admiral.
 - Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.

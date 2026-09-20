@@ -1,0 +1,587 @@
+{
+  "672e2e7500543603d91e0101": {
+    "name": "Nomad Reflex Sight",
+    "shortName": "Nomad",
+    "description": "The Nomad Reflex Sight is a compact reflex sight for close range engagements. It features a 1x magnification and a 20mm objective lens. The sight is equipped with a 3 MOA red dot and has a 1 MOA click adjustment."
+  },
+  "672e2e75033ea9ca8bef91bc": {
+    "name": "FAST Optic Riser",
+    "shortName": "FAST Riser",
+    "description": "The FAST Optic Riser securely elevates direct-to-rail mounted red dot optics with a standard lower 1/3 co-witness picatinny mount to a 2.26 optical center line. The FAST Optic Riser provides an elevated M1913 Picatinny platform for direct attachment of optics, such as EOTech® EXPS, Vortex UH-1 and other lower 1/3 co-witness optics."
+  },
+  "672e2e7503876d1630af50b0": {
+    "name": "Devil MLOK grip",
+    "shortName": "DEVIL",
+    "description": "A very solid angled grip in pure steel. Crafted by Painter."
+  },
+  "672e2e7504b1f1d5b0e4209c": {
+    "name": "Scott FM3 protective mask",
+    "shortName": "FM3",
+    "description": "Approved to EN 136 Class 3, the highest standard for safety."
+  },
+  "672e2e7505c0ffbaf790db95": {
+    "name": "SureFire flashlight with pressure pad",
+    "shortName": "SF Press",
+    "description": "WMLx White - Gen 2 sets the standard for balancing output, reliability, and value in a compact white-light capability for your rifle or carbine. Extensively proven amidst prolonged rapid firing, rough handling, and harsh conditions, it is a match for adversity in any clime or place."
+  },
+  "672e2e75071e71f8e4a59286": {
+    "name": "Wilcox tactical device",
+    "shortName": "Wilcox",
+    "description": "Compact laser and flashlight device for mounting on picatinny rails."
+  },
+  "672e2e750c562a5e650dc9b3": {
+    "name": "Scalarworks LEAP/Scope mount",
+    "shortName": "LEAP",
+    "description": "Designed for shooters who want the lightest, strongest, and most compact quick-detach red dot sight mount possible. The LEAP/01 redefines the standard for mounting your Aimpoint Micro T-2 footprint compatible optic to your AR-15 Picatinny top rail."
+  },
+  "672e2e750cd8dfd1fee34a08": {
+    "name": "AR-15 ZipLine stock",
+    "shortName": "ZipLine",
+    "description": "Legendary blueprint from a specific game. Fits AR-15 and compatible weapons."
+  },
+  "672e2e750ea81b3b93b943ac": {
+    "name": "TGC combat belt (Black)",
+    "shortName": "BELT",
+    "description": "Advanced combat belt with a lightweight construction and a comfortable fit. The belt is equipped with a quick-release buckle and a system of additional pouches for carrying equipment. The belt is made of durable materials and is designed for long-term use in harsh conditions."
+  },
+  "672e2e7511180730151307bc": {
+    "name": "KAC Rail Cover",
+    "shortName": "Cover",
+    "description": "KAC iconic Ribbed Rail Panels have seen use all over the globe on US military M4 Carbines."
+  },
+  "672e2e75195420ccca420a2f": {
+    "name": "6x38mm ARC",
+    "shortName": "ARC",
+    "description": "The 6mm Advanced Rifle Cartridge (6x38mm), or 6mm ARC for short, is a 6 mm (.243) caliber intermediate rifle cartridge introduced by Hornady in 2020, as a low-recoil, high-accuracy long-range cartridge, designed for use in the AR-15 platform at request of a specialized group within the U.S. DoD for its multipurpose combat rifle program."
+  },
+  "672e2e751a561533f23a2635": {
+    "name": "AR-15 Daniel Defense 15\" handguard",
+    "shortName": "DDMFR 15\"",
+    "description": "Daniel Defense MFR 15.0 M-LOK rail, which comes from the DDM4V7 PRO edition. Length of 15\", it has everything you need on the battlefield."
+  },
+  "672e2e751ff683e9432cb5af": {
+    "name": "TGC MULE combat belt (Black)",
+    "shortName": "MULE",
+    "description": "Large ergonomic belt for military units. The belt is equipped with a quick-release buckle and a system of additional pouches for carrying equipment. The belt is made of durable materials and is designed for long-term use in harsh conditions."
+  },
+  "672e2e7521f4ccc8cc6d8335": {
+    "name": "M16 Daniel Defense 14\" handguard",
+    "shortName": "DDM16",
+    "description": "Daniel Defense MFR 14.0 M-LOK rail, which comes from the DDM4V7 PRO edition. Length of 14\", it has everything you need on the battlefield."
+  },
+  "672e2e7526ba61dbb88be7ff": {
+    "name": "TGC First Aid container",
+    "shortName": "First Aid",
+    "description": "A pouch for all your meds, produced by Painter."
+  },
+  "672e2e7531ffa75ea676c3ea": {
+    "name": "CGPC3 TQS (Tan)",
+    "shortName": "CGPC3",
+    "description": "A low-profile, lightweight and fully modular plate carrier made in the Czech Republic. With its sturdy construction and advanced materials, it offers reliable defense against ballistic threats and fragmentation, while its Tube Quick System allows for comfortable and silent unfastening."
+  },
+  "672e2e7533a70f23dfe4c8bb": {
+    "name": "MAGPUL MOE SL-M FDE",
+    "shortName": "SL-M FDE",
+    "description": "The MOE SL-M Carbine Stock is a drop-in replacement buttstock for AR15/M4 Mil-Spec carbine buffer tubes. It was specifically developed for ultra-compact, PDW-style military platform requirements and for users desiring a smaller, lighter stock."
+  },
+  "672e2e7535b901cc0cb57e73": {
+    "name": "M16 5.56x45 20\" barrel",
+    "shortName": "M16 20\"",
+    "description": "A 20\" for M16 5.56x45 NATO ammo."
+  },
+  "672e2e753a1ea309958b56cc": {
+    "name": "AR-15 BCM MCMR-10 handguard (FDE)",
+    "shortName": "MCMR 10\"",
+    "description": "Featuring the same industry leading barrel nut and lock up design as originally introduced on BCM's evolutionary KMR handguard, the MCMR Series of handguards gives the shooter modularity in the M-LOK platform."
+  },
+  "672e2e753c97527a5186e73f": {
+    "name": "DevTac Ronin ballistic helmet (v2)",
+    "shortName": "Ronin v2",
+    "description": "A Japan-based tactical helmet, manufactured by DevTac. Not used by any military or special forces. Just somehow happened to be in Tarkov for some frivolous price. Features a full protection of the whole head, but the armor class is not good enough to actually be useful in combat."
+  },
+  "672e2e753f9d1074231fa6a2": {
+    "name": "M700 7.62x51 15 inch threaded barrel",
+    "shortName": "M700 15",
+    "description": "A 15 inch threaded barrel for Remington Model 700 sniper rifle chambered in 7.62x51 NATO ammo."
+  },
+  "672e2e753ffe524d70e8cd8f": {
+    "name": "AR-15 M16 v2 stock",
+    "shortName": "M16",
+    "description": "M16 stock made by Colt for AR-15 and compatible weapons."
+  },
+  "672e2e754544ab54214fd56c": {
+    "name": "Back Panel v1 (Black)",
+    "shortName": "Back Panel",
+    "description": "Back panel for vests. Adds 5x5 cells for carrying various equipment."
+  },
+  "672e2e7546454a975e0b7a3b": {
+    "name": "BCM GUNFIGHTER MOD 3 vertical foregrip (FDE tape)",
+    "shortName": "GF MOD3",
+    "description": "Lightweight polymer tactical grip produced by BCM. Modded with grip tape that holds the universe together."
+  },
+  "672e2e754e6844af8e197b00": {
+    "name": "MSA TC2000 ACH MICH helmet",
+    "shortName": "TC-2000",
+    "description": "The MICH was originally part of a series of combat helmets designed for the U.S. Army Special Operations Command as a replacement for the PASGT helmet and the various non-ballistic helmets solely within those units."
+  },
+  "672e2e754f01ef56b4aa66a3": {
+    "name": "Wrapped 5.56x45 silencer",
+    "shortName": "Wrap 556",
+    "description": "This wrapped silencer is designed for installation on AR or AK based 5.56x45 rifles. It is made of stainless steel and has a special coating that reduces the sound of shots."
+  },
+  "672e2e75500922dee75bf400": {
+    "name": "AR-15 ZipLine handguard",
+    "shortName": "ZipLine",
+    "description": "Legendary blueprint from a specific game. Fits AR-15 and compatible weapons."
+  },
+  "672e2e7553233ca6956e5358": {
+    "name": "AR-15 5.56x45 200mm barrel",
+    "shortName": "AR-15 200mm",
+    "description": "A 200mm barrel for AR-15 based weapons for 5.56x45 NATO ammo. Corresponds with standard service M4 CQBR barrel."
+  },
+  "672e2e755898793d805ec2c3": {
+    "name": "SAKO Vertical Foregrip OD",
+    "shortName": "SAKO",
+    "description": "The SAKO Vertical Grip feature a soft touch overmolded gripping area, allowed for improved retention and comfort. Grips mount to standard Picatinny rails and feature a built-in dual O-ring, water tight storage."
+  },
+  "672e2e75592eb3c91e248717": {
+    "name": "Back Panel v2 (Black)",
+    "shortName": "Back Panel",
+    "description": "Back panel for vests. Adds 5x5 cells for carrying various equipment."
+  },
+  "672e2e755aa052b1e954dd68": {
+    "name": "HK MP7 TGC Stelio 4.6x30 sound suppressor",
+    "shortName": "Stelio 4.6",
+    "description": "Stelio is a 4.6x30 mm suppressor produced by Painter (TGC)."
+  },
+  "672e2e755ab53b635a4d4f39": {
+    "name": "Trijicon MRO Reflex Sight",
+    "shortName": "MRO",
+    "description": "The Trijicon MRO (Miniature Rifle Optic) is a sealed, miniature reflex sight intended for use on rifles, carbines, and shotguns to provide fast target acquisition."
+  },
+  "672e2e755afaba52a4af5e45": {
+    "name": "Crye Precision AVS",
+    "shortName": "AVS",
+    "description": "The AVS Harness is a primary base component of the AVS. It provides structural support and a mounting platform for a variety of AVS™ components, which allows a wide range of different load-outs and configurations."
+  },
+  "672e2e755c49aef3e8a3dd0c": {
+    "name": "AR-15 M16 M203 heat shield handguard",
+    "shortName": "M203",
+    "description": "Heat shield handguard for M16A4 and M4A1 with M203 grenade launcher."
+  },
+  "672e2e755cebe435a3b4dba5": {
+    "name": "Daniel Defense 5.56 magazine",
+    "shortName": "DD MAG",
+    "description": "The DD Magazine is the only AR-15 magazine worthy of the Daniel Defense name and is built with the same quality and standards as their world-class firearms. Its 32-round capacity for 5.56mm and 300 Blackout rounds is the most notable enhancement while maintaining the same size as industry-standard 30-round magazines."
+  },
+  "672e2e756174d5e5e9f677ee": {
+    "name": "SureFire flashlight with pressure pad (FDE)",
+    "shortName": "SF Press",
+    "description": "WMLx White - Gen 2 sets the standard for balancing output, reliability, and value in a compact white-light capability for your rifle or carbine. Extensively proven amidst prolonged rapid firing, rough handling, and harsh conditions, it is a match for adversity in any clime or place."
+  },
+  "672e2e7563b1a22a3c7b3895": {
+    "name": "Back Panel v1",
+    "shortName": "Back Panel",
+    "description": "Back panel for vests. Adds 5x5 cells for carrying various equipment."
+  },
+  "672e2e75645f9ad09f4b949d": {
+    "name": "Lwrci Railskin OD",
+    "shortName": "Cover",
+    "description": "The unique snake scale pattern provides positive non-slip grip even when wet or oily. Made of an extremely durable space-age polymer, they are nearly unbreakable."
+  },
+  "672e2e756803734b60f5ac1e": {
+    "name": "GP-9 protective mask",
+    "shortName": "GP-9",
+    "description": "The GP-9 features a removable oral-nasal cup, panoramic lens, intercom, voice diaphragm, and a 40mm GOST thread, making it superior to the previous GP-7V mask."
+  },
+  "672e2e756bdff59d722213c9": {
+    "name": "SAKO Vertical Foregrip",
+    "shortName": "SAKO",
+    "description": "The SAKO Vertical Grip feature a soft touch overmolded gripping area, allowed for improved retention and comfort. Grips mount to standard Picatinny rails and feature a built-in dual O-ring, water tight storage."
+  },
+  "672e2e7578374ac936625f9a": {
+    "name": "AR-15 Daniel Defense 15\" handguard (FDE)",
+    "shortName": "DDMFR 15\"",
+    "description": "Daniel Defense MFR 15.0 M-LOK rail, which comes from the DDM4V7 PRO edition. Length of 15\", it has everything you need on the battlefield."
+  },
+  "672e2e757a1e6eeae1841933": {
+    "name": "INFORCE WMLX GEN 2",
+    "shortName": "WMLX",
+    "description": "WMLx White - Gen 2 sets the standard for balancing output, reliability, and value in a compact white-light capability for your rifle or carbine. Extensively proven amidst prolonged rapid firing, rough handling, and harsh conditions, it is a match for adversity in any clime or place."
+  },
+  "672e2e757e294bf6e5ecb944": {
+    "name": "TGC M-LOK 2.8 inch rail",
+    "shortName": "MLOK 2.8\"",
+    "description": "Low profile M-LOK 2.8 inch rail created by Painter, allows installation of additional equipment on the handguards equipped with an M-LOK interface."
+  },
+  "672e2e757e517ac4552086d1": {
+    "name": "M16 5.56x45 18\" barrel",
+    "shortName": "M16 18\"",
+    "description": "A 18\" for M16 5.56x45 NATO ammo."
+  },
+  "672e2e757efbbef26ff61046": {
+    "name": "BCM GUNFIGHTER MOD 3 vertical foregrip (Blue tape)",
+    "shortName": "GF MOD3",
+    "description": "Lightweight polymer tactical grip produced by BCM. Modded with grip tape that holds the universe together."
+  },
+  "672e2e75848c5da68dd122f0": {
+    "name": "Magpul MOE2 pistol grip (Black)",
+    "shortName": "MOE2",
+    "description": "The polymer Magpul MOE2 pistol grip can be installed on any weapon compatible with AR-15 pistol grips. Thanks to the ergonomic shape and anti-slip texture, it makes the weapon grip and control more comfortably. The inside of the grip contains free space for spare parts, tools, batteries, and an accessories kit. Comes in black and flat dark earth."
+  },
+  "672e2e758808bacbb9d5abc4": {
+    "name": "TGC Ammo Pouch",
+    "shortName": "AMMO",
+    "description": "Ammunition storage pouch produced by Painter."
+  },
+  "672e2e758977f29e3a29cd9c": {
+    "name": "KAC QDC-CQB 5.56x45 sound suppressor",
+    "shortName": "QDC-CQB 556",
+    "description": "The Knight's Armament Company QDC 556 sound suppressor, designed for use with 5.56x45 caliber weapon systems. Can only be installed on the KAC QDC 3-Prong Flash Eliminator."
+  },
+  "672e2e758c2bcbf1b2421359": {
+    "name": "PARACLETE SOHPC GEN2 (Black)",
+    "shortName": "SOHPC GEN2",
+    "description": "The SOHPC is PARACLETEs most successful hard plate carrier. It has been innovatively designed to provide unmatched comfort, protection and flexibility to meet the needs of every mission. Through the addition of an adjustable cummerbund and optional side plate pouches for hard armor plates, the SOHPC is the operators choice for todays missions."
+  },
+  "672e2e75929d47eb157491c8": {
+    "name": "M16 Daniel Defense 14\" handguard",
+    "shortName": "DDM16",
+    "description": "Daniel Defense MFR 14.0 M-LOK rail, which comes from the DDM4V7 PRO edition. Length of 14\", it has everything you need on the battlefield."
+  },
+  "672e2e759342d416e10caa10": {
+    "name": "Surefire M640U-BK-PRO Flashlight offset",
+    "shortName": "M640-O",
+    "description": "With its recoil-proof, ultra-high-output LED delivering 1000 lumens of blinding white light, the Scout Light Pro is ready for action. Its proprietary TIR lens shapes the light into a far-reaching beam with ample surround light for exceptional peripheral vision, making it ideal for medium to longer-range applications. SureFires new Low-Profile Mount (LPM) delivers unprecedented versatility, allowing the user to optimize the lights position relative to the rail."
+  },
+  "672e2e7595d3b3be0daf9055": {
+    "name": "Ops-Core FAST MT MODXII (Black)",
+    "shortName": "Fast MODXII",
+    "description": "Ops-Core Fast ballistic helmet is popular in special forces all around the world. Can be modified with different components. Modded with accessories used by special forces."
+  },
+  "672e2e759623bcd75fbfb04c": {
+    "name": "Riser One mount",
+    "shortName": "RIS One",
+    "description": "Perfect mount to use with the Aimpoint Micro T-1 reflex sight."
+  },
+  "672e2e759b231e2b1a95516f": {
+    "name": "AR-15 TGC handguard",
+    "shortName": "TGC 10\"",
+    "description": "Featuring the same industry leading barrel nut and lock up design as originally introduced on BCM's evolutionary KMR handguard, the MCMR Series of handguards gives the shooter modularity in the M-LOK platform."
+  },
+  "672e2e759bff586ad22ecbc7": {
+    "name": "AR-15 Daniel Defense charging handle",
+    "shortName": "DD",
+    "description": "This Daniel Defense Grip-N-Rip AR-15 Ambidextrous Charging Handle is a lightweight, durable, and reliable method to charge your firearm."
+  },
+  "672e2e75a16c1d2034c384cf": {
+    "name": "TGC combat belt (Brown)",
+    "shortName": "BELT",
+    "description": "Advanced combat belt with a lightweight construction and a comfortable fit. The belt is equipped with a quick-release buckle and a system of additional pouches for carrying equipment. The belt is made of durable materials and is designed for long-term use in harsh conditions."
+  },
+  "672e2e75a23a16d355754ef6": {
+    "name": "PARACLETE APC",
+    "shortName": "APC",
+    "description": "Designed to allow the operator to gain immediate protection against high powered assault weapons, the Advanced Plate Carrier (APC) takes performance to new levels. Blending the functionality of a tactical vest with the simplicity of a plate carrier, the APC accommodates soft ballistic panels, Level III or IV hard armor plates and equipment pouches."
+  },
+  "672e2e75a26efb53bc703d45": {
+    "name": "TGC Police Belt",
+    "shortName": "BELT",
+    "description": "Utility belt for police units. The belt is equipped with a quick-release buckle and a system of additional pouches for carrying equipment. The belt is made of durable materials and is designed for long-term use in harsh conditions."
+  },
+  "672e2e75a8d84451e1b9d793": {
+    "name": "AR-15 ZipLine pistol grip",
+    "shortName": "ZipLine",
+    "description": "Legendary blueprint from a specific game. Fits AR-15 and compatible weapons."
+  },
+  "672e2e75a9332b620bdf4715": {
+    "name": "FAST Micro",
+    "shortName": "FAST Micro",
+    "description": "The FAST Micro mount features built-in standard height back up iron sights that keep weapons uncluttered, without reducing capability.  Both front and rear BUIS are completely adjustable for windage and elevation. The front sight post can be removed so that the rear BUIS aperture can be used with a traditional front sight such as our FUSION fixed or folding sights  (if present), creating a more conventional sight radius. However, the built in front/rear BUIS is perfect for backup on super short PDW/SMG platforms where rail space is critical for mounting lights and lasers."
+  },
+  "672e2e75aedb36663267e181": {
+    "name": "Classic US Helmet",
+    "shortName": "US Helmet",
+    "description": "The classic US helmet, used in the US military since 1983. The helmet offers protection against shrapnel and other projectiles."
+  },
+  "672e2e75afb25b57bd1d1455": {
+    "name": "CGPC3 TQS (Green)",
+    "shortName": "CGPC3",
+    "description": "A low-profile, lightweight and fully modular plate carrier made in the Czech Republic. With its sturdy construction and advanced materials, it offers reliable defense against ballistic threats and fragmentation, while its Tube Quick System allows for comfortable and silent unfastening."
+  },
+  "672e2e75b0ab4fcbbf7dc471": {
+    "name": "TGC Tool Box",
+    "shortName": "Tool Box",
+    "description": "Premium (TGC Certified) tool box to store all of your tools and workshop components, produced by Painter."
+  },
+  "672e2e75b14ae1b5c91474b4": {
+    "name": "Ops-Core FAST MT MODXII (M90)",
+    "shortName": "Fast MODXII",
+    "description": "Ops-Core Fast ballistic helmet is popular in special forces all around the world. Can be modified with different components. Modded with accessories used by special forces."
+  },
+  "672e2e75b5b680c7ee6aa408": {
+    "name": "Ops-Core FAST MT MODXII (Multicam)",
+    "shortName": "Fast MODXII",
+    "description": "Ops-Core Fast ballistic helmet is popular in special forces all around the world. Can be modified with different components. Modded with accessories used by special forces."
+  },
+  "672e2e75b74647fc82da299c": {
+    "name": "AR-15 M16 stock",
+    "shortName": "M16",
+    "description": "M16 stock made by Colt for AR-15 and compatible weapons."
+  },
+  "672e2e75b7f83e81f1dc5067": {
+    "name": "MAGPUL MOE SL-M",
+    "shortName": "SL-M",
+    "description": "The MOE SL-M Carbine Stock is a drop-in replacement buttstock for AR15/M4 Mil-Spec carbine buffer tubes. It was specifically developed for ultra-compact, PDW-style military platform requirements and for users desiring a smaller, lighter stock."
+  },
+  "672e2e75b9082dbf88dd1dbd": {
+    "name": "Mystery Ranch NICE COMM 3 BVS frame system (M90)",
+    "shortName": "COMM 3",
+    "description": "The NICE Frame special system for carrying oversized or heavy loads with an installed COMM 3 backpack for carrying radio systems. The COMM 3 main bay is designed for PRC117F or G, PRC119F, 152, or ASIP radios. The Hitchhiker and Daypack lid allows you to carry separate gear if needed. The modular NICE COMM 3 system is ready to adapt to changing tasks. An extremely rare thing, for which a real hunt is conducted in Tarkov."
+  },
+  "672e2e75ba73d87a448e3f13": {
+    "name": "Magpul FDE MOE2 pistol grip (FDE)",
+    "shortName": "MOE2",
+    "description": "The polymer Magpul MOE2 pistol grip can be installed on any weapon compatible with AR-15 pistol grips. Thanks to the ergonomic shape and anti-slip texture, it makes the weapon grip and control more comfortably. The inside of the grip contains free space for spare parts, tools, batteries, and an accessories kit. Comes in black and flat dark earth."
+  },
+  "672e2e75ba8f56d981dc6e2c": {
+    "name": "HK MP7 4.6x30 60-round magazine",
+    "shortName": "MP7 60",
+    "description": "60-round 4.6x30 magazine for MP7."
+  },
+  "672e2e75bd4a44818c26b1b0": {
+    "name": "AR-15 BCM MCMR-10 handguard",
+    "shortName": "MCMR 10\"",
+    "description": "Featuring the same industry leading barrel nut and lock up design as originally introduced on BCM's evolutionary KMR handguard, the MCMR Series of handguards gives the shooter modularity in the M-LOK platform."
+  },
+  "672e2e75be2ea9998a388b8b": {
+    "name": "PARACLETE APC (Multicam)",
+    "shortName": "APC Multicam",
+    "description": "Designed to allow the operator to gain immediate protection against high powered assault weapons, the Advanced Plate Carrier (APC) takes performance to new levels. Blending the functionality of a tactical vest with the simplicity of a plate carrier, the APC accommodates soft ballistic panels, Level III or IV hard armor plates and equipment pouches."
+  },
+  "672e2e75bfad327651a1a19b": {
+    "name": "TGC MULE combat belt",
+    "shortName": "MULE",
+    "description": "Large ergonomic belt for military units. The belt is equipped with a quick-release buckle and a system of additional pouches for carrying equipment. The belt is made of durable materials and is designed for long-term use in harsh conditions."
+  },
+  "672e2e75c076d2093b05c764": {
+    "name": "Mystery Ranch NICE COMM 3 BVS frame system (Black)",
+    "shortName": "COMM 3",
+    "description": "The NICE Frame special system for carrying oversized or heavy loads with an installed COMM 3 backpack for carrying radio systems. The COMM 3 main bay is designed for PRC117F or G, PRC119F, 152, or ASIP radios. The Hitchhiker and Daypack lid allows you to carry separate gear if needed. The modular NICE COMM 3 system is ready to adapt to changing tasks. An extremely rare thing, for which a real hunt is conducted in Tarkov."
+  },
+  "672e2e75c24f8de5c9a1bdfc": {
+    "name": "AR-15 ZipLine reciever",
+    "shortName": "ZipLine",
+    "description": "Legendary blueprint from a specific game. Fits AR-15 and compatible weapons."
+  },
+  "672e2e75c3973efd2d011d2f": {
+    "name": "Magpul 5.56/7.62 kitted magazine",
+    "shortName": "KIT-MAG",
+    "description": "30-round magazine for 5.56x45 and 7.62x35 rounds. The magazine is equipped with a Magpul Ranger assist puller."
+  },
+  "672e2e75c5ba9aeedbced57d": {
+    "name": "Crye Precision AVS (Black)",
+    "shortName": "AVS",
+    "description": "The AVS Harness is a primary base component of the AVS. It provides structural support and a mounting platform for a variety of AVS™ components, which allows a wide range of different load-outs and configurations."
+  },
+  "672e2e75c7c7c5232e513062": {
+    "name": "AK AKademia Bastion transparent dust cover",
+    "shortName": "Bastion Trans",
+    "description": "The Bastion dust cover with an integrated Picatinny rail is compatible with all models of Kalashnikov automatic rifles and carbines based on the AK platform. Manufactured by AKademia. Transparent version."
+  },
+  "672e2e75d122de1a20db31a5": {
+    "name": "SureFire X300U-A Flashlight",
+    "shortName": "X300U",
+    "description": "SureFire X300U-A is a more powerful version of the SureFire X300U. It is a compact WeaponLight for pistols and long guns, featuring an ultra-high-output LED that delivers 1,000 lumens of blinding white light with a focused beam that provides significant reach and peripheral illumination."
+  },
+  "672e2e75d276dfa8dd76770c": {
+    "name": "Back Panel v2",
+    "shortName": "Back Panel",
+    "description": "Back panel for vests. Adds 5x5 cells for carrying various equipment."
+  },
+  "672e2e75d41d0e93c918096a": {
+    "name": "AR-15 Magpul MOE Carbine stock (Modded)",
+    "shortName": "MOE",
+    "description": "A drop-in replacement buttstock for AR-15/M16 carbines by Magpul Original Equipment. Uses mil-spec sized receiver extension tubes."
+  },
+  "672e2e75d89015cd6322030b": {
+    "name": "Shapeshifter helmet with face cover",
+    "shortName": "Shapeshifter",
+    "description": "Legendary helmet with face cover."
+  },
+  "672e2e75dad19c7115e2489e": {
+    "name": "AR-15 Strike Industries Advanced Receiver Extension buffer tube with adapter",
+    "shortName": "ARE Adapter",
+    "description": "The Advanced Receiver Extension buffer tube with adapter, Mil-Spec diameter will fit any AR-15-based carbine or rifle. The buffer tube has a distinctive scalloping that decreases friction with the stock and reduces weight while retaining strength in areas that get the most stress. Manufactured by Strike Industries."
+  },
+  "672e2e75dbf780f902fd6d68": {
+    "name": "PARACLETE SOHPC GEN2",
+    "shortName": "SOHPC GEN2",
+    "description": "The SOHPC is PARACLETEs most successful hard plate carrier. It has been innovatively designed to provide unmatched comfort, protection and flexibility to meet the needs of every mission. Through the addition of an adjustable cummerbund and optional side plate pouches for hard armor plates, the SOHPC is the operators choice for todays missions."
+  },
+  "672e2e75e04c9aca3536136b": {
+    "name": "AR-15 5.56x45 180mm barrel",
+    "shortName": "AR-15 180mm",
+    "description": "A 180mm barrel for AR-15 based weapons for 5.56x45 NATO ammo. Corresponds with standard service M4 CQBR barrel."
+  },
+  "672e2e75e12417d2656e8974": {
+    "name": "M1 Vietnam Helmet",
+    "shortName": "NAM",
+    "description": "Second World War vintage United States pattern M1 helmet, with minor modifications. For American troops, a cloth helmet cover was designed with a disruptive camouflage pattern."
+  },
+  "672e2e75e21492038fb1b118": {
+    "name": "HK MP7 TGC Stelio S 4.6x30 sound suppressor",
+    "shortName": "Stelio 4.6",
+    "description": "Stelio is a 4.6x30 mm suppressor produced by Painter (TGC)."
+  },
+  "672e2e75e2cb5715ab46ae15": {
+    "name": "BOPE Beret",
+    "shortName": "BOPE",
+    "description": "What is a Brazilian police beret doing here in Russia?"
+  },
+  "672e2e75e352ae625453519b": {
+    "name": "FTX tactical device",
+    "shortName": "FTX",
+    "description": "Compact laser and flashlight device for mounting on picatinny rails."
+  },
+  "672e2e75e8c2736e43530008": {
+    "name": "Gemtech ONE-S multi-caliber sound suppressor",
+    "shortName": "ONE-S",
+    "description": "Gemtech ONE-S (mini) sound suppressor designed for use with a 7.62x51 NATO, but also compatible with a most popular rifle calibers. Can only be installed on compatible devices."
+  },
+  "672e2e75e97f1888187ed37d": {
+    "name": "DevTac Ronin ballistic helmet (v2.1)",
+    "shortName": "Ronin v2.1",
+    "description": "A Japan-based tactical helmet, manufactured by DevTac. Not used by any military or special forces. Just somehow happened to be in Tarkov for some frivolous price. Features a full protection of the whole head, but the armor class is not good enough to actually be useful in combat."
+  },
+  "672e2e75ea372126f4fcb874": {
+    "name": "BCM GUNFIGHTER MOD 3 vertical foregrip (reversed)",
+    "shortName": "GF MOD3",
+    "description": "Lightweight polymer tactical grip produced by BCM."
+  },
+  "672e2e75eae8c670d0f7740d": {
+    "name": "HK MP7 TGC stock",
+    "shortName": "TGC",
+    "description": "The TGC branded MP7 stock offers increased stability and ergonomics."
+  },
+  "672e2e75ebb3b5f3e2cb6291": {
+    "name": "Lwrci Railskin FDE",
+    "shortName": "Cover",
+    "description": "The unique snake scale pattern provides positive non-slip grip even when wet or oily. Made of an extremely durable space-age polymer, they are nearly unbreakable."
+  },
+  "672e2e75ec239cfca3bedf6d": {
+    "name": "Ghost Mask",
+    "shortName": "Ghost",
+    "description": "This ghost mask is made from soft cotton stretch fabric that is moisture-wicking, windproof, sweat-wicking, and UV resistant."
+  },
+  "672e2e75ec4a3496b64346c5": {
+    "name": "Surefire M640U-BK-PRO Flashlight",
+    "shortName": "M640U",
+    "description": "With its recoil-proof, ultra-high-output LED delivering 1000 lumens of blinding white light, the Scout Light Pro is ready for action. Its proprietary TIR lens shapes the light into a far-reaching beam with ample surround light for exceptional peripheral vision, making it ideal for medium to longer-range applications. SureFires new Low-Profile Mount (LPM) delivers unprecedented versatility, allowing the user to optimize the lights position relative to the rail."
+  },
+  "672e2e75ecdecad1471639ad": {
+    "name": "LWRCI Railskin",
+    "shortName": "LWRCI",
+    "description": "The unique snake scale pattern provides positive non-slip grip even when wet or oily. Made of an extremely durable space-age polymer, they are nearly unbreakable."
+  },
+  "672e2e75ed6ad7cc5028734f": {
+    "name": "Crye Precision JPC",
+    "shortName": "JPC",
+    "description": "The JPC is a lightweight and minimal vest designed for maximum mobility, weight savings, and packability."
+  },
+  "672e2e75f2da844c65b50d6a": {
+    "name": "Wilcox tactical device (Black)",
+    "shortName": "Wilcox",
+    "description": "Compact laser and flashlight device for mounting on picatinny rails."
+  },
+  "672e2e75f3418d66159240f8": {
+    "name": "Strike Industries LINK grip",
+    "shortName": "LINK",
+    "description": "The Strike Industries LINK-CFG (Curved Fore Grip) design was derived from Cobra Tactical Fore Grip and features SIs LINK system which is mountable to both M-Lok and Keymod rails."
+  },
+  "672e2e75f863ac94cae32632": {
+    "name": "HK MP7 TGC stock buffer tube",
+    "shortName": "TGC",
+    "description": "The TGC branded MP7 stock enables you to mount AR style stocks on your MP7."
+  },
+  "672e2e75fa61ef193bdbd7e6": {
+    "name": "CGPC3 TQS (Urban)",
+    "shortName": "CGPC3",
+    "description": "A low-profile, lightweight and fully modular plate carrier made in the Czech Republic. With its sturdy construction and advanced materials, it offers reliable defense against ballistic threats and fragmentation, while its Tube Quick System allows for comfortable and silent unfastening."
+  },
+  "6733edbe21f258964d0d4c5a": {
+    "name": "AR-15 Honey Badger Q stock",
+    "shortName": "BADGER",
+    "description": "The OG Honey Badger was developed at AAC by previous owner and Q Founder, Kevin Brittingham and his R&D team at the request of an elite US special operations group looking to replace their MP5-SDs with an upgraded platform."
+  },
+  "6733edc58add9191997aec92": {
+    "name": "AR-15 TGC Split Handguard",
+    "shortName": "MOE",
+    "description": "A machined aluminum multi-rail handguard specifically designed for the Special Operations Command (SOCOM) M4A1 carbine."
+  },
+  "67341526d1587cba81586e7f": {
+    "name": "Magpul M-LOK handstop foregrip",
+    "shortName": "MLOK",
+    "description": "The M-LOK Hand Stop serves as a light weight, low-profile M-LOK slot index point for improved weapon control, or as a forward stop to prevent the shooters hand from reaching the hot front sight assembly or muzzle."
+  },
+  "673d7aa5a2c68c0cfcec6b93": {
+    "name": "Magpul M-LOK handstop foregrip (FDE)",
+    "shortName": "MLOK",
+    "description": "The M-LOK Hand Stop serves as a light weight, low-profile M-LOK slot index point for improved weapon control, or as a forward stop to prevent the shooters hand from reaching the hot front sight assembly or muzzle."
+  },
+  "674102e3b161458e6ee0531f": {
+    "name": "Reptilia Dot Acro riser",
+    "shortName": "DOT",
+    "description": "The DOT Mount by Reptilia is a lightweight, slim-line mounting solution for a variety of red dot optics. Machined from billet 7075-T6 aluminum with Milspec Type III hard anodized finish, the DOT Mount attaches to any M1913 Picatinny rail, and offers lower 1/3 co-witness with standard AR15-style back-up sights."
+  },
+  "67429a6fe31216a0757777e1": {
+    "name": "SLR Aimpoint riser",
+    "shortName": "SLR",
+    "description": "The SLR Mount is a lightweight, slim-line mounting solution for a variety of red dot optics. Machined from billet 7075-T6 aluminum with Milspec Type III hard anodized finish, the SLR mount attaches to any M1913 Picatinny rail, and offers lower 1/3 co-witness with standard AR15-style back-up sights."
+  },
+  "67a281fafa6f0dadd5211962": {
+    "name": "Daniel Defense 5.56 magazine (FDE)",
+    "shortName": "DD MAG",
+    "description": "The DD Magazine is the only AR-15 magazine worthy of the Daniel Defense name and is built with the same quality and standards as their world-class firearms. Its 32-round capacity for 5.56mm and 300 Blackout rounds is the most notable enhancement while maintaining the same size as industry-standard 30-round magazines."
+  },
+  "67b09f2f8bad925404cd80bb": {
+    "name": "Wrapped multicam 5.56x45 silencer",
+    "shortName": "Wrap 556",
+    "description": "This wrapped silencer is designed for installation on AR or AK based 5.56x45 rifles. It is made of stainless steel and has a special coating that reduces the sound of shots."
+  },
+  "67b1eb6d91f8e59bc799beb1": {
+    "name": "Surefire M640U-BK-PRO FDE Flashlight offset",
+    "shortName": "M640-OF",
+    "description": "With its recoil-proof, ultra-high-output LED delivering 1000 lumens of blinding white light, the Scout Light Pro is ready for action. Its proprietary TIR lens shapes the light into a far-reaching beam with ample surround light for exceptional peripheral vision, making it ideal for medium to longer-range applications. SureFires new Low-Profile Mount (LPM) delivers unprecedented versatility, allowing the user to optimize the lights position relative to the rail."
+  },
+  "67b22feaecf38d826bb7dc43": {
+    "name": "Daniel Defense X 5.56 magazine",
+    "shortName": "DD X",
+    "description": "The DD Magazine is the only AR-15 magazine worthy of the Daniel Defense name and is built with the same quality and standards as their world-class firearms. Its 32-round capacity for 5.56mm and 300 Blackout rounds is the most notable enhancement while maintaining the same size as industry-standard 30-round magazines."
+  },
+  "67b3252d085fe3e32bc8eeb7": {
+    "name": "Daniel Defense X (FDE) 5.56 magazine",
+    "shortName": "DD X",
+    "description": "The DD Magazine is the only AR-15 magazine worthy of the Daniel Defense name and is built with the same quality and standards as their world-class firearms. Its 32-round capacity for 5.56mm and 300 Blackout rounds is the most notable enhancement while maintaining the same size as industry-standard 30-round magazines."
+  },
+  "67b8d6cd220640e6846aed85": {
+    "name": "CGPC3 TQS (Dark)",
+    "shortName": "CGPC3",
+    "description": "A low-profile, lightweight and fully modular plate carrier made in the Czech Republic. With its sturdy construction and advanced materials, it offers reliable defense against ballistic threats and fragmentation, while its Tube Quick System allows for comfortable and silent unfastening."
+  },
+  "684ae8ebb048d86cbdf8d5d9": {
+    "name": "TGC Rubber Duck sound suppressor",
+    "shortName": "R-DUCK",
+    "description": "TGC Rubber Duck sound suppressor designed for use with a 7.62x51 NATO, but also compatible with a most popular rifle calibers. Made of stainless steel and special rubber reducing sounds even more than a regular silencer. Can only be installed on 51T muzzle devices."
+  },
+  "684ae9d928526b5c284aacb6": {
+    "name": "AR-10/15 TGC Rubber Duck sound suppressor (FDE)",
+    "shortName": "R-DUCK",
+    "description": "TGC Rubber Duck sound suppressor designed for use with a 7.62x51 NATO, but also compatible with a most popular rifle calibers. Made of stainless steel and special rubber reducing sounds even more than a regular silencer. Can only be installed on 51T muzzle devices."
+  },
+  "685009b24c99357a3da143e4": {
+    "name": "Velociraptor polymer handguard (TGC)",
+    "shortName": "Vel HG2",
+    "description": "A polymer handguard for the Velociraptor assault rifle. A modified version of the Tapco AK handguard based on the Galil AR handguard, designed to be installed over the suppressor shroud, preventing possible injury to the shooter's hands during firing. This version also take foregrips."
+  }
+}

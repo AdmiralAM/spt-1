@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $inventory = Get-Content (Join-Path $root 'manifests/artem-bundle-inventory.json') -Raw | ConvertFrom-Json
+$overrideRoot = Join-Path $root 'tools/artem-bundle-overrides'
 $destinationRoot = [IO.Path]::GetFullPath($Destination)
 New-Item -ItemType Directory -Force -Path $destinationRoot | Out-Null
 
@@ -48,7 +49,13 @@ foreach ($entry in $inventory.bundles) {
     $target = Join-Path $destinationRoot $relative
     if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Artem bundle is missing: $relative" }
     $hash = (Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($hash -ne $entry.sha256 -or (Get-Item $source).Length -ne $entry.size) { throw "Artem bundle contract drift: $relative" }
+    if ($hash -ne $entry.sha256 -or (Get-Item $source).Length -ne $entry.size) {
+        $override = Join-Path $overrideRoot $relative
+        if (-not (Test-Path -LiteralPath $override -PathType Leaf)) { throw "Artem bundle contract drift without a verified override: $relative" }
+        $overrideHash = (Get-FileHash $override -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($overrideHash -ne $entry.sha256 -or (Get-Item $override).Length -ne $entry.size) { throw "Artem bundle override contract drift: $relative" }
+        $source = $override
+    }
     New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
     Copy-Item -LiteralPath $source -Destination $target -Force
     $copied++
