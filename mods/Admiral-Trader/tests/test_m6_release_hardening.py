@@ -10,7 +10,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
     def test_release_metadata_and_scope_are_aligned(self):
         runtime = json.loads((ROOT / "manifests/runtime-manifest.json").read_text())
         m6 = json.loads((ROOT / "manifests/m6-stable-release.json").read_text())
-        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "stable", "~4.1.0"))
+        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "stable-beta", "~4.1.0"))
         self.assertEqual(runtime["schemaVersion"], 2)
         self.assertTrue(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
@@ -53,7 +53,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
         self.assertIn("assets\\d5c27bb3169f8dfbc13f6b69.jpg", (ROOT / "server/AdmiralTrader.Server.csproj").read_text(encoding="utf-8"))
-        self.assertIn("publicationMode -NotePropertyValue 'stable'", builder)
+        self.assertIn("publicationMode -NotePropertyValue 'stable-beta'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
         self.assertIn("d5c27bb3169f8dfbc13f6b69", install)
@@ -72,9 +72,9 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertIn("Count -ne 35", builder)
         self.assertIn("workflow_dispatch:", workflow)
         self.assertNotIn("pull_request:", workflow)
-        self.assertIn("releaseChannel='stable'", builder)
+        self.assertIn("releaseChannel='stable-beta'", builder)
         self.assertIn("releaseChannel='preview'", builder)
-        self.assertIn("Admiral-Suite-Trader-0.3.0-STABLE-Economy-0.1.0-PREVIEW", builder + workflow)
+        self.assertIn("Admiral-Suite-Trader-0.3.0-STABLE-BETA-Economy-0.1.0-PREVIEW", builder + workflow)
 
 
 if __name__ == "__main__":

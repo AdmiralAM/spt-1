@@ -35,7 +35,7 @@ if (($actualRuntimeManifests -join ',') -ne ($expectedRuntimeManifests -join ','
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
 if ($manifest.version -ne '0.3.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
-if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'stable' -or $manifest.publicationMode -ne 'stable') { throw 'Staged package is not the stable Trader line.' }
+if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'stable-beta' -or $manifest.publicationMode -ne 'stable-beta') { throw 'Staged package is not the stable-beta Trader line.' }
 if ($manifest.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant()) { throw 'Staged manifest source HEAD mismatch.' }
 
 $provenancePath = Join-Path $candidate 'admiral-trader-provenance.json'

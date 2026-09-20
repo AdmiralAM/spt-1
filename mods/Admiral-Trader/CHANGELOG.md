@@ -1,6 +1,6 @@
 # Admiral Trader changelog
 
-## 0.3.0 — stable campaign and storefront
+## 0.3.0 — stable beta campaign and storefront
 
 - Complete imported storefront presentation: every sold Artem item has a verified packaged prefab and non-empty Russian copy, all Painter prefabs are registered in the bundle manifest, and all 117 optional TGC templates receive non-destructive Russian-locale fallbacks when present.
 - Correct Snacky-Z as a 2x1/5x5 compact pouch and move it to a finite maintenance-material barter; move Painter's 20-draw Special Delivery from unrestricted cash purchase to a one-per-reset themed barter while preserving every template and offer ID.

@@ -10,7 +10,7 @@ Admiral Trader has **one active workstream**:
 - current development/validation baseline: **SPT 4.1.5**;
 - runtime metadata compatibility range: **`~4.1.0`**;
 - stable gameplay baseline: **`0.2.0`**;
-- stable campaign release: **`0.3.0`**, 172 core quests / 82 finite offers, plus 10 optional Icebreaker quests when its verified runtime is present;
+- stable beta campaign release: **`0.3.0`**, 172 core quests / 82 finite offers, plus 10 optional Icebreaker quests when its verified runtime is present; long-running gameplay polish continues without holding back the complete content line;
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
