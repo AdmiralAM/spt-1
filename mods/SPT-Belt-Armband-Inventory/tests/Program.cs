@@ -69,6 +69,7 @@ internal static class Program
         }
         LocalPackNStrapImportRegression.Run();
         UseItemsAnywhereCompatibilityRegression.Run();
+        BeltAccessApiRegression.Run();
         ArmBandVariantCatalogRegression.Run();
         ArmBandLootPolicyRegression.Run();
         ArmBandFeatureConfigRegression.Run();

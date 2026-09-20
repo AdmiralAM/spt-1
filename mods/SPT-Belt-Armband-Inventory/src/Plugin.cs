@@ -11,7 +11,6 @@ namespace SPTBeltArmbandInventory
     [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(PackNStrapCompatibility.PluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(UseItemsAnywhereCompatibility.PluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
@@ -37,7 +36,6 @@ namespace SPTBeltArmbandInventory
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
         FastAccessSlotPatches fastAccessSlotPatches;
-        UseItemsAnywhereCompatibility useItemsAnywhereCompatibility;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
         DedicatedWearablePickupPatches dedicatedPickupPatches;
@@ -265,18 +263,6 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but magazines inside compatible wearable containers may not participate in vanilla reachable-container reload logic.");
             }
 
-            if (Chainloader.PluginInfos.ContainsKey(UseItemsAnywhereCompatibility.PluginGuid))
-            {
-                Type equipmentSlotType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
-                useItemsAnywhereCompatibility = new UseItemsAnywhereCompatibility(Logger.LogInfo, Logger.LogWarning);
-                if (equipmentSlotType == null || !useItemsAnywhereCompatibility.TryInstall(equipmentSlotType))
-                {
-                    useItemsAnywhereCompatibility.Dispose();
-                    useItemsAnywhereCompatibility = null;
-                    Logger.LogWarning("Use Items Anywhere remains active, but its configured ArmBand lists could not be extended with dedicated Belt pseudo-slot15.");
-                }
-            }
-
             slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
             if (!slotMergePatches.TryInstall())
             {
@@ -425,8 +411,6 @@ namespace SPTBeltArmbandInventory
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
             slotMergePatches = null;
-            if (useItemsAnywhereCompatibility != null) useItemsAnywhereCompatibility.Dispose();
-            useItemsAnywhereCompatibility = null;
             if (fastAccessSlotPatches != null) fastAccessSlotPatches.Dispose();
             fastAccessSlotPatches = null;
             if (scavPatches != null) scavPatches.Dispose();

@@ -220,6 +220,43 @@ namespace SPTBeltArmbandInventory
         [ThreadStatic] static bool reentrant;
         static bool failureLogged;
 
+        internal static object[] EnumerateBeltSources(object inventory)
+        {
+            MethodInfo getItems = GetItemsInSlots;
+            object beltArgument = BeltSlotsArgument;
+            Type itemType = ItemType;
+            Type returnType = ReturnType;
+            if (inventory == null || reentrant || getItems == null || beltArgument == null
+                || itemType == null || returnType == null
+                || !HasExactFallbackQueryContract(getItems, beltArgument, itemType, returnType))
+                return null;
+
+            try
+            {
+                object value;
+                reentrant = true;
+                try { value = getItems.Invoke(inventory, new[] { beltArgument }); }
+                finally { reentrant = false; }
+                if (value == null || !returnType.IsInstanceOfType(value) || !(value is IEnumerable sequence)
+                    || !HasExactFallbackQueryContract(getItems, beltArgument, itemType, returnType))
+                    return null;
+
+                var result = new List<object>();
+                foreach (object item in sequence)
+                {
+                    if (item == null) continue;
+                    if (!itemType.IsInstanceOfType(item) || result.Count >= 512) return null;
+                    if (!ContainsReference(result, item)) result.Add(item);
+                }
+                return result.ToArray();
+            }
+            catch
+            {
+                reentrant = false;
+                return null;
+            }
+        }
+
         internal static void EnterReloadScope()
         {
             reloadDepth++;
@@ -475,6 +512,8 @@ namespace SPTBeltArmbandInventory
         bool arrayRollbackUnsafe;
         bool arrayContentAuthorityUnsafe;
         bool installed;
+        readonly object publicApiOwner = new object();
+        readonly Func<object, object[]> publicApiProvider = ReloadCandidateBridgeRuntime.EnumerateBeltSources;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
         {
@@ -542,8 +581,13 @@ namespace SPTBeltArmbandInventory
 
                 bool reachability = TryInstallReloadReachability();
                 bool candidateBridge = reachability && TryInstallReloadCandidateBridge(inventoryType, slotEnumType, dedicatedBelt);
-                if (reachability && candidateBridge)
+                if (reachability && candidateBridge && BeltAccessApi.TryPublish(publicApiOwner, publicApiProvider))
                     ReloadDiagnosticLog.TryInfo(logInfo, "B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended; reload reachability is exact; Reload/QuickReload preserve vanilla candidates and append exact Magazine Belt descendants as scoped fallback.");
+                else if (reachability && candidateBridge)
+                {
+                    UnpatchReload();
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB public Belt access API publication failed closed; reload integration was rolled back to avoid split ownership.");
+                }
                 else if (reachability)
                     ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB fast-access arrays/reachability remain active, but the atomic Reload/QuickReload candidate bridge could not bind; Magazine Armband remains reachable and Magazine Belt remains reserve-only for this session.");
                 else
@@ -1148,6 +1192,7 @@ namespace SPTBeltArmbandInventory
 
         void UnpatchReload()
         {
+            BeltAccessApi.Revoke(publicApiOwner);
             UnpatchCandidateBridge();
             UnpatchReachability();
         }

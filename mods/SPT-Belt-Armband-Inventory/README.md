@@ -2,6 +2,12 @@
 
 Stable **v0.3.0**, compatible with **SPT 4.1.x** and validated against **SPT 4.1.5**.
 
+## Optional compatibility API
+
+The client assembly exposes `SPTBeltArmbandInventory.BeltAccessApi` contract version `1` for optional compatibility suites. Consumers first check `IsAvailable`, then call `TryEnumerateBeltSources(object inventory, out object[] sources)` with the live EFT `Inventory` instance. A successful call returns a bounded identity-preserving snapshot of the equipped slot15 Belt root and its contents; `false` always returns an empty array. The API is published only after Belt's exact reload/access binding succeeds and is revoked with that owner. Consumers must not reproduce Belt reflection, patch reload, or infer slot ownership when the API is unavailable.
+
+Use Items Anywhere list adaptation is Suite-owned. B&A&HB no longer detects or mutates that foreign plugin's configuration; the external idempotent adapter keeps slot15 following ArmBand.
+
 The private runtime direction imports Pack 'n' Strap belts, containers, models
 and layouts into B&A&HB while keeping all third-party assets and item databases
 out of this repository. The public source remains buildable without Pack 'n'
