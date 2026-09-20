@@ -10,7 +10,6 @@ namespace SPTBeltArmbandInventory
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(PackNStrapCompatibility.PluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
@@ -59,7 +58,7 @@ namespace SPTBeltArmbandInventory
 
             HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
 
-            bool packNStrapDetected = PackNStrapCompatibility.IsClientPresent(Chainloader.PluginInfos.Keys);
+            bool packNStrapDetected = ExternalCompatibilityApi.IsPackNStrap211Claimed;
             if (packNStrapDetected)
                 Logger.LogInfo("B&A&HB companion mode selected: WTT Pack 'n' Strap owns standard belt/container behavior; only Admiral HeadBand, Dogtag and exact-ID protection remain active.");
 

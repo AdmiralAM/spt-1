@@ -20,7 +20,7 @@ public sealed class WristWalletAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (PackNStrapCompatibility.IsServerPresentNow() || LocalPackNStrapImportState.Enabled)
+        if (ExternalCompatibilityApi.IsPackNStrap211Claimed || LocalPackNStrapImportState.Enabled)
         {
             logger.Info("B&A&HB companion mode: Wrist Wallet offer skipped.");
             return Task.CompletedTask;

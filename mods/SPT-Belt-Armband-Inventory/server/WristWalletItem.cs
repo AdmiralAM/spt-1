@@ -25,7 +25,7 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.SourceArmbandTpl))
             throw new InvalidOperationException("B&A&HB Wrist Wallet source armband missing.");
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.CustomBeltParentTpl))

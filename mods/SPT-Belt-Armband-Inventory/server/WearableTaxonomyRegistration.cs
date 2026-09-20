@@ -22,7 +22,7 @@ public sealed class WearableTaxonomyRegistration(
         // Validate every existing persistent identity before mutating TemplateTable.
         // A collision in the second/third node must not leave earlier nodes partially installed.
         TemplateItem? searchableAddition = PrepareNode(SearchableParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         // Published B&A item templates keep this parent ID in profiles. Retain
         // the taxonomy node in companion mode without exposing a Belt slot or
         // adding it to any Pack 'n' Strap-owned filter.

@@ -105,6 +105,8 @@ namespace SPTBeltArmbandInventory
                     capabilities));
             }
 
+            // Static classification preserves legacy profile identity. Runtime entry
+            // points still require the Suite ownership claim through IsBelt.
             foreach (string templateId in TgcCompatibilityPolicy.BeltTemplateIds)
             {
                 descriptors.Add(templateId, new WearableItemDescriptor(

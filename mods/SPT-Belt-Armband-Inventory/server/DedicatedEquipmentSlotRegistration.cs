@@ -31,7 +31,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // DedicatedWearableItems runs at Preload+3. Never publish slot15/16
             // filters until both exact product templates exist and are therefore
             // safe host targets for the remainder of server startup.
-            bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+            bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
             if ((!companionMode && !templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl))
                 || !templateTable.Items.ContainsKey(EmergencyHeadBandTpl))
             {

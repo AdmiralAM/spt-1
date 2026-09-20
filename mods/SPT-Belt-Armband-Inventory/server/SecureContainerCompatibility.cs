@@ -44,9 +44,9 @@ public sealed class SecureContainerCompatibility(
         HashSet<MongoId> wallets = FindAndNormalizeWallets(out int walletMoneyFixes);
         HashSet<MongoId> dogtagCases = FindDogtagCases();
 
-        TgcCommitResult tgc = CommitTgcOwnership();
+        TgcCommitResult tgc = ExternalCompatibilityApi.IsTgc300Claimed ? CommitTgcOwnership() : default;
         HashSet<MongoId> gammaContainers = packNStrapContainers
-            .Concat(TgcSecurePouches.Where(templateTable.Items.ContainsKey))
+            .Concat(ExternalCompatibilityApi.IsTgc300Claimed ? TgcSecurePouches.Where(templateTable.Items.ContainsKey) : [])
             .ToHashSet();
         int gammaAdmissions = ExtendGamma(gammaContainers);
         int walletAdmissions = ExtendHeadBand(DedicatedWearableItems.HeadBandCurrencyGridName, wallets);

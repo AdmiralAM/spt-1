@@ -25,7 +25,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB Magazine Armband source armband missing.");
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB Magazine Armband source handbook entry missing.");
 

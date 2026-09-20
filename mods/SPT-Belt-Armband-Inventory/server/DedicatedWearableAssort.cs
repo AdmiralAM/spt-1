@@ -24,7 +24,7 @@ public sealed class DedicatedWearableAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow() || LocalPackNStrapImportState.Enabled;
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed || LocalPackNStrapImportState.Enabled;
         var beltTemplateId = new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var headBandTemplateId = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
         if ((!companionMode && !templateTable.Items.ContainsKey(beltTemplateId)) || !templateTable.Items.ContainsKey(headBandTemplateId))

@@ -8,6 +8,8 @@ The client assembly exposes `SPTBeltArmbandInventory.BeltAccessApi` contract ver
 
 Use Items Anywhere list adaptation is Suite-owned. B&A&HB no longer detects or mutates that foreign plugin's configuration; the external idempotent adapter keeps slot15 following ArmBand.
 
+TGC 3.0.0 and Pack 'n' Strap 2.1.1 discovery/adapter ownership is also Suite-owned through `ExternalCompatibilityApi` contract version `1`. The Suite claims the exact integration with `TryClaimTgc300(1, ownerToken)` or `TryClaimPackNStrap211(1, ownerToken)` before Belt initialization. Missing Suite, contract mismatch and a second owner fail closed without enabling foreign integration. See [`docs/external-compatibility-audit.md`](docs/external-compatibility-audit.md) for the active/historical seam inventory.
+
 The private runtime direction imports Pack 'n' Strap belts, containers, models
 and layouts into B&A&HB while keeping all third-party assets and item databases
 out of this repository. The public source remains buildable without Pack 'n'

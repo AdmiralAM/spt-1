@@ -39,6 +39,7 @@ namespace SPTBeltArmbandInventory
             if (beltFilter == null) throw new ArgumentNullException(nameof(beltFilter));
             if (publishedTemplateIds == null) throw new ArgumentNullException(nameof(publishedTemplateIds));
             mutations = 0;
+            if (!ExternalCompatibilityApi.IsTgc300Claimed) return true;
             var published = new HashSet<string>(publishedTemplateIds, StringComparer.Ordinal);
             int count = 0;
             foreach (string id in BeltTemplateIds) if (published.Contains(id)) count++;
@@ -61,6 +62,7 @@ namespace SPTBeltArmbandInventory
             if (filter == null) throw new ArgumentNullException(nameof(filter));
             if (publishedTemplateIds == null) throw new ArgumentNullException(nameof(publishedTemplateIds));
             mutations = 0;
+            if (!ExternalCompatibilityApi.IsTgc300Claimed) return true;
             var published = new HashSet<string>(publishedTemplateIds, StringComparer.Ordinal);
             int managedCount = 0;
             foreach (string id in SecureContainerPouchAllowlist) if (published.Contains(id)) managedCount++;
@@ -84,7 +86,7 @@ namespace SPTBeltArmbandInventory
 
         internal static bool IsBelt(string templateId)
         {
-            if (string.IsNullOrEmpty(templateId)) return false;
+            if (!ExternalCompatibilityApi.IsTgc300Claimed || string.IsNullOrEmpty(templateId)) return false;
             foreach (string id in BeltTemplateIds)
                 if (string.Equals(templateId, id, StringComparison.Ordinal)) return true;
             return false;
@@ -92,7 +94,7 @@ namespace SPTBeltArmbandInventory
 
         internal static bool IsExplicitSecureContainerPouch(string templateId)
         {
-            if (string.IsNullOrEmpty(templateId)) return false;
+            if (!ExternalCompatibilityApi.IsTgc300Claimed || string.IsNullOrEmpty(templateId)) return false;
             foreach (string id in SecureContainerPouchAllowlist)
                 if (string.Equals(templateId, id, StringComparison.Ordinal)) return true;
             return false;

@@ -40,7 +40,7 @@ public sealed class DedicatedWearableItems(
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable source handbook entry missing.");
 
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         // The persistent Magazine Belt template must remain resolvable even when
         // Pack 'n' Strap owns the active Belt feature. Existing profiles can
         // contain this exact B&A template ID; omitting it makes SPT reject the

@@ -18,11 +18,21 @@ internal static class Program
 
     static void Main()
     {
-        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "other", "com.wtt.packnstrap" }), "Pack 'n' Strap client GUID selects companion mode");
-        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "COM.WTT.PACKNSTRAP" }), "Pack 'n' Strap GUID detection is case-insensitive");
-        Assert(!PackNStrapCompatibility.IsClientPresent(new[] { "com.trenchfoot.beltslot" }), "legacy BeltSlot does not impersonate Pack 'n' Strap");
-        Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
-        Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
+        object suiteOwner = new();
+        Assert(!ExternalCompatibilityApi.IsTgc300Claimed && !ExternalCompatibilityApi.IsPackNStrap211Claimed,
+            "foreign compatibility is absent by default");
+        Assert(!TgcCompatibilityPolicy.IsBelt("672e2e75a16c1d2034c384cf"),
+            "unclaimed TGC runtime classification is disabled");
+        Assert(!ExternalCompatibilityApi.TryClaimTgc300(2, suiteOwner)
+            && !ExternalCompatibilityApi.TryClaimPackNStrap211(0, suiteOwner),
+            "contract mismatch fails closed without changing ownership");
+        Assert(ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, suiteOwner),
+            "Suite can claim exact TGC 3.0.0 integration");
+        Assert(ExternalCompatibilityApi.TryClaimPackNStrap211(ExternalCompatibilityApi.ContractVersion, suiteOwner),
+            "Suite can claim exact Pack 'n' Strap 2.1.1 integration");
+        Assert(ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, suiteOwner)
+            && !ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, new object()),
+            "claim is idempotent for one owner and rejects duplicate adapters");
         Assert(SecureContainerCompatibilityPolicy.GammaTemplateIds.Contains("665ee77ccf2d642e98220bca"), "the equipped SPT Gamma template is an explicit compatibility host");
         Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("669c10fa06c00c483c58537a", new[] { SecureContainerCompatibilityPolicy.PackNStrapContainerParent }), "Pack 'n' Strap cash pouch is admitted through its owned parent");
         Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer(SecureContainerCompatibilityPolicy.PackNStrapPlateContainer, Array.Empty<string>()), "Pack 'n' Strap plate case is admitted by exact identity");
