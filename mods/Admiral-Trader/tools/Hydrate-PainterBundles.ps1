@@ -26,8 +26,13 @@ if ($SourceRuntime) {
     New-Item -ItemType Directory -Force -Path $extract | Out-Null
     $sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue
     $sevenZip = if ($null -ne $sevenZipCommand) { $sevenZipCommand.Source } else { 'C:\Program Files\7-Zip\7z.exe' }
-    if (-not (Test-Path -LiteralPath $sevenZip -PathType Leaf)) { throw '7z.exe is required to hydrate the pinned Painter asset' }
-    & $sevenZip x $archive "-o$extract" -y | Out-Null
+    if (Test-Path -LiteralPath $sevenZip -PathType Leaf) {
+        & $sevenZip x $archive "-o$extract" -y | Out-Null
+    } else {
+        $tarCommand = Get-Command tar.exe -ErrorAction SilentlyContinue
+        if ($null -eq $tarCommand) { throw '7z.exe or tar.exe is required to hydrate the pinned Painter asset' }
+        & $tarCommand.Source -xf $archive -C $extract
+    }
     if ($LASTEXITCODE -ne 0) { throw 'Failed to extract the pinned Painter asset' }
     $sourceRoot = (Get-ChildItem $extract -Recurse -Directory | Where-Object {
         Test-Path (Join-Path $_.FullName 'figurine_batman.bundle')

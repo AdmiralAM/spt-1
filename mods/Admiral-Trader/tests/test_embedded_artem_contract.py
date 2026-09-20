@@ -49,6 +49,8 @@ def test_painter_bundle_layer_is_reproducible_and_coexists_with_artem() -> None:
         hydrator = (ROOT / "tools" / hydrator_name).read_text(encoding="utf-8")
         assert "$sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue" in hydrator
         assert "if ($null -ne $sevenZipCommand)" in hydrator
+        assert "$tarCommand = Get-Command tar.exe -ErrorAction SilentlyContinue" in hydrator
+        assert "-xf $archive -C $extract" in hydrator
 
 
 def test_persistent_artem_id_sets_match_inventory() -> None:
