@@ -442,11 +442,15 @@ public sealed class LegacyTraderConsolidation(
         HashSet<MongoId> existing = admiral.Suits.Select(suit => suit.SuiteId).ToHashSet();
         int added = 0;
         foreach (Suit suit in source)
+        {
+            if (LegacyTraderIds.Contains(suit.Tid.ToString(), StringComparer.Ordinal))
+                suit.Tid = AdmiralId;
             if (existing.Add(suit.SuiteId))
             {
                 admiral.Suits.Add(suit);
                 added++;
             }
+        }
         return added;
     }
 

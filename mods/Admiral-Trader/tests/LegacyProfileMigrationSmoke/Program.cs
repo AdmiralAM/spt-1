@@ -35,6 +35,14 @@ SptProfile profile = new()
                     StartTime = 50,
                     StatusTimers = [],
                     CompletedConditions = []
+                },
+                new QuestStatus
+                {
+                    QId = new MongoId("668aace8ff74aecfbcfbe9e6"),
+                    Status = QuestStatusEnum.AvailableForFinish,
+                    StartTime = 80,
+                    StatusTimers = new() { [QuestStatusEnum.AvailableForFinish] = 99 },
+                    CompletedConditions = ["668aacd1dee3de3ce276fdfa"]
                 }
             ],
             TradersInfo = new Dictionary<MongoId, TraderInfo>
@@ -64,7 +72,21 @@ SptProfile profile = new()
             Id = painterId,
             AttachmentsNew = 1,
             New = 1,
-            Messages = [new Message { Id = painterMessage, UserId = painterId }],
+            Messages =
+            [
+                new Message
+                {
+                    Id = painterMessage,
+                    UserId = painterId,
+                    HasRewards = true,
+                    RewardCollected = false,
+                    Items = new MessageItems
+                    {
+                        Stash = new MongoId("668000000000000000000002"),
+                        Data = [new Item { Id = new MongoId("668000000000000000000003"), Template = new MongoId("5449016a4bdc2d6f028b456f"), Upd = new Upd { StackObjectsCount = 21000 } }]
+                    }
+                }
+            ],
             Users = [new UserDialogInfo { Id = painterId }]
         }
     },
@@ -93,11 +115,18 @@ if (profile.DialogueRecords!.ContainsKey(painterId)
     || !profile.DialogueRecords.TryGetValue(admiralId, out Dialogue? dialogue)
     || dialogue.Messages!.Single().UserId != admiralId
     || dialogue.Users!.Single().Id != admiralId)
-    throw new Exception("legacy dialogue was not re-owned by Admiral");
-if (profile.CharacterData.PmcData.Quests!.Count != 2
+    throw new Exception("legacy dialogue or its unclaimed attachment was not preserved under Admiral");
+Message migratedMessage = dialogue.Messages!.Single();
+if (migratedMessage.RewardCollected != false
+    || migratedMessage.Items?.Data?.Single().Upd?.StackObjectsCount != 21000)
+    throw new Exception("unclaimed legacy message attachment changed during migration");
+if (profile.CharacterData.PmcData.Quests!.Count != 3
     || profile.CharacterData.PmcData.Quests[0].Status != QuestStatusEnum.Started
     || profile.CharacterData.PmcData.Quests[0].CompletedConditions!.Single() != "672e31c3262af62a8eb157cd"
-    || profile.CharacterData.PmcData.Quests[1].Status != QuestStatusEnum.Success)
+    || profile.CharacterData.PmcData.Quests[1].Status != QuestStatusEnum.Success
+    || profile.CharacterData.PmcData.Quests[2].Status != QuestStatusEnum.AvailableForFinish
+    || profile.CharacterData.PmcData.Quests[2].StatusTimers[QuestStatusEnum.AvailableForFinish] != 99
+    || profile.CharacterData.PmcData.Quests[2].CompletedConditions!.Single() != "668aacd1dee3de3ce276fdfa")
     throw new Exception("persistent external quest status or objective progress changed during migration");
 
 SptProfile failedPainterReward = new()

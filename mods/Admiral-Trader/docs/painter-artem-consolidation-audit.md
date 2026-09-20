@@ -82,6 +82,14 @@ Artem has one introduction root. It branches immediately into `Expanding Wardrob
 7. Painter and Artem quest locales, image routes, custom items, clothing and zones are published by Admiral. Artem zone IDs and objective references are retained unchanged.
 8. Every external assort is checked for complete parent trees, barter keys and loyalty keys. Every external quest prerequisite is checked against the final quest table. Missing external templates remove only the affected optional offer tree or external quest graph; the 172-quest Admiral core remains active.
 
+## Runtime-reference closure
+
+The final closure audit classifies every preserved Painter and Artem trader ID occurrence. Legacy IDs are permitted only as declarative import ownership in the two source base records, the 35 source quests and the 64 Artem clothing definitions, plus immutable identity manifests. During publication Admiral remaps quest ownership, objective trader fields, standing targets, assortment-unlock trader fields and clothing suit `tid`. Assort trees, questassort maps and dialogue payload definitions contain no legacy trader owner.
+
+One additional runtime defect was found here: imported clothing suits retained Artem in their native `tid` after being copied into Admiral's suit list. The legacy trader table was then removed, leaving the client purchase route pointed at a retired owner. Suit `tid` is now remapped before merge without changing any suit, outfit, clothing or offer ID.
+
+The synthetic upgrade test covers `Started`, `AvailableForFinish` and `Success` quest states, completed-condition progress, standing/loyalty/sales, purchase ledgers and an unclaimed message attachment. The first pass re-owns these records; the second pass is a no-op. No reward is regenerated, and the narrowly scoped Taped Up repair remains the only compensation path.
+
 ## Validation result
 
 The exact integration contract uses Admiral TGC Integration PR #362 head `bd1500b86c356f5e97fade75cf0c1df974ae9621`, its 117 upstream TGC templates, a content-only Painter layer without `Painter-4.0.dll`, and embedded Artem data owned by Admiral. It must consolidate **402 offers / 946 item rows / 35 quests / 44 quest unlocks / 68 suits**, remove the legacy trader records, and reach `Server has started, happy playing`. The content-only Painter layer also preserves its five template identities, Hall of Fame compatibility, two non-lootable quest figurines, and the authored 175-entry/20-draw Special Delivery pool. A deterministic synthetic-profile test proves quest state, relation, standing, loyalty, sales, purchase and dialogue preservation and confirms the second pass is a no-op. `external-content-identities.json` records every source quest, offer, item, unlock and suit ID used by this contract.
