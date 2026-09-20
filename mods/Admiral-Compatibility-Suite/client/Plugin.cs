@@ -18,9 +18,13 @@ public sealed class Plugin : BaseUnityPlugin
 
     private UseItemsAnywhereAdapter useItemsAnywhere;
     private UiFixesBeltAdapter uiFixesBelt;
+    private TextureReadbackAdapter textureReadback;
 
     private void Awake()
     {
+        textureReadback = new TextureReadbackAdapter(Logger.LogWarning);
+        textureReadback.TryInstall();
+
         if (!Chainloader.PluginInfos.ContainsKey(BeltPluginGuid))
         {
             return;
@@ -58,5 +62,7 @@ public sealed class Plugin : BaseUnityPlugin
         useItemsAnywhere = null;
         uiFixesBelt?.Dispose();
         uiFixesBelt = null;
+        textureReadback?.Dispose();
+        textureReadback = null;
     }
 }
