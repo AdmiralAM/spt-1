@@ -56,14 +56,19 @@ public sealed class BeltProgressionRuntime(TemplateTable templates, TradersTable
         {
             var roots = fence.Assort.Items.Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && ids.Contains(x.Template)).Select(x => x.Id).ToHashSet();
             var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
-            bool changed;
-            do { changed = false; foreach (var x in fence.Assort.Items) if (x.ParentId is { } p && all.Contains(p.ToString()) && all.Add(x.Id.ToString())) changed = true; } while (changed);
+            foreach (var root in roots) CollectDescendants(fence.Assort.Items, all, root.ToString());
             removed = roots.Count;
             fence.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
             foreach (var id in roots) { fence.Assort.BarterScheme.Remove(id); fence.Assort.LoyalLevelItems.Remove(id); }
         }
         logger.Success($"Admiral Belt progression enforced: detected={belts.Length}, offers normalized={normalized}, Fence roots removed={removed}");
         return Task.CompletedTask;
+    }
+
+    private static void CollectDescendants(List<Item> items, HashSet<string> collected, string parentId)
+    {
+        foreach (var child in items.Where(x => string.Equals(x.ParentId?.ToString(), parentId, StringComparison.Ordinal)))
+            if (collected.Add(child.Id.ToString())) CollectDescendants(items, collected, child.Id.ToString());
     }
 
     public static double BeltPriceFloor(int cells) => cells switch

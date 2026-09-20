@@ -30,6 +30,8 @@ public sealed class UniqueContainerEconomyRuntime(
             ["c29f11b2e63a089916739c96"] = new(400_000, 3, 2), // Small Leather Docket
             ["12403f74773f49be6a2d84b7"] = new(350_000, 2, 2), // Small Medical Pouch
             ["440de5d056825485a0cf3a19"] = new(600_000, 3, 2), // Small Magazine Pouch
+            ["ae9e418fd5d4c4eec4a0e6ea"] = new(450_000, 2, 2), // Small Ammunition Pouch (B&A&HB)
+            ["672e2e758808bacbb9d5abc4"] = new(600_000, 3, 1), // TGC Ammo Pouch
             ["6925918065a41e6b1e02a7d7"] = new(350_000, 2, 2), // Vintage Lunch Box
             ["2eabd4da4ab194eb168e72d3"] = new(500_000, 3, 1), // Small Key Ring
             ["669c10fa06c00c483c58537a"] = new(400_000, 3, 1), // Small Cash Box
@@ -98,13 +100,7 @@ public sealed class UniqueContainerEconomyRuntime(
             .Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && templateIds.Contains(x.Template))
             .Select(x => x.Id).ToHashSet();
         var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
-        bool changed;
-        do
-        {
-            changed = false;
-            foreach (var item in trader.Assort.Items)
-                if (item.ParentId is { } parent && all.Contains(parent.ToString()) && all.Add(item.Id.ToString())) changed = true;
-        } while (changed);
+        foreach (var root in roots) CollectDescendants(trader.Assort.Items, all, root.ToString());
 
         trader.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
         foreach (var root in roots)
@@ -113,5 +109,11 @@ public sealed class UniqueContainerEconomyRuntime(
             trader.Assort.LoyalLevelItems.Remove(root);
         }
         return roots.Count;
+    }
+
+    private static void CollectDescendants(List<Item> items, HashSet<string> collected, string parentId)
+    {
+        foreach (var child in items.Where(x => string.Equals(x.ParentId?.ToString(), parentId, StringComparison.Ordinal)))
+            if (collected.Add(child.Id.ToString())) CollectDescendants(items, collected, child.Id.ToString());
     }
 }

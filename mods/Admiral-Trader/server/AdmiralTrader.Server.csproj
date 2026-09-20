@@ -56,6 +56,7 @@
     <Content Include="..\manifests\artem-bundle-inventory.json" Link="manifests\artem-bundle-inventory.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\painter-bundle-inventory.json" Link="manifests\painter-bundle-inventory.json" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\belt-progression-policy.json" Link="manifests\belt-progression-policy.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\unique-container-economy-policy.json" Link="manifests\unique-container-economy-policy.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\dialogue.json" Link="db\dialogue.json" CopyToOutputDirectory="Always" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="Always" />
