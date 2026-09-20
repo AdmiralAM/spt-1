@@ -16,7 +16,7 @@ Versions below reflect the durable workstream roadmap when a module has an activ
 
 | Module | Version / state | Purpose | Install / development channel |
 | --- | --- | --- | --- |
-| [Admiral Tactical HUD](https://github.com/AdmiralAM/spt-1/issues/71) | `1.13.3`; active M1 stabilization | Population, player-status, and kill-feed HUD | Single live implementation PR discovered from GitHub; published `runtime` remains unchanged until deliberate acceptance |
+| [Admiral Tactical HUD](https://github.com/AdmiralAM/spt-1/issues/71) | `1.13.3`; **Stable Beta** playable baseline, further development later | Population and player-status HUD; kill feed is intentionally absent from Stable Beta and is the mandatory next product stage | Stable Beta baseline is pinned by exact source/release metadata; the single live implementation PR remains the later-development line |
 | [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.2.0`; stable / runtime validated | Requirement, FIR, hideout, valuation/background, craft/barter relevance, contextual inventory cards, and optional Amands Sense guidance | `runtime-item-intelligence` |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
 | [B&A&HB #2 MOD SPT](https://github.com/AdmiralAM/spt-1/issues/285) | `0.2.0`; active Pack 'n' Strap companion (`0.1.0` published stable) | HeadBand, optional Dogtag Case, and exact B&A-owned protection; standard belts, pouches and mini-containers remain owned by separately installed Pack 'n' Strap | Single live v0.2 PR discovered from GitHub; stable full-Belt v0.1.0 reserve remains on [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
@@ -25,13 +25,18 @@ Versions below reflect the durable workstream roadmap when a module has an activ
 | [Admiral Trader](https://github.com/AdmiralAM/spt-1/issues/192) | `0.1.0 + milestones`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Single live implementation PR discovered from GitHub; CI artifacts until deliberate runtime promotion |
 | [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
-### Admiral Tactical HUD transition
+### Admiral Tactical HUD Stable Beta
 
-`Admiral Tactical HUD` is the canonical product identity and Issue #71 is its durable milestone roadmap. Under the schema-v4 control plane, the current implementation PR/branch/exact head is **discovered from live GitHub evidence** and is deliberately not stored as a mutable pointer in `.github/workstreams.json` or this README.
+`Admiral Tactical HUD 1.13.3 Stable Beta` is the user-accepted playable baseline. It is **not final stable**.
 
-Until M1 receives physical runtime acceptance and the active line is deliberately integrated, `main` still contains the previously accepted legacy source tree at `mods/SPT-Tactical-HUD` (`1.13.2`). That legacy path is **not** a competing development authority and must not be used to start new HUD work. The target canonical source path is `mods/Admiral-Tactical-HUD`.
+- Runtime code baseline: `d7d63c0196af12141aedfc8f4896f0a9a84376ed`.
+- The unsuccessful experimental kill feed is intentionally absent and must not be restored into Stable Beta.
+- Kill feed remains the mandatory next product stage and will be redesigned from first principles for fast, clear, low-noise combat readability without covering important UI.
+- Further architecture, population/status, UX and performance polish remains later roadmap work.
 
-Tactical HUD `1.14.0` is retired. Historical PR #195 and branch `optimize/tactical-hud-runtime` are superseded evidence only. `archive/v1.13.0` is a temporary recovery reserve while the 1.13.3 line is not yet final; it is not a maintained product version and should be removed during the final 1.13.3 stable cleanup unless the user explicitly decides otherwise.
+Issue #71 is the durable roadmap; the live implementation PR remains the continuation line when development resumes. See [Stable Beta release notes](docs/admiral-tactical-hud-1.13.3-stable-beta.md).
+
+`main` may still contain the older integrated `mods/SPT-Tactical-HUD` source tree. That legacy path is not a competing development authority. Tactical HUD `1.14.0`, historical PR #195 and the retired `optimize/tactical-hud-runtime` branch remain superseded evidence only.
 
 ### Item Intelligence Admiral transition
 
