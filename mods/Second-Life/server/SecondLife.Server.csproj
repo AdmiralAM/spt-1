@@ -6,7 +6,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Second Life Admiral Server</AssemblyName>
     <RootNamespace>Admiral.SecondLife.Server</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\InventoryAncestry.cs" Link="InventoryAncestry.cs" />

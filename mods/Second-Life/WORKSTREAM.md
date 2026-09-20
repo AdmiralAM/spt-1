@@ -1,5 +1,9 @@
 # Second Life Admiral workstream
 
+## Published channel
+
+`0.1.1` is the authorized Stable Beta: the implemented solo recovery path is suitable for ordinary play and is published as a prerelease. Stable Beta does not claim final M6/M7 acceptance. Remaining edge-case physical checks, balance and polish continue in this same workstream and do not change the frozen ownership, one-life, payment or anti-duplication contracts.
+
 Authority for continuation lives in this file, Issue #352, the live PR body and the live PR exact head. The live implementation PR is the only development line. A future worker starts at the first milestone without acceptance evidence and continues automatically.
 
 ## Frozen product contract
@@ -90,6 +94,8 @@ Acceptance: exactly one recovery; original equipment exists once; recovered inve
 Remediate failures, package and deliberately promote only the exact physically accepted head.
 
 Acceptance: install/rollback are verified; main and runtime identity agree; merge, Issue closure and branch deletion occur only after explicit user confirmation.
+
+The Stable Beta publication is an intermediate prerelease within M7. Final stable promotion remains pending the remaining M6 edge-case matrix and explicit final-stable confirmation.
 
 ### M8 — Post-stable pre-raid emergency preset
 

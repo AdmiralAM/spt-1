@@ -3,7 +3,7 @@ using BepInEx.Configuration;
 
 namespace Admiral.SecondLife.Client
 {
-    [BepInPlugin("com.admiralam.secondlife", "Second Life Admiral", "0.1.0")]
+    [BepInPlugin("com.admiralam.secondlife", "Second Life Admiral", "0.1.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         RuntimeBridge bridge;
@@ -13,8 +13,8 @@ namespace Admiral.SecondLife.Client
             ConfigEntry<bool> enabled = Config.Bind(
                 "General",
                 "Enabled",
-                false,
-                "Enable one guarded recovery per supported solo raid. Disabled until the recovery executor passes preflight.");
+                true,
+                "Enable one guarded recovery per supported solo raid.");
             ConfigEntry<string> eligiblePistolTemplates = Config.Bind(
                 "Emergency armament",
                 "Eligible pistol template IDs",
@@ -52,7 +52,7 @@ namespace Admiral.SecondLife.Client
                 return;
             }
 
-            Logger.LogInfo("Second Life Admiral v0.1.0 loaded; recovery is fail-closed and disabled by default.");
+            Logger.LogInfo("Second Life Admiral v0.1.1 Stable Beta loaded; recovery is enabled by default and remains fail-closed.");
         }
 
         void OnDestroy()

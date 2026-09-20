@@ -1,6 +1,8 @@
 # Second Life Admiral
 
-Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 4.1.x.
+Second Life Admiral `0.1.1` is a Stable Beta bounded one-time same-raid recovery mod for SPT 4.1.x. The current build and load baseline is SPT 4.1.6; the original lifecycle archaeology baseline remains SPT 4.1.5.
+
+Stable Beta means the implemented recovery path is published for ordinary solo play while remaining edge-case physical checks, balance tuning and interface polish continue. It is not the final stable release.
 
 ## Product contract
 
@@ -28,7 +30,8 @@ root and constructs a distinct recovery object using the profile's persistent
 equipment identity, reuses the native
 local-game player and owner factories, replaces the dead player registration,
 and resumes native death if preflight or reconstruction fails. The executor is
-disabled by default and has not yet passed the physical gameplay gate. The
+enabled by default for new Stable Beta installations and remains fail-closed
+when a supported runtime contract is unavailable. The
 server reserves a bounded random complete pistol set from the authoritative
 stash, including nested containers. The client reconstructs the exact pistol
 tree, installed magazine and one same-template spare magazine with their
@@ -67,6 +70,14 @@ SPT_Runtime/user/mods/Second Life Admiral/Second Life Admiral Server.dll
 All files must come from the same exact source commit. A load warning that
 `Second Life Admiral.dll` references a missing `SecondLife.Core` means the
 installation is incomplete and the recovery module is inert.
+
+Existing `BepInEx/config/com.admiralam.secondlife.cfg` settings are preserved on upgrade. If an older installation explicitly saved `Enabled = false`, enable it manually to use recovery.
+
+## Stable Beta boundary
+
+The Stable Beta includes one paid recovery, safe alternate spawning, retained corpse ownership, nested-stash pistol selection, protected-slot handling, Dynamic Maps and optional LootNet compatibility, plus the separate first-life/second-life report.
+
+Remaining beta work covers the complete extraction/second-death matrix on SPT 4.1.6, quick-slot and protected-slot regression checks, insurance/FIR/profile restart auditing, balance of healing/spawn distances and presentation polish. Fika remains unsupported. The pre-raid emergency preset, native-styled death/healing sequence and merged two-life EFT result are future extensions.
 
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 
