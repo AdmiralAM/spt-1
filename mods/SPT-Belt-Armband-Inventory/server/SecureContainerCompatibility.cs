@@ -61,7 +61,7 @@ public sealed class SecureContainerCompatibility(
             foreach (MongoId gamma in GammaFamily.Where(templateTable.Items.ContainsKey))
                 RequireAdmission(gamma.ToString(), null, packNStrapCashBox, "Pack 'n' Strap Small Cash Box");
 
-        logger.Success($"B&A&HB final compatibility committed: Gamma Pack 'n' Strap admissions={gammaAdmissions}, "
+        logger.Debug($"B&A&HB final compatibility committed: Gamma Pack 'n' Strap admissions={gammaAdmissions}, "
             + $"containers verified={packNStrapContainers.Count}, Gamma hosts verified={GammaFamily.Count(templateTable.Items.ContainsKey)}, "
             + $"wallets={wallets.Count}/HeadBand additions={walletAdmissions}/money-filter fixes={walletMoneyFixes}, "
             + $"dogtag cases={dogtagCases.Count}/HeadBand additions={dogtagAdmissions}; "

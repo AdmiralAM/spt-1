@@ -155,7 +155,7 @@ public sealed class DogtagCaseItem(
             ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
             canonicalLease.RequireCurrent(templateTable, source);
-            logger.Success("B&A&HB Dogtag Case retained as a validated HeadBand utility container without vanilla Dogtag-slot exposure.");
+            logger.Debug("B&A&HB Dogtag Case retained as a validated HeadBand utility container without vanilla Dogtag-slot exposure.");
             return Task.CompletedTask;
         }
 
@@ -236,7 +236,7 @@ public sealed class DogtagCaseItem(
         ValidateExisting(created, source);
         RequireCanonicalRegisteredTemplate(templateTable);
         canonicalLease.RequireCurrent(templateTable, source);
-        logger.Success("B&A&HB Dogtag Case created and revalidated as a HeadBand utility container without vanilla Dogtag-slot exposure.");
+        logger.Debug("B&A&HB Dogtag Case created and revalidated as a HeadBand utility container without vanilla Dogtag-slot exposure.");
         return Task.CompletedTask;
     }
 

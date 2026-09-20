@@ -50,7 +50,7 @@ public sealed class BeltServerRegistration(
             enabled.Add(deathPatch);
             insurancePatch.Enable();
             enabled.Add(insurancePatch);
-            logger.Success("B&A&HB #2 server death + insurance protection patches installed atomically through uniquely-resolved SPT 4.1 DI bindings.");
+            logger.Debug("B&A&HB #2 server death + insurance protection patches installed atomically through uniquely-resolved SPT 4.1 DI bindings.");
         }
         catch (Exception exception)
         {

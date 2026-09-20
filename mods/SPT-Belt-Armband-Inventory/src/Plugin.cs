@@ -13,6 +13,7 @@ namespace SPTBeltArmbandInventory
     [BepInDependency("com.admiralam.compatibility-suite", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
+        static readonly Action<string> QuietInfo = _ => { };
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
         public const string PluginName = "B&A&HB #2 MOD SPT";
         public const string PluginVersion = "0.3.0";
@@ -48,20 +49,20 @@ namespace SPTBeltArmbandInventory
         {
             ReflectionTools.LogWarning = Logger.LogWarning;
             modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB #2 MOD SPT. Runtime-candidate builds force this on at startup.");
-            protectionSettings = new ProtectionSettingsSync(Config, Logger.LogInfo, Logger.LogWarning);
+            protectionSettings = new ProtectionSettingsSync(Config, QuietInfo, Logger.LogWarning);
 
             if (!modEnabled.Value)
             {
                 modEnabled.Value = true;
                 Config.Save();
-                Logger.LogInfo("B&A&HB #2 MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
+                Logger.LogDebug("B&A&HB #2 MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
             }
 
-            HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
+            HostBoundaryDiscovery.Log(QuietInfo, Logger.LogWarning);
 
             bool packNStrapDetected = ExternalCompatibilityApi.IsPackNStrap211Claimed;
             if (packNStrapDetected)
-                Logger.LogInfo("B&A&HB companion mode selected: WTT Pack 'n' Strap owns standard belt/container behavior; only Admiral HeadBand, Dogtag and exact-ID protection remain active.");
+                Logger.LogDebug("B&A&HB companion mode selected: WTT Pack 'n' Strap owns standard belt/container behavior; only Admiral HeadBand, Dogtag and exact-ID protection remain active.");
 
             if (!TryDetectLegacyBeltSlot(out bool legacyBeltSlotDetected))
             {
@@ -74,9 +75,9 @@ namespace SPTBeltArmbandInventory
                 return;
             }
             if (legacyBeltSlotDetected)
-                Logger.LogInfo("B&A&HB companion mode accepts Pack 'n' Strap's required Trenchfoot-BeltSlot owner and will not install competing standard Belt routes.");
+                Logger.LogDebug("B&A&HB companion mode accepts Pack 'n' Strap's required Trenchfoot-BeltSlot owner and will not install competing standard Belt routes.");
 
-            runtimeTypePatches = new RuntimeCustomBeltTypePatches(Logger.LogInfo, Logger.LogWarning);
+            runtimeTypePatches = new RuntimeCustomBeltTypePatches(QuietInfo, Logger.LogWarning);
             // Published B&A item templates retain the custom Belt parent on the
             // server in companion mode so old profiles remain loadable. The
             // matching JsonTypes mapping is therefore always required for
@@ -89,7 +90,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            runtimeHeadBandTypePatches = new RuntimeCustomHeadBandTypePatches(Logger.LogInfo, Logger.LogWarning);
+            runtimeHeadBandTypePatches = new RuntimeCustomHeadBandTypePatches(QuietInfo, Logger.LogWarning);
             if (!runtimeHeadBandTypePatches.TryInstall())
             {
                 runtimeHeadBandTypePatches.Dispose();
@@ -100,7 +101,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            equipmentCacheCapacityPatches = new EquipmentCacheCapacityPatches(Logger.LogInfo, Logger.LogWarning);
+            equipmentCacheCapacityPatches = new EquipmentCacheCapacityPatches(QuietInfo, Logger.LogWarning);
             if (!equipmentCacheCapacityPatches.TryInstall())
             {
                 equipmentCacheCapacityPatches.Dispose();
@@ -113,7 +114,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning, !packNStrapDetected);
+            dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(QuietInfo, Logger.LogWarning, !packNStrapDetected);
             if (!dedicatedEquipmentSlotPatches.TryInstall())
             {
                 dedicatedEquipmentSlotPatches.Dispose();
@@ -128,7 +129,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            dedicatedSlotPresentationPatches = new DedicatedSlotPresentationPatches(Logger.LogInfo, Logger.LogWarning);
+            dedicatedSlotPresentationPatches = new DedicatedSlotPresentationPatches(QuietInfo, Logger.LogWarning);
             if (!dedicatedSlotPresentationPatches.TryInstall())
             {
                 dedicatedSlotPresentationPatches.Dispose();
@@ -136,7 +137,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
             }
 
-            compactFaceHeadBandPresentationPatches = new CompactFaceHeadBandPresentationPatches(Logger.LogInfo, Logger.LogWarning);
+            compactFaceHeadBandPresentationPatches = new CompactFaceHeadBandPresentationPatches(QuietInfo, Logger.LogWarning);
             if (!compactFaceHeadBandPresentationPatches.TryInstall())
             {
                 compactFaceHeadBandPresentationPatches.Dispose();
@@ -144,7 +145,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Accepted stable HeadBand presentation remains active; compact Face/HeadBand layout could not bind for this session.");
             }
 
-            firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(Logger.LogInfo, Logger.LogWarning);
+            firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(QuietInfo, Logger.LogWarning);
             if (!firstOpenHeadBandLayoutPatches.TryInstall())
             {
                 firstOpenHeadBandLayoutPatches.Dispose();
@@ -156,7 +157,7 @@ namespace SPTBeltArmbandInventory
                 FirstOpenHeadBandLayoutRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
-            dedicatedSlotLocalizationPatches = new DedicatedSlotLocalizationPatches(Logger.LogInfo, Logger.LogWarning);
+            dedicatedSlotLocalizationPatches = new DedicatedSlotLocalizationPatches(QuietInfo, Logger.LogWarning);
             if (!dedicatedSlotLocalizationPatches.TryInstall())
             {
                 dedicatedSlotLocalizationPatches.Dispose();
@@ -164,7 +165,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated wearable slots remain active, but Belt/HeadBand captions may use the English fallback for this session.");
             }
 
-            headwearCompatibilityPatches = new HeadwearCompatibilityPatches(Logger.LogInfo, Logger.LogWarning);
+            headwearCompatibilityPatches = new HeadwearCompatibilityPatches(QuietInfo, Logger.LogWarning);
             if (!headwearCompatibilityPatches.TryInstall())
             {
                 headwearCompatibilityPatches.Dispose();
@@ -172,7 +173,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Utility HeadBand.");
             }
 
-            beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(Logger.LogInfo, Logger.LogWarning);
+            beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(QuietInfo, Logger.LogWarning);
             if (!beltContainersPanelProjectionPatches.TryInstall())
             {
                 beltContainersPanelProjectionPatches.Dispose();
@@ -180,9 +181,9 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated Belt equipment data remains active, but the Belt row could not be projected into EFT ContainersPanel for this session.");
             }
 
-            Logger.LogInfo("B&A&HB #2 wearable presentation uses native SlotView/GridWindow paths with fixed dedicated Belt and HeadBand locations.");
+            Logger.LogDebug("B&A&HB #2 wearable presentation uses native SlotView/GridWindow paths with fixed dedicated Belt and HeadBand locations.");
 
-            gridWindowSizingPatches = new GridWindowSizingPatches(Logger.LogInfo, Logger.LogWarning);
+            gridWindowSizingPatches = new GridWindowSizingPatches(QuietInfo, Logger.LogWarning);
             if (!gridWindowSizingPatches.TryInstall())
             {
                 gridWindowSizingPatches.Dispose();
@@ -194,7 +195,7 @@ namespace SPTBeltArmbandInventory
                 GridWindowSizingRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
-            headBandItemIconPatches = new HeadBandItemIconPatches(Logger.LogInfo, Logger.LogWarning);
+            headBandItemIconPatches = new HeadBandItemIconPatches(QuietInfo, Logger.LogWarning);
             if (!headBandItemIconPatches.TryInstall())
             {
                 headBandItemIconPatches.Dispose();
@@ -202,7 +203,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Utility HeadBand keeps its runtime model, but the owned inventory-card icon could not bind for this session.");
             }
 
-            embeddedAccessoryGridPatches = new EmbeddedAccessoryGridPatches(Logger.LogInfo, Logger.LogWarning);
+            embeddedAccessoryGridPatches = new EmbeddedAccessoryGridPatches(QuietInfo, Logger.LogWarning);
             if (!embeddedAccessoryGridPatches.TryInstall())
             {
                 embeddedAccessoryGridPatches.Dispose();
@@ -212,14 +213,14 @@ namespace SPTBeltArmbandInventory
 
             if (packNStrapDetected)
             {
-                lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning, true);
+                lootPatches = new LootPriorityPatches(QuietInfo, Logger.LogWarning, true);
                 if (!lootPatches.TryInstall())
                 {
                     lootPatches.Dispose();
                     lootPatches = null;
                     Logger.LogWarning("Pack 'n' Strap keeps its container ordering, but exact Admiral wallet money auto-deposit could not be added.");
                 }
-                paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+                paymentPatches = new PaymentSlotPatches(QuietInfo, Logger.LogWarning);
                 if (!paymentPatches.TryInstall())
                 {
                     paymentPatches.Dispose();
@@ -227,11 +228,11 @@ namespace SPTBeltArmbandInventory
                     Logger.LogWarning("Pack 'n' Strap remains authoritative for Belt routing, but exact Admiral wallet payment sources could not be added.");
                 }
                 protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
-                Logger.LogInfo("B&A&HB companion mode initialized with exact Admiral wallet payment sources and money-only auto-deposit; Pack 'n' Strap retains general Belt/ArmBand loot ordering, unload, Scav, fast-access, merge, pickup and equipment-build ownership.");
+                Logger.LogDebug("B&A&HB companion mode initialized with exact Admiral wallet payment sources and money-only auto-deposit; Pack 'n' Strap retains general Belt/ArmBand loot ordering, unload, Scav, fast-access, merge, pickup and equipment-build ownership.");
                 return;
             }
 
-            lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
+            lootPatches = new LootPriorityPatches(QuietInfo, Logger.LogWarning);
             if (!lootPatches.TryInstall())
             {
                 lootPatches.Dispose();
@@ -239,7 +240,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but automatic loot placement will use vanilla container priorities.");
             }
 
-            unloadPatches = new UnloadPriorityPatches(Logger.LogInfo, Logger.LogWarning);
+            unloadPatches = new UnloadPriorityPatches(QuietInfo, Logger.LogWarning);
             if (!unloadPatches.TryInstall())
             {
                 unloadPatches.Dispose();
@@ -247,7 +248,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but unload placement will use vanilla grid priorities.");
             }
 
-            scavPatches = new ScavBeltPatches(Logger.LogInfo, Logger.LogWarning);
+            scavPatches = new ScavBeltPatches(QuietInfo, Logger.LogWarning);
             if (!scavPatches.TryInstall())
             {
                 scavPatches.Dispose();
@@ -255,7 +256,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("PMC wearable behavior remains active, but a Scav spawned with a container ArmBand may retain vanilla ArmBand deletion behavior.");
             }
 
-            fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            fastAccessSlotPatches = new FastAccessSlotPatches(QuietInfo, Logger.LogWarning);
             if (!fastAccessSlotPatches.TryInstall())
             {
                 fastAccessSlotPatches.Dispose();
@@ -263,7 +264,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but magazines inside compatible wearable containers may not participate in vanilla reachable-container reload logic.");
             }
 
-            slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
+            slotMergePatches = new SlotMergePatches(QuietInfo, Logger.LogWarning);
             if (!slotMergePatches.TryInstall())
             {
                 slotMergePatches.Dispose();
@@ -271,7 +272,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but wearable parent/child merge semantics remain vanilla.");
             }
 
-            pickupPatches = new PickupSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            pickupPatches = new PickupSlotPatches(QuietInfo, Logger.LogWarning);
             if (!pickupPatches.TryInstall())
             {
                 pickupPatches.Dispose();
@@ -280,7 +281,7 @@ namespace SPTBeltArmbandInventory
             }
             else
             {
-                dedicatedPickupPatches = new DedicatedWearablePickupPatches(Logger.LogInfo, Logger.LogWarning);
+                dedicatedPickupPatches = new DedicatedWearablePickupPatches(QuietInfo, Logger.LogWarning);
                 if (!dedicatedPickupPatches.TryInstall())
                 {
                     dedicatedPickupPatches.Dispose();
@@ -289,7 +290,7 @@ namespace SPTBeltArmbandInventory
                 }
             }
 
-            paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            paymentPatches = new PaymentSlotPatches(QuietInfo, Logger.LogWarning);
             if (!paymentPatches.TryInstall())
             {
                 paymentPatches.Dispose();
@@ -297,7 +298,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable storage remains active, but payment-capable wearable contents may not participate in vanilla payment-source enumeration.");
             }
 
-            buildValidationPatches = new EquipmentBuildValidationPatches(Logger.LogInfo, Logger.LogWarning);
+            buildValidationPatches = new EquipmentBuildValidationPatches(QuietInfo, Logger.LogWarning);
             if (!buildValidationPatches.TryInstall())
             {
                 buildValidationPatches.Dispose();
@@ -306,7 +307,7 @@ namespace SPTBeltArmbandInventory
             }
 
             protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
-            Logger.LogInfo("B&A&HB #2 MOD SPT wearable-container core initialized without idle polling.");
+            Logger.LogDebug("B&A&HB #2 MOD SPT wearable-container core initialized without idle polling.");
         }
 
         IEnumerator SyncProtectionSettingsBounded()

@@ -46,7 +46,7 @@ public sealed class ArmBandVariantItems(
         }
 
         WearableProtectionRuntime.ConfigureVariantRoots(featureConfig.Value.ArmBandRoles.ProtectionTemplateAllowlist);
-        logger.Success($"B&A&HB immutable ArmBand variants registered: visuals=26, roles=5, templates={ArmBandVariantCatalog.All.Length}, orientation={orientation}; exact ArmBand host exposure committed.");
+        logger.Debug($"B&A&HB immutable ArmBand variants registered: visuals=26, roles=5, templates={ArmBandVariantCatalog.All.Length}, orientation={orientation}; exact ArmBand host exposure committed.");
         return Task.CompletedTask;
     }
 

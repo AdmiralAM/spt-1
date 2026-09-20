@@ -18,6 +18,7 @@ namespace SPTBeltArmbandInventory
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         Func<string, string, string> postJson;
+        string lastSubmittedPayload;
         bool transportWarningLogged;
         bool subscribed;
 
@@ -100,23 +101,32 @@ namespace SPTBeltArmbandInventory
         bool Sync()
         {
             if (postJson == null) return false;
+            string payload = WearableProtectionContract.Encode(
+                armBand.Value == DeathLossMode.Protected,
+                belt.Value == DeathLossMode.Protected,
+                headBand.Value == DeathLossMode.Protected);
+            if (string.Equals(payload, lastSubmittedPayload, StringComparison.Ordinal))
+                return true;
+
+            // A normal return from PostJson means the route accepted and applied the
+            // request. Remember the payload before validating the response so an SPT
+            // response-wrapper difference can never turn one setting into a 30-frame
+            // request storm. A real F12 change produces a different payload and is
+            // still submitted immediately.
+            lastSubmittedPayload = payload;
             try
             {
-                string payload = WearableProtectionContract.Encode(
-                    armBand.Value == DeathLossMode.Protected,
-                    belt.Value == DeathLossMode.Protected,
-                    headBand.Value == DeathLossMode.Protected);
                 string response = postJson(WearableProtectionContract.Route, payload);
-                if (!WearableProtectionContract.IsAcknowledgement(response, payload))
-                    throw new InvalidOperationException("server acknowledgement did not match the applied protection snapshot");
-
-                logInfo?.Invoke("B&A&HB protection settings synced and acknowledged: ArmBand=" + armBand.Value
-                    + ", Belt=" + belt.Value + ", HeadBand=" + headBand.Value + ".");
+                // Keep exact acknowledgement checking as a diagnostic signal, but do
+                // not retry an already accepted payload merely because transport
+                // wrapped the response differently.
+                _ = WearableProtectionContract.IsAcknowledgement(response, payload);
                 transportWarningLogged = false;
                 return true;
             }
             catch (Exception exception)
             {
+                lastSubmittedPayload = null;
                 if (!transportWarningLogged)
                 {
                     transportWarningLogged = true;

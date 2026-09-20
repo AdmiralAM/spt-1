@@ -111,8 +111,7 @@ internal static class WearableProtectionRuntime
 
 [Injectable(TypePriority = OnLoadOrder.Routers + 1)]
 public sealed class WearableProtectionRouter(
-    JsonUtil jsonUtil,
-    ISptLogger<WearableProtectionRouter> logger)
+    JsonUtil jsonUtil)
     : StaticRouter(
         jsonUtil,
         [
@@ -122,7 +121,6 @@ public sealed class WearableProtectionRouter(
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(info);
-                    logger.Info($"B&A&HB protection policy updated: ArmBand={(snapshot.ArmBandProtected ? "Protected" : "Lost")}, Belt={(snapshot.BeltProtected ? "Protected" : "Lost")}, HeadBand={(snapshot.HeadBandProtected ? "Protected" : "Lost")}.");
                     string response = WearableProtectionContract.Encode(
                         snapshot.ArmBandProtected,
                         snapshot.BeltProtected,

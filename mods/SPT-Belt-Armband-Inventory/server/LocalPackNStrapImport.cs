@@ -32,7 +32,7 @@ public sealed class LocalPackNStrapImport(
 
         PreventImportedBeltsFromBeingNested(templateTable);
         LocalPackNStrapImportState.Enabled = true;
-        logger.Success("B&A&HB private Pack 'n' Strap content import loaded; imported belts are routed to dedicated slot15 and no Pack 'n' Strap runtime owner is required.");
+        logger.Debug("B&A&HB private Pack 'n' Strap content import loaded; imported belts are routed to dedicated slot15 and no Pack 'n' Strap runtime owner is required.");
     }
 
     private static void PreventImportedBeltsFromBeingNested(TemplateTable templateTable)

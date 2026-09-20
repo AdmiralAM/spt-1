@@ -66,7 +66,7 @@ public sealed class DedicatedWearableItems(
         RegisterHeadBandIcon();
         RegisterOwnedIcon(PlateContainerTemplateId);
 
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? "B&A&HB companion Utility HeadBand registered; legacy Magazine Belt template retained for profile safety without a B&A slot or offer."
             : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + Dogtag Case 1x1 grids.");
         return Task.CompletedTask;

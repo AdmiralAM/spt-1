@@ -97,7 +97,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // list positions. Client presentation owns the requested visual anchors.
             inventory.Properties!.Slots = slots;
 
-            logger.Success(companionMode
+            logger.Debug(companionMode
                 ? $"B&A&HB companion equipment contract registered: HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}; Belt remains owned by Pack 'n' Strap."
                 : $"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically after exact product templates: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
         }

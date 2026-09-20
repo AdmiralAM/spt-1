@@ -22,7 +22,7 @@ public sealed class WristWalletAssort(
     {
         if (ExternalCompatibilityApi.IsPackNStrap211Claimed || LocalPackNStrapImportState.Enabled)
         {
-            logger.Info("B&A&HB companion mode: Wrist Wallet offer skipped.");
+            logger.Debug("B&A&HB companion mode: Wrist Wallet offer skipped.");
             return Task.CompletedTask;
         }
         var templateId = new MongoId(RuntimeIdentity.WristWalletItemId);
@@ -41,7 +41,7 @@ public sealed class WristWalletAssort(
         if (existing != null)
         {
             ValidateExisting(trader, id, existing, templateId);
-            logger.Success($"B&A&HB Wrist Wallet retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
+            logger.Debug($"B&A&HB Wrist Wallet retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
@@ -58,7 +58,7 @@ public sealed class WristWalletAssort(
         });
         trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]]);
         trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
-        logger.Success($"B&A&HB Wrist Wallet added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB.");
+        logger.Debug($"B&A&HB Wrist Wallet added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB.");
         return Task.CompletedTask;
     }
 

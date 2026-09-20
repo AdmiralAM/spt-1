@@ -33,7 +33,7 @@ public sealed class WearableTaxonomyRegistration(
         if (beltAddition != null) templateTable.Items.Add(BeltParentTpl, beltAddition);
         if (headBandAddition != null) templateTable.Items.Add(HeadBandParentTpl, headBandAddition);
 
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? "B&A&HB companion taxonomy registered for HeadBand and legacy profile identities; active Belt ownership remains with Pack 'n' Strap."
             : "B&A&HB #2 wearable taxonomy registered atomically for ArmBand/Belt/HeadBand runtime families.");
         return Task.CompletedTask;

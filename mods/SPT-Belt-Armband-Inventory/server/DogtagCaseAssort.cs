@@ -38,7 +38,7 @@ public sealed class DogtagCaseAssort(
             cleanupAssort.BarterScheme?.Remove(offerId);
             cleanupAssort.LoyalLevelItems?.Remove(offerId);
         }
-        logger.Success("B&A&HB Dogtag Case trader offer is withdrawn; the persistent case remains available for existing profiles and the HeadBand slot.");
+        logger.Debug("B&A&HB Dogtag Case trader offer is withdrawn; the persistent case remains available for existing profiles and the HeadBand slot.");
         return Task.CompletedTask;
 
 #pragma warning disable CS0162
@@ -98,7 +98,7 @@ public sealed class DogtagCaseAssort(
             RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, existing, existingBarter);
             RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
-            logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
+            logger.Debug($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
@@ -208,7 +208,7 @@ public sealed class DogtagCaseAssort(
             throw;
         }
 
-        logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
+        logger.Debug($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
     }
 

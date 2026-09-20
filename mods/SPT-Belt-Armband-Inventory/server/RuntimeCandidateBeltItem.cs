@@ -33,7 +33,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (templateTable.Items.TryGetValue(MagazineArmbandTpl, out var existingCandidate))
         {
             ValidateExistingCandidate(existingCandidate);
-            logger.Success(companionMode
+            logger.Debug(companionMode
                 ? $"B&A&HB companion legacy Magazine Armband template retained for profile safety: tpl={RuntimeCandidateTpl}; no B&A offer or ArmBand filter publication."
                 : $"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
             return Task.CompletedTask;
@@ -75,7 +75,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         // ArmBand host exposure is intentionally owned by WristWalletItem at
         // Preload+2. That later owner validates that both exact ArmBand products
         // exist before mutating the vanilla slot filter, preventing dangling IDs.
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? $"B&A&HB companion legacy Magazine Armband template registered for profile safety: tpl={RuntimeCandidateTpl}; no B&A offer or ArmBand filter publication."
             : $"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
