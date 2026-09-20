@@ -32,3 +32,9 @@ Suite now owns an idempotent external adapter that makes dedicated Belt slot15
 follow every ArmBand-enabled Use Items Anywhere list. The foreign DLL remains
 untouched. Removal of the superseded Belt-side copy is a separate Belt-owned
 change, so mixed-version installations remain safe during migration.
+
+The Suite also owns the narrow UI Fixes bridge. It patches only UI Fixes'
+in-raid `LoadAmmoByType` replacement and appends ammo returned by Belt's public
+`BeltAccessApi` v1. Belt retains the complete native reload/access engine. A
+missing API, contract mismatch or changed UI Fixes call site fails closed and
+leaves the native/UI Fixes result untouched.

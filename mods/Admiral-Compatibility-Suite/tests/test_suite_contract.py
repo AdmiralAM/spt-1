@@ -55,5 +55,16 @@ class SuiteContractTests(unittest.TestCase):
         self.assertIn("Harmony.GetPatchInfo(plateDropTarget)", source)
         self.assertIn("Armor plate item-on-item action patch was not installed", source)
 
+    def test_ui_fixes_adapter_consumes_versioned_belt_api_and_fails_closed(self):
+        source = (MODULE / "client/UiFixesBeltAdapter.cs").read_text(encoding="utf-8")
+        self.assertIn('UpstreamPluginGuid = "com.tyfon.uifixes"', source)
+        self.assertIn('FindUniqueType("SPTBeltArmbandInventory.BeltAccessApi")', source)
+        self.assertIn("RequiredBeltContractVersion = 1", source)
+        self.assertIn('"TryEnumerateBeltSources"', source)
+        self.assertIn("rewrittenCalls != 1", source)
+        self.assertIn("harmony?.UnpatchSelf()", source)
+        self.assertNotIn("NativeBeltActions", source)
+        self.assertNotIn("IntegratedBeltAccess", source)
+
 if __name__ == "__main__":
     unittest.main()

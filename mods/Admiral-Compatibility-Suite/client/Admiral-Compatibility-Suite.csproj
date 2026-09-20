@@ -12,6 +12,7 @@
     <SPTPath Condition="'$(SPTPath)' == ''">C:\Games\SPT\</SPTPath>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony"><HintPath>$(SPTPath)BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Assembly-CSharp"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="BepInEx"><HintPath>$(SPTPath)BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath><Private>false</Private></Reference>

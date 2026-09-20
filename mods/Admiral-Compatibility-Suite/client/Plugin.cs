@@ -7,6 +7,7 @@ namespace AdmiralCompatibilitySuite;
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
 [BepInDependency(BeltPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(UseItemsAnywhereAdapter.UpstreamPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(UiFixesBeltAdapter.UpstreamPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "com.admiralam.compatibility-suite";
@@ -15,20 +16,33 @@ public sealed class Plugin : BaseUnityPlugin
     internal const string BeltPluginGuid = "com.admiralam.spt.belt-armband-inventory";
 
     private UseItemsAnywhereAdapter useItemsAnywhere;
+    private UiFixesBeltAdapter uiFixesBelt;
 
     private void Awake()
     {
-        if (!Chainloader.PluginInfos.ContainsKey(BeltPluginGuid)
-            || !Chainloader.PluginInfos.ContainsKey(UseItemsAnywhereAdapter.UpstreamPluginGuid))
+        if (!Chainloader.PluginInfos.ContainsKey(BeltPluginGuid))
         {
             return;
         }
 
-        useItemsAnywhere = new UseItemsAnywhereAdapter(Logger.LogInfo, Logger.LogWarning);
-        if (!useItemsAnywhere.TryInstall())
+        if (Chainloader.PluginInfos.ContainsKey(UseItemsAnywhereAdapter.UpstreamPluginGuid))
         {
-            useItemsAnywhere.Dispose();
-            useItemsAnywhere = null;
+            useItemsAnywhere = new UseItemsAnywhereAdapter(Logger.LogInfo, Logger.LogWarning);
+            if (!useItemsAnywhere.TryInstall())
+            {
+                useItemsAnywhere.Dispose();
+                useItemsAnywhere = null;
+            }
+        }
+
+        if (Chainloader.PluginInfos.ContainsKey(UiFixesBeltAdapter.UpstreamPluginGuid))
+        {
+            uiFixesBelt = new UiFixesBeltAdapter(Logger.LogInfo, Logger.LogWarning);
+            if (!uiFixesBelt.TryInstall())
+            {
+                uiFixesBelt.Dispose();
+                uiFixesBelt = null;
+            }
         }
     }
 
@@ -36,5 +50,7 @@ public sealed class Plugin : BaseUnityPlugin
     {
         useItemsAnywhere?.Dispose();
         useItemsAnywhere = null;
+        uiFixesBelt?.Dispose();
+        uiFixesBelt = null;
     }
 }
