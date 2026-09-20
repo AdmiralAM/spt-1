@@ -90,6 +90,15 @@ jobs:
             if (Test-Path $target) { Remove-Item $target -Recurse -Force }
             Copy-Item $mod.FullName $target -Recurse -Force
           }
+          # Admiral owns the consolidated content, while the installed WTT
+          # utility remains a shared runtime service. Provision the exact
+          # compile-time version as an isolated smoke fixture so its own mod
+          # metadata is not duplicated inside the Admiral folder.
+          $commonLib = Join-Path $env:USERPROFILE '.nuget/packages/wtt-servercommonlib/3.0.6/lib/net10.0/WTT-ServerCommonLib.dll'
+          if (-not (Test-Path $commonLib -PathType Leaf)) { throw 'WTT CommonLib 3.0.6 smoke fixture is missing.' }
+          $commonTarget = Join-Path $runtimeMods 'WTT-ServerCommonLib'
+          New-Item $commonTarget -ItemType Directory -Force | Out-Null
+          Copy-Item $commonLib $commonTarget
           $server = Get-ChildItem $env:SPT_RUNTIME_ROOT -File | Where-Object { $_.Name -in @('SPT.Server.exe','SPT.Server') } | Select-Object -First 1
           if (-not $server) { throw 'SPT server executable was not found in the verified runtime.' }
           $stdout = "$env:RUNNER_TEMP/spt-server.stdout.log"; $stderr = "$env:RUNNER_TEMP/spt-server.stderr.log"

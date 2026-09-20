@@ -14,7 +14,7 @@ if (-not (Test-Path $canonical -PathType Container)) { throw 'Canonical Admiral-
 if (Test-Path (Join-Path $candidate 'SPT_Runtime/user/mods/Admiral-Trader')) { throw 'Legacy hyphenated install directory leaked into the package.' }
 
 foreach ($relative in @(
-    'Admiral Trader Server.dll', 'WTT-ServerCommonLib.dll', 'db/base.json', 'db/assort.json', 'db/natalya-signature-assort.json',
+    'Admiral Trader Server.dll', 'db/base.json', 'db/assort.json', 'db/natalya-signature-assort.json',
     'db/questassort.json', 'manifests/campaign-manifest.json', 'manifests/relationship-stock.json',
     'manifests/runtime-manifest.json', 'manifests/story-campaign-runtime.json',
     'README.md', 'CHANGELOG.md', 'INSTALL.md', 'POLISHING.md',

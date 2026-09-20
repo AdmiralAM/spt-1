@@ -52,7 +52,6 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, install)
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
-        self.assertIn("WTT-ServerCommonLib.dll", builder)
         self.assertIn("assets\\d5c27bb3169f8dfbc13f6b69.jpg", (ROOT / "server/AdmiralTrader.Server.csproj").read_text(encoding="utf-8"))
         self.assertIn("publicationMode -NotePropertyValue 'stable-beta'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
