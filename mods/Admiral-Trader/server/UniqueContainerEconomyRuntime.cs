@@ -72,7 +72,7 @@ public sealed class UniqueContainerEconomyRuntime(
             }
 
             foreach (var offer in traderPair.Value.Assort.Items
-                         .Where(x => x.ParentId?.ToString() == "hideout" && active.ContainsKey(x.Template)))
+                         .Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && active.ContainsKey(x.Template)))
             {
                 var policy = active[offer.Template];
                 traderPair.Value.Assort.LoyalLevelItems[offer.Id] = policy.LoyaltyLevel;
@@ -95,18 +95,18 @@ public sealed class UniqueContainerEconomyRuntime(
     private static int RemoveOfferTrees(Trader trader, HashSet<MongoId> templateIds)
     {
         var roots = trader.Assort.Items
-            .Where(x => x.ParentId?.ToString() == "hideout" && templateIds.Contains(x.Template))
+            .Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && templateIds.Contains(x.Template))
             .Select(x => x.Id).ToHashSet();
-        var all = new HashSet<MongoId>(roots);
+        var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
         bool changed;
         do
         {
             changed = false;
             foreach (var item in trader.Assort.Items)
-                if (item.ParentId is { } parent && all.Contains(parent) && all.Add(item.Id)) changed = true;
+                if (item.ParentId is { } parent && all.Contains(parent.ToString()) && all.Add(item.Id.ToString())) changed = true;
         } while (changed);
 
-        trader.Assort.Items.RemoveAll(x => all.Contains(x.Id));
+        trader.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
         foreach (var root in roots)
         {
             trader.Assort.BarterScheme.Remove(root);

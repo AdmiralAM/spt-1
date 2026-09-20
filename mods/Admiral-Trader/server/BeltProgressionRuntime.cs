@@ -35,7 +35,7 @@ public sealed class BeltProgressionRuntime(TemplateTable templates, TradersTable
         {
             var trader = traderPair.Value;
             if (traderPair.Key.ToString() == FenceId) continue;
-            foreach (var offer in trader.Assort.Items.Where(x => x.ParentId?.ToString() == "hideout" && ids.Contains(x.Template)))
+            foreach (var offer in trader.Assort.Items.Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && ids.Contains(x.Template)))
             {
                 var cells = belts.First(x => x.Item.Id == offer.Template).Cells;
                 var price = BeltPriceFloor(cells);
@@ -54,12 +54,12 @@ public sealed class BeltProgressionRuntime(TemplateTable templates, TradersTable
         }
         if (ids.Count > 0 && traders.TryGetValue(new MongoId(FenceId), out var fence))
         {
-            var roots = fence.Assort.Items.Where(x => x.ParentId?.ToString() == "hideout" && ids.Contains(x.Template)).Select(x => x.Id).ToHashSet();
-            var all = new HashSet<MongoId>(roots);
+            var roots = fence.Assort.Items.Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && ids.Contains(x.Template)).Select(x => x.Id).ToHashSet();
+            var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
             bool changed;
-            do { changed = false; foreach (var x in fence.Assort.Items) if (x.ParentId is { } p && all.Contains(p) && all.Add(x.Id)) changed = true; } while (changed);
+            do { changed = false; foreach (var x in fence.Assort.Items) if (x.ParentId is { } p && all.Contains(p.ToString()) && all.Add(x.Id.ToString())) changed = true; } while (changed);
             removed = roots.Count;
-            fence.Assort.Items.RemoveAll(x => all.Contains(x.Id));
+            fence.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
             foreach (var id in roots) { fence.Assort.BarterScheme.Remove(id); fence.Assort.LoyalLevelItems.Remove(id); }
         }
         logger.Success($"Admiral Belt progression enforced: detected={belts.Length}, offers normalized={normalized}, Fence roots removed={removed}");
