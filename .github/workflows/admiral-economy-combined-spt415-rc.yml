@@ -63,6 +63,8 @@ jobs:
       - name: Build combined exact-runtime candidate
         shell: pwsh
         run: |
+          dotnet restore mods/Admiral-Trader/server/AdmiralTrader.Server.csproj `
+            -p:SptRuntimeLibDir="$env:SPT_RUNTIME_ROOT"
           ./mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1 `
             -SptRoot $env:SPT_RUNTIME_ROOT `
             -SourceHeadSha '${{ github.event.pull_request.head.sha || github.sha }}' `
