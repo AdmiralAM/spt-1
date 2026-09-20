@@ -1,16 +1,21 @@
 # Admiral Tactical HUD
 
-Admiral Tactical HUD `1.13.3` for SPT 4.1.x. The current PR package is **RC2** and remains under runtime smoke validation after the rejected first finalization candidate.
+Admiral Tactical HUD `1.13.3` for SPT 4.1.x.
+
+The current accepted runtime state is **Stable Beta**: it is user-confirmed playable and suitable for normal use, but it is **not final stable**. Further polish and expansion continue later from the same product line.
 
 | Component | Version |
 | --- | --- |
 | Compact client | `1.13.3` |
 | Full Census client | `1.13.3` |
 | Server companion | `1.13.3` |
+| Release status | **Stable Beta** |
+
+Stable Beta runtime code baseline: `d7d63c0196af12141aedfc8f4896f0a9a84376ed`.
 
 ## Scope
 
-Admiral Tactical HUD owns only HUD functionality:
+Admiral Tactical HUD currently owns:
 
 - compact population display;
 - optional Full Census population display;
@@ -19,6 +24,16 @@ Admiral Tactical HUD owns only HUD functionality:
 - HUD assets and their validation/optimization pipeline.
 
 The `1.13.3` line is the only maintained version. Legacy Tactical HUD versions and retired combined HUD/Item-Intelligence concepts are not maintained runtime products.
+
+## Stable Beta boundary
+
+The current working state is frozen as the **Stable Beta** gameplay baseline.
+
+The unsuccessful experimental kill feed has been removed and is **not included**. Do not restore that implementation or treat its old weapon-text/weapon-icon contract as the next design.
+
+Kill feed remains the **mandatory next product stage** and must be redesigned from first principles for clear, expressive, rapidly readable combat use with low visual noise and no obstruction of important interface information. No new kill-feed implementation is part of this Stable Beta scope.
+
+See `RELEASE_NOTES.md` and `release-metadata.json` for the exact baseline contract.
 
 ## Two population modes
 
@@ -49,22 +64,20 @@ Both the Bot Census population glyphs and the Admiral reserve atlas are embedded
 - `docs/compass-navigation-roadmap.md` — deferred compass, Dynamic Maps and mono-audio accessibility design draft.
 - `tools/` — deterministic asset, optics and hot-path validation tools.
 - `THIRD-PARTY-LICENSES/` — retained licenses for incorporated third-party material.
+- `RELEASE_NOTES.md` — Stable Beta release notes.
+- `release-metadata.json` — machine-readable Stable Beta baseline metadata.
 
 Generated build output is never a source of truth and is not committed to the module tree.
 
-## RC2 runtime installation
+## Stable Beta installation
 
-The RC2 package installs to:
+The Stable Beta package installs to:
 
 - `BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll`
 - `BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD Full Census.dll`
 - `BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png`
 - `SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll`
 
-Before copying RC2, remove every path listed under `removeBeforeInstall` in the packaged
-`SPT_Runtime/user/mods/Admiral Tactical HUD/cleanup-manifest.json`. Then remove the two
-existing directories listed under `replace` and copy the packaged `BepInEx/` and
-`SPT_Runtime/` folders into the SPT root. This prevents an old DLL or duplicate atlas from
-being loaded beside RC2; the manifest is the exact machine-readable replacement contract.
+Before copying Stable Beta, remove every path listed under `removeBeforeInstall` in the packaged `SPT_Runtime/user/mods/Admiral Tactical HUD/cleanup-manifest.json`. Then remove the two existing directories listed under `replace` and copy the packaged `BepInEx/` and `SPT_Runtime/` folders into the SPT root.
 
-RC2 is not promoted as stable until Compact population icons, Full Census, status icons and raid/menu lifecycle pass a physical SPT smoke test. The experimental kill feed has been removed from this release line; any future replacement requires a separate readable and non-distracting design.
+Stable Beta is deliberately not final stable.
