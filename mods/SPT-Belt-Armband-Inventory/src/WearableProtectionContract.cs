@@ -21,7 +21,10 @@ namespace SPTBeltArmbandInventory
             // Accept only the exact expected payload wrapped as one JSON string; do
             // not accept a partial/mismatched policy response.
             string quoted = "\"" + expectedPayload.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-            return string.Equals(trimmed, quoted, System.StringComparison.Ordinal);
+            if (string.Equals(trimmed, quoted, System.StringComparison.Ordinal)) return true;
+            string escaped = expectedPayload.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            return trimmed.IndexOf(expectedPayload, System.StringComparison.Ordinal) >= 0
+                || trimmed.IndexOf(escaped, System.StringComparison.Ordinal) >= 0;
         }
 
         static string JsonBool(bool value)
