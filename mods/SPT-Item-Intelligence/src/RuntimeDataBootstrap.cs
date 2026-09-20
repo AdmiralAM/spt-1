@@ -544,7 +544,24 @@ namespace SPTItemIntelligence
 
         public ItemHoverText CreateFallback(string templateId)
         {
-            return new ItemHoverText("ITEM INTELLIGENCE", string.Empty, Detail);
+            RequirementBootstrapState current = State;
+            ModuleSelection selected = modules();
+            if (current == RequirementBootstrapState.Ready && selected.Requirements)
+            {
+                ItemRequirementAllocation notNeeded = new ItemRequirementAllocation(0, 0, 0, 0, 0, 0, 0);
+                return new ItemHoverText(string.Empty, string.Empty, string.Empty,
+                    templateId, 0, 0, 0, 0, 0, allocation: notNeeded, modules: selected);
+            }
+            ItemDataState dataState = current == RequirementBootstrapState.Loading
+                ? ItemDataState.Loading
+                : current == RequirementBootstrapState.Unavailable ? ItemDataState.Unavailable : ItemDataState.Missing;
+            string status = dataState == ItemDataState.Loading
+                ? GameUiText.T("Loading item data", "Загрузка данных")
+                : dataState == ItemDataState.Unavailable
+                    ? GameUiText.T("Data unavailable", "Данные недоступны")
+                    : GameUiText.T("No data for this item", "Нет данных о предмете");
+            return new ItemHoverText("ITEM INTELLIGENCE", string.Empty, status,
+                string.Empty, 0, 0, 0, 0, 0, dataState: dataState);
         }
 
         void TraceRuntimeBoundary(RequirementIndex index, ItemRequirementStateIndex requirements)

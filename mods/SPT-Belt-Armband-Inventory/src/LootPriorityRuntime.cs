@@ -12,10 +12,12 @@ namespace SPTBeltArmbandInventory
         static Func<IList> createTypedList;
         static object armBandValue;
         static object dedicatedBeltValue;
+        static object dedicatedHeadBandValue;
         static Type containerType;
+        static bool walletOnly;
         static Action<string> logWarning;
 
-        internal static bool TryInstall(object harmony, MethodInfo patchMethod, Type harmonyMethodType, ConstructorInfo harmonyMethodConstructor, Type equipmentType, Type slotEnumType, Action<string> warning)
+        internal static bool TryInstall(object harmony, MethodInfo patchMethod, Type harmonyMethodType, ConstructorInfo harmonyMethodConstructor, Type equipmentType, Type slotEnumType, bool companionWalletOnly, Action<string> warning)
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
@@ -35,6 +37,8 @@ namespace SPTBeltArmbandInventory
 
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
             dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
+            dedicatedHeadBandValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
+            walletOnly = companionWalletOnly;
             object postfix = harmonyMethodConstructor.Invoke(new object[] { typeof(LootPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic) });
             Patch(harmony, patchMethod, harmonyMethodType, target, postfix);
             return true;
@@ -46,7 +50,9 @@ namespace SPTBeltArmbandInventory
             createTypedList = null;
             armBandValue = null;
             dedicatedBeltValue = null;
+            dedicatedHeadBandValue = null;
             containerType = null;
+            walletOnly = false;
             logWarning = null;
         }
 
@@ -58,7 +64,21 @@ namespace SPTBeltArmbandInventory
                 object equipment = __args[0];
                 List<object> belt = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.LootPriority);
                 AppendUnique(belt, ReadCapabilityContainers(equipment, dedicatedBeltValue, AccessoryCapability.LootPriority));
-                if (belt.Count == 0) return;
+                List<object> wallet = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.PaymentSource);
+                AppendUnique(wallet, ReadCapabilityContainers(equipment, dedicatedHeadBandValue, AccessoryCapability.PaymentSource));
+                if (belt.Count == 0 && wallet.Count == 0) return;
+
+                if (walletOnly)
+                {
+                    if (!IsMoney(__args[1]) || wallet.Count == 0) return;
+                    List<object> existing = ToObjects(__result);
+                    IList augmented = createTypedList();
+                    if (augmented == null) return;
+                    AddUnique(augmented, wallet);
+                    AddUnique(augmented, existing);
+                    __result = augmented;
+                    return;
+                }
 
                 var groups = new Dictionary<string, List<object>>
                 {
@@ -66,7 +86,8 @@ namespace SPTBeltArmbandInventory
                     { LootPriorityPlan.Pockets, ReadSlotContainers(equipment, "Pockets") },
                     { LootPriorityPlan.Backpack, ReadSlotContainers(equipment, "Backpack") },
                     { LootPriorityPlan.Secure, ReadSlotContainers(equipment, "SecuredContainer") },
-                    { LootPriorityPlan.Belt, belt }
+                    { LootPriorityPlan.Belt, belt },
+                    { LootPriorityPlan.Wallet, wallet }
                 };
 
                 List<object> vanilla = ToObjects(__result);
@@ -100,6 +121,20 @@ namespace SPTBeltArmbandInventory
         static void AppendUnique(List<object> target, List<object> source)
         {
             for (int i = 0; i < source.Count; i++) if (!target.Contains(source[i])) target.Add(source[i]);
+        }
+
+        static void AddUnique(IList target, List<object> source)
+        {
+            for (int i = 0; i < source.Count; i++)
+                if (source[i] != null && containerType.IsInstanceOfType(source[i]) && !target.Contains(source[i])) target.Add(source[i]);
+        }
+
+        static bool IsMoney(object item)
+        {
+            string templateId = GetTemplateId(item);
+            return string.Equals(templateId, "5449016a4bdc2d6f028b456f", StringComparison.Ordinal)
+                || string.Equals(templateId, "5696686a4bdc2da3298b456a", StringComparison.Ordinal)
+                || string.Equals(templateId, "569668774bdc2da2298b4568", StringComparison.Ordinal);
         }
 
         static string GetTemplateId(object item)

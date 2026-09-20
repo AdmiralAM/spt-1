@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,6 +18,8 @@ namespace SPTItemIntelligence
         readonly Func<string, ItemHoverText> fallbackFactory;
         ItemHoverText current = ItemHoverText.Empty;
         object hoveredView;
+        object pinnedView;
+        Rect pinnedCardRect;
         ItemPresentationIndex renderedIndex;
         int invalidationVersion;
         int renderedInvalidation = -1;
@@ -100,6 +103,7 @@ namespace SPTItemIntelligence
                 ClearAnchor();
                 Clear();
             }
+            if (object.ReferenceEquals(pinnedView, itemView)) ClearPinned();
         }
 
         public void ClearViews()
@@ -109,6 +113,7 @@ namespace SPTItemIntelligence
             staleViews.Clear();
             renderedIndex = null;
             ClearAnchor();
+            ClearPinned();
             Clear();
         }
 
@@ -120,11 +125,14 @@ namespace SPTItemIntelligence
         public void Draw()
         {
             if (!settings.Modules.TrackViews) return;
-            if (Event.current != null && Event.current.type != EventType.Repaint) return;
-            RefreshTrackedViewsIfNeeded();
+            Event guiEvent = Event.current;
+            bool repaint = guiEvent == null || guiEvent.type == EventType.Repaint;
+            bool click = guiEvent != null && guiEvent.type == EventType.MouseDown && guiEvent.button == 0;
+            if (!repaint && !click) return;
+            if (repaint) RefreshTrackedViewsIfNeeded();
             if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
 
-            object activeView = Volatile.Read(ref hoveredView);
+            object activeView = pinnedView ?? Volatile.Read(ref hoveredView);
             if (activeView == null) return;
             TrackedItemView tracked;
             if (!trackedViews.TryGetValue(activeView, out tracked)) return;
@@ -133,10 +141,30 @@ namespace SPTItemIntelligence
             {
                 Rect markerRect;
                 if (!tracked.TryGetTooltipHotspot(out markerRect)) return;
-                Vector2 mouse = Event.current == null
+                Vector2 mouse = guiEvent == null
                     ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
-                    : Event.current.mousePosition;
-                if (!markerRect.Contains(mouse)) return;
+                    : guiEvent.mousePosition;
+
+                if (click)
+                {
+                    object hovered = Volatile.Read(ref hoveredView);
+                    if (hovered != null && trackedViews.TryGetValue(hovered, out TrackedItemView hoveredTracked) &&
+                        hoveredTracked.TryGetTooltipHotspot(out Rect hoveredMarker) && hoveredMarker.Contains(mouse))
+                    {
+                        if (object.ReferenceEquals(pinnedView, hovered)) ClearPinned();
+                        else { pinnedView = hovered; pinnedCardRect = default(Rect); }
+                        guiEvent.Use();
+                    }
+                    else if (pinnedView != null && !pinnedCardRect.Contains(mouse))
+                    {
+                        ClearPinned();
+                        guiEvent.Use();
+                    }
+                    return;
+                }
+
+                bool pinned = object.ReferenceEquals(pinnedView, activeView);
+                if (!pinned && !markerRect.Contains(mouse)) return;
 
                 int previousDepth = GUI.depth;
                 Color previousColor = GUI.color;
@@ -144,7 +172,9 @@ namespace SPTItemIntelligence
                 {
                     GUI.depth = -1000;
                     GUI.color = Color.white;
-                    PolishedTooltipRenderer.Draw(markerRect, tracked.Text, settings);
+                    Rect card = PolishedTooltipRenderer.Draw(markerRect, tracked.Text, settings,
+                        pinned ? ItemTooltipMode.Full : (ItemTooltipMode?)null);
+                    if (pinned) pinnedCardRect = card;
                 }
                 finally
                 {
@@ -156,6 +186,12 @@ namespace SPTItemIntelligence
             {
                 tooltipDrawingDisabled = true;
             }
+        }
+
+        void ClearPinned()
+        {
+            pinnedView = null;
+            pinnedCardRect = default(Rect);
         }
 
         void RefreshTrackedViewsIfNeeded()
@@ -488,6 +524,9 @@ namespace SPTItemIntelligence
                 Color sourceColor = settings.GetColor(presentation.Kind);
                 sourceColor.a = settings.MarkerOpacity;
                 Set(ringImage, "color", sourceColor);
+                Set(backgroundImage, "sprite", FrameSprite(settings.MarkerFrame, false));
+                Set(ringImage, "sprite", FrameSprite(settings.MarkerFrame, true));
+                Set(glyphImage, "sprite", SymbolSprite(settings.MarkerSymbol));
                 Color statusColor = ResolveStatusColor(hoverText, settings);
                 statusColor.a = settings.MarkerOpacity;
                 Set(glyphImage, "color", statusColor);
@@ -614,76 +653,64 @@ namespace SPTItemIntelligence
 
             static Sprite CircleSprite()
             {
-                if (circleSprite != null) return circleSprite;
-                circleSprite = RadialSprite("ItemIntelligenceCircle", .49f, 0f);
-                return circleSprite;
+                return FrameSprite(ItemMarkerFrame.Circle, false);
             }
 
             static Sprite RingSprite()
             {
-                if (ringSprite != null) return ringSprite;
-                ringSprite = RadialSprite("ItemIntelligenceRing", .49f, .36f);
-                return ringSprite;
+                return FrameSprite(ItemMarkerFrame.Circle, true);
             }
 
-            static Sprite RadialSprite(string name, float outer, float inner)
+            static Sprite FrameSprite(ItemMarkerFrame frame, bool ring)
             {
-                const int size = 64;
-                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = name;
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Color32[] pixels = new Color32[size * size];
-                for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    float nx = (x + .5f) / size - .5f;
-                    float ny = (y + .5f) / size - .5f;
-                    float distance = Mathf.Sqrt(nx * nx + ny * ny);
-                    float outerAlpha = Mathf.Clamp01((outer - distance) * size);
-                    float innerAlpha = inner <= 0f ? 1f : Mathf.Clamp01((distance - inner) * size);
-                    byte alpha = (byte)Mathf.RoundToInt(outerAlpha * innerAlpha * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
-                }
-                texture.SetPixels32(pixels);
-                texture.Apply(false, true);
-                Sprite result = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-                result.name = name + "Sprite";
-                result.hideFlags = HideFlags.HideAndDontSave;
-                return result;
+                string shape = frame == ItemMarkerFrame.Hex ? "hex" : frame == ItemMarkerFrame.Diamond ? "diamond" : frame == ItemMarkerFrame.Square ? "square" : "circle";
+                string resource = "frame-" + shape + (ring ? "-ring.png" : "-fill.png");
+                Sprite sprite = EmbeddedSprite(resource);
+                if (frame == ItemMarkerFrame.Circle) { if (ring) ringSprite = sprite; else circleSprite = sprite; }
+                return sprite;
             }
 
-            // Original two-stroke geometry. No external sprite, font glyph, asset, or copied geometry.
             static Sprite CheckmarkSprite()
             {
-                if (checkmarkSprite != null) return checkmarkSprite;
-                const int size = 64;
-                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = "ItemIntelligenceOriginalCheckmark";
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Color32[] pixels = new Color32[size * size];
-                for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
-                    float check = Mathf.Min(SegmentDistance(p, new Vector2(.22f, .50f), new Vector2(.43f, .30f)),
-                        SegmentDistance(p, new Vector2(.43f, .30f), new Vector2(.79f, .69f)));
-                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((.075f - check) * size) * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
-                }
-                texture.SetPixels32(pixels);
-                texture.Apply(false, true);
-                checkmarkSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-                checkmarkSprite.hideFlags = HideFlags.HideAndDontSave;
+                if (checkmarkSprite == null) checkmarkSprite = EmbeddedSprite("symbol-check.png");
                 return checkmarkSprite;
             }
-            static float SegmentDistance(Vector2 p, Vector2 a, Vector2 b)
+
+            static Sprite SymbolSprite(ItemMarkerSymbol symbol)
             {
-                Vector2 ab = b - a;
-                return Vector2.Distance(p, a + ab * Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude));
+                switch (symbol)
+                {
+                    case ItemMarkerSymbol.Cross: return EmbeddedSprite("symbol-cross.png");
+                    case ItemMarkerSymbol.Dot: return EmbeddedSprite("symbol-dot.png");
+                    case ItemMarkerSymbol.Alert: return EmbeddedSprite("symbol-alert.png");
+                    default: return CheckmarkSprite();
+                }
+            }
+
+            static readonly Dictionary<string, Sprite> embeddedSprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+            static Sprite EmbeddedSprite(string fileName)
+            {
+                Sprite cached;
+                if (embeddedSprites.TryGetValue(fileName, out cached)) return cached;
+                string resourceName = "SPTItemIntelligence.Markers." + fileName;
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+                {
+                    if (stream == null) return null;
+                    byte[] bytes = new byte[stream.Length];
+                    int offset = 0;
+                    while (offset < bytes.Length) { int read = stream.Read(bytes, offset, bytes.Length - offset); if (read <= 0) break; offset += read; }
+                    Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    if (!texture.LoadImage(bytes, true)) { UnityEngine.Object.Destroy(texture); return null; }
+                    texture.name = fileName;
+                    texture.filterMode = FilterMode.Bilinear;
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                    texture.hideFlags = HideFlags.HideAndDontSave;
+                    cached = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, .5f), texture.width);
+                    cached.name = fileName + "Sprite";
+                    cached.hideFlags = HideFlags.HideAndDontSave;
+                    embeddedSprites[fileName] = cached;
+                    return cached;
+                }
             }
             static Type PropertyType(object target, string name)
             {

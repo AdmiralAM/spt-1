@@ -31,8 +31,6 @@ The legacy repositories are **content/data-model sources and compatibility refer
 
 The SPT 4.1 Andrudis port uses the current DI/load model (`IModMetadata`, `IOnLoad`, injected database tables, `ImageRouter`, `TraderConfig`, `RagfairConfig`) rather than the old 3.x server API.
 
-The maintained `WTT-Artem-Revival` module in this repository targets `net10.0` and consumes `WTT-ServerCommonLib` 3.0.6. This is evidence that the WTT 3.x server-common boundary is viable in the repository's current SPT generation; it is **not** yet a decision that Admiral Trader must depend on WTT at runtime.
-
 `acidphantasm/scorpion-csharp` is a single-custom-trader architecture reference: explicit trader identity, explicit assort/quest-assort loading, lazy locale injection, and SPT 4.1 table/config boundaries. It is a code-pattern reference, not source to copy wholesale.
 
 Current SPT trader JSON supplied from an installed SPT runtime is a native data-shape reference for `base.json`, `assort.json`, and `questassort.json`. Those runtime files are reference input and are not committed here.

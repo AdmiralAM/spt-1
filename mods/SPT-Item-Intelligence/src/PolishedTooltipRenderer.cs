@@ -29,13 +29,13 @@ namespace SPTItemIntelligence
         static string[] lineBuffer = Array.Empty<string>();
         static float[] rowHeightBuffer = Array.Empty<float>();
 
-        public static void Draw(Rect marker, ItemHoverText text, ItemIntelligenceUiSettings settings)
+        public static Rect Draw(Rect marker, ItemHoverText text, ItemIntelligenceUiSettings settings, ItemTooltipMode? modeOverride = null)
         {
-            if (text == null || settings == null) return;
+            if (text == null || settings == null) return default(Rect);
 
-            ItemTooltipMode mode = settings.TooltipMode;
+            ItemTooltipMode mode = modeOverride ?? settings.TooltipMode;
             int lineCount = text.GetLineCount(mode);
-            if (lineCount <= 0) return;
+            if (lineCount <= 0) return default(Rect);
 
             EnsureBuffers(lineCount);
 
@@ -123,6 +123,7 @@ namespace SPTItemIntelligence
             }
 
             GUI.color = previous;
+            return card;
         }
 
         static GUIStyle GetLabelStyle(int fontSize)

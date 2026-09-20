@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using SPTBeltArmbandInventory;
 
 namespace SPTBeltArmbandInventory.Server;
 
@@ -10,12 +12,13 @@ namespace SPTBeltArmbandInventory.Server;
 /// </summary>
 public static class PersistentIdentityManifest
 {
-    public static readonly string[] TemplateIds =
+    private static readonly string[] LegacyTemplateIds =
     [
         RuntimeIdentity.CandidateItemId,
         RuntimeIdentity.WristWalletItemId,
         RuntimeIdentity.DedicatedMagazineBeltItemId,
-        RuntimeIdentity.EmergencyHeadBandItemId
+        RuntimeIdentity.EmergencyHeadBandItemId,
+        RuntimeIdentity.DogtagCaseItemId
     ];
 
     public static readonly string[] ParentIds =
@@ -25,12 +28,14 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.HeadBandItemParentId
     ];
 
-    public static readonly string[] GridIds =
+    private static readonly string[] LegacyGridIds =
     [
         RuntimeIdentity.CandidateGridId,
         RuntimeIdentity.WristWalletGridId,
         RuntimeIdentity.DedicatedMagazineBeltGridId,
-        RuntimeIdentity.EmergencyHeadBandGridId
+        RuntimeIdentity.EmergencyHeadBandGridId,
+        RuntimeIdentity.EmergencyHeadBandCigarettesGridId,
+        RuntimeIdentity.DogtagCaseGridId
     ];
 
     public static readonly string[] AssortIds =
@@ -38,7 +43,8 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.CandidateAssortId,
         RuntimeIdentity.WristWalletAssortId,
         RuntimeIdentity.DedicatedMagazineBeltAssortId,
-        RuntimeIdentity.EmergencyHeadBandAssortId
+        RuntimeIdentity.EmergencyHeadBandAssortId,
+        RuntimeIdentity.DogtagCaseAssortId
     ];
 
     public static readonly string[] SlotIds =
@@ -52,6 +58,12 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.DedicatedBeltSlotMongoId,
         RuntimeIdentity.DedicatedHeadBandSlotMongoId
     ];
+
+    public static readonly string[] TemplateIds =
+        LegacyTemplateIds.Concat(ArmBandVariantCatalog.All.Select(variant => variant.TemplateId)).ToArray();
+
+    public static readonly string[] GridIds =
+        LegacyGridIds.Concat(ArmBandVariantCatalog.All.Select(variant => variant.GridId)).ToArray();
 
     public static bool IsOwnedTemplate(string? templateId)
     {

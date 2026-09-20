@@ -1,0 +1,271 @@
+using System.Runtime.CompilerServices;
+using SPTarkov.Server.Core.Models.Common;
+
+namespace SPTBeltArmbandInventory.Server;
+
+/// <summary>
+/// Captures the exact non-B&A&HB Dogtag-slot acceptance set before the mod
+/// appends its container. Trader registration then proves that every captured
+/// vanilla/foreign entry still survives and that no other B&A&HB product has
+/// contaminated the host. This prevents a later mutation from silently
+/// satisfying the host check with just one arbitrary non-case entry.
+/// Public surface exists only so the separate regression assembly can exercise
+/// the runtime contract directly.
+/// </summary>
+public static class DogtagCaseHostContract
+{
+    public const string BearDogtagTemplateId = "59f32bb586f774757e1e8442";
+    public const string UsecDogtagTemplateId = "59f32c3b86f77472a31742f0";
+
+    private sealed class RollbackAuthority
+    {
+        internal readonly HashSet<MongoId> Host;
+        internal readonly HashSet<MongoId> Baseline;
+
+        internal RollbackAuthority(HashSet<MongoId> host, HashSet<MongoId> baseline)
+        {
+            Host = host;
+            Baseline = new HashSet<MongoId>(baseline);
+        }
+    }
+
+    private static readonly object SnapshotSync = new();
+    private static readonly ConditionalWeakTable<HashSet<MongoId>, RollbackAuthority> RollbackAuthorities = new();
+    private static readonly ConditionalWeakTable<HashSet<MongoId>, RollbackAuthority> ActiveRollbackHosts = new();
+    private static HashSet<MongoId>? capturedVanillaEntries;
+
+    public static int CapturedVanillaEntryCount
+    {
+        get
+        {
+            lock (SnapshotSync)
+                return capturedVanillaEntries?.Count ?? 0;
+        }
+    }
+
+    public static void CaptureVanillaEntries(IEnumerable<MongoId> acceptedTemplates)
+    {
+        ArgumentNullException.ThrowIfNull(acceptedTemplates);
+
+        var snapshot = acceptedTemplates.ToHashSet();
+        if (snapshot.Count == 0)
+            throw new InvalidOperationException("B&A&HB Dogtag host snapshot refused: no vanilla/non-owned acceptance entries were present before mutation.");
+
+        foreach (MongoId entry in snapshot)
+        {
+            if (PersistentIdentityManifest.IsOwnedTemplate(entry.ToString()))
+                throw new InvalidOperationException($"B&A&HB Dogtag host snapshot refused: owned template {entry} was presented as a vanilla/foreign acceptance entry.");
+        }
+
+        var bearDogtag = new MongoId(BearDogtagTemplateId);
+        var usecDogtag = new MongoId(UsecDogtagTemplateId);
+        if (!snapshot.Contains(bearDogtag) || !snapshot.Contains(usecDogtag))
+            throw new InvalidOperationException("B&A&HB Dogtag host snapshot refused: canonical BEAR/USEC dogtag acceptance is incomplete before mutation.");
+
+        lock (SnapshotSync)
+        {
+            if (capturedVanillaEntries == null)
+            {
+                capturedVanillaEntries = snapshot;
+                return;
+            }
+
+            if (!capturedVanillaEntries.SetEquals(snapshot))
+                throw new InvalidOperationException("B&A&HB Dogtag host snapshot changed during preload; refusing an ambiguous host contract.");
+        }
+    }
+
+    public static void RequirePreserved(HashSet<MongoId> currentFilter)
+    {
+        HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(current);
+
+        HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
+        if (!current.SetEquals(liveAfterProof))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during preserved-host verification.");
+    }
+
+    public static void RequireCommitted(HashSet<MongoId> currentFilter)
+    {
+        HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(current);
+
+        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        if (!current.Contains(caseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
+
+        HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
+        if (!current.SetEquals(liveAfterProof))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during committed-host verification.");
+
+        // Do not release ActiveRollbackHosts merely because a committed shape was
+        // observed. The exact snapshot-key receipt is still live until explicit
+        // metadata abandon or owned rollback consumes it. Releasing the per-host
+        // gate here would permit an external add/remove ABA to open a second baseline
+        // capture while the first rollback authority remains valid.
+    }
+
+    public static HashSet<MongoId> CaptureRollbackBaseline(HashSet<MongoId> currentFilter)
+    {
+        HashSet<MongoId> snapshot = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(snapshot);
+        if (snapshot.Contains(new MongoId(RuntimeIdentity.DogtagCaseItemId)))
+            throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: exact Dogtag Case was already present before an owned add transaction.");
+
+        var authority = new RollbackAuthority(currentFilter, snapshot);
+        lock (SnapshotSync)
+        {
+            if (ActiveRollbackHosts.TryGetValue(currentFilter, out _))
+                throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: another pre-add transaction already owns exact-host capture authority.");
+
+            ActiveRollbackHosts.Add(currentFilter, authority);
+            try
+            {
+                RollbackAuthorities.Add(snapshot, authority);
+            }
+            catch
+            {
+                ActiveRollbackHosts.Remove(currentFilter);
+                throw;
+            }
+        }
+        return snapshot;
+    }
+
+    public static bool TryAbandonRollbackAuthority(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)
+    {
+        if (currentFilter == null || preCommitSnapshot == null) return false;
+        lock (SnapshotSync)
+        {
+            if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority)
+                || !ReferenceEquals(currentFilter, authority.Host)
+                || !preCommitSnapshot.SetEquals(authority.Baseline))
+                return false;
+
+            // Metadata-only abandon is valid only for the exact concurrent-commit
+            // shape that explains Add(case)==false: the pinned baseline plus exactly
+            // the Dogtag Case. Foreign/current host drift must retain authority and
+            // fail closed rather than silently declaring the pre-add transaction clean.
+            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+            var expectedCommitted = new HashSet<MongoId>(authority.Baseline) { caseTpl };
+            HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(expectedCommitted))
+                return false;
+
+            // Re-prove the exact host shape immediately before metadata authority is
+            // consumed. A mutation between the first proof and token release must not
+            // silently discard the only rollback/capture authority for this host.
+            HashSet<MongoId> liveBeforeConsume = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(liveBeforeConsume)
+                || !liveBeforeConsume.SetEquals(expectedCommitted))
+                return false;
+
+            RollbackAuthorities.Remove(preCommitSnapshot);
+            if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
+                && ReferenceEquals(active, authority))
+                ActiveRollbackHosts.Remove(authority.Host);
+            return true;
+        }
+    }
+
+    public static bool TryRollbackOwnedCaseAddition(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)
+    {
+        if (currentFilter == null || preCommitSnapshot == null) return false;
+        try
+        {
+            lock (SnapshotSync)
+            {
+                if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority))
+                    return false;
+
+                // A rejected foreign/value-identical host or caller-mutated snapshot
+                // must not burn the real exact-host token. Only the exact host + exact
+                // caller baseline may exercise this authority.
+                if (!ReferenceEquals(currentFilter, authority.Host)
+                    || !preCommitSnapshot.SetEquals(authority.Baseline))
+                    return false;
+
+                // Retain the exact ConditionalWeakTable key before rebinding value
+                // checks to the internally pinned immutable-copy baseline.
+                HashSet<MongoId> authorityKey = preCommitSnapshot;
+                preCommitSnapshot = authority.Baseline;
+
+                // Neither the snapshot-key token nor ActiveRollbackHosts capture gate
+                // is consumed yet. Any drift/no-op failure before a proven exact
+                // baseline restore leaves the original authority live, so later
+                // value-ABA cannot open a second baseline capture on this host.
+                var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+                if (preCommitSnapshot.Contains(caseTpl)) return false;
+
+                HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };
+                HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+                if (!current.SetEquals(expectedCommitted))
+                    return false;
+
+                // Re-prove the exact host shape immediately before the only mutation.
+                // Foreign/current drift remains untouched and retains capture authority.
+                HashSet<MongoId> liveBeforeRemove = SnapshotCurrentFilter(currentFilter);
+                if (!current.SetEquals(liveBeforeRemove)
+                    || !liveBeforeRemove.SetEquals(expectedCommitted))
+                    return false;
+
+                if (!currentFilter.Remove(caseTpl))
+                    return false;
+
+                HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
+                if (!IsExactRollbackBaseline(after, preCommitSnapshot))
+                    return false;
+
+                // Consume rollback/capture metadata only after the exact owned remove
+                // and exact baseline restoration are both proven. Successful rollback
+                // is therefore the sole path that re-opens this host for a fresh
+                // pre-add transaction; ambiguous failures remain fail-closed.
+                RollbackAuthorities.Remove(authorityKey);
+                if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
+                    && ReferenceEquals(active, authority))
+                    ActiveRollbackHosts.Remove(authority.Host);
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsExactRollbackBaseline(HashSet<MongoId> after, HashSet<MongoId> preCommitSnapshot)
+    {
+        return after.SetEquals(preCommitSnapshot);
+    }
+
+    private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
+    {
+        ArgumentNullException.ThrowIfNull(currentFilter);
+        return currentFilter.ToHashSet();
+    }
+
+    private static void RequirePreservedSnapshot(HashSet<MongoId> current)
+    {
+        MongoId[] captured;
+        lock (SnapshotSync)
+        {
+            if (capturedVanillaEntries == null || capturedVanillaEntries.Count == 0)
+                throw new InvalidOperationException("B&A&HB Dogtag host verification refused: vanilla acceptance snapshot was never captured.");
+            captured = capturedVanillaEntries.ToArray();
+        }
+
+        foreach (MongoId entry in captured)
+        {
+            if (!current.Contains(entry))
+                throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
+        }
+
+        foreach (MongoId entry in current)
+        {
+            string id = entry.ToString();
+            if (PersistentIdentityManifest.IsOwnedTemplate(id)
+                && !string.Equals(id, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))
+                throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
+        }
+    }
+}

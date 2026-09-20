@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "updatedAt": "2026-09-06",
+  "updatedAt": "2026-09-20",
   "authority": {
     "productAuthority": "user",
     "coordinationWorker": "GitHub Work SPT",
@@ -80,7 +80,10 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "slotIds": [15, 16],
+        "slotIds": [
+          15,
+          16
+        ],
         "preserveDistributedIds": true,
         "status": "published-stable-baseline-not-active-roadmap"
       },
@@ -166,8 +169,14 @@
         "one exact-head release candidate passes the final batched runtime gate on the current approved SPT 4.1.x baseline"
       ],
       "supersededAuthorities": {
-        "issues": [115],
-        "pullRequests": [193, 297, 327]
+        "issues": [
+          115
+        ],
+        "pullRequests": [
+          193,
+          297,
+          327
+        ]
       },
       "ruledOutHypotheses": [
         "AllQuestsCheckmarks as root cause of the auto-accept/auto-turn-in lifecycle defect, based on user physical A/B test with the mod disabled"
@@ -180,8 +189,17 @@
       "version": "0.1.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "historicalEvidence": {
-        "issues": [141, 143, 197, 220],
-        "pullRequests": [222, 223, 226]
+        "issues": [
+          141,
+          143,
+          197,
+          220
+        ],
+        "pullRequests": [
+          222,
+          223,
+          226
+        ]
       },
       "phasePlan": [
         {
@@ -208,9 +226,17 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "modes": ["Off", "Audit", "Enforce"],
+        "modes": [
+          "Off",
+          "Audit",
+          "Enforce"
+        ],
         "preserveAcceptedEnforceAlpha": true,
-        "classification": ["Baseline", "Relationship", "Milestone"],
+        "classification": [
+          "Baseline",
+          "Relationship",
+          "Milestone"
+        ],
         "noSecondTraderEconomyEngine": true
       },
       "stableAcceptance": [
@@ -226,7 +252,7 @@
       "workstreamName": "Item Intelligence MOD SPT",
       "productName": "Item Intelligence Admiral",
       "modulePath": "mods/SPT-Item-Intelligence",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
@@ -281,13 +307,13 @@
       ],
       "frozen": {
         "productName": "Item Intelligence Admiral",
-        "stableBaseline": "1.0.0",
+        "stableBaseline": "1.2.0",
         "compatibilitySourcePath": "mods/SPT-Item-Intelligence",
         "compatibilityRuntimeBranch": "runtime-item-intelligence",
         "preserveExistingGuidNamespaceEndpoint": true,
-        "itemValuationRemainsSeparate": true,
+        "itemValuationRemainsSeparate": false,
         "noTransactionExecution": true,
-        "status": "published-stable-baseline-not-active-roadmap"
+        "status": "published-stable-not-active-roadmap"
       },
       "referenceSources": [
         {
@@ -303,19 +329,34 @@
         }
       ],
       "stableAcceptance": [
-        "official Item Intelligence Admiral identity and v1.0.0 compatibility identifiers remain stable while v1.1 evolves",
+        "official Item Intelligence Admiral identity and compatibility identifiers remain stable through v1.2.0",
         "F12 can disable Marker, Tooltip, Quest, Future Quest, Hideout, Value and Craft/Barter layers independently without disabling unrelated layers",
-        "Item Valuation MOD SPT background colors remain a separate independent server-side feature and are not duplicated inside II",
+        "Item Valuation background colors are an independently switchable Item Intelligence module while the standalone package remains rollback-compatible only",
         "irrelevant items have no II marker while active quest, hideout and future quest attention states remain immediately legible",
         "quest and hideout owned/required/remaining quantities are deterministic, FIR-aware and free of double counting",
         "tooltip hierarchy is readable and bounded, with value/sell data consuming prepared cached state only",
         "disabled modules perform no unnecessary steady-state work and no permanent polling, global scans, hot-path reflection/allocations or extra hover networking are introduced",
         "Task Item Indicator and CompatibilityHighlighter overlap is deliberately classified only after core II stabilization",
-        "one exact-head Item Intelligence Admiral v1.1 package passes the batched physical SPT runtime gate"
+        "one exact-head Item Intelligence Admiral v1.2.0 package passes the batched physical SPT runtime gate"
       ],
       "historicalEvidence": {
-        "issues": [82, 94, 118, 198],
-        "pullRequests": [86, 96, 108, 120, 126, 199]
+        "issues": [
+          82,
+          94,
+          118,
+          198,
+          338
+        ],
+        "pullRequests": [
+          86,
+          96,
+          108,
+          120,
+          126,
+          199,
+          341,
+          343
+        ]
       }
     },
     "tacticalHud": {
@@ -326,42 +367,49 @@
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
-          "key": "m1-rc2-stabilization",
+          "key": "stable-beta-baseline",
           "issue": 71,
-          "objective": "Stabilize Admiral Tactical HUD 1.13.3 RC2 without adding post-RC functionality: reliable Compact/status/body/self icons, independent Full Census, clean short weapon-text kill feed, deterministic lifecycle and package.",
-          "acceptance": "Exact-head CI/package are green, no residual weapon-icon contract remains, and one batched physical SPT smoke proves Compact icons, fallback assets, Full Census, population, weapon-text kill feed, raid/menu lifecycle and clean logs.",
-          "requiresUserRuntime": true
-        },
-        {
-          "key": "m2-architecture-consolidation",
-          "issue": 71,
-          "objective": "Simplify the accepted HUD architecture using typed EFT APIs where proven stable, reflection only for compatibility/optional integrations, unified world/player lifecycle, centralized icon/font/resources and removal of dead legacy paths.",
-          "acceptance": "Accepted M1 behavior is unchanged while complexity and redundant compatibility machinery are reduced; deterministic validation stays green with no new global scans or permanent polling.",
+          "objective": "Preserve Admiral Tactical HUD 1.13.3 Stable Beta as the user-accepted playable rollback/reference baseline: Compact population with established Admiral role icons, optional independent Full Census, status/body/self assets, current edit/configuration behavior, deterministic install cleanup, and no kill feed.",
+          "acceptance": "User-confirmed playable on 2026-09-20 from runtime code baseline d7d63c0196af12141aedfc8f4896f0a9a84376ed. The failed kill-feed implementation is absent and must not be restored into this baseline. Stable Beta is explicitly not final stable.",
           "requiresUserRuntime": false
         },
         {
-          "key": "m3-population-best-of",
+          "key": "kill-feed-redesign",
+          "issue": 71,
+          "objective": "Design and implement the kill feed again from first principles as the mandatory next product stage, without restoring the rejected implementation or inheriting its weapon-text/weapon-icon contract.",
+          "acceptance": "A batched physical combat check proves the new feed is immediately understandable, expressive but compact, rapidly readable under combat pressure, bounded in lifetime/count, low-noise, and does not cover important Tarkov HUD or combat information.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "architecture-consolidation",
+          "issue": 71,
+          "objective": "Simplify the accepted HUD architecture using typed EFT APIs where proven stable, reflection only for compatibility/optional integrations, unified world/player lifecycle, centralized icon/font/resources and removal of dead legacy paths.",
+          "acceptance": "Accepted Stable Beta and accepted redesigned kill-feed behavior remain unchanged while complexity and redundant compatibility machinery are reduced; deterministic validation stays green with no new global scans or permanent polling.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "population-best-of",
           "issue": 71,
           "objective": "Consolidate Compact and Full Census as two coherent population presentations using approved BotCensus-derived classification, glyph/resource, Fika observed-AI and bounded recount patterns.",
           "acceptance": "Population classes/counts and both presentations are coherent and independently controllable, use one bounded data model, preserve MIT attribution and introduce no duplicate always-on counting engine.",
           "requiresUserRuntime": false
         },
         {
-          "key": "m4-status-best-of",
+          "key": "status-best-of",
           "issue": 71,
           "objective": "Improve the status HUD with approved CompactHUD-derived typed status access, screen-aware BattleUI/Hideout visibility, optional total health and immediately usable Tactical Vest + Pockets grenade count.",
           "acceptance": "Status remains compact and Tarkov-appropriate, grenade count excludes backpack/secure container, inventory/menu hiding is correct and update cadence is bounded.",
           "requiresUserRuntime": false
         },
         {
-          "key": "m5-hud-ux-layout",
+          "key": "hud-ux-layout",
           "issue": 71,
           "objective": "Unify per-module scale/gap, horizontal/vertical layout, screen clamping, drag/edit frame, save/reset positioning and safe cursor lock/visibility restore.",
           "acceptance": "Editing is obvious, reversible and persistent, normal gameplay has no edit-mode overhead and all modules remain visually coherent.",
           "requiresUserRuntime": false
         },
         {
-          "key": "m6-performance-hardening",
+          "key": "performance-hardening",
           "issue": 71,
           "objective": "Minimize HUD runtime cost with separated status/population/kill cadences, cached immutable render data, reused scratch/UI objects and disabled-section zero/low-work behavior.",
           "acceptance": "Guarded hot paths contain no recurring avoidable allocations/global scans/reflection, hidden sections do no unnecessary work, and no FPS/frametime/stutter regression is introduced.",
@@ -370,16 +418,28 @@
         {
           "key": "stable-release",
           "issue": 71,
-          "objective": "Produce and deliberately promote one final install-ready Admiral Tactical HUD package after all approved milestones are complete.",
-          "acceptance": "Canonical naming/install paths, EN/RU terminology, third-party attribution and package cleanup are correct; one final exact-head physical runtime gate passes; merge/publication/main verification and branch cleanup succeed.",
+          "objective": "Produce and deliberately promote one final install-ready Admiral Tactical HUD package only after the post-Stable-Beta roadmap, including the redesigned kill feed, is complete.",
+          "acceptance": "Canonical naming/install paths, EN/RU terminology, third-party attribution and package cleanup are correct; one final exact-head physical runtime gate passes; merge/publication/main verification and branch cleanup succeed. Only then may the product be called final stable.",
           "requiresUserRuntime": true
         }
       ],
       "frozen": {
         "productName": "Admiral Tactical HUD",
         "releaseLine": "1.13.3",
-        "compactWeaponNamesInsteadOfKillFeedIcons": true,
-        "status": "identity-contract-not-active-branch-authority"
+        "stableBeta": {
+          "label": "Stable Beta",
+          "exactRuntimeCodeHead": "d7d63c0196af12141aedfc8f4896f0a9a84376ed",
+          "acceptedDate": "2026-09-20",
+          "userAcceptedPlayable": true,
+          "killFeedIncluded": false,
+          "finalStable": false
+        },
+        "killFeed": {
+          "failedImplementationStatus": "retired-do-not-restore",
+          "nextMandatoryProductStage": true,
+          "redesignFromScratch": true
+        },
+        "status": "stable-beta-baseline-not-active-branch-authority"
       },
       "referenceSources": [
         {
@@ -396,19 +456,22 @@
         }
       ],
       "stableAcceptance": [
-        "single coherent Admiral Tactical HUD development line with one active implementation PR/branch at a time",
-        "canonical 1.13.3 identity and deterministic install/cleanup layout",
-        "compact readable weapon-name kill feed with no residual weapon-icon data contract",
+        "Stable Beta remains a preserved playable rollback/reference baseline and is never mislabeled final stable",
+        "the retired kill-feed implementation is not restored or used as the final design contract",
+        "a newly designed kill feed is immediately understandable, expressive but compact, rapidly readable in combat, bounded and non-obstructive",
         "Compact and optional Full Census population modes share bounded coherent data behavior",
         "status HUD has correct screen lifecycle and only useful non-duplicative information",
         "EN/RU user-facing terminology and configuration descriptions are concise and consistent",
         "no unbounded polling, global scans, hot-path reflection/allocations, freezes or frametime regression",
         "MIT donor/reference attribution is complete without mandatory donor dependencies",
-        "one final exact-head package passes the batched physical SPT runtime gate"
+        "one final exact-head package passes the batched physical SPT runtime gate before final stable promotion"
       ],
       "supersededAuthorities": {
-        "pullRequests": [195]
-      }
+        "pullRequests": [
+          195
+        ]
+      },
+      "releaseStatus": "stable-beta"
     }
   }
 }

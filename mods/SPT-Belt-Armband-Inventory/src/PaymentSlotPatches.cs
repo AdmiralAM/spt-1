@@ -26,7 +26,9 @@ namespace SPTBeltArmbandInventory
         internal static Func<object, object> ReadContainedItem;
         internal static Func<object, string> ReadTemplateId;
         internal static object ArmBandValue;
-        static readonly RuntimeListOwnership Ownership = new RuntimeListOwnership();
+        internal static object HeadBandValue;
+        static readonly RuntimeListOwnership ArmBandOwnership = new RuntimeListOwnership();
+        static readonly RuntimeListOwnership HeadBandOwnership = new RuntimeListOwnership();
         static bool runtimeFailureLogged;
 
         internal static void Normalize(object equipment, object result)
@@ -38,33 +40,8 @@ namespace SPTBeltArmbandInventory
                 IList list = result as IList;
                 if (list == null || list.IsReadOnly || list.IsFixedSize) return;
 
-                object armBandSlot = GetSlot(equipment, ArmBandValue);
-                if (armBandSlot == null) return;
-
-                object item = ReadContainedItem(armBandSlot);
-                string templateId = item == null ? null : ReadTemplateId(item);
-                bool include = PaymentSlotPolicy.ShouldIncludeWearable(templateId, item != null && ReflectionTools.HasContainers(item));
-                int existing = IndexOfReference(list, armBandSlot);
-                bool owned = Ownership.Owns(equipment, list, armBandSlot);
-
-                if (include && existing < 0)
-                {
-                    list.Add(armBandSlot);
-                    Ownership.Mark(equipment, list, armBandSlot);
-                }
-                else if (include && existing >= 0 && !owned)
-                {
-                    Ownership.Forget(equipment);
-                }
-                else if (!include && existing >= 0 && owned)
-                {
-                    list.RemoveAt(existing);
-                    Ownership.Forget(equipment);
-                }
-                else if (!include)
-                {
-                    Ownership.Forget(equipment);
-                }
+                NormalizeSlot(equipment, list, ArmBandValue, ArmBandOwnership);
+                NormalizeSlot(equipment, list, HeadBandValue, HeadBandOwnership);
             }
             catch (Exception exception)
             {
@@ -77,6 +54,37 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static void NormalizeSlot(object equipment, IList list, object slotValue, RuntimeListOwnership ownership)
+        {
+                if (slotValue == null) return;
+                object slot = GetSlot(equipment, slotValue);
+                if (slot == null) return;
+                object item = ReadContainedItem(slot);
+                string templateId = item == null ? null : ReadTemplateId(item);
+                bool include = PaymentSlotPolicy.ShouldIncludeWearable(templateId, item != null && ReflectionTools.HasContainers(item));
+                int existing = IndexOfReference(list, slot);
+                bool owned = ownership.Owns(equipment, list, slot);
+
+                if (include && existing < 0)
+                {
+                    list.Add(slot);
+                    ownership.Mark(equipment, list, slot);
+                }
+                else if (include && existing >= 0 && !owned)
+                {
+                    ownership.Forget(equipment);
+                }
+                else if (!include && existing >= 0 && owned)
+                {
+                    list.RemoveAt(existing);
+                    ownership.Forget(equipment);
+                }
+                else if (!include)
+                {
+                    ownership.Forget(equipment);
+                }
+        }
+
         static int IndexOfReference(IList list, object target)
         {
             for (int i = 0; i < list.Count; i++)
@@ -86,12 +94,14 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
-            Ownership.Reset();
+            ArmBandOwnership.Reset();
+            HeadBandOwnership.Reset();
             LogWarning = null;
             GetSlot = null;
             ReadContainedItem = null;
             ReadTemplateId = null;
             ArmBandValue = null;
+            HeadBandValue = null;
             runtimeFailureLogged = false;
         }
 
@@ -157,6 +167,7 @@ namespace SPTBeltArmbandInventory
                 PaymentSlotRuntime.ReadContainedItem = containedItemReader;
                 PaymentSlotRuntime.ReadTemplateId = templateIdReader;
                 PaymentSlotRuntime.ArmBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
+                PaymentSlotRuntime.HeadBandValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
 
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, getter, postfix);

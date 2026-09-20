@@ -1,0 +1,46 @@
+name: 'B&A&HB Integrated Access RC'
+on:
+  push:
+    branches: [fix/bahb-equipped-belt-operational-access]
+    paths: ['mods/SPT-Belt-Armband-Inventory/integrated-repair/**', '.github/workflows/belt-operational-access.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: bahb-integrated-repair-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test production integration and emitted native-signature wrappers
+        shell: pwsh
+        run: |
+          dotnet run --project mods/SPT-Belt-Armband-Inventory/integrated-repair/Tests/Tests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { throw 'Core regression failure' }
+          dotnet run --project mods/SPT-Belt-Armband-Inventory/integrated-repair/NativeTests/NativeTests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { throw 'Native action wrapper regression failure' }
+      - name: Compile primary-assembly integration input
+        run: dotnet build mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/IntegratedBeltAccess.csproj -c Release -warnaserror
+      - name: Build reproducible private-binary integrator
+        shell: pwsh
+        run: |
+          dotnet publish mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o artifact/integrator
+          if ($LASTEXITCODE -ne 0) { throw 'Integrator build failed' }
+          Copy-Item mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/bin/Release/netstandard2.1/BAndHB.Integration.BuildInput.dll artifact/integrator/
+          $refs = Join-Path $env:DOTNET_ROOT 'packs/NETStandard.Library.Ref/2.1.0/ref/netstandard2.1'
+          if (-not (Test-Path "$refs/netstandard.dll")) { throw 'Exact netstandard2.1 reference assembly is missing' }
+          Copy-Item "$refs/*.dll" artifact/integrator/
+          '${{ github.sha }}' | Set-Content artifact/integrator/SOURCE-SHA.txt
+          Write-Host 'The worker applies this builder to the supplied private client locally. BuildKit is not an installable mod. Native game files remain private and unchanged.'
+      - name: Upload reproducible private integration builder
+        uses: actions/upload-artifact@v4
+        with:
+          name: BAndHB-Integrated-RC3-BuildKit
+          path: artifact/integrator
+          retention-days: 7
+          if-no-files-found: error
