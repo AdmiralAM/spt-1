@@ -6,7 +6,7 @@ A source repository for independent SPT 4.1.x mods. Each maintained module owns 
 
 ## Project ownership
 
-This repository contains only the AdmiralAM SPT modules maintained as part of this suite. Third-party source packages, imported content archives, generated runtime packages, and large binary assets are kept outside Git.
+This repository contains only the AdmiralAM SPT modules maintained as part of this suite. All rights belong exclusively to Admiral and should not be used by anyone without approval.
 
 ## Modules
 
