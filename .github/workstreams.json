@@ -416,7 +416,7 @@
           "requiresUserRuntime": false
         },
         {
-          "key": "final-stable-release",
+          "key": "stable-release",
           "issue": 71,
           "objective": "Produce and deliberately promote one final install-ready Admiral Tactical HUD package only after the post-Stable-Beta roadmap, including the redesigned kill feed, is complete.",
           "acceptance": "Canonical naming/install paths, EN/RU terminology, third-party attribution and package cleanup are correct; one final exact-head physical runtime gate passes; merge/publication/main verification and branch cleanup succeed. Only then may the product be called final stable.",
