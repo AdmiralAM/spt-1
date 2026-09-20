@@ -46,7 +46,9 @@ public sealed class ExternalCompatibilityClaims(
             .SingleOrDefault(type => type != null);
         if (api is null) return Task.CompletedTask;
 
-        bool tgcPresent = TgcBelts.All(templateTable.Items.ContainsKey);
+        bool tgcPresent = TgcBelts.All(templateTable.Items.ContainsKey)
+            || AppDomain.CurrentDomain.GetAssemblies().Any(assembly =>
+                string.Equals(assembly.GetName().Name, "TGC-NG", StringComparison.OrdinalIgnoreCase));
         bool packPresent = templateTable.Items.ContainsKey(PackNStrapParent);
         if (tgcPresent) Claim(api, "TryClaimTgc300", "TGC 3.0.0");
         if (packPresent) Claim(api, "TryClaimPackNStrap211", "Pack 'n' Strap 2.1.1");
