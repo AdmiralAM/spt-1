@@ -69,7 +69,6 @@ public sealed class ArtemContentRegistration(
         if (!File.Exists(IOPath.Combine(modPath, "bundles.json"))
             || !File.Exists(assortPath)
             || requiredBundles.Length != 262
-            || requiredBundles.Any(path => !File.Exists(IOPath.Combine(bundlesPath, path)))
             || Directory.GetFiles(customItemsPath, "*.json", SearchOption.TopDirectoryOnly).Length != 6
             || Directory.GetFiles(IOPath.Combine(questPath, "Images"), "*", SearchOption.TopDirectoryOnly).Length != 24
             || Directory.GetFiles(IOPath.Combine(questPath, "Locales"), "*.json", SearchOption.TopDirectoryOnly).Length != 3

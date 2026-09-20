@@ -64,24 +64,21 @@ public sealed class UniqueContainerEconomyRuntime(
         }
 
         var normalized = 0;
-        var removedFromFence = 0;
         foreach (var traderPair in traders)
         {
-            if (traderPair.Key.ToString() == BeltProgressionRuntime.FenceId)
-            {
-                removedFromFence += RemoveOfferTrees(traderPair.Value, active.Keys.ToHashSet());
-                continue;
-            }
-
             foreach (var offer in traderPair.Value.Assort.Items
                          .Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && active.ContainsKey(x.Template)))
             {
                 var policy = active[offer.Template];
                 traderPair.Value.Assort.LoyalLevelItems[offer.Id] = policy.LoyaltyLevel;
-                if (traderPair.Value.Assort.BarterScheme.TryGetValue(offer.Id, out var schemes)
-                    && schemes.Count == 1 && schemes[0].Count == 1 && schemes[0][0].Template == Money.ROUBLES
-                    && (schemes[0][0].Count ?? 0) < policy.PriceFloor)
-                    schemes[0][0].Count = policy.PriceFloor;
+                // Imported content may arrive as dollars, euros or a token barter.  Keeping
+                // that donor scheme is what allowed LL2/LL3 specialty storage to remain
+                // effectively free at Ragman.  Admiral owns the consolidated storefront,
+                // so publish one deterministic RUB price for every direct trader offer.
+                traderPair.Value.Assort.BarterScheme[offer.Id] =
+                [
+                    [new BarterScheme { Template = Money.ROUBLES, Count = policy.PriceFloor }]
+                ];
 
                 offer.Upd ??= new Upd();
                 offer.Upd.UnlimitedCount = false;
@@ -90,30 +87,7 @@ public sealed class UniqueContainerEconomyRuntime(
             }
         }
 
-        logger.Success($"Admiral unique-container economy enforced: catalogue={Catalogue.Count}, present={active.Count}, offers={normalized}, Fence roots removed={removedFromFence}");
+        logger.Success($"Admiral unique-container economy enforced: catalogue={Catalogue.Count}, present={active.Count}, offers normalized={normalized}");
         return Task.CompletedTask;
-    }
-
-    private static int RemoveOfferTrees(Trader trader, HashSet<MongoId> templateIds)
-    {
-        var roots = trader.Assort.Items
-            .Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && templateIds.Contains(x.Template))
-            .Select(x => x.Id).ToHashSet();
-        var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
-        foreach (var root in roots) CollectDescendants(trader.Assort.Items, all, root.ToString());
-
-        trader.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
-        foreach (var root in roots)
-        {
-            trader.Assort.BarterScheme.Remove(root);
-            trader.Assort.LoyalLevelItems.Remove(root);
-        }
-        return roots.Count;
-    }
-
-    private static void CollectDescendants(List<Item> items, HashSet<string> collected, string parentId)
-    {
-        foreach (var child in items.Where(x => string.Equals(x.ParentId?.ToString(), parentId, StringComparison.Ordinal)))
-            if (collected.Add(child.Id.ToString())) CollectDescendants(items, collected, child.Id.ToString());
     }
 }

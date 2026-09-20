@@ -29,46 +29,27 @@ public sealed class BeltProgressionRuntime(TemplateTable templates, TradersTable
             if (handbook is not null && handbook.Price < floor) handbook.Price = floor;
         }
         var ids = belts.Select(x => x.Item.Id).ToHashSet();
-        var removed = 0;
         var normalized = 0;
         foreach (var traderPair in traders)
         {
             var trader = traderPair.Value;
-            if (traderPair.Key.ToString() == FenceId) continue;
             foreach (var offer in trader.Assort.Items.Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && ids.Contains(x.Template)))
             {
                 var cells = belts.First(x => x.Item.Id == offer.Template).Cells;
                 var price = BeltPriceFloor(cells);
                 trader.Assort.LoyalLevelItems[offer.Id] = BeltLoyaltyLevel(cells);
-                if (trader.Assort.BarterScheme.TryGetValue(offer.Id, out var schemes)
-                    && schemes.Count == 1 && schemes[0].Count == 1 && schemes[0][0].Template == Money.ROUBLES)
-                {
-                    double currentPrice = schemes[0][0].Count ?? 0;
-                    if (currentPrice < price) schemes[0][0].Count = price;
-                }
+                trader.Assort.BarterScheme[offer.Id] =
+                [
+                    [new BarterScheme { Template = Money.ROUBLES, Count = price }]
+                ];
                 offer.Upd ??= new Upd();
                 offer.Upd.UnlimitedCount = false;
                 offer.Upd.StackObjectsCount = BeltStock(cells);
                 normalized++;
             }
         }
-        if (ids.Count > 0 && traders.TryGetValue(new MongoId(FenceId), out var fence))
-        {
-            var roots = fence.Assort.Items.Where(x => string.Equals(x.ParentId?.ToString(), "hideout", StringComparison.Ordinal) && ids.Contains(x.Template)).Select(x => x.Id).ToHashSet();
-            var all = roots.Select(x => x.ToString()).ToHashSet(StringComparer.Ordinal);
-            foreach (var root in roots) CollectDescendants(fence.Assort.Items, all, root.ToString());
-            removed = roots.Count;
-            fence.Assort.Items.RemoveAll(x => all.Contains(x.Id.ToString()));
-            foreach (var id in roots) { fence.Assort.BarterScheme.Remove(id); fence.Assort.LoyalLevelItems.Remove(id); }
-        }
-        logger.Success($"Admiral Belt progression enforced: detected={belts.Length}, offers normalized={normalized}, Fence roots removed={removed}");
+        logger.Success($"Admiral Belt progression enforced: detected={belts.Length}, offers normalized={normalized}");
         return Task.CompletedTask;
-    }
-
-    private static void CollectDescendants(List<Item> items, HashSet<string> collected, string parentId)
-    {
-        foreach (var child in items.Where(x => string.Equals(x.ParentId?.ToString(), parentId, StringComparison.Ordinal)))
-            if (collected.Add(child.Id.ToString())) CollectDescendants(items, collected, child.Id.ToString());
     }
 
     public static double BeltPriceFloor(int cells) => cells switch
