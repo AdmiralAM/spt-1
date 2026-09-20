@@ -15,10 +15,12 @@ namespace Admiral.SecondLife.Client
         readonly ConfigEntry<float> recoveryDelaySeconds;
         readonly ConfigEntry<float> minimumCorpseDistance;
         readonly ConfigEntry<float> minimumPlayerDistance;
+        readonly ConfigEntry<bool> diagnosticDebug;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
         readonly RuntimeLifeStatistics lifeStatistics = new RuntimeLifeStatistics();
+        readonly RaidDeathDiagnostics deathDiagnostics = new RaidDeathDiagnostics();
         Harmony harmony;
         RecoveryRuntimeContract runtimeContract;
         RecoveryExecutor executor;
@@ -37,6 +39,7 @@ namespace Admiral.SecondLife.Client
             ConfigEntry<float> recoveryDelaySeconds,
             ConfigEntry<float> minimumCorpseDistance,
             ConfigEntry<float> minimumPlayerDistance,
+            ConfigEntry<bool> diagnosticDebug,
             Action<string> logInfo,
             Action<string> logWarning)
         {
@@ -45,6 +48,7 @@ namespace Admiral.SecondLife.Client
             this.recoveryDelaySeconds = recoveryDelaySeconds;
             this.minimumCorpseDistance = minimumCorpseDistance;
             this.minimumPlayerDistance = minimumPlayerDistance;
+            this.diagnosticDebug = diagnosticDebug;
             this.logInfo = logInfo;
             this.logWarning = logWarning;
         }
@@ -65,6 +69,9 @@ namespace Admiral.SecondLife.Client
                     logInfo);
                 harmony = new Harmony(HarmonyId);
                 active = this;
+                harmony.Patch(
+                    contract.PlayerOnDead,
+                    prefix: new HarmonyMethod(typeof(RuntimeBridge), nameof(PlayerOnDeadPrefix)));
                 harmony.Patch(
                     contract.CreateCorpse,
                     postfix: new HarmonyMethod(typeof(RuntimeBridge), nameof(CorpseCreatedPostfix)));
@@ -91,6 +98,16 @@ namespace Admiral.SecondLife.Client
         static void CorpseCreatedPostfix(object __instance, object __result)
         {
             active?.CaptureCorpse(__instance, __result);
+        }
+
+        static void PlayerOnDeadPrefix(object __instance, object __0)
+        {
+            if (active == null) return;
+            try { active.CaptureDeath(__instance, __0); }
+            catch (Exception exception)
+            {
+                active.logWarning?.Invoke("Death diagnostic capture failed without affecting native death: " + (exception.InnerException?.Message ?? exception.Message));
+            }
         }
 
         static void GameWorldStartedPostfix(object __instance)
@@ -152,6 +169,44 @@ namespace Admiral.SecondLife.Client
                 logWarning?.Invoke("Native corpse has no stable equipment-root ID; recovery will fail closed.");
         }
 
+        void CaptureDeath(object player, object damageTypeArgument)
+        {
+            if (player == null || !ReadBoolean(player, "IsYourPlayer")) return;
+
+            object killer = ReadMember(player, "LastAggressor");
+            object damageInfo = ReadMember(player, "LastDamageInfo");
+            object killerProfile = ReadMember(killer, "Profile");
+            object killerInfo = ReadMember(killerProfile, "Info");
+            object killerSettings = ReadMember(killerInfo, "Settings");
+            object weapon = ReadMember(damageInfo, "Weapon");
+            object weaponTemplate = ReadMember(weapon, "Template");
+            object currentAmmoTemplate = ReadMember(weapon, "CurrentAmmoTemplate");
+            string ammoTemplateId = ReadMember(damageInfo, "SourceId")?.ToString();
+            string ammoName = ReadMember(currentAmmoTemplate, "ShortNameLocalizationKey")?.ToString();
+
+            PlayerDeathDiagnostic captured = deathDiagnostics.Record(
+                ReadMember(killerProfile, "Nickname")?.ToString() ?? ReadMember(killerInfo, "Nickname")?.ToString() ?? "environment",
+                ReadMember(killerSettings, "Role")?.ToString(),
+                ReadMember(killer, "Side")?.ToString() ?? ReadMember(killerProfile, "Side")?.ToString(),
+                ReadMember(weapon, "ShortName")?.ToString() ?? ReadMember(weapon, "Name")?.ToString(),
+                string.IsNullOrWhiteSpace(ammoName) ? ammoTemplateId : ammoName,
+                DistanceBetween(player, killer),
+                ReadMember(player, "LastBodyPart")?.ToString() ?? ReadMember(player, "LastDamagedBodyPart")?.ToString(),
+                damageTypeArgument?.ToString() ?? ReadMember(damageInfo, "DamageType")?.ToString());
+
+            logInfo?.Invoke(deathDiagnostics.Format(captured));
+            if (diagnosticDebug?.Value == true)
+            {
+                logInfo?.Invoke(
+                    "SecondLifeDeathDebug raid=" + (pendingRaidId ?? "unknown") +
+                    " death=" + captured.DeathNumber +
+                    " killerProfile=" + (ReadMember(killer, "ProfileId") ?? "unknown") +
+                    " weaponTemplate=" + (ReadMember(weaponTemplate, "StringId") ?? ReadMember(weapon, "StringTemplateId") ?? "unknown") +
+                    " ammoTemplate=" + (ammoTemplateId ?? "unknown") +
+                    " rawDamage=" + (ReadMember(damageInfo, "Damage") ?? "unknown"));
+            }
+        }
+
         void BeginRaid(object gameWorld)
         {
             object mainPlayer = ReadObject(gameWorld, "MainPlayer");
@@ -167,6 +222,7 @@ namespace Admiral.SecondLife.Client
             pendingCorpseEquipmentRootId = null;
             warnedExecutorUnavailable = false;
             lifeStatistics.Reset();
+            deathDiagnostics.Reset(pendingRaidId);
             if (!finalizationGate.StartRaid(pendingRaidId))
                 logWarning?.Invoke("Recovery lifecycle rejected native raid start " + pendingRaidId + ".");
             else
@@ -391,6 +447,31 @@ namespace Admiral.SecondLife.Client
         static object ReadObject(object instance, string propertyName) =>
             instance == null ? null : AccessTools.Property(instance.GetType(), propertyName)?.GetValue(instance, null);
 
+        static object ReadMember(object instance, string name)
+        {
+            if (instance == null) return null;
+            Type type = instance.GetType();
+            return AccessTools.Property(type, name)?.GetValue(instance, null) ?? AccessTools.Field(type, name)?.GetValue(instance);
+        }
+
+        static float DistanceBetween(object first, object second)
+        {
+            object firstPosition = ReadMember(first, "Position");
+            object secondPosition = ReadMember(second, "Position");
+            if (firstPosition == null || secondPosition == null) return 0f;
+            float dx = ReadCoordinate(firstPosition, "x") - ReadCoordinate(secondPosition, "x");
+            float dy = ReadCoordinate(firstPosition, "y") - ReadCoordinate(secondPosition, "y");
+            float dz = ReadCoordinate(firstPosition, "z") - ReadCoordinate(secondPosition, "z");
+            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        static float ReadCoordinate(object vector, string name)
+        {
+            object value = ReadMember(vector, name);
+            try { return value == null ? 0f : Convert.ToSingle(value); }
+            catch { return 0f; }
+        }
+
         bool Fail(string message)
         {
             logWarning?.Invoke(message);
@@ -411,6 +492,7 @@ namespace Admiral.SecondLife.Client
             pendingProfileId = null;
             pendingRaidId = null;
             raidSequence = 0;
+            deathDiagnostics.Reset(null);
         }
     }
 }

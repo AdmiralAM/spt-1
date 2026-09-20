@@ -35,6 +35,11 @@ namespace Admiral.SecondLife.Client
                 "Minimum live-player distance",
                 75f,
                 new ConfigDescription("Minimum recovery-spawn distance from every other live player.", new AcceptableValueRange<float>(0f, 500f)));
+            ConfigEntry<bool> diagnosticDebug = Config.Bind(
+                "Diagnostics",
+                "Debug",
+                false,
+                "Log extended raw death-diagnostic identifiers in addition to the single compact line per death.");
 
             bridge = new RuntimeBridge(
                 enabled,
@@ -42,6 +47,7 @@ namespace Admiral.SecondLife.Client
                 recoveryDelaySeconds,
                 minimumCorpseDistance,
                 minimumPlayerDistance,
+                diagnosticDebug,
                 message => Logger.LogInfo(message),
                 message => Logger.LogWarning(message));
 

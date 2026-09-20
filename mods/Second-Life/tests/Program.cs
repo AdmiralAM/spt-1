@@ -302,6 +302,18 @@ var higherSecondLife = new LifeStatisticsSnapshot(2600, cumulativeStats.Kills);
 LifeStatisticsReport separatedHigherSecondLife = LifeStatisticsReport.Separate(firstLifeStats, firstLifeStats, higherSecondLife);
 Expect(separatedHigherSecondLife.SecondLife.Experience == 1350, "second-life experience is measured from its captured baseline even when it exceeds first-life experience");
 
+var deathDiagnostics = new RaidDeathDiagnostics();
+deathDiagnostics.Reset("raid-two-deaths");
+PlayerDeathDiagnostic firstDeath = deathDiagnostics.Record("Killa", "bossKilla", "Savage", "RPK-16", "5.45x39 PP", 41.25f, "Head", "Bullet");
+string firstDeathLine = deathDiagnostics.Format(firstDeath);
+PlayerDeathDiagnostic finalDeathDiagnostic = deathDiagnostics.Record("Reshala", "bossBully", "Savage", "AK-101", "5.56x45 M856A1", 18.5f, "Chest", "Bullet");
+string finalDeathLine = deathDiagnostics.Format(finalDeathDiagnostic);
+Expect(deathDiagnostics.Deaths.Count == 2, "both deaths from one raid are retained");
+Expect(deathDiagnostics.Deaths[0] == firstDeath && deathDiagnostics.Deaths[1] == finalDeathDiagnostic, "the final death does not overwrite the first death");
+Expect(firstDeath.LifeNumber == 1 && firstDeath.DeathNumber == 1 && finalDeathDiagnostic.LifeNumber == 2 && finalDeathDiagnostic.DeathNumber == 2, "two raid deaths have distinct life and death ordinals");
+Expect(firstDeathLine.Contains("\"death\":1") && firstDeathLine.Contains("Killa") && !firstDeathLine.Contains("Reshala"), "first-death log remains independently identifiable");
+Expect(finalDeathLine.Contains("\"death\":2") && finalDeathLine.Contains("Reshala") && !finalDeathLine.Contains("Killa"), "final-death log remains independently identifiable");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 
 sealed class FakeMove : IReversibleInventoryMove
