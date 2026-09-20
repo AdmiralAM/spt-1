@@ -122,10 +122,13 @@ class QuestQualityRuntimeTests(unittest.TestCase):
         }
         by_id = {quest["_id"]: quest for quest in self.quests}
         for qid in ids:
-            counter = by_id[qid]["conditions"]["AvailableForFinish"][0]
-            nested = {row["conditionType"] for row in counter["counter"]["conditions"]}
-            self.assertTrue({"Equipment", "Kills", "Location", "ExitStatus"} <= nested, qid)
-            self.assertTrue(counter["oneSessionOnly"], qid)
+            objectives = by_id[qid]["conditions"]["AvailableForFinish"]
+            combat = next(row for row in objectives if any(x.get("conditionType") == "Kills" for x in row["counter"]["conditions"]))
+            extraction = next(row for row in objectives if any(x.get("conditionType") == "ExitStatus" for x in row["counter"]["conditions"]))
+            self.assertTrue({"Equipment", "Kills", "Location"} <= {row["conditionType"] for row in combat["counter"]["conditions"]}, qid)
+            self.assertTrue({"Equipment", "Location", "ExitStatus"} <= {row["conditionType"] for row in extraction["counter"]["conditions"]}, qid)
+            self.assertTrue(combat["oneSessionOnly"], qid)
+            self.assertTrue(extraction["oneSessionOnly"], qid)
             self.assertIn("Уточнение:", self.locales["ru"][qid + " description"], qid)
             self.assertIn("Задача:", self.locales["ru"][qid + " description"], qid)
 

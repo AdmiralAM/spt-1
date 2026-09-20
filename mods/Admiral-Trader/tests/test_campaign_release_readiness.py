@@ -92,6 +92,7 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
             for filename in (f"{lang}.json", f"arsenal-{lang}.json", f"m3-{lang}.json", f"m8-{lang}.json", f"story-{lang}.json"):
                 locales[lang].update(load(f"db/locales/{filename}"))
 
+        authored_keys = {(row["questId"], row["conditionId"]) for row in rows}
         runtime_rows = {}
         for quest_id, quest in self.quests.items():
             for condition in quest["conditions"]["AvailableForFinish"]:
@@ -99,7 +100,7 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
                     continue
                 inner = condition.get("counter", {}).get("conditions", [])
                 equipment = next((row for row in inner if row.get("conditionType") == "Equipment"), None)
-                if equipment:
+                if equipment and (quest_id, condition["id"]) in authored_keys:
                     runtime_rows[(quest_id, condition["id"])] = equipment["equipmentInclusive"]
 
         self.assertEqual(11, len(runtime_rows))

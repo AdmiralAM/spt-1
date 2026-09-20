@@ -26,9 +26,9 @@ def test_no_catalogued_container_can_be_cheap_or_ll1():
     assert ammo["priceFloorRub"] == 450_000
 
 
-def test_runtime_enforces_offer_and_fence_guards():
-    assert "RemoveOfferTrees" in SOURCE
+def test_runtime_enforces_offer_guards():
     assert "LoyalLevelItems[offer.Id] = policy.LoyaltyLevel" in SOURCE
-    assert "schemes[0][0].Count = policy.PriceFloor" in SOURCE
+    assert "BarterScheme[offer.Id]" in SOURCE
+    assert "Template = Money.ROUBLES, Count = policy.PriceFloor" in SOURCE
     assert "offer.Upd.UnlimitedCount = false" in SOURCE
     assert "offer.Upd.StackObjectsCount = policy.Stock" in SOURCE

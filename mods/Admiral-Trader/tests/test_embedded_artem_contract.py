@@ -71,7 +71,7 @@ def test_painter_bundle_layer_is_reproducible_and_coexists_with_artem() -> None:
     assert "Hydrate-PainterBundles.ps1" in build
     assert "262 Artem and 5 Painter" in build
     assert "dotnet build $project -c Release --no-restore" in build
-    assert "requiredBundles.Any" in registration
+    assert "requiredBundles.Length != 262" in registration
     for hydrator_name in ("Hydrate-ArtemBundles.ps1", "Hydrate-PainterBundles.ps1"):
         hydrator = (ROOT / "tools" / hydrator_name).read_text(encoding="utf-8")
         assert "$sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue" in hydrator
