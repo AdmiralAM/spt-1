@@ -22,7 +22,16 @@ foreach ($relative in @(
 )) {
     if (-not (Test-Path (Join-Path $canonical $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
 }
-if (@(Get-ChildItem (Join-Path $canonical 'manifests') -File).Count -ne 4) { throw 'Package contains non-runtime design manifests.' }
+$expectedRuntimeManifests = @(
+    'artem-bundle-inventory.json', 'campaign-manifest.json', 'external-content-identities.json',
+    'external-trader-consolidation.json', 'painter-bundle-inventory.json',
+    'painter-special-delivery-pool.json', 'relationship-stock.json', 'reward-bundle-policy.json',
+    'runtime-manifest.json', 'story-campaign-runtime.json'
+) | Sort-Object
+$actualRuntimeManifests = @(Get-ChildItem (Join-Path $canonical 'manifests') -File | Select-Object -ExpandProperty Name | Sort-Object)
+if (($actualRuntimeManifests -join ',') -ne ($expectedRuntimeManifests -join ',')) {
+    throw "Package runtime manifest set drifted: $($actualRuntimeManifests -join ', ')"
+}
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
 if ($manifest.version -ne '0.3.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
