@@ -24,8 +24,8 @@ if ($SourceRuntime) {
     $extract = Join-Path $WorkingDirectory 'extracted'
     if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $extract | Out-Null
-    $sevenZip = (Get-Command 7z.exe -ErrorAction SilentlyContinue).Source
-    if (-not $sevenZip) { $sevenZip = 'C:\Program Files\7-Zip\7z.exe' }
+    $sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue
+    $sevenZip = if ($null -ne $sevenZipCommand) { $sevenZipCommand.Source } else { 'C:\Program Files\7-Zip\7z.exe' }
     if (-not (Test-Path -LiteralPath $sevenZip -PathType Leaf)) { throw '7z.exe is required to hydrate the pinned Artem asset' }
     & $sevenZip x $archive "-o$extract" -y | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Failed to extract the pinned Artem asset' }
