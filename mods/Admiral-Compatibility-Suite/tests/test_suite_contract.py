@@ -79,5 +79,20 @@ class SuiteContractTests(unittest.TestCase):
         self.assertNotIn("NativeBeltActions", source)
         self.assertNotIn("IntegratedBeltAccess", source)
 
+    def test_external_claim_is_narrow_and_runs_before_belt_awake(self):
+        source = (MODULE / "client/ExternalCompatibilityClaims.cs").read_text(encoding="utf-8")
+        plugin = (MODULE / "client/Plugin.cs").read_text(encoding="utf-8")
+        self.assertIn('"SPTBeltArmbandInventory.ExternalCompatibilityApi"', source)
+        self.assertIn('"TryClaimTgc300"', source)
+        self.assertIn('"TryClaimPackNStrap211"', source)
+        self.assertIn("RequiredContractVersion = 1", source)
+        self.assertNotIn("BepInDependency(BeltPluginGuid", plugin)
+        self.assertIn("ExternalCompatibilityClaims.TryClaimClient", plugin)
+        server = (MODULE / "server/ServerMod.cs").read_text(encoding="utf-8")
+        self.assertIn("OnLoadOrder.Preload - 1", server)
+        self.assertIn('"TryClaimTgc300"', server)
+        self.assertIn('"TryClaimPackNStrap211"', server)
+        self.assertIn("TgcBelts.All(templateTable.Items.ContainsKey)", server)
+
 if __name__ == "__main__":
     unittest.main()

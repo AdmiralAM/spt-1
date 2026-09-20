@@ -5,7 +5,7 @@ using BepInEx.Bootstrap;
 namespace AdmiralCompatibilitySuite;
 
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-[BepInDependency(BeltPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(ExternalCompatibilityClaims.PackNStrapPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(UseItemsAnywhereAdapter.UpstreamPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(UiFixesBeltAdapter.UpstreamPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
@@ -24,6 +24,11 @@ public sealed class Plugin : BaseUnityPlugin
         {
             return;
         }
+
+        ExternalCompatibilityClaims.TryClaimClient(
+            Chainloader.PluginInfos.ContainsKey(ExternalCompatibilityClaims.PackNStrapPluginGuid),
+            Logger.LogInfo,
+            Logger.LogWarning);
 
         if (Chainloader.PluginInfos.ContainsKey(UseItemsAnywhereAdapter.UpstreamPluginGuid))
         {
