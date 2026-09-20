@@ -86,7 +86,7 @@ $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.jso
 if ($questFiles.Count -ne 172) { throw "Trader quest count drift: $($questFiles.Count)" }
 
 $project = Join-Path $traderRoot 'server/AdmiralTrader.Server.csproj'
-dotnet build $project -c Release --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
+dotnet build $project -c Release --no-restore --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
 if ($LASTEXITCODE -ne 0) { throw 'Active-head Trader exact-runtime build failed.' }
 
 $dll = Join-Path $traderRoot 'server/bin/Release/net10.0/Admiral Trader Server.dll'
