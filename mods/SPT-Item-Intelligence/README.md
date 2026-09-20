@@ -93,6 +93,8 @@ The install-only `runtime-item-intelligence` channel contains the accepted stabl
 
 The stable runtime channel is published from the accepted exact source commit and contains only the consolidated client and server package.
 
+The exhaustive [Stable Beta product map](docs/stable-beta-product-map.md) lists every compiled source unit, server registration, route, Harmony/runtime patch, scheduled path, F12 entry and dependency boundary. Its regression guard fails if a new compiled module, patch owner, dependency or configuration entry is added without updating that map.
+
 External AllQuestsCheckmarks and legacy Item Valuation are unnecessary with v1.1. `Background Coloring (Valuation)` remains independently switchable in F12 and restores each native cell color when disabled. Restore the v1.0 package and legacy Item Valuation configuration only when rolling back.
 
 ## Documentation
