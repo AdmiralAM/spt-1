@@ -44,14 +44,34 @@
       "sourcePath": "mods/SPT-Belt-Armband-Inventory",
       "target": "com.emilanderss0n.tgc",
       "disposition": "migrate-to-suite",
-      "status": "embedded"
+      "status": "belt-runtime-owner-api-extraction-in-progress",
+      "reviewedBeltHead": "6a4438025ec2dc9653fb447b321ccac630e98b17",
+      "runtimeSeams": [
+        "server/SecureContainerCompatibility.cs",
+        "server/TgcBeltProfileMigration.cs",
+        "src/TgcCompatibilityPolicy.cs",
+        "src/DedicatedWearablePickupPatches.cs",
+        "src/FastAccessSlotPatches.cs",
+        "src/WearableItemDescriptor.cs"
+      ],
+      "ownershipRule": "Belt retains slot15 hosting and persistent profile migration; Suite may own only cross-mod detection and policy handoff."
     },
     {
       "id": "belt-packnstrap",
       "sourcePath": "mods/SPT-Belt-Armband-Inventory",
       "target": "com.wtt.packnstrap",
       "disposition": "migrate-to-suite",
-      "status": "embedded-private-import"
+      "status": "belt-runtime-owner-api-extraction-in-progress",
+      "reviewedBeltHead": "6a4438025ec2dc9653fb447b321ccac630e98b17",
+      "runtimeSeams": [
+        "src/PackNStrapCompatibility.cs",
+        "src/Plugin.cs",
+        "src/FastAccessSlotPatches.cs",
+        "server/SecureContainerCompatibility.cs",
+        "server/DedicatedEquipmentSlotRegistration.cs",
+        "server/LocalPackNStrapImport.cs"
+      ],
+      "ownershipRule": "Pack 'n' Strap keeps its content and assets; Belt keeps slot15 mechanics; Suite owns only optional compatibility orchestration after a versioned Belt handoff exists."
     },
     {
       "id": "item-intelligence-sense",

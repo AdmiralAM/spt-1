@@ -28,6 +28,19 @@ class SuiteContractTests(unittest.TestCase):
         self.assertTrue({"amands-sense", "foldables", "merge-consumables", "packnstrap", "tgc", "use-items-anywhere"} <= targets)
         self.assertGreater(result["signalFileCounts"].get("harmony_patch", 0), 0)
         self.assertGreater(result["signalFileCounts"].get("reflection", 0), 0)
+        self.assertGreater(result["scopeFileCounts"].get("runtime", 0), 0)
+        self.assertTrue(all(row["scope"] in {"runtime", "test", "documentation", "build-tool", "other"} for row in result["findings"]))
+
+    def test_tgc_and_packnstrap_migration_is_bound_to_reviewed_runtime_seams(self):
+        data = json.loads((MODULE / "manifests/compatibility-ownership.json").read_text(encoding="utf-8"))
+        rows = {row["id"]: row for row in data["components"]}
+        for component in ("belt-tgc", "belt-packnstrap"):
+            row = rows[component]
+            self.assertEqual(row["status"], "belt-runtime-owner-api-extraction-in-progress")
+            self.assertEqual(len(row["reviewedBeltHead"]), 40)
+            self.assertGreater(len(row["runtimeSeams"]), 2)
+            self.assertTrue(all(path.endswith(".cs") for path in row["runtimeSeams"]))
+            self.assertIn("Belt", row["ownershipRule"])
 
     def test_use_items_anywhere_adapter_is_suite_owned_and_non_destructive(self):
         source = (MODULE / "client/UseItemsAnywhereAdapter.cs").read_text(encoding="utf-8")

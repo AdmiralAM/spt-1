@@ -38,3 +38,20 @@ in-raid `LoadAmmoByType` replacement and appends ammo returned by Belt's public
 `BeltAccessApi` v1. Belt retains the complete native reload/access engine. A
 missing API, contract mismatch or changed UI Fixes call site fails closed and
 leaves the native/UI Fixes result untouched.
+
+## TGC and Pack 'n' Strap migration
+
+The remaining Belt integrations are no longer represented by a vague
+"embedded" label. The ownership manifest pins the reviewed Belt head and the
+exact runtime files involved. TGC currently crosses slot15 filters, pickup,
+fast access, secure-container policy and existing-profile migration. Pack 'n'
+Strap crosses companion detection, slot publication, secure-container policy,
+fast access and the opt-in private importer. These are real runtime seams, not
+mere documentation references.
+
+They move only after Belt publishes a minimal versioned handoff. Belt continues
+to own slot15 behavior and profile identities; Pack 'n' Strap retains all of
+its content/assets; Compatibility Suite will own only optional cross-mod
+orchestration. The audit report now labels runtime, test, documentation and
+build-tool evidence separately so historical notes cannot be mistaken for a
+loaded patch.

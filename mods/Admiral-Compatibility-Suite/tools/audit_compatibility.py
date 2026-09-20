@@ -35,10 +35,24 @@ def files(root: Path):
             continue
         yield path
 
+def classify_scope(relative_path: str) -> str:
+    parts = relative_path.lower().split("/")
+    name = parts[-1]
+    if "tests" in parts or name.startswith("test_") or name.endswith("tests.cs"):
+        return "test"
+    if "docs" in parts or name in {"readme.md", "design-spt-4.1.3-belt.md"}:
+        return "documentation"
+    if "tools" in parts or ".github" in parts:
+        return "build-tool"
+    if any(folder in parts for folder in ("client", "server", "src", "integrated-repair", "operational-hotfix")):
+        return "runtime"
+    return "other"
+
 def audit(root: Path, source_label: str = "repository") -> dict:
     findings = []
     totals = Counter()
     modules = Counter()
+    scopes = Counter()
     for path in files(root):
         rel = path.relative_to(root).as_posix()
         text = path.read_text(encoding="utf-8-sig", errors="replace")
@@ -50,12 +64,15 @@ def audit(root: Path, source_label: str = "repository") -> dict:
         module = parts[1] if parts[0] == "mods" and len(parts) > 1 else parts[0]
         for kind in kinds: totals[kind] += 1
         modules[module] += 1
-        findings.append({"source": source_label, "path": rel, "module": module, "signals": kinds, "foreignTargets": foreign})
+        scope = classify_scope(rel)
+        scopes[scope] += 1
+        findings.append({"source": source_label, "path": rel, "module": module, "scope": scope, "signals": kinds, "foreignTargets": foreign})
     return {
         "schemaVersion": 1,
         "filesWithSignals": len(findings),
         "signalFileCounts": dict(sorted(totals.items())),
         "moduleFileCounts": dict(sorted(modules.items())),
+        "scopeFileCounts": dict(sorted(scopes.items())),
         "findings": findings,
     }
 
@@ -63,17 +80,20 @@ def audit_many(roots: list[tuple[str, Path]]) -> dict:
     combined = []
     totals = Counter()
     modules = Counter()
+    scopes = Counter()
     for label, root in roots:
         result = audit(root, label)
         combined.extend(result["findings"])
         totals.update(result["signalFileCounts"])
         modules.update({f"{label}:{name}": count for name, count in result["moduleFileCounts"].items()})
+        scopes.update(result["scopeFileCounts"])
     return {
         "schemaVersion": 1,
         "scannedRoots": [{"label": label, "path": str(root)} for label, root in roots],
         "filesWithSignals": len(combined),
         "signalFileCounts": dict(sorted(totals.items())),
         "moduleFileCounts": dict(sorted(modules.items())),
+        "scopeFileCounts": dict(sorted(scopes.items())),
         "findings": combined,
     }
 
