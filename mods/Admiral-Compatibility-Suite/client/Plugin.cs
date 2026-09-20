@@ -10,6 +10,7 @@ namespace AdmiralCompatibilitySuite;
 [BepInDependency(UiFixesBeltAdapter.UpstreamPluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
+    private static readonly System.Action<string> QuietInfo = _ => { };
     public const string PluginGuid = "com.admiralam.compatibility-suite";
     public const string PluginName = "Admiral Compatibility Suite";
     public const string PluginVersion = "0.1.0";
@@ -27,12 +28,12 @@ public sealed class Plugin : BaseUnityPlugin
 
         ExternalCompatibilityClaims.TryClaimClient(
             Chainloader.PluginInfos.ContainsKey(ExternalCompatibilityClaims.PackNStrapPluginGuid),
-            Logger.LogInfo,
+            QuietInfo,
             Logger.LogWarning);
 
         if (Chainloader.PluginInfos.ContainsKey(UseItemsAnywhereAdapter.UpstreamPluginGuid))
         {
-            useItemsAnywhere = new UseItemsAnywhereAdapter(Logger.LogInfo, Logger.LogWarning);
+            useItemsAnywhere = new UseItemsAnywhereAdapter(QuietInfo, Logger.LogWarning);
             if (!useItemsAnywhere.TryInstall())
             {
                 useItemsAnywhere.Dispose();
@@ -42,7 +43,7 @@ public sealed class Plugin : BaseUnityPlugin
 
         if (Chainloader.PluginInfos.ContainsKey(UiFixesBeltAdapter.UpstreamPluginGuid))
         {
-            uiFixesBelt = new UiFixesBeltAdapter(Logger.LogInfo, Logger.LogWarning);
+            uiFixesBelt = new UiFixesBeltAdapter(QuietInfo, Logger.LogWarning);
             if (!uiFixesBelt.TryInstall())
             {
                 uiFixesBelt.Dispose();

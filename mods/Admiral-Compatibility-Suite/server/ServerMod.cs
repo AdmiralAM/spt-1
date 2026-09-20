@@ -3,6 +3,7 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
@@ -59,8 +60,33 @@ public sealed class ExternalCompatibilityClaims(
     {
         MethodInfo? method = api.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
         if (method?.Invoke(null, [ContractVersion, OwnerToken]) is true)
-            logger.Success($"Admiral Compatibility Suite claimed Belt {product} compatibility ownership.");
+            logger.Debug($"Admiral Compatibility Suite claimed Belt {product} compatibility ownership.");
         else
             logger.Warning($"Admiral Compatibility Suite could not claim Belt {product} compatibility; integration remains disabled.");
+    }
+}
+
+[Injectable(TypePriority = OnLoadOrder.PostLoad + 100500)]
+public sealed class UniqueRewardAvailabilityGuard(TemplateTable templateTable) : IOnLoad
+{
+    private static readonly MongoId TwitchDogtagCase = new("6937ecc3dbdccab44605fcf0");
+
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!templateTable.Items.TryGetValue(TwitchDogtagCase, out TemplateItem? item)
+            || item.Properties is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        // This is a long-quest reward. A missing/late custom handbook entry can
+        // otherwise make Fence generate a near-free dynamic offer for it.
+        item.Properties.IsUnbuyable = true;
+        item.Properties.CanSellOnRagfair = false;
+        templateTable.Prices[TwitchDogtagCase] = Math.Max(
+            templateTable.Prices.GetValueOrDefault(TwitchDogtagCase),
+            98_000d);
+        return Task.CompletedTask;
     }
 }

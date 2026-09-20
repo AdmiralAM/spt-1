@@ -14,7 +14,8 @@ public sealed class SourcePressureRuntimeReportService(ModHelper modHelper)
         EconomyConfig config,
         FinalDbSourceObservation finalDb,
         AdmiralTraderRuntimeAdapterReport admiralTrader,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool writeReport = true)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(finalDb);
@@ -23,11 +24,14 @@ public sealed class SourcePressureRuntimeReportService(ModHelper modHelper)
 
         var report = SourcePressureRuntimeReportBuilder.Build(finalDb, admiralTrader);
         var economyModPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
-        var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath))
-            ?? Path.Combine(economyModPath, "reports");
-        Directory.CreateDirectory(reportDirectory);
-        var reportPath = Path.Combine(reportDirectory, "economy-admiral-source-pressure.json");
-        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        if (writeReport)
+        {
+            var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath))
+                ?? Path.Combine(economyModPath, "reports");
+            Directory.CreateDirectory(reportDirectory);
+            var reportPath = Path.Combine(reportDirectory, "economy-admiral-source-pressure.json");
+            await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
         return report;
     }
 }

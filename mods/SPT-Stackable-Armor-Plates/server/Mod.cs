@@ -11,10 +11,10 @@ namespace SPTStackableArmorPlates.Server;
 public record ModMetadata : IModMetadata
 {
     public string ModGuid { get; init; } = "com.admiralam.stackable-armor-plates";
-    public string Name { get; init; } = "Admiral Stackable Armor Plates";
+    public string Name { get; init; } = "Admiral Armor Plate Field Repair";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new(0, 1, 0);
+    public SemanticVersioning.Version Version { get; init; } = new(0, 2, 0);
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public bool HasPrepatcher { get; init; }
     public List<string>? Incompatibilities { get; init; }
@@ -27,14 +27,11 @@ public record ModMetadata : IModMetadata
 }
 
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 100200)]
-public sealed class StackableArmorPlateRegistration(
-    TemplateTable templateTable,
-    ISptLogger<StackableArmorPlateRegistration> logger) : IOnLoad
+public sealed class StackableArmorPlateRegistration(TemplateTable templateTable) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        int changed = 0;
-        int alreadyLarger = 0;
+        int plates = 0;
 
         foreach (TemplateItem template in templateTable.Items.Values)
         {
@@ -50,24 +47,15 @@ public sealed class StackableArmorPlateRegistration(
                 continue;
             }
 
-            int current = properties.StackMaxSize.GetValueOrDefault(1);
-            int desired = PlateStackPolicy.DesiredStackSize(current);
-            if (desired == current)
-            {
-                alreadyLarger++;
-                continue;
-            }
-
-            properties.StackMaxSize = desired;
-            changed++;
+            properties.StackMaxSize = 1;
+            plates++;
         }
 
-        if (changed == 0 && alreadyLarger == 0)
+        if (plates == 0)
         {
             throw new InvalidDataException("No armor plate templates were resolved; refusing to load a silent no-op.");
         }
 
-        logger.Success($"Stackable Armor Plates enabled {PlateStackPolicy.StackSize}-item stacks for {changed} plate templates; {alreadyLarger} templates already allowed at least that many.");
         return Task.CompletedTask;
     }
 }

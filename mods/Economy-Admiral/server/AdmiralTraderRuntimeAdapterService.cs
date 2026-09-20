@@ -10,7 +10,7 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task<AdmiralTraderRuntimeAdapterReport> RunAsync(EconomyConfig config, CancellationToken cancellationToken)
+    public async Task<AdmiralTraderRuntimeAdapterReport> RunAsync(EconomyConfig config, CancellationToken cancellationToken, bool writeReport = true)
     {
         ArgumentNullException.ThrowIfNull(config);
         cancellationToken.ThrowIfCancellationRequested();
@@ -42,9 +42,12 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             }
         }
 
-        var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath)) ?? Path.Combine(economyModPath, "reports");
-        Directory.CreateDirectory(reportDirectory);
-        await File.WriteAllTextAsync(Path.Combine(reportDirectory, "economy-admiral-admiral-trader-adapter.json"), JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        if (writeReport)
+        {
+            var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath)) ?? Path.Combine(economyModPath, "reports");
+            Directory.CreateDirectory(reportDirectory);
+            await File.WriteAllTextAsync(Path.Combine(reportDirectory, "economy-admiral-admiral-trader-adapter.json"), JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
         return report;
     }
 

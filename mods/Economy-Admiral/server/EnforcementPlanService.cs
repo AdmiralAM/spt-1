@@ -26,7 +26,8 @@ public sealed class EnforcementPlanService(
     public async Task<EnforcementPlanReport> RunAsync(
         QuestAnalysisReport analysis,
         QuestProvenanceDeltaReport provenance,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool writeReport = true)
     {
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EnforcementPlanService).Assembly);
@@ -129,23 +130,27 @@ public sealed class EnforcementPlanService(
         };
 
         var planPath = SafePath(modPath, "reports/economy-admiral-enforcement-plan.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(planPath)!);
-        await File.WriteAllTextAsync(planPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        if (writeReport)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(planPath)!);
+            await File.WriteAllTextAsync(planPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
 
         if (config.Mode == EconomyMode.Enforce)
         {
-            if (transaction.Committed)
-                logger.Warning($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={transaction.Results.Count}; plan={planPath}");
+            if (transaction.Committed && writeReport)
+                logger.Info($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={transaction.Results.Count}; plan={planPath}");
             else if (transaction.RolledBack)
                 logger.Error($"[Economy Admiral] Enforce transaction rolled back: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
             else if (!string.IsNullOrWhiteSpace(transaction.Error))
                 logger.Error($"[Economy Admiral] Enforce transaction aborted without writes/commit: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
-            else
+            else if (writeReport)
                 logger.Info($"[Economy Admiral] Enforce completed with no planned mutations: planned=0; plan={planPath}");
         }
         else
         {
-            logger.Info($"[Economy Admiral] enforcement preview complete: candidates={finalizedCandidates.Count}, planned={proposals.Count}, mutations=0; plan={planPath}");
+            if (writeReport)
+                logger.Info($"[Economy Admiral] enforcement preview complete: candidates={finalizedCandidates.Count}, planned={proposals.Count}, mutations=0; plan={planPath}");
         }
 
         return report;

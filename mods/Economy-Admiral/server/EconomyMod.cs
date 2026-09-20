@@ -36,18 +36,24 @@ public sealed class EconomyMod(
             return;
 
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
-        runtimeEvidenceService.CaptureBefore();
+        if (config.EnableRuntimeDiagnostics)
+            runtimeEvidenceService.CaptureBefore();
 
-        await auditService.RunAsync(vanillaBaseline, cancellationToken);
-        var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
-        var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
-        await rewardUtilityAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
-        await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
+        if (config.EnableRuntimeDiagnostics)
+            await auditService.RunAsync(vanillaBaseline, cancellationToken);
+        var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken, config.EnableRuntimeDiagnostics);
+        var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken, config.EnableRuntimeDiagnostics);
+        if (config.EnableRuntimeDiagnostics)
+        {
+            await rewardUtilityAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
+            await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
+        }
 
-        var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
+        var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken, config.EnableRuntimeDiagnostics);
 
-        var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
-        await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
+        var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken, config.EnableRuntimeDiagnostics);
+        if (config.EnableRuntimeDiagnostics)
+            await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
 
         questAnalysis = PlayableQuestRewardPolicy.ApplyToEnforcement(config, questAnalysis);
 
@@ -58,7 +64,7 @@ public sealed class EconomyMod(
         try
         {
             GroupedItemRewardSlot.ResetEvidence();
-            var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
+            var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken, config.EnableRuntimeDiagnostics);
 
             if (config.Mode == EconomyMode.Enforce
                 && enforcement.PlannedMutationCount > 0
@@ -76,8 +82,11 @@ public sealed class EconomyMod(
             fleaListingFeePressureService.Apply(config);
             lootPressureService.Apply(config);
 
-            await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
-            await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
+            if (config.EnableRuntimeDiagnostics)
+            {
+                await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
+                await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
+            }
         }
         catch (Exception applyException) when (transactionSnapshot is not null)
         {

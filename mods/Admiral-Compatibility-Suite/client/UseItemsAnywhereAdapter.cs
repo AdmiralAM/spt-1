@@ -3,6 +3,8 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
+using EFT.InventoryLogic;
+using HarmonyLib;
 
 namespace AdmiralCompatibilitySuite;
 
@@ -10,6 +12,7 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
 {
     internal const string UpstreamPluginGuid = "com.cj.useFromAnywhere";
     private const int DedicatedBeltSlotValue = 15;
+    private const string HarmonyOwner = "com.admiralam.compatibility-suite.use-items-anywhere-belt";
     private static readonly string[] SlotListFields =
     {
         "_weaponSlots", "GrenadeThrowSlots", "_meleeSlots", "FlareSlots",
@@ -19,6 +22,8 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
     private readonly Action<string> logInfo;
     private readonly Action<string> logWarning;
     private object belt;
+    private Harmony harmony;
+    private static MethodInfo enumerateBeltSources;
 
     internal UseItemsAnywhereAdapter(Action<string> logInfo, Action<string> logWarning)
     {
@@ -38,6 +43,14 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
             }
 
             belt = Enum.ToObject(equipmentSlot, DedicatedBeltSlotValue);
+            Type beltApi = FindUniqueType("SPTBeltArmbandInventory.BeltAccessApi")
+                ?? throw new TypeLoadException("BeltAccessApi is unavailable.");
+            enumerateBeltSources = beltApi.GetMethod(
+                "TryEnumerateBeltSources",
+                BindingFlags.Public | BindingFlags.Static,
+                null,
+                new[] { typeof(object), typeof(object[]).MakeByRefType() },
+                null) ?? throw new MissingMethodException(beltApi.FullName, "TryEnumerateBeltSources");
             int eligible = 0;
             int extended = 0;
             int alreadyExtended = 0;
@@ -72,6 +85,18 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
                 throw new InvalidOperationException("Use Items Anywhere exposes no configurable access list.");
             }
 
+            harmony = new Harmony(HarmonyOwner);
+            var postfix = new HarmonyMethod(typeof(UseItemsAnywhereAdapter), nameof(IncludeBeltItem))
+            {
+                priority = Priority.Last
+            };
+            harmony.Patch(
+                AccessTools.Method(typeof(InventoryController), nameof(InventoryController.IsAtBindablePlace)),
+                postfix: postfix);
+            harmony.Patch(
+                AccessTools.Method(typeof(InventoryController), nameof(InventoryController.IsAtReachablePlace)),
+                postfix: postfix);
+
             logInfo?.Invoke($"Admiral Compatibility Suite verified {eligible} Use Items Anywhere access lists: enabled Belt slot15 in {extended}, already enabled in {alreadyExtended}.");
             return true;
         }
@@ -80,6 +105,20 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
             Dispose();
             logWarning?.Invoke($"Admiral Compatibility Suite Use Items Anywhere adapter failed safely: {exception.GetType().FullName}: {exception.Message}");
             return false;
+        }
+    }
+
+    private static void IncludeBeltItem(InventoryController __instance, Item item, ref bool __result)
+    {
+        if (__result || __instance?.Inventory == null || item == null || enumerateBeltSources == null)
+            return;
+
+        object[] arguments = { __instance.Inventory, null };
+        if (enumerateBeltSources.Invoke(null, arguments) is true
+            && arguments[1] is object[] sources
+            && Array.IndexOf(sources, item) >= 0)
+        {
+            __result = true;
         }
     }
 
@@ -95,6 +134,9 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
 
     public void Dispose()
     {
+        harmony?.UnpatchSelf();
+        harmony = null;
+        enumerateBeltSources = null;
         belt = null;
     }
 }

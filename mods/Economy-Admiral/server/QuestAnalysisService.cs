@@ -26,7 +26,8 @@ public sealed class QuestAnalysisService(
     public async Task<QuestAnalysisReport> RunAsync(
         QuestProgressionSnapshot progressionSnapshot,
         VanillaBaselineSnapshot vanillaBaseline,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool writeReport = true)
     {
         if (vanillaBaseline.QuestCount <= 0 || vanillaBaseline.Quests.Count <= 0)
             throw new InvalidOperationException("Economy Admiral unified analysis requires a non-empty pristine startup baseline.");
@@ -85,12 +86,11 @@ public sealed class QuestAnalysisService(
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Economy Admiral unified quest analysis report path must stay inside the mod directory.");
 
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info(
-            $"[Economy Admiral] unified typed/pristine analysis complete: finalQuests={rows.Count}, pristineQuests={vanillaBaseline.QuestCount}, " +
-            $"modAddedQuests={rows.Count(row => !row.IsVanillaTraderQuest)}, flags={flagCounts.Values.Sum()}; report={reportPath}"
-        );
+        if (writeReport)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
+            await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
         return report;
     }
 

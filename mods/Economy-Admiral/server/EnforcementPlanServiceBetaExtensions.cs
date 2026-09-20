@@ -16,7 +16,8 @@ public static class EnforcementPlanServiceBetaExtensions
         QuestAnalysisReport analysis,
         QuestProvenanceDeltaReport provenance,
         AdmiralTraderRuntimeAdapterReport admiralTrader,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool writeReport = true)
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(analysis);
@@ -50,6 +51,6 @@ public static class EnforcementPlanServiceBetaExtensions
             Note = analysis.Note + " Beta ownership gate: Admiral Trader automatic reward normalization requires the maintained explicit Gameplay Alpha v4 contract; incompatible/absent contract evidence suppresses only automatic mutation-driving flags, never provenance checks or explicit manual targets.",
         };
 
-        return service.RunAsync(gatedAnalysis, provenance, cancellationToken);
+        return service.RunAsync(gatedAnalysis, provenance, cancellationToken, writeReport);
     }
 }

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace SPTStackableArmorPlates.Client;
 
-[BepInPlugin("com.admiralam.stackable-armor-plates.client", "Admiral Stackable Armor Plates", "0.1.0")]
+[BepInPlugin("com.admiralam.stackable-armor-plates.client", "Admiral Armor Plate Field Repair", "0.2.0")]
 [BepInDependency("com.lacyway.mc", "1.6.2")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -17,27 +17,21 @@ public sealed class Plugin : BaseUnityPlugin
         var harmony = new Harmony(harmonyId);
         harmony.PatchAll(typeof(Plugin).Assembly);
 
-        var plateDropTarget = AccessTools.Method(
+        var target = AccessTools.Method(
             typeof(ItemController),
             nameof(ItemController.ExecutePossibleAction),
             new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) });
-        if (plateDropTarget == null || Harmony.GetPatchInfo(plateDropTarget)?.Owners.Contains(harmonyId) != true)
-        {
-            throw new InvalidOperationException("Armor plate item-on-item action patch was not installed.");
-        }
-
-        Logger.LogInfo("Armor plate exact item-on-item merge action enabled; native template matching remains authoritative.");
+        if (target == null || Harmony.GetPatchInfo(target)?.Owners.Contains(harmonyId) != true)
+            throw new InvalidOperationException("Armor plate field-repair action patch was not installed.");
     }
 }
 
-// ArmorPlate is not a StackableItem, so the normal drag/drop action resolver can
-// choose swap/move even after the server raises StackMaxSize. Route an exact
-// plate-on-plate action through the native merge operation. Native merge keeps
-// the required same-template rule and rejects different plate templates.
 [HarmonyPatch(typeof(ItemController), nameof(ItemController.ExecutePossibleAction),
     new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) })]
-internal static class PlateCombineActionPatch
+internal static class PlateFieldRepairPatch
 {
+    private const float Epsilon = 0.001f;
+
     private static bool Prefix(
         ItemController __instance,
         ItemContext itemContext,
@@ -45,13 +39,60 @@ internal static class PlateCombineActionPatch
         bool simulate,
         ref OperationResult __result)
     {
-        Item sourceItem = itemContext?.Item;
-        if (sourceItem is not ArmorPlate || targetItem is not ArmorPlate)
+        if (itemContext?.Item is not ArmorPlate source || targetItem is not ArmorPlate target || source == target)
+            return true;
+
+        RepairableComponent sourceRepair = source.GetItemComponent<RepairableComponent>();
+        RepairableComponent targetRepair = target.GetItemComponent<RepairableComponent>();
+        if (sourceRepair == null || targetRepair == null
+            || IsFull(sourceRepair) || IsFull(targetRepair)
+            || !SharePlateSlot(source, target))
         {
             return true;
         }
 
-        __result = ItemManipulator.Merge(sourceItem, targetItem, __instance, simulate);
+        Item consumed;
+        RepairableComponent survivorRepair;
+        if (sourceRepair.Durability <= targetRepair.Durability)
+        {
+            consumed = source;
+            survivorRepair = targetRepair;
+        }
+        else
+        {
+            consumed = target;
+            survivorRepair = sourceRepair;
+        }
+
+        RepairableComponent consumedRepair = consumed.GetItemComponent<RepairableComponent>();
+        OperationResult<RemoveResult> removal = ItemManipulator.Remove(consumed, __instance, simulate);
+        if (removal.Failed)
+        {
+            __result = removal.Error;
+            return false;
+        }
+
+        if (!simulate)
+            survivorRepair.Durability = Math.Min(survivorRepair.MaxDurability,
+                survivorRepair.Durability + consumedRepair.Durability);
+
+        __result = removal;
         return false;
+    }
+
+    private static bool IsFull(RepairableComponent repairable)
+        => repairable.Durability >= repairable.MaxDurability - Epsilon;
+
+    private static bool SharePlateSlot(ArmorPlate first, ArmorPlate second)
+    {
+        if (first.Template is not ArmoredEquipmentTemplate firstTemplate
+            || second.Template is not ArmoredEquipmentTemplate secondTemplate)
+        {
+            return false;
+        }
+
+        EArmorPlateCollider firstSlots = firstTemplate.ArmorPlateColliders;
+        EArmorPlateCollider secondSlots = secondTemplate.ArmorPlateColliders;
+        return firstSlots != 0 && secondSlots != 0 && (firstSlots & secondSlots) != 0;
     }
 }

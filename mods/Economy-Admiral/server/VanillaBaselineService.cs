@@ -93,7 +93,6 @@ public sealed class VanillaBaselineService(
             Quests = rows,
         };
 
-        logger.Info($"[Economy Admiral] pristine vanilla baseline captured before normal mod callbacks: quests={snapshot.QuestCount}, traders={snapshot.TraderCount}, handbookPrices={snapshot.HandbookItemCount}, priority={snapshot.CapturePriority}");
     }
 
     public VanillaBaselineSnapshot GetSnapshot() => snapshot
