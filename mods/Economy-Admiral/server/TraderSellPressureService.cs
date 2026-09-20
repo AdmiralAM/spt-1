@@ -58,7 +58,8 @@ public sealed class TraderSellPressureService(
             }
 
             applied = true;
-            logger.Info($"[Economy Admiral] trader sell pressure applied: preset={config.Preset}, payoutMultiplier={multiplier:0.###}x, traders={changedTraders.Count}, loyaltyLevels={changedLevels}, aggregateCoef={beforeTotal:0.##}->{afterTotal:0.##}");
+            if (config.EnableRuntimeDiagnostics)
+                logger.Info($"[Economy Admiral] trader sell pressure applied: preset={config.Preset}, payoutMultiplier={multiplier:0.###}x, traders={changedTraders.Count}, loyaltyLevels={changedLevels}, aggregateCoef={beforeTotal:0.##}->{afterTotal:0.##}");
             return new TraderSellPressureResult(true, multiplier, changedTraders.Count, changedLevels, beforeTotal, afterTotal, null);
         }
         catch (Exception applyException)

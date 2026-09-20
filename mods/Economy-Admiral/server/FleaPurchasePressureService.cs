@@ -32,12 +32,13 @@ public sealed class FleaPurchasePressureService(
             adjustment.HandbookPriceMultiplier = FleaPurchasePressurePolicy.StrongerHandbookPriceMultiplier(beforeHandbookMultiplier, config);
 
             var targets = FleaPurchasePressurePolicy.Resolve(config);
-            logger.Info(
-                $"[Economy Admiral] flea purchase pressure applied: preset={config.Preset}, " +
-                $"basePriceMultiplier={beforeBaseMultiplier:0.###}->{generate.PriceMultiplier:0.###}, " +
-                $"belowHandbookDifference={beforeDifference:0.###}%->{adjustment.MaxPriceDifferenceBelowHandbookPercent:0.###}%, " +
-                $"handbookMultiplier={beforeHandbookMultiplier:0.###}->{adjustment.HandbookPriceMultiplier:0.###}, " +
-                $"antiArbitrageFloor={generate.PreventPriceBeingBelowTraderBuyPrice}, targetBase={targets.BasePriceMultiplier:0.###}");
+            if (config.EnableRuntimeDiagnostics)
+                logger.Info(
+                    $"[Economy Admiral] flea purchase pressure applied: preset={config.Preset}, " +
+                    $"basePriceMultiplier={beforeBaseMultiplier:0.###}->{generate.PriceMultiplier:0.###}, " +
+                    $"belowHandbookDifference={beforeDifference:0.###}%->{adjustment.MaxPriceDifferenceBelowHandbookPercent:0.###}%, " +
+                    $"handbookMultiplier={beforeHandbookMultiplier:0.###}->{adjustment.HandbookPriceMultiplier:0.###}, " +
+                    $"antiArbitrageFloor={generate.PreventPriceBeingBelowTraderBuyPrice}, targetBase={targets.BasePriceMultiplier:0.###}");
 
             return new(
                 true,

@@ -38,7 +38,8 @@ public sealed class FleaListingFeePressureService(
                 throw new InvalidOperationException("Flea listing-fee pressure post-write verification failed.");
 
             applied = true;
-            logger.Info($"[Economy Admiral] flea listing-fee pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, communityItemTax={beforeItemTax:0.###}->{targetItemTax:0.###}, communityRequirementTax={beforeRequirementTax:0.###}->{targetRequirementTax:0.###}");
+            if (config.EnableRuntimeDiagnostics)
+                logger.Info($"[Economy Admiral] flea listing-fee pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, communityItemTax={beforeItemTax:0.###}->{targetItemTax:0.###}, communityRequirementTax={beforeRequirementTax:0.###}->{targetRequirementTax:0.###}");
             return new FleaListingFeePressureResult(true, multiplier, beforeItemTax, targetItemTax, beforeRequirementTax, targetRequirementTax, null);
         }
         catch (Exception applyException)
