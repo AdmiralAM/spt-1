@@ -2290,7 +2290,7 @@
                 "description": "The Army MSV-GEN II includes both full Up Tactical and Concealable Vest components. It can be worn over the soldier’s uniform and is made up of the Concealable Components inserted into the Tactical Carrier. The Concealable Components contain the soft ballistic panels for the MSV-GEN II and can be removed from the Tactical Carrier and worn separately as a complete Concealable Vest. Therefore, this vest can be transformed to Tactical or Concealable depending on mission requirements."
             },
             "ru": {
-                "name": "MSV-GEN II",
+                "name": "Бронежилет MSV-GEN II",
                 "shortName": "MSV-GEN II",
                 "description": "Армейская система MSV-GEN II включает компоненты полноценного тактического и скрытого жилета. Её можно носить поверх формы; скрытые компоненты устанавливаются в тактический чехол. В них находятся мягкие баллистические панели MSV-GEN II, которые можно снять с тактического чехла и использовать отдельно как полноценный скрытый жилет. Таким образом, систему можно настроить под тактическое или скрытое ношение в зависимости от задачи."
             }
@@ -6344,7 +6344,7 @@
                 "description": "The JPC (JUMPABLE PLATE CARRIER) 2.0™ MARITIME is a lightweight and minimal armor vest designed for maximum mobility, weight savings, and packability. At just over one pound for the entire carrier, the JPC 2.0™ MARITIME offers a variety of configuration options to suit an operator’s needs in terms of protection, modularity, and comfort."
             },
             "ru": {
-                "name": "JPC 2.0 MARITIME",
+                "name": "Плитоносец JPC 2.0 MARITIME",
                 "shortName": "JPC 2.0",
                 "description": "JPC (JUMPABLE PLATE CARRIER) 2.0™ MARITIME — лёгкий минималистичный бронежилет, рассчитанный на максимальную мобильность, снижение массы и компактность. При массе чуть больше одного фунта он предлагает множество вариантов настройки защиты, модульности и комфорта под задачи оператора."
             }
@@ -7113,7 +7113,7 @@
                 "description": "The JPC (JUMPABLE PLATE CARRIER) 2.0™ MARITIME is a lightweight and minimal armor vest designed for maximum mobility, weight savings, and packability. At just over one pound for the entire carrier, the JPC 2.0™ MARITIME offers a variety of configuration options to suit an operator’s needs in terms of protection, modularity, and comfort."
             },
             "ru": {
-                "name": "JPC 2.0 MARITIME",
+                "name": "Плитоносец JPC 2.0 MARITIME",
                 "shortName": "JPC 2.0",
                 "description": "JPC (JUMPABLE PLATE CARRIER) 2.0™ MARITIME — лёгкий минималистичный бронежилет, рассчитанный на максимальную мобильность, снижение массы и компактность. При массе чуть больше одного фунта он предлагает множество вариантов настройки защиты, модульности и комфорта под задачи оператора."
             }
@@ -9423,7 +9423,7 @@
                 "description": "The AIRLITE SPC (STRUCTURAL PLATE CARRIER) offers all the lightweight mobility of our JPC™ while providing the structural load support of our AVS™ & CPC™. At just over one pound for the entire system (including front flap and cummerbund- each sold separetely), the AIRLITE SPC is an ideal choice for all environments including maritime. It pairs with our patented AIRLITE STRUCTURAL CUMMERBUND that allows pouches to be mounted on both the inside and outside of the cummerbund and is compatible with our EXTENDABLE StKSS™ to reduce the load on the shoulders and back.  The AIRLITE SPC sheds unnecessary weight and bulk while improving overall ventilation."
             },
             "ru": {
-                "name": "AirLite SPC (Multicam)",
+                "name": "Плитоносец AirLite SPC (Multicam)",
                 "shortName": "SPC",
                 "description": "AIRLITE SPC (STRUCTURAL PLATE CARRIER) сочетает мобильность лёгкого JPC™ со структурной поддержкой нагрузки систем AVS™ и CPC™. При массе чуть больше одного фунта в полной конфигурации AIRLITE SPC подходит для различных условий, включая морские операции. Фирменный AIRLITE STRUCTURAL CUMMERBUND позволяет размещать подсумки с внутренней и внешней стороны и совместим с EXTENDABLE StKSS™ для снижения нагрузки на плечи и спину. Система избавлена от лишней массы и объёма и обеспечивает улучшенную вентиляцию."
             }
@@ -9920,7 +9920,7 @@
                 "description": "The LV/119 SYSTEM is a group of products that work together to give end-users the ability to scale their equipment to their current needs. The fact that this is a cohesive system means that users can mix and match accessories in most cases. For example: One could take a C O V E R T Front or Rear Plate bag and use it with an O V E R T Front and Rear Plate Bag. Users may also also cross pollinate cummerbunds, shoulder covers, and other parts that will be available. The SYSTEM encompasses many parts, some of which are currently available and some that are in development, such as Back Panels of various types, MOLLE cummerbunds, First Spear TUBES™ integrations, and different placards."
             },
             "ru": {
-                "name": "LV-119 (Multicam)",
+                "name": "Плитоносец LV-119 (Multicam)",
                 "shortName": "LV-119",
                 "description": "LV/119 SYSTEM — набор совместимых компонентов, позволяющий пользователю масштабировать снаряжение под текущую задачу. Благодаря единой системе большинство аксессуаров можно комбинировать между собой: например, использовать переднюю или заднюю панель COVERT вместе с панелями OVERT. Также можно менять камербанды, плечевые накладки и другие элементы. Система включает множество компонентов — задние панели разных типов, MOLLE-камербанды, интеграцию First Spear TUBES™ и различные передние панели."
             }

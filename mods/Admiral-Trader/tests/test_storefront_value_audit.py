@@ -65,6 +65,27 @@ class StorefrontValueAuditTests(unittest.TestCase):
         self.assertNotIn("unbounded-purchase", rows["672e2804a0529208b4e10e18"]["flags"])
         self.assertNotIn("unbounded-purchase", rows["672e2e75a8f42643cd43c4b8"]["flags"])
 
+    def test_inherited_basic_artem_magazines_and_ammo_are_not_extortionate(self):
+        rows = {row["offerId"]: row for row in self.rows}
+        normalized = {
+            "66bf757f27d0b097db0acf79",
+            "66bf757f27d0b097db0acf7d",
+            "66bf757f27d0b097db0acf7e",
+            "66bf757f27d0b097db0acf7f",
+            "66bf757f27d0b097db0acf46",
+            "66bf757f27d0b097db0acf49",
+            "66bf757f27d0b097db0acf5a",
+            "66bf757f27d0b097db0acf5c",
+            "66bf757f27d0b097db0acf5f",
+            "66bf757f27d0b097db0acf2f",
+            "66bf757f27d0b097db0acf30",
+            "66bf757f27d0b097db0acf0d",
+        }
+        for offer_id in normalized:
+            self.assertEqual("Artem", rows[offer_id]["source"])
+            self.assertNotIn("very-expensive", rows[offer_id]["flags"], offer_id)
+            self.assertLessEqual(float(rows[offer_id]["costValueRatio"]), 2.0, offer_id)
+
 
 if __name__ == "__main__":
     unittest.main()

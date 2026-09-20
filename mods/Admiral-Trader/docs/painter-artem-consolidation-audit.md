@@ -6,6 +6,12 @@ Painter/TGC and Artem persistent item, offer, clothing, quest and message IDs ar
 
 The source set is Painter 3.0.0 (`4f4735…d2d3be`), TGC 3.0.0 (`932aaa…d2726`) and WTT-Artem 3.0.2 (`11e5bf…6318d`). The measured installed Artem runtime supplied the preserved 703-row repaired assortment used by the embedded contract. Its distributed trader, quest, offer, item, clothing and zone identities are unchanged.
 
+## Russian copy and price normalization
+
+The embedded Artem layer has 131 custom item records, 64 clothing suits and 204 quest locale keys. Every item now has non-empty Russian name, short name and description fields; every clothing record has Russian name and description fields; Artem and Painter Russian quest key sets exactly match their English authorities. Product and model designations such as Ops-Core, PVS-31, JPC and Multicam remain intact, while category words and previously untranslated inherited labels are Russian.
+
+The 546-offer effective-store audit was regenerated against the installed SPT database and TGC source. Offer IDs, stock, loyalty levels, buy limits, barter routes and all 62 quest gates remain unchanged. Twelve inherited Artem cash routes for ordinary magazines and AP 6.3 ammunition were the only proven price defects: their former 3.2–10.5× handbook premiums were reduced to at most 2×. Scarce quest-gated stock, authored barters, Painter's capped THICC case, optional WTT routes and distinct same-product acquisition routes remain untouched.
+
 ## Actual scope
 
 | Source | Quests | Root offers | Assort rows | Quest unlocks | Clothing suits | Runtime role |

@@ -965,8 +965,8 @@
                 "description": "Black Shadow Company"
             },
             "ru": {
-                "name": "Nikto Mask",
-                "shortName": "Nikto Mask",
+                "name": "Маска Никто",
+                "shortName": "Маска Никто",
                 "description": "Black Shadow Company"
             }
         },
@@ -1227,8 +1227,8 @@
                 "description": "The NIJ Level IIIA+ Ballsitic Face Mask has been designed to maximize comfort while proviing front facial protection."
             },
             "ru": {
-                "name": "CQCM Full Face Bulletproof Mask (Worn)",
-                "shortName": "CQCM Ballistic Mask",
+                "name": "Баллистическая маска CQCM (изношенная)",
+                "shortName": "Маска CQCM",
                 "description": "Баллистическая лицевая маска уровня NIJ IIIA+ разработана для максимального комфорта при защите передней части лица."
             }
         },
@@ -1964,7 +1964,7 @@
                 "description": "A quality balaclava with a special technological material, which ensures maximum warmth in the most severe frosts. But we do not need it for warmth. We need it to look tactical."
             },
             "ru": {
-                "name": "Death Shadow lightweight armored mask (Cultist)",
+                "name": "Лёгкая бронемаска Death Shadow (сектанты)",
                 "shortName": "Death Shadow",
                 "description": "Качественная балаклава из специального технологичного материала, обеспечивающего тепло даже в сильные морозы. Но нам она нужна не ради тепла — она нужна, чтобы выглядеть тактически."
             }
@@ -2182,9 +2182,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "Wolf Cowl",
-                "shortName": "Wolf Cowl",
-                "description": ""
+                "name": "Волчий капюшон",
+                "shortName": "Волчий капюшон",
+                "description": "Лицевая экипировка «Волчий капюшон»."
             }
         },
         "addtoInventorySlots": [],
@@ -2231,7 +2231,7 @@
             "ru": {
                 "name": "Wolf Cowl (коричневый)",
                 "shortName": "Wolf Cowl",
-                "description": ""
+                "description": "Лицевая экипировка «Wolf Cowl (коричневый)»."
             }
         },
         "addtoInventorySlots": [],

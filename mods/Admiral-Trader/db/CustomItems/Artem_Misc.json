@@ -96,7 +96,7 @@
             "ru": {
                 "name": "Abandoned медицинский ящик (1944)",
                 "shortName": "MedBox",
-                "description": ""
+                "description": "Особый предмет «Abandoned медицинский ящик (1944)»."
             }
         },
         "addtoInventorySlots": [],
@@ -255,7 +255,7 @@
             "ru": {
                 "name": "Modernized контейнер для предметов",
                 "shortName": "контейнер для предметов",
-                "description": ""
+                "description": "Особый предмет «Modernized контейнер для предметов»."
             }
         },
         "addtoInventorySlots": [],
@@ -341,9 +341,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "Snacky-Z",
+                "name": "Сухпаёк Snacky-Z",
                 "shortName": "Snacky-Z",
-                "description": ""
+                "description": "Особый предмет «Сухпаёк Snacky-Z»."
             }
         },
         "addtoInventorySlots": [],
@@ -438,7 +438,7 @@
                 "description": "The Collar used on Denis meanwhile was held in captivity."
             },
             "ru": {
-                "name": "Denis' Collar",
+                "name": "Ошейник Дениса",
                 "shortName": "Denis' Collar",
                 "description": "Ошейник, который использовали на Денисе, пока он находился в плену."
             }
@@ -551,8 +551,8 @@
                 "description": "The trophy is a lovingly carved hunk of wood shaped like a headcrab, poised to leap—perfect for terrifying squirrels or impressing friends who’ve never seen a crab that wants to eat your face."
             },
             "ru": {
-                "name": "Carved Headcrab Trophy",
-                "shortName": "Headcrab",
+                "name": "Резной трофей «Хедкраб»",
+                "shortName": "Хедкраб",
                 "description": "Трофей — аккуратно вырезанный кусок дерева в форме хедкраба, готового к прыжку. Отлично подходит, чтобы пугать белок или впечатлять друзей, которые никогда не видели краба, пытающегося съесть лицо."
             }
         },
@@ -771,7 +771,7 @@
             "ru": {
                 "name": "Solaire фигурка",
                 "shortName": "Solaire",
-                "description": ""
+                "description": "Особый предмет «Solaire фигурка»."
             }
         },
         "addtoInventorySlots": [],
@@ -882,7 +882,7 @@
                 "description": "An improved version of a USB Rubber Duck. It's pretty Groovey!"
             },
             "ru": {
-                "name": "USB Groovey Duck",
+                "name": "USB-накопитель Groovey Duck",
                 "shortName": "GDuck",
                 "description": "Улучшенная версия USB Rubber Ducky. Получилась довольно Groovey!"
             }

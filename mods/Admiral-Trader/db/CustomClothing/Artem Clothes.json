@@ -386,8 +386,8 @@
                 "description": "Softshell (Alpine MC)"
             },
             "ru": {
-                "name": "Softshell (Alpine MC)",
-                "description": "Softshell (Alpine MC)"
+                "name": "Куртка Softshell (Alpine MC)",
+                "description": "Тактическая куртка Softshell в зимнем камуфляже Alpine Multicam."
             }
         },
         "topBundlePath": "Tops/artem_top_18.bundle",
@@ -411,8 +411,8 @@
                 "description": "Troubleshooter"
             },
             "ru": {
-                "name": "Troubleshooter",
-                "description": "Troubleshooter"
+                "name": "Устранитель проблем",
+                "description": "Полевой комплект «Устранитель проблем»."
             }
         },
         "topBundlePath": "Tops/artem_top_19.bundle",
@@ -1478,8 +1478,8 @@
                 "description": "Woodland Infiltrator lower (Alpine)"
             },
             "ru": {
-                "name": "Woodland Infiltrator lower (Alpine)",
-                "description": "Woodland Infiltrator lower (Alpine)"
+                "name": "Брюки Woodland Infiltrator (Alpine)",
+                "description": "Нижняя часть комплекта Woodland Infiltrator в зимнем камуфляже Alpine."
             }
         },
         "bottomBundlePath": "Pants/artem_pants_27.bundle",

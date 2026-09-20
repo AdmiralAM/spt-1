@@ -111,7 +111,7 @@
             "ru": {
                 "name": "'Oi Matey' нашивка",
                 "shortName": "'Oi Matey'",
-                "description": ""
+                "description": "Нашивка «'Oi Matey' нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -157,7 +157,7 @@
             "ru": {
                 "name": "Bluey Portrait нашивка",
                 "shortName": "Bluey",
-                "description": ""
+                "description": "Нашивка «Bluey Portrait нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -203,7 +203,7 @@
             "ru": {
                 "name": "USEC нашивка",
                 "shortName": "USEC",
-                "description": ""
+                "description": "Нашивка «USEC нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -249,7 +249,7 @@
             "ru": {
                 "name": "BEAR нашивка",
                 "shortName": "BEAR",
-                "description": ""
+                "description": "Нашивка «BEAR нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -524,8 +524,8 @@
             },
             "ru": {
                 "name": "нашивка",
-                "shortName": "",
-                "description": ""
+                "shortName": "нашивка",
+                "description": "Нашивка «нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -570,7 +570,7 @@
             },
             "ru": {
                 "name": "Notepad++ нашивка",
-                "shortName": "",
+                "shortName": "Notepad++ нашивка",
                 "description": "Нашему любимому и самому безумному участнику WTT — Qwertyalex."
             }
         },
@@ -616,7 +616,7 @@
             },
             "ru": {
                 "name": "Scotland нашивка",
-                "shortName": "",
+                "shortName": "Scotland нашивка",
                 "description": "Шотландия"
             }
         },
@@ -662,8 +662,8 @@
             },
             "ru": {
                 "name": "Germany нашивка",
-                "shortName": "",
-                "description": ""
+                "shortName": "Germany нашивка",
+                "description": "Нашивка «Germany нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -755,7 +755,7 @@
             "ru": {
                 "name": "'no step on snek'нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «'no step on snek'нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -801,7 +801,7 @@
             "ru": {
                 "name": "Meowdy нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Meowdy нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -847,7 +847,7 @@
             "ru": {
                 "name": "Australia нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Australia нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -893,7 +893,7 @@
             "ru": {
                 "name": "Canada нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Canada нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -939,7 +939,7 @@
             "ru": {
                 "name": "Poland нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Poland нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -985,7 +985,7 @@
             "ru": {
                 "name": "Solaire Circular нашивка",
                 "shortName": "Solaire",
-                "description": ""
+                "description": "Нашивка «Solaire Circular нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1031,7 +1031,7 @@
             "ru": {
                 "name": "нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1077,7 +1077,7 @@
             "ru": {
                 "name": "нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1123,7 +1123,7 @@
             "ru": {
                 "name": "Brotherhood нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Brotherhood нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1169,7 +1169,7 @@
             "ru": {
                 "name": "Hidden Leaf нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Hidden Leaf нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1215,7 +1215,7 @@
             "ru": {
                 "name": "Berserk нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «Berserk нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1261,7 +1261,7 @@
             "ru": {
                 "name": "нашивка",
                 "shortName": "нашивка",
-                "description": ""
+                "description": "Нашивка «нашивка»."
             }
         },
         "addtoInventorySlots": [],
@@ -1356,7 +1356,7 @@
             "ru": {
                 "name": "батарейный блок ПНВ",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «батарейный блок ПНВ»."
             }
         },
         "addtoInventorySlots": [],
@@ -1451,7 +1451,7 @@
             "ru": {
                 "name": "батарейный блок ПНВ (Alpine)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «батарейный блок ПНВ (Alpine)»."
             }
         },
         "addtoInventorySlots": [],
@@ -1546,7 +1546,7 @@
             "ru": {
                 "name": "батарейный блок ПНВ (Multicam)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «батарейный блок ПНВ (Multicam)»."
             }
         },
         "addtoInventorySlots": [],
@@ -1641,7 +1641,7 @@
             "ru": {
                 "name": "батарейный блок ПНВ (Multicam чёрный)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «батарейный блок ПНВ (Multicam чёрный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -1736,7 +1736,7 @@
             "ru": {
                 "name": "Ferro Concepts батарейный блок (койот)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «Ferro Concepts батарейный блок (койот)»."
             }
         },
         "addtoInventorySlots": [],
@@ -1831,7 +1831,7 @@
             "ru": {
                 "name": "Ferro Concepts батарейный блок (Ranger зелёный)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «Ferro Concepts батарейный блок (Ranger зелёный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -1926,7 +1926,7 @@
             "ru": {
                 "name": "Ferro Concepts батарейный блок (чёрный)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «Ferro Concepts батарейный блок (чёрный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -2021,7 +2021,7 @@
             "ru": {
                 "name": "Ferro Concepts батарейный блок (Alpine)",
                 "shortName": "батарейный блок ПНВ",
-                "description": ""
+                "description": "Нашивка «Ferro Concepts батарейный блок (Alpine)»."
             }
         },
         "addtoInventorySlots": [],
@@ -2389,7 +2389,7 @@
             "ru": {
                 "name": "чехол на шлем чёрный",
                 "shortName": "чехол на шлем",
-                "description": ""
+                "description": "Нашивка «чехол на шлем чёрный»."
             }
         },
         "addtoInventorySlots": [],
@@ -2759,7 +2759,7 @@
             "ru": {
                 "name": "чехол на шлем Alpine",
                 "shortName": "чехол на шлем",
-                "description": ""
+                "description": "Нашивка «чехол на шлем Alpine»."
             }
         },
         "addtoInventorySlots": [],
@@ -3135,7 +3135,7 @@
             "ru": {
                 "name": "чехол на шлем Ranger зелёный",
                 "shortName": "чехол на шлем",
-                "description": ""
+                "description": "Нашивка «чехол на шлем Ranger зелёный»."
             }
         },
         "addtoInventorySlots": [],
@@ -3511,7 +3511,7 @@
             "ru": {
                 "name": "чехол на шлем Multicam",
                 "shortName": "чехол на шлем",
-                "description": ""
+                "description": "Нашивка «чехол на шлем Multicam»."
             }
         },
         "addtoInventorySlots": [],
@@ -3887,7 +3887,7 @@
             "ru": {
                 "name": "чехол на шлем Multicam чёрный",
                 "shortName": "чехол на шлем",
-                "description": ""
+                "description": "Нашивка «чехол на шлем Multicam чёрный»."
             }
         },
         "addtoInventorySlots": [],

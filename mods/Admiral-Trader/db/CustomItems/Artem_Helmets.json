@@ -189,7 +189,7 @@
                 "description": "Protect your skull from knocks and bangs with the ImpaX Extreme bump helmet from DLP Tactical. Cut in the familiar MICH / ACH Advanced Combat Helmet pattern, zero transition time is needed between the ImpaX Extreme bump helmet and the heavier ballistic equivalents. Perfect for high speed/ low drag operators who do not need bullet resistant protection or as a training/ simulation aid for when the heavier ballistic helmets are not desired."
             },
             "ru": {
-                "name": "DLP Tactical Extreme Helmet",
+                "name": "Шлем DLP Tactical Extreme",
                 "shortName": "DLP тактический шлем",
                 "description": "Лёгкий защитный шлем ImpaX Extreme от DLP Tactical защищает голову от ударов. Он выполнен в привычной форме MICH / ACH, поэтому переход между ним и тяжёлыми баллистическими аналогами не требует привыкания. Подходит для мобильных операторов, которым не нужна пулестойкая защита, а также для тренировок и симуляций, где тяжёлый баллистический шлем избыточен."
             }
@@ -1169,7 +1169,7 @@
                 "description": "Protect your skull from knocks and bangs with the ImpaX Extreme bump helmet from DLP Tactical. Cut in the familiar MICH / ACH Advanced Combat Helmet pattern, zero transition time is needed between the ImpaX Extreme bump helmet and the heavier ballistic equivalents. Perfect for high speed/ low drag operators who do not need bullet resistant protection or as a training/ simulation aid for when the heavier ballistic helmets are not desired."
             },
             "ru": {
-                "name": "DLP Tactical Extreme Helmet",
+                "name": "Шлем DLP Tactical Extreme",
                 "shortName": "DLP Tactical Extreme Helmet",
                 "description": "Лёгкий защитный шлем ImpaX Extreme от DLP Tactical защищает голову от ударов. Он выполнен в привычной форме MICH / ACH, поэтому переход между ним и тяжёлыми баллистическими аналогами не требует привыкания. Подходит для мобильных операторов, которым не нужна пулестойкая защита, а также для тренировок и симуляций, где тяжёлый баллистический шлем избыточен."
             }
@@ -1631,7 +1631,7 @@
                 "description": "High cut, lightweight, non-ballistic shell features a hybrid design of unidirectional and woven composite carbon fibers. Designed for less extreme environments, the durable carbon construction provides protection against blunt trauma, making it ideal for rugged training, recee and water operations, and fast roping."
             },
             "ru": {
-                "name": "Ops-Core FAST Carbon Low Cut Helmet (Roze)",
+                "name": "Шлем Ops-Core FAST Carbon Low Cut (розовый)",
                 "shortName": "Ops-Core Low Cut Helmet",
                 "description": "Лёгкая небаллистическая высокообрезанная оболочка выполнена из гибридного композита однонаправленных и тканых углеродных волокон. Прочная карбоновая конструкция рассчитана на умеренные условия и защищает от тупой травмы, что делает её подходящей для интенсивных тренировок, разведки, водных операций и спуска по канату."
             }
@@ -4516,7 +4516,7 @@
                 "description": "Developed specifically for use with the MOHOC® and MOHOC® IR Cameras, the Multi-Mount is designed to extend the functionality of your camera beyond the helmet."
             },
             "ru": {
-                "name": "MOHOC® IR Camera",
+                "name": "Инфракрасная камера MOHOC®",
                 "shortName": "MOHOC® Camera",
                 "description": "Multi-Mount разработан специально для камер MOHOC® и MOHOC® IR и позволяет использовать камеру не только на шлеме."
             }
@@ -4562,7 +4562,7 @@
                 "description": "Core Survival HEL-STAR 6® Gen III is a multi function helmet mounted LED light designed for airborne/MFF, tactical and other military operations. HEL-STAR 6® Gen III combines the basic features of the earlier HEL-STAR 4® & HEL-STAR 5® multi-function marker lights into a compact, integrated design with enhanced omni-directional visibility and easy battery replacement."
             },
             "ru": {
-                "name": "Core Survival HEL-STAR 6 Gen III",
+                "name": "Сигнальный маяк Core Survival HEL-STAR 6 Gen III",
                 "shortName": "HEL-STAR",
                 "description": "Core Survival HEL-STAR 6® Gen III — многофункциональный шлемный светодиодный маяк для воздушно-десантных/MFF, тактических и других военных операций. HEL-STAR 6® Gen III объединяет основные функции ранних маркерных огней HEL-STAR 4® и HEL-STAR 5® в компактной интегрированной конструкции с улучшенной круговой видимостью и удобной заменой батареи."
             }
@@ -4612,7 +4612,7 @@
             "ru": {
                 "name": "V-Lites (красный)",
                 "shortName": "V-Lites",
-                "description": ""
+                "description": "Элемент экипировки головы «V-Lites (красный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -4658,9 +4658,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "V-Lites (Blue)",
+                "name": "Сигнальный маяк V-Lites (синий)",
                 "shortName": "V-Lites",
-                "description": ""
+                "description": "Элемент экипировки головы «Сигнальный маяк V-Lites (синий)»."
             }
         },
         "addtoInventorySlots": [],
@@ -4706,7 +4706,7 @@
                 "description": "Finally, a practical helmet ghillie cover. Quickly attach via shock cord to add an extra element of concealment to your kit. Creates color, texture and shadow to instantly break up the shape and appearance of your head. Rapidly remove at any time within seconds thanks to design simplicity."
             },
             "ru": {
-                "name": "Augmento™ Helmet Ghillie Cover Gen II (Multicam)",
+                "name": "Маскировочный чехол Augmento™ Gen II (Multicam)",
                 "shortName": "Augmento™ Helmet Ghillie Cover Gen II",
                 "description": "Практичный маскировочный чехол для шлема. Быстро крепится эластичным шнуром и добавляет дополнительный уровень маскировки. Цвет, фактура и тени разрушают узнаваемый силуэт головы. Благодаря простой конструкции чехол можно снять за несколько секунд."
             }
@@ -4754,7 +4754,7 @@
                 "description": "Finally, a practical helmet ghillie cover. Quickly attach via shock cord to add an extra element of concealment to your kit. Creates color, texture and shadow to instantly break up the shape and appearance of your head. Rapidly remove at any time within seconds thanks to design simplicity."
             },
             "ru": {
-                "name": "Augmento™ Helmet Ghillie Cover Gen II (Alpine)",
+                "name": "Маскировочный чехол Augmento™ Gen II (Alpine)",
                 "shortName": "Augmento™ Helmet Ghillie Cover Gen II",
                 "description": "Практичный маскировочный чехол для шлема. Быстро крепится эластичным шнуром и добавляет дополнительный уровень маскировки. Цвет, фактура и тени разрушают узнаваемый силуэт головы. Благодаря простой конструкции чехол можно снять за несколько секунд."
             }
@@ -4900,7 +4900,7 @@
             "ru": {
                 "name": "V-Lites (зелёный)",
                 "shortName": "V-Lites",
-                "description": ""
+                "description": "Элемент экипировки головы «V-Lites (зелёный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -4946,9 +4946,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "V-Lites (IR)",
+                "name": "Инфракрасный маяк V-Lites",
                 "shortName": "V-Lites",
-                "description": ""
+                "description": "Элемент экипировки головы «Инфракрасный маяк V-Lites»."
             }
         },
         "addtoInventorySlots": [],
@@ -5105,7 +5105,7 @@
             "ru": {
                 "name": "GPNVG-18 ПНВ (белый)",
                 "shortName": "GPNVG18 (белый)",
-                "description": ""
+                "description": "Элемент экипировки головы «GPNVG-18 ПНВ (белый)»."
             }
         },
         "addtoInventorySlots": [],
@@ -5264,7 +5264,7 @@
             "ru": {
                 "name": "GPNVG-18 ПНВ (OD)",
                 "shortName": "GPNVG18 (OD)",
-                "description": ""
+                "description": "Элемент экипировки головы «GPNVG-18 ПНВ (OD)»."
             }
         },
         "addtoInventorySlots": [],
@@ -5423,7 +5423,7 @@
             "ru": {
                 "name": "GPNVG-18 ПНВ (чёрный)",
                 "shortName": "GPNVG18 (чёрный)",
-                "description": ""
+                "description": "Элемент экипировки головы «GPNVG-18 ПНВ (чёрный)»."
             }
         },
         "addtoInventorySlots": [],
@@ -5591,7 +5591,7 @@
                 "description": "A Japan-styled tactical helmet, manufactured by DevTac. Not used by any military or special forces. Just somehow happened to be in Tarkov for some frivolous price. Features a full protection of the whole head, but the armor class is not good enough to actually be useful in combat."
             },
             "ru": {
-                "name": "DevTac Ronin ballistic helmet (Alpine)",
+                "name": "Баллистический шлем DevTac Ronin (Alpine)",
                 "shortName": "Ronin(Alpine)",
                 "description": "Тактический шлем в японском стиле производства DevTac. Не используется армией или спецподразделениями и каким-то образом оказался в Таркове за совершенно несерьёзные деньги. Закрывает практически всю голову, однако класс защиты недостаточен для действительно эффективного применения в бою."
             }
@@ -5953,7 +5953,7 @@
                 "description": "The ComTac IV Hybrid Communication Headset is designed to help reduce exposure to hazardous levels of noise, improve situational awareness and at the same time enable two-way radio communication in noisy environments. The headset's electronics are contained completely inside the headset housing, eliminating the need for a large, heavy external radio control box. The headband mechanically stabilizes the headset to help relieve issues of earplugs dislodging from cable snags and body movement. Designed for comfortable use with a ballistic helmet."
             },
             "ru": {
-                "name": "Peltor ComTac 2 headset(Mounted)",
+                "name": "Активная гарнитура Peltor ComTac 2 (на шлем)",
                 "shortName": "ComTac 2",
                 "description": "Гибридная гарнитура ComTac IV предназначена для снижения воздействия опасных уровней шума, повышения ситуационной осведомлённости и обеспечения двусторонней радиосвязи в шумной обстановке. Вся электроника размещена внутри корпуса гарнитуры, поэтому тяжёлый внешний блок управления не нужен. Оголовье механически стабилизирует гарнитуру и снижает риск смещения вкладышей из-за зацепов кабеля и движений тела. Рассчитана на удобное использование с баллистическим шлемом."
             }
@@ -6069,7 +6069,7 @@
                 "description": "The ComTac IV Hybrid Communication Headset is designed to help reduce exposure to hazardous levels of noise, improve situational awareness and at the same time enable two-way radio communication in noisy environments. The headset's electronics are contained completely inside the headset housing, eliminating the need for a large, heavy external radio control box. The headband mechanically stabilizes the headset to help relieve issues of earplugs dislodging from cable snags and body movement. Designed for comfortable use with a ballistic helmet."
             },
             "ru": {
-                "name": "Peltor ComTac 2 headset(Mounted)",
+                "name": "Активная гарнитура Peltor ComTac 2 (на шлем)",
                 "shortName": "ComTac 2",
                 "description": "Гибридная гарнитура ComTac IV предназначена для снижения воздействия опасных уровней шума, повышения ситуационной осведомлённости и обеспечения двусторонней радиосвязи в шумной обстановке. Вся электроника размещена внутри корпуса гарнитуры, поэтому тяжёлый внешний блок управления не нужен. Оголовье механически стабилизирует гарнитуру и снижает риск смещения вкладышей из-за зацепов кабеля и движений тела. Рассчитана на удобное использование с баллистическим шлемом."
             }
@@ -6185,7 +6185,7 @@
                 "description": "The ComTac IV Hybrid Communication Headset is designed to help reduce exposure to hazardous levels of noise, improve situational awareness and at the same time enable two-way radio communication in noisy environments. The headset's electronics are contained completely inside the headset housing, eliminating the need for a large, heavy external radio control box. The headband mechanically stabilizes the headset to help relieve issues of earplugs dislodging from cable snags and body movement. Designed for comfortable use with a ballistic helmet."
             },
             "ru": {
-                "name": "Peltor ComTac 2 headset(Mounted)",
+                "name": "Активная гарнитура Peltor ComTac 2 (на шлем)",
                 "shortName": "ComTac 2",
                 "description": "Гибридная гарнитура ComTac IV предназначена для снижения воздействия опасных уровней шума, повышения ситуационной осведомлённости и обеспечения двусторонней радиосвязи в шумной обстановке. Вся электроника размещена внутри корпуса гарнитуры, поэтому тяжёлый внешний блок управления не нужен. Оголовье механически стабилизирует гарнитуру и снижает риск смещения вкладышей из-за зацепов кабеля и движений тела. Рассчитана на удобное использование с баллистическим шлемом."
             }
@@ -6301,9 +6301,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "RAC headsets(1)",
+                "name": "Активная гарнитура Ops-Core RAC (вариант 1)",
                 "shortName": "RAC",
-                "description": ""
+                "description": "Элемент экипировки головы «Активная гарнитура Ops-Core RAC (вариант 1)»."
             }
         },
         "addtoInventorySlots": [],
@@ -6417,9 +6417,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "RAC headsets(2)",
+                "name": "Активная гарнитура Ops-Core RAC (вариант 2)",
                 "shortName": "RAC",
-                "description": ""
+                "description": "Элемент экипировки головы «Активная гарнитура Ops-Core RAC (вариант 2)»."
             }
         },
         "addtoInventorySlots": [],
@@ -6533,9 +6533,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "RAC headsets(3)",
+                "name": "Активная гарнитура Ops-Core RAC (вариант 3)",
                 "shortName": "RAC",
-                "description": ""
+                "description": "Элемент экипировки головы «Активная гарнитура Ops-Core RAC (вариант 3)»."
             }
         },
         "addtoInventorySlots": [],
@@ -6649,9 +6649,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "RAC headsets(4)",
+                "name": "Активная гарнитура Ops-Core RAC (вариант 4)",
                 "shortName": "RAC",
-                "description": ""
+                "description": "Элемент экипировки головы «Активная гарнитура Ops-Core RAC (вариант 4)»."
             }
         },
         "addtoInventorySlots": [],
@@ -6695,9 +6695,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "PVS-31",
+                "name": "Прибор ночного видения PVS-31",
                 "shortName": "PVS-31",
-                "description": ""
+                "description": "Элемент экипировки головы «Прибор ночного видения PVS-31»."
             }
         },
         "addtoInventorySlots": [],
@@ -6743,9 +6743,9 @@
                 "description": ""
             },
             "ru": {
-                "name": "PVS-31 (Wide)",
+                "name": "Прибор ночного видения PVS-31 (широкий обзор)",
                 "shortName": "PVS-31",
-                "description": ""
+                "description": "Элемент экипировки головы «Прибор ночного видения PVS-31 (широкий обзор)»."
             }
         },
         "addtoInventorySlots": [],

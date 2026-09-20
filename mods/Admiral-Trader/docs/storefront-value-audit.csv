@@ -80,13 +80,13 @@ Artem,false,66bf757f27d0b097db0acf75,5447a9cd4bdc2dbd208b4567,Штурмовая
 Artem,false,66bf757f27d0b097db0acf76,5cc86840d7f00c002412c56c,5.7x28мм R37.X,1,unlimited,99999,120,cash,,172,220,0.782,1/1,
 Artem,false,66bf757f27d0b097db0acf77,5c1bc7752e221602b1779b34,"Тактическая рукоятка Зенит ""РК-6""",1,unlimited,99999,4,cash,,4741,5540,0.856,1/1,
 Artem,false,66bf757f27d0b097db0acf78,56d59856d2720bd8418b456a,Пистолет SIG P226R 9x19,1,unlimited,99999,6,cash,,15423,15213,1.014,7/7,
-Artem,false,66bf757f27d0b097db0acf79,56d59948d2720bb7418b4582,Магазин на 15 патронов 9x19 для P226,1,finite,9400,6,cash,,7544,2096,3.599,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf79,56d59948d2720bb7418b4582,Магазин на 15 патронов 9x19 для P226,1,finite,9400,6,cash,,3000,2096,1.431,1/1,
 Artem,false,66bf757f27d0b097db0acf7a,583990e32459771419544dd2,Автомат Калашникова АКС-74УН 5.45x39,1,unlimited,99999,6,cash,,74112,69899,1.060,9/9,
 Artem,false,66bf757f27d0b097db0acf7b,59e7715586f7742ee5789605,Респираторная маска,1,unlimited,99999,3,cash,,4302,1786,2.409,1/1,
 Artem,false,66bf757f27d0b097db0acf7c,5b432b965acfc47a8774094e,Активные наушники ГСШ-01,1,unlimited,99999,4,cash,,31625,16056,1.970,1/1,
-Artem,false,66bf757f27d0b097db0acf7d,5aaa4194e5b5b055d06310a5,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 5.45x39 для АК-74",1,finite,72,15,cash,,11000,2658,4.138,1/1,very-expensive
-Artem,false,66bf757f27d0b097db0acf7e,5d1340b3d7ad1a0b52682ed7,"Магазин Magpul ""PMAG 30 GEN M3 STANAG"" на 30 патронов 5.56x45 для AR-15 (FDE)",1,unlimited,99999,15,cash,,11500,3113,3.694,1/1,very-expensive
-Artem,false,66bf757f27d0b097db0acf7f,55802d5f4bdc2dac148b458e,"Магазин Magpul ""PMAG 30 GEN M3 W STANAG"" на 30 патронов 5.56x45 для AR-15",1,unlimited,99999,12,cash,,11500,3797,3.029,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf7d,5aaa4194e5b5b055d06310a5,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 5.45x39 для АК-74",1,finite,72,15,cash,,4000,2658,1.505,1/1,
+Artem,false,66bf757f27d0b097db0acf7e,5d1340b3d7ad1a0b52682ed7,"Магазин Magpul ""PMAG 30 GEN M3 STANAG"" на 30 патронов 5.56x45 для AR-15 (FDE)",1,unlimited,99999,15,cash,,4700,3113,1.510,1/1,
+Artem,false,66bf757f27d0b097db0acf7f,55802d5f4bdc2dac148b458e,"Магазин Magpul ""PMAG 30 GEN M3 W STANAG"" на 30 патронов 5.56x45 для AR-15",1,unlimited,99999,12,cash,,5700,3797,1.501,1/1,
 Artem,false,66bf757f27d0b097db0acf80,6193d338de3cdf1d2614a6fc,Магазин на 12 патронов .45 ACP для HK USP,1,finite,59,12,cash,,1700,2200,0.773,1/1,
 Artem,false,66bf757f27d0b097db0acf81,5a718da68dc32e000d46d264,"Магазин Magpul ""PMAG GL9"" на 21 патрон 9x19 для Glock",1,unlimited,99999,16,cash,,4125,1731,2.383,1/1,
 Artem,false,66bf757f27d0b097db0acf82,6571bde39837cc51b800c212,Полумаска Призрак,1,unlimited,99999,4,cash,,3412,6523,0.523,1/1,
@@ -145,10 +145,10 @@ Artem,false,66bf757f27d0b097db0acf42,5ba26383d4351e00334c93d9,Пистолет-�
 Artem,false,66bf757f27d0b097db0acf43,5b2388675acfc4771e1be0be,"Оптический прицел 30мм Burris ""FullField TAC30 1-4x24""",2,unlimited,99999,3,cash,,41528,31468,1.320,1/1,
 Artem,false,66bf757f27d0b097db0acf44,5b3cbc235acfc4001863ac44,"Наглазник на прицел Armasight ""Vulcan MG""",2,unlimited,99999,14,cash,,464,704,0.659,1/1,
 Artem,false,66bf757f27d0b097db0acf45,64b6979341772715af0f9c39,4.6x30мм JSP SX ,2,unlimited,99999,200,cash,,326,280,1.164,1/1,
-Artem,false,66bf757f27d0b097db0acf46,5b099ac65acfc400186331e1,Магазин на 20 патронов 7.62x51 для SA58/FAL,2,unlimited,99999,6,cash,,10475,2780,3.768,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf46,5b099ac65acfc400186331e1,Магазин на 20 патронов 7.62x51 для SA58/FAL,2,unlimited,99999,6,cash,,4200,2780,1.511,1/1,
 Artem,false,66bf757f27d0b097db0acf47,55d614004bdc2d86028b4568,"Глушитель SureFire ""SOCOM556-MONSTER"" 5.56x45",2,finite,173,4,cash,,45321,43000,1.054,1/1,
 Artem,false,66bf757f27d0b097db0acf48,5df25b6c0b92095fd441e4cf,Магазин на 5 патронов 7.62x51 для ОРСИС T-5000M,2,finite,852,5,cash,,2221,1950,1.139,1/1,
-Artem,false,66bf757f27d0b097db0acf49,59d6272486f77466146386ff,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 7.62x39 для АК",2,finite,52,6,cash,,12523,3183,3.934,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf49,59d6272486f77466146386ff,"Магазин Magpul ""PMAG 30 GEN M3"" на 30 патронов 7.62x39 для АК",2,finite,52,6,cash,,4800,3183,1.508,1/1,
 Artem,false,66bf757f27d0b097db0acf4a,618bb76513f5097c8d5aa2d5,"Рюкзак Группа 99 ""Т20"" (Умбра)",2,unlimited,99999,5,cash,,39239,29410,1.334,1/1,
 Artem,false,66bf757f27d0b097db0acf4b,5c066e3a0db834001b7353f0,"Прибор ночного видения Armasight ""N-15""",2,finite,8,1,cash,,43215,74800,0.578,1/1,
 Artem,false,66bf757f27d0b097db0acf4c,5c0696830db834001d23f5da,Прибор ночного видения ПНВ-10Т,2,finite,13,1,cash,,32962,28000,1.177,1/1,
@@ -165,12 +165,12 @@ Artem,false,66bf757f27d0b097db0acf56,62e14904c2699c0ec93adc47,"Пистолет-
 Artem,false,66bf757f27d0b097db0acf57,5a0abb6e1526d8000a025282,"Переходник ""Тактика Тула"" для АК 7.62x39",2,unlimited,99999,2,cash,,693,615,1.127,1/1,
 Artem,false,66bf757f27d0b097db0acf58,5e4d34ca86f774264f758330,"Активные наушники Walker's ""Razor Digital""",2,unlimited,99999,2,cash,,31625,35100,0.901,1/1,
 Artem,false,66bf757f27d0b097db0acf59,5e9db13186f7742f845ee9d3,Разгрузочный жилет LBT-1961A Load Bearing Chest Rig (MAS Grey),2,unlimited,99999,3,cash,,73829,38250,1.930,1/1,
-Artem,false,66bf757f27d0b097db0acf5a,59fafc9386f774067d462453,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (FDE)",2,finite,483,6,cash,,15675,4700,3.335,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf5a,59fafc9386f774067d462453,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (FDE)",2,finite,483,6,cash,,7000,4700,1.489,1/1,
 Artem,false,66bf757f27d0b097db0acf5b,58491f3324597764bc48fa02,"Голографический прицел EOTech ""XPS3-0""",2,unlimited,99999,4,cash,,24563,19985,1.229,1/1,
-Artem,false,66bf757f27d0b097db0acf5c,59fafc5086f7740dbe19f6c3,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (Черный)",2,finite,483,6,cash,,15675,4387,3.573,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf5c,59fafc5086f7740dbe19f6c3,"Магазин US Palm ""AK30"" на 30 патронов 7.62x39 для АК (Черный)",2,finite,483,6,cash,,6600,4387,1.504,1/1,
 Artem,false,66bf757f27d0b097db0acf5d,66326bfd46817c660d015154,66326bfd46817c660d015154,2,finite,6844,none,cash+quest,67464750efd379bfffb1d539,75000,,,0/1,partial-product-value
 Artem,false,66bf757f27d0b097db0acf5e,5c0e5edb86f77461f55ed1f7,"Бронежилет БНТИ ""Жук"" (Пресса)",2,unlimited,99999,2,cash,,97745,39522,2.473,8/8,
-Artem,false,66bf757f27d0b097db0acf5f,5c925fa22e221601da359b7b,9x19мм AP 6.3,2,unlimited,99999,180,cash,,795,210,3.786,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf5f,5c925fa22e221601da359b7b,9x19мм AP 6.3,2,unlimited,99999,180,cash,,350,210,1.667,1/1,
 Artem,false,66bf757f27d0b097db0acf60,5c0d668f86f7747ccb7f13b2,9x39мм СПП гс,2,finite,2391,170,cash,,752,440,1.709,1/1,
 Artem,false,66bf757f27d0b097db0acf61,5e023e53d4353e3302577c4c,7.62x51мм БПЗ FMJ,2,unlimited,99999,140,cash,,212,240,0.883,1/1,
 Artem,false,66bf757f27d0b097db0acf62,5c7fb51d2e2216001219ce11,"Пламегаситель SureFire ""SF3P"" 5.56x45 для AR-15",2,unlimited,99999,4,cash,,6239,6420,0.972,1/1,
@@ -261,8 +261,8 @@ Artem,false,66bf757f27d0b097db0acf2b,5b3b99475acfc432ff4dcbee,"Оптическ�
 Artem,false,66bf757f27d0b097db0acf2c,6567e7681265c8a131069b0f,"Оптический прицел 30мм SIG Sauer ""TANGO6T 1-6x24""",3,unlimited,99999,2,cash,,50000,68601,0.729,1/1,
 Artem,false,66bf757f27d0b097db0acf2d,5e9dacf986f774054d6b89f4,"Бронежилет ФОРТ ""Дефендер-2""",3,unlimited,99999,2,cash,,205223,158901,1.292,9/9,
 Artem,false,66bf757f27d0b097db0acf2e,5c1cd46f2e22164bef5cfedb,"Тактическая рукоятка Зенит ""РК-1"" на креплении ""Б-25У""",3,finite,40,2,cash,,38741,18890,2.051,1/1,
-Artem,false,66bf757f27d0b097db0acf2f,618168dc8004cc50514c34fc,Магазин на 20 патронов 7.62x51 для FN SCAR-H,3,finite,875,5,cash,,21071,4000,5.268,1/1,very-expensive
-Artem,false,66bf757f27d0b097db0acf30,6183d53f1cb55961fa0fdcda,Магазин на 20 патронов 7.62x51 для FN SCAR-H (FDE),3,finite,875,5,cash,,21071,4500,4.682,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf2f,618168dc8004cc50514c34fc,Магазин на 20 патронов 7.62x51 для FN SCAR-H,3,finite,875,5,cash,,6000,4000,1.500,1/1,
+Artem,false,66bf757f27d0b097db0acf30,6183d53f1cb55961fa0fdcda,Магазин на 20 патронов 7.62x51 для FN SCAR-H (FDE),3,finite,875,5,cash,,6800,4500,1.511,1/1,
 Artem,false,66bf757f27d0b097db0acf31,619cbf7d23893217ec30b689,Кейс для инъекторов,3,unlimited,99999,1,barter,,222689,415000,0.537,1/1,
 Artem,false,66bf757f27d0b097db0acf32,5bb2475ed4351e00853264e3,Штурмовая винтовка HK 416A5 5.56x45,3,unlimited,99999,2,cash,,46523,88157,0.528,12/12,
 Artem,false,66bf757f27d0b097db0acf33,5fbcc1d9016cce60e8341ab3,Штурмовая винтовка SIG MCX .300 Blackout,3,unlimited,99999,2,cash+quest,67464750efd379bfffb1d539,159653,179760,0.888,20/20,
@@ -315,7 +315,7 @@ Artem,false,66bf757f27d0b097db0acf09,5ba26835d4351e0035628ff5,4.6x30мм AP SX,4
 Artem,false,66bf757f27d0b097db0acf0a,5a6086ea4f39f99cd479502f,7.62x51мм M61,4,finite,12000,140,cash+quest,6741d6176c4b417a408d290f,1152,1050,1.097,1/1,
 Artem,false,66bf757f27d0b097db0acf0b,57c44b372459772d2b39b8ce,"Автомат Специальный АС ""Вал"" 9x39",4,unlimited,99999,2,cash,,104253,104536,0.997,8/8,
 Artem,false,66bf757f27d0b097db0acf0c,5efb0cabfb3e451d70735af5,.45 ACP AP,4,unlimited,99999,160,cash,,800,670,1.194,1/1,
-Artem,false,66bf757f27d0b097db0acf0d,59c1383d86f774290a37e0ca,"Магазин Magpul ""PMAG D-60 STANAG"" на 60 патронов 5.56x45 для AR-15",4,finite,94,4,cash,,58163,15413,3.774,1/1,very-expensive
+Artem,false,66bf757f27d0b097db0acf0d,59c1383d86f774290a37e0ca,"Магазин Magpul ""PMAG D-60 STANAG"" на 60 патронов 5.56x45 для AR-15",4,finite,94,4,cash,,23000,15413,1.492,1/1,
 Artem,false,66bf757f27d0b097db0acf0e,544a37c44bdc2d25388b4567,"Магазин SureFire ""MAG5-60 STANAG"" на 60 патронов 5.56x45 для AR-15",4,finite,54,3,cash,,52163,22755,2.292,1/1,
 Artem,false,66bf757f27d0b097db0acf0f,5fc23426900b1d5091531e15,Магазин на 10 патронов .338 LM для Mk-18,4,unlimited,99999,5,cash,,10122,14600,0.693,1/1,
 Artem,false,66bf757f27d0b097db0acf10,5a608bf24f39f98ffc77720e,7.62x51мм M62 Tracer,4,finite,54276,140,cash+quest,6746319d051c463a810728fc,1050,440,2.386,1/1,
