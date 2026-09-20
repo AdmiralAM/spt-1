@@ -127,7 +127,7 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
             throw;
         }
 
-        logger.Success("B&A&HB Dogtag Case canonical preflight passed: exact source/root/grid/filter identity, taxonomy and scalar geometry/presentation values are stable across lease publication and leased to Preload +3.");
+        logger.Debug("B&A&HB Dogtag Case canonical preflight passed: exact source/root/grid/filter identity, taxonomy and scalar geometry/presentation values are stable across lease publication and leased to Preload +3.");
     }
 
     private TemplateItem RequireCanonicalSourceContract(CancellationToken cancellationToken, TemplateItem? expectedReference = null)

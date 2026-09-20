@@ -24,21 +24,23 @@ public sealed class DedicatedWearableItems(
     private static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
     private static readonly MongoId BeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     private static readonly MongoId HeadBandParentTpl = new(RuntimeIdentity.HeadBandItemParentId);
+    private const string PlateContainerTemplateId = "6a3c0e9643138b61c8739586";
     private const string GridPrototype = "55d329c24bdc2d892f8b4567";
     internal const string HeadBandCurrencyGridName = "main";
-    internal const string HeadBandCigarettesGridName = "cigarettes";
+    // Keep the old wire name and grid id so existing profile children remain valid.
+    // Product semantics changed from cigarettes to the owned Dogtag Case.
+    internal const string HeadBandDogtagCaseGridName = "cigarettes";
+    internal const string HeadBandCigarettesGridName = HeadBandDogtagCaseGridName;
 
-    private static readonly HashSet<MongoId> HeadBandCurrencyWalletWhitelist =
-        HeadBandUtilityPolicy.CurrencyWalletTemplateIds.Select(id => new MongoId(id)).ToHashSet();
-    private static readonly HashSet<MongoId> HeadBandCigaretteWhitelist =
-        HeadBandUtilityPolicy.CigaretteTemplateIds.Select(id => new MongoId(id)).ToHashSet();
+    private static readonly HashSet<MongoId> HeadBandDogtagCaseWhitelist =
+        [new MongoId(RuntimeIdentity.DogtagCaseItemId)];
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable source handbook entry missing.");
 
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         // The persistent Magazine Belt template must remain resolvable even when
         // Pack 'n' Strap owns the active Belt feature. Existing profiles can
         // contain this exact B&A template ID; omitting it makes SPT reject the
@@ -62,10 +64,11 @@ public sealed class DedicatedWearableItems(
 
         EnsureHeadBand(handbookItem.ParentId);
         RegisterHeadBandIcon();
+        RegisterOwnedIcon(PlateContainerTemplateId);
 
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? "B&A&HB companion Utility HeadBand registered; legacy Magazine Belt template retained for profile safety without a B&A slot or offer."
-            : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + cigarettes 1x1 grids.");
+            : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + Dogtag Case 1x1 grids.");
         return Task.CompletedTask;
     }
 
@@ -81,12 +84,22 @@ public sealed class DedicatedWearableItems(
         imageRouter.AddRoute($"/files/handbook/{RuntimeIdentity.EmergencyHeadBandItemId}", iconPath);
     }
 
+    private void RegisterOwnedIcon(string templateId)
+    {
+        string modPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
+        string iconPath = System.IO.Path.Combine(modPath, "assets", "icons", $"{templateId}.png");
+        if (!File.Exists(iconPath))
+            throw new FileNotFoundException($"B&A&HB owned inventory icon is missing for {templateId}.", iconPath);
+        imageRouter.AddRoute($"/files/handbook/{templateId}", iconPath);
+    }
+
     private void EnsureHeadBand(MongoId handbookParent)
     {
+        HashSet<MongoId> walletWhitelist = BuildCurrencyWalletWhitelist();
         var id = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
         if (templateTable.Items.TryGetValue(id, out var existing))
         {
-            ValidateHeadBand(existing);
+            ValidateHeadBand(existing, walletWhitelist);
             return;
         }
 
@@ -105,13 +118,13 @@ public sealed class DedicatedWearableItems(
                 {
                     Name = "B&A&HB Utility HeadBand",
                     ShortName = "Utility HB",
-                    Description = "Compact HeadBand utility carrier with separate currency/wallet and cigarette pockets. Death protection follows the B&A&HB F12 setting."
+                    Description = "Compact HeadBand utility carrier with separate currency/wallet and Dogtag Case pockets. Death protection follows the B&A&HB F12 setting."
                 },
                 ["ru"] = new LocaleDetails
                 {
                     Name = "Утилитарная налобная повязка B&A&HB",
                     ShortName = "Утил. повязка",
-                    Description = "Компактная налобная повязка с отдельными ячейками для денег/кошелька и сигарет. Защита при смерти определяется настройкой B&A&HB в F12."
+                    Description = "Компактная налобная повязка с отдельными ячейками для денег/кошелька и жетонницы. Защита при смерти определяется настройкой B&A&HB в F12."
                 }
             },
             OverrideProperties = new TemplateItemProperties
@@ -131,14 +144,14 @@ public sealed class DedicatedWearableItems(
                         RuntimeIdentity.EmergencyHeadBandItemId,
                         RuntimeIdentity.EmergencyHeadBandSplitGridColumns,
                         RuntimeIdentity.EmergencyHeadBandSplitGridRows,
-                        HeadBandCurrencyWalletWhitelist),
+                        walletWhitelist),
                     CreateGrid(
-                        HeadBandCigarettesGridName,
+                        HeadBandDogtagCaseGridName,
                         RuntimeIdentity.EmergencyHeadBandCigarettesGridId,
                         RuntimeIdentity.EmergencyHeadBandItemId,
                         RuntimeIdentity.EmergencyHeadBandSplitGridColumns,
                         RuntimeIdentity.EmergencyHeadBandSplitGridRows,
-                        HeadBandCigaretteWhitelist)
+                        HeadBandDogtagCaseWhitelist)
                 ]
             }
         };
@@ -219,7 +232,23 @@ public sealed class DedicatedWearableItems(
         };
     }
 
-    private static void ValidateHeadBand(TemplateItem item)
+    private HashSet<MongoId> BuildCurrencyWalletWhitelist()
+    {
+        var accepted = HeadBandUtilityPolicy.CurrencyWalletTemplateIds.Select(id => new MongoId(id)).ToHashSet();
+        var currency = new MongoId(HeadBandUtilityPolicy.Rouble);
+        var moneyClass = new MongoId("543be5dd4bdc2deb348b4569");
+        foreach (var pair in templateTable.Items)
+        {
+            var grids = pair.Value.Properties?.Grids;
+            if (grids == null) continue;
+            if (grids.SelectMany(x => x.Properties?.Filters ?? []).Any(x =>
+                x.Filter?.Contains(currency) == true || x.Filter?.Contains(moneyClass) == true))
+                accepted.Add(pair.Key);
+        }
+        return accepted;
+    }
+
+    private static void ValidateHeadBand(TemplateItem item, HashSet<MongoId> walletWhitelist)
     {
         if (!Equals(item.Parent, HeadBandParentTpl))
             throw new InvalidOperationException("B&A&HB Utility HeadBand parent collision.");
@@ -228,8 +257,8 @@ public sealed class DedicatedWearableItems(
         if (grids == null || grids.Length != 2)
             throw new InvalidOperationException("B&A&HB Utility HeadBand requires exactly two native 1x1 grids.");
 
-        ValidateGrid(grids, HeadBandCurrencyGridName, RuntimeIdentity.EmergencyHeadBandGridId, HeadBandCurrencyWalletWhitelist);
-        ValidateGrid(grids, HeadBandCigarettesGridName, RuntimeIdentity.EmergencyHeadBandCigarettesGridId, HeadBandCigaretteWhitelist);
+        ValidateGrid(grids, HeadBandCurrencyGridName, RuntimeIdentity.EmergencyHeadBandGridId, walletWhitelist);
+        ValidateGrid(grids, HeadBandDogtagCaseGridName, RuntimeIdentity.EmergencyHeadBandCigarettesGridId, HeadBandDogtagCaseWhitelist);
     }
 
     private static void ValidateGrid(Grid[] grids, string name, string gridId, HashSet<MongoId> accepted)

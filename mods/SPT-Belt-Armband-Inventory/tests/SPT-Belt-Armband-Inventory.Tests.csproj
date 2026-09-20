@@ -7,6 +7,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The vanilla Dogtag-slot publication concept was retired. Its source-shape
+         regressions describe a product path that no longer ships. -->
+    <Compile Remove="DogtagCase*.cs" />
+    <Compile Remove="DogtagOrdinaryTagRecoveryRegression.cs" />
     <ProjectReference Include="..\server\SPT-Belt-Armband-Inventory.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -17,7 +21,7 @@
     <Compile Include="..\src\WearableItemDescriptor.cs" Link="WearableItemDescriptor.cs" />
     <Compile Include="..\src\WearableConceptCatalog.cs" Link="WearableConceptCatalog.cs" />
     <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
-    <Compile Include="..\src\PackNStrapCompatibility.cs" Link="PackNStrapCompatibility.cs" />
+    <Compile Include="..\src\TgcCompatibilityPolicy.cs" Link="TgcCompatibilityPolicy.cs" />
     <Compile Include="..\src\WearableProtectionContract.cs" Link="WearableProtectionContract.cs" />
     <Compile Include="..\src\HostBoundaryPolicy.cs" Link="HostBoundaryPolicy.cs" />
     <Compile Include="..\src\DedicatedWearableSlotContract.cs" Link="DedicatedWearableSlotContract.cs" />
@@ -42,6 +46,7 @@
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
     <Compile Include="..\src\EquipmentCacheCapacityPolicy.cs" Link="EquipmentCacheCapacityPolicy.cs" />
     <Compile Include="..\src\RuntimeListOwnership.cs" Link="RuntimeListOwnership.cs" />
+    <Compile Include="..\src\BeltAccessApi.cs" Link="BeltAccessApi.cs" />
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
     <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />
     <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />

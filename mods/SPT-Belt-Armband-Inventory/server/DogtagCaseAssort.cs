@@ -9,9 +9,8 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Publishes the Dogtag Case only after both its exact template and the vanilla
-/// Dogtag equipment host contract are live. This keeps the product obtainable
-/// without weakening the ordinary personal-dogtag slot semantics.
+/// Withdraws the historical cheap Dogtag Case offer while retaining its exact
+/// persistent template for existing profiles and the Utility HeadBand grid.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 2)]
 public sealed class DogtagCaseAssort(
@@ -28,11 +27,27 @@ public sealed class DogtagCaseAssort(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // The HeadBand now hosts the Dogtag Case. Keep the template/profile ID,
+        // but withdraw the old cheap Ragman offer if an earlier build published it.
+        var traderForCleanup = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId);
+        var cleanupAssort = traderForCleanup?.Assort;
+        if (cleanupAssort?.Items != null)
+        {
+            var offerId = new MongoId(RuntimeIdentity.DogtagCaseAssortId);
+            cleanupAssort.Items.RemoveAll(x => x.Id == offerId);
+            cleanupAssort.BarterScheme?.Remove(offerId);
+            cleanupAssort.LoyalLevelItems?.Remove(offerId);
+        }
+        logger.Debug("B&A&HB Dogtag Case trader offer is withdrawn; the persistent case remains available for existing profiles and the HeadBand slot.");
+        return Task.CompletedTask;
+
+#pragma warning disable CS0162
         if (!DogtagCaseAvailability.IsAvailable)
         {
             logger.Warning($"B&A&HB Dogtag Case offer skipped: {DogtagCaseAvailability.UnavailableReason}");
             return Task.CompletedTask;
         }
+#pragma warning restore CS0162
 
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         RequirePublicationBoundary(templateTable, templateId);
@@ -83,7 +98,7 @@ public sealed class DogtagCaseAssort(
             RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, existing, existingBarter);
             RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
-            logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
+            logger.Debug($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
@@ -193,7 +208,7 @@ public sealed class DogtagCaseAssort(
             throw;
         }
 
-        logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
+        logger.Debug($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
     }
 

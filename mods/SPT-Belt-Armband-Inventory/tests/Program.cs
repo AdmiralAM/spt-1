@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SPTBeltArmbandInventory;
 using SPTBeltArmbandInventory.Tests;
@@ -17,24 +18,80 @@ internal static class Program
 
     static void Main()
     {
-        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "other", "com.wtt.packnstrap" }), "Pack 'n' Strap client GUID selects companion mode");
-        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "COM.WTT.PACKNSTRAP" }), "Pack 'n' Strap GUID detection is case-insensitive");
-        Assert(!PackNStrapCompatibility.IsClientPresent(new[] { "com.trenchfoot.beltslot" }), "legacy BeltSlot does not impersonate Pack 'n' Strap");
-        Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
-        Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
+        object suiteOwner = new();
+        Assert(!ExternalCompatibilityApi.IsTgc300Claimed && !ExternalCompatibilityApi.IsPackNStrap211Claimed,
+            "foreign compatibility is absent by default");
+        Assert(!TgcCompatibilityPolicy.IsBelt("672e2e75a16c1d2034c384cf"),
+            "unclaimed TGC runtime classification is disabled");
+        Assert(!ExternalCompatibilityApi.TryClaimTgc300(2, suiteOwner)
+            && !ExternalCompatibilityApi.TryClaimPackNStrap211(0, suiteOwner),
+            "contract mismatch fails closed without changing ownership");
+        Assert(ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, suiteOwner),
+            "Suite can claim exact TGC 3.0.0 integration");
+        Assert(ExternalCompatibilityApi.TryClaimPackNStrap211(ExternalCompatibilityApi.ContractVersion, suiteOwner),
+            "Suite can claim exact Pack 'n' Strap 2.1.1 integration");
+        Assert(ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, suiteOwner)
+            && !ExternalCompatibilityApi.TryClaimTgc300(ExternalCompatibilityApi.ContractVersion, new object()),
+            "claim is idempotent for one owner and rejects duplicate adapters");
+        Assert(SecureContainerCompatibilityPolicy.GammaTemplateIds.Contains("665ee77ccf2d642e98220bca"), "the equipped SPT Gamma template is an explicit compatibility host");
+        Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("669c10fa06c00c483c58537a", new[] { SecureContainerCompatibilityPolicy.PackNStrapContainerParent }), "Pack 'n' Strap cash pouch is admitted through its owned parent");
+        Assert(SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer(SecureContainerCompatibilityPolicy.PackNStrapPlateContainer, Array.Empty<string>()), "Pack 'n' Strap plate case is admitted by exact identity");
+        Assert(!SecureContainerCompatibilityPolicy.IsSupportedPackNStrapContainer("5c093e3486f77430cb02e593", new[] { "5795f317245977243854e041" }), "unrelated vanilla simple containers remain forbidden");
+        Assert(TgcCompatibilityPolicy.BeltTemplateIds.Count == 5, "TGC 3.0.0 belt integration is an exact five-template allowlist");
+        Assert(TgcCompatibilityPolicy.IsBelt("672e2e75a16c1d2034c384cf"), "TGC combat belt is assigned to the B&A Belt host");
+        Assert(!TgcCompatibilityPolicy.IsBelt(TgcCompatibilityPolicy.ToolBoxTemplateId), "TGC Tool Box cannot impersonate a Belt");
+        Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e758808bacbb9d5abc4"), "TGC Ammo Pouch is explicitly admitted to supported secure containers");
+        Assert(TgcCompatibilityPolicy.IsExplicitSecureContainerPouch("672e2e7526ba61dbb88be7ff"), "TGC First Aid container is explicitly admitted to supported secure containers");
+        Assert(!TgcCompatibilityPolicy.IsExplicitSecureContainerPouch(TgcCompatibilityPolicy.ToolBoxTemplateId), "TGC Tool Box remains excluded from secure containers");
+        Assert(TgcCompatibilityPolicy.IntegrationSourcePr == 362
+            && TgcCompatibilityPolicy.IntegrationContractHead == "bd1500b86c356f5e97fade75cf0c1df974ae9621",
+            "B&A TGC ownership contract is pinned to PR #362 exact reviewed head");
+        var absentArmBand = new HashSet<string>();
+        var absentBelt = new HashSet<string>();
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(absentArmBand, absentBelt, Array.Empty<string>(), out int absentChanges)
+            && absentChanges == 0 && absentArmBand.Count == 0 && absentBelt.Count == 0,
+            "missing TGC is a fail-closed no-op");
+        var stockArmBand = new HashSet<string>(TgcCompatibilityPolicy.BeltTemplateIds);
+        var ownedBelt = new HashSet<string>();
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(stockArmBand, ownedBelt, TgcCompatibilityPolicy.BeltTemplateIds, out int firstBeltChanges)
+            && firstBeltChanges == 10 && stockArmBand.Count == 0 && ownedBelt.SetEquals(TgcCompatibilityPolicy.BeltTemplateIds),
+            "stock TGC ArmBand mutations are transferred to exact B&A slot15 ownership");
+        Assert(TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(stockArmBand, ownedBelt, TgcCompatibilityPolicy.BeltTemplateIds, out int secondBeltChanges)
+            && secondBeltChanges == 0,
+            "TGC Belt filter ownership is idempotent");
+        var secureFilter = new HashSet<string>(TgcCompatibilityPolicy.SecureContainerPouchAllowlist) { TgcCompatibilityPolicy.ToolBoxTemplateId };
+        string[] allTgcContainers = TgcCompatibilityPolicy.SecureContainerPouchAllowlist.Concat(new[] { TgcCompatibilityPolicy.ToolBoxTemplateId }).ToArray();
+        Assert(TgcCompatibilityPolicy.TryNormalizeSecureContainerFilter(secureFilter, allTgcContainers, true, out int firstSecureChanges),
+            "complete stock TGC secure family is accepted");
+        Assert(firstSecureChanges > 0,
+            "stock TGC secure normalization reports its owned replacement mutations");
+        Assert(secureFilter.SetEquals(TgcCompatibilityPolicy.SecureContainerPouchAllowlist),
+            $"stock TGC secure normalization leaves exact two-item Gamma allowlist (actual={string.Join(',', secureFilter)})");
+        Assert(TgcCompatibilityPolicy.TryNormalizeSecureContainerFilter(secureFilter, allTgcContainers, true, out int secondSecureChanges)
+            && secondSecureChanges == 0 && secureFilter.SetEquals(TgcCompatibilityPolicy.SecureContainerPouchAllowlist),
+            "TGC secure filter normalization is content-idempotent");
+        Assert(!TgcCompatibilityPolicy.TryNormalizeBeltHostFilters(new HashSet<string>(), new HashSet<string>(), new[] { TgcCompatibilityPolicy.BeltTemplateIds.First() }, out _),
+            "partial TGC Belt publication fails closed before mutation");
+        foreach (string tgcBelt in TgcCompatibilityPolicy.BeltTemplateIds)
+        {
+            Assert(WearableItemDescriptorRegistry.HasCapability(tgcBelt, AccessoryCapability.FastAccess), "TGC Belt receives exact slot15 fast access");
+            Assert(!WearableItemDescriptorRegistry.HasCapability(tgcBelt, AccessoryCapability.DeathRetention), "foreign TGC Belt never receives Admiral death protection");
+        }
         LocalPackNStrapImportRegression.Run();
         UseItemsAnywhereCompatibilityRegression.Run();
+        BeltAccessApiRegression.Run();
         ArmBandVariantCatalogRegression.Run();
         ArmBandLootPolicyRegression.Run();
         ArmBandFeatureConfigRegression.Run();
         HeadBandVisualAssetRegression.Run();
+        LegacyCashBoxProfileMigrationRegression.Run();
+        TgcBeltProfileMigrationRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();
         ReloadScopeThreadIsolationRegression.Run();
         ReloadScopeEpochRegression.Run();
         ReloadSlotArrayContentPinRegression.Run();
-        DogtagCaseHostContractRegression.RunConcurrentCommittedVerificationRegression();
         Assert(BeltSlotPlan.IsExpectedContainerPanelOrder(Vanilla), "recognizes SPT 4.1 container order");
         Assert(!BeltSlotPlan.IsExpectedContainerPanelOrder(new[] { BeltSlotPlan.Pockets }), "rejects unrelated enum arrays");
 

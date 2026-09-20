@@ -2,6 +2,14 @@
 
 Stable **v0.3.0**, compatible with **SPT 4.1.x** and validated against **SPT 4.1.5**.
 
+## Optional compatibility API
+
+The client assembly exposes `SPTBeltArmbandInventory.BeltAccessApi` contract version `1` for optional compatibility suites. Consumers first check `IsAvailable`, then call `TryEnumerateBeltSources(object inventory, out object[] sources)` with the live EFT `Inventory` instance. A successful call returns a bounded identity-preserving snapshot of the equipped slot15 Belt root and its contents; `false` always returns an empty array. The API is published only after Belt's exact reload/access binding succeeds and is revoked with that owner. Consumers must not reproduce Belt reflection, patch reload, or infer slot ownership when the API is unavailable.
+
+Use Items Anywhere list adaptation is Suite-owned. B&A&HB no longer detects or mutates that foreign plugin's configuration; the external idempotent adapter keeps slot15 following ArmBand.
+
+TGC 3.0.0 and Pack 'n' Strap 2.1.1 discovery/adapter ownership is also Suite-owned through `ExternalCompatibilityApi` contract version `1`. The Suite claims the exact integration with `TryClaimTgc300(1, ownerToken)` or `TryClaimPackNStrap211(1, ownerToken)` before Belt initialization. Missing Suite, contract mismatch and a second owner fail closed without enabling foreign integration. See [`docs/external-compatibility-audit.md`](docs/external-compatibility-audit.md) for the active/historical seam inventory.
+
 The private runtime direction imports Pack 'n' Strap belts, containers, models
 and layouts into B&A&HB while keeping all third-party assets and item databases
 out of this repository. The public source remains buildable without Pack 'n'
@@ -19,6 +27,16 @@ this repository. The local importer consumes the user's own copy only. Imported
 foreign roots never enter the Admiral protection allowlist.
 
 Stable v0.3.0 includes the v0.2 product line plus randomized functional ArmBands, wallet logistics, the crimson Utility HeadBand visual, and native always-visible HeadBand/ArmBand container panels. Previously published identities remain immutable.
+
+### Tactical Gear Component 3.0.0 compatibility
+
+B&A&HB owns the equipment integration boundary when TGC 3.0.0 is present. Five exact TGC combat-belt templates are removed from vanilla `ArmBand` admission and admitted through dedicated Belt slot15 while retaining their original TGC template IDs, grids, bundles and trader ownership. Existing profile roots found in `ArmBand` move to slot15 when free; a displaced PMC root is preserved through the sorting table rather than deleted.
+
+TGC's broad `PouchesInSecureContainer` mutation is treated as disabled regardless of the foreign configuration value. B&A&HB first removes TGC container additions from the secure-container family, then explicitly admits only TGC Ammo Pouch `672e2e758808bacbb9d5abc4` and TGC First Aid container `672e2e7526ba61dbb88be7ff` into the supported Gamma family. TGC Tool Box `672e2e75b0ab4fcbbf7dc471` remains excluded. TGC belts receive Belt access, pickup, build and Scav-host behavior, but never inherit Admiral death/insurance protection.
+
+This contract was audited against the unmodified upstream `TGC_3.0.0.7z` release asset with SHA-256 `932AAAA34D7E7F21770E7249E4F29227751938883E21A7151C684775359D2726`. B&A&HB does not copy TGC assets, change TGC identities, or take ownership of Painter/Artem trader and quest content.
+
+The cross-module handoff is owned by Admiral TGC Integration PR #362; its live exact head is the integration authority for a combined candidate. That module publishes the unchanged TGC templates while deliberately omitting stock `TGC-NG.dll` filter mutation; B&A&HB remains the sole authority for the five slot15 belts, two Gamma admissions and Tool Box denial. Absence of TGC is a no-op, while a partial recognized TGC template family fails closed before host-filter mutation.
 
 Release authority: Issue **#351** and PR **#357**.
 

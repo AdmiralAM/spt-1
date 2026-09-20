@@ -1,122 +1,70 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
-    // Stable Baseline 1 fallback placement. Post-stable compact presentation may
-    // suppress this owner only after its own exact EquipmentTab patch installs.
     internal static class HeadBandRenderSettle
     {
         const float HeadBandCompactHeight = 44f;
-        const float HeadBandGap = 4f;
-        const float StructuralOffset = HeadBandCompactHeight + HeadBandGap;
-
-        sealed class ReflowState
-        {
-            internal readonly WeakReference EquipmentTab;
-            internal readonly Dictionary<int, Vector2> OriginalPositions = new Dictionary<int, Vector2>();
-
-            internal ReflowState(Component equipmentTab)
-            {
-                EquipmentTab = new WeakReference(equipmentTab);
-            }
-        }
-
-        internal static bool Suppressed;
-
-        static readonly Dictionary<int, ReflowState> States = new Dictionary<int, ReflowState>();
+        const float Gap = 4f;
+        static readonly Vector3[] Corners = new Vector3[4];
         static bool proofLogged;
         static bool failureLogged;
+
+        internal static bool Suppressed;
 
         internal static void OnHeadwearShown(Component headwearView)
         {
             if (Suppressed || headwearView == null || headwearView.transform == null) return;
-            TryApplyStructuralReflow(headwearView);
+            TryApplyFlowPlacement(headwearView);
         }
 
-        static bool TryApplyStructuralReflow(Component headwearView)
+        static bool TryApplyFlowPlacement(Component headwearView)
         {
             if (DedicatedSlotPresentationRuntime.EquipmentTabType == null
                 || DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField == null
-                || DedicatedSlotPresentationRuntime.HeadBandSlotKey == null)
+                || DedicatedSlotPresentationRuntime.HeadBandSlotKey == null
+                || DedicatedSlotPresentationRuntime.BeltSlotKey == null
+                || DedicatedSlotPresentationRuntime.ArmBandSlotKey == null)
                 return false;
 
             try
             {
                 Component equipmentTab = headwearView.GetComponentInParent(DedicatedSlotPresentationRuntime.EquipmentTabType);
-                if (equipmentTab == null || equipmentTab.transform == null) return false;
+                IDictionary slotViews = equipmentTab == null ? null
+                    : DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
+                if (slotViews == null) return false;
 
-                IDictionary slotViews = DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
-                if (slotViews == null || !slotViews.Contains(DedicatedSlotPresentationRuntime.HeadBandSlotKey)) return false;
+                RectTransform headBand = RectFor(slotViews, DedicatedSlotPresentationRuntime.HeadBandSlotKey);
+                RectTransform belt = RectFor(slotViews, DedicatedSlotPresentationRuntime.BeltSlotKey);
+                RectTransform armBand = RectFor(slotViews, DedicatedSlotPresentationRuntime.ArmBandSlotKey);
+                if (headBand == null || belt == null || armBand == null) return false;
 
-                Component headBandView = slotViews[DedicatedSlotPresentationRuntime.HeadBandSlotKey] as Component;
-                RectTransform headBandRect = headBandView == null ? null : headBandView.transform as RectTransform;
-                RectTransform headwearRect = headwearView.transform as RectTransform;
-                if (headBandView == null || headBandRect == null || headwearRect == null) return false;
-
-                int key = equipmentTab.GetInstanceID();
-                ReflowState state;
-                States.TryGetValue(key, out state);
-                Component stateEquipmentTab = state == null ? null : state.EquipmentTab.Target as Component;
-                if (state == null || stateEquipmentTab == null || !ReferenceEquals(stateEquipmentTab, equipmentTab))
-                {
-                    state = CaptureState(equipmentTab, slotViews);
-                    States[key] = state;
-                }
-
-                Vector2 originalHeadwear;
-                if (!state.OriginalPositions.TryGetValue(headwearView.GetInstanceID(), out originalHeadwear))
-                {
-                    originalHeadwear = headwearRect.anchoredPosition;
-                    state.OriginalPositions[headwearView.GetInstanceID()] = originalHeadwear;
-                }
-
-                Vector3 panelWorldBefore = equipmentTab.transform.position;
-
+                RectTransform lowestSpecialSlot = null;
                 foreach (DictionaryEntry entry in slotViews)
                 {
-                    Component view = entry.Value as Component;
-                    if (view == null || ReferenceEquals(view, headBandView)) continue;
-                    RectTransform rect = view.transform as RectTransform;
-                    if (rect == null) continue;
-
-                    int viewId = view.GetInstanceID();
-                    Vector2 original;
-                    if (!state.OriginalPositions.TryGetValue(viewId, out original))
-                    {
-                        original = rect.anchoredPosition;
-                        state.OriginalPositions[viewId] = original;
-                    }
-                    rect.anchoredPosition = new Vector2(original.x, original.y - StructuralOffset);
+                    if (entry.Key == null || entry.Value == null
+                        || entry.Key.ToString().IndexOf("SpecialSlot", StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                    RectTransform candidate = (entry.Value as Component)?.transform as RectTransform;
+                    if (candidate == null) continue;
+                    if (lowestSpecialSlot == null || Bottom(candidate).y < Bottom(lowestSpecialSlot).y)
+                        lowestSpecialSlot = candidate;
                 }
+                if (lowestSpecialSlot == null) return false;
 
-                if (!ReferenceEquals(headBandView.transform.parent, equipmentTab.transform))
-                    headBandView.transform.SetParent(equipmentTab.transform, false);
-                headBandView.transform.SetSiblingIndex(headwearView.transform.GetSiblingIndex());
-                headBandRect.anchorMin = headwearRect.anchorMin;
-                headBandRect.anchorMax = headwearRect.anchorMax;
-                headBandRect.pivot = headwearRect.pivot;
-                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(1f, headwearRect.rect.width));
-                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandCompactHeight);
-                headBandRect.anchoredPosition = originalHeadwear;
-                headBandView.gameObject.SetActive(true);
-
-                float panelWorldDelta = Vector3.Distance(equipmentTab.transform.position, panelWorldBefore);
-                bool mapExact = ReferenceEquals(slotViews[DedicatedSlotPresentationRuntime.HeadBandSlotKey], headBandView);
+                headBand.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandCompactHeight);
+                AlignTopLeft(headBand, BottomLeft(lowestSpecialSlot) + Vector3.down * Gap);
+                AlignTopLeft(armBand, TopRight(belt) + Vector3.right * Gap);
+                headBand.gameObject.SetActive(true);
+                armBand.gameObject.SetActive(true);
 
                 if (!proofLogged)
                 {
                     proofLogged = true;
                     DedicatedSlotPresentationRuntime.LogInfo?.Invoke(
-                        "B&A&HB HEADBAND FIRST-RENDER PROOF: slot16 instance=" + headBandView.GetInstanceID()
-                        + "; mapExact=" + mapExact
-                        + "; local=" + headBandRect.anchoredPosition.x.ToString("0.0") + "," + headBandRect.anchoredPosition.y.ToString("0.0")
-                        + "; nativeY=-" + StructuralOffset.ToString("0.0")
-                        + "; panelLayoutMutation=False"
-                        + "; panelWorldDelta=" + panelWorldDelta.ToString("0.00")
-                        + "; synchronous=True.");
+                        "B&A&HB ACCESSORY FLOW PROOF: HeadBand follows live SpecialSlot bottom; ArmBand follows live Belt right edge; fixed page offsets=False.");
                 }
                 return true;
             }
@@ -126,54 +74,44 @@ namespace SPTBeltArmbandInventory
                 {
                     failureLogged = true;
                     DedicatedSlotPresentationRuntime.LogWarning?.Invoke(
-                        "B&A&HB HeadBand structural Gear Panel reflow failed safely: "
+                        "B&A&HB accessory flow placement failed safely: "
                         + exception.GetType().FullName + ": " + exception.Message);
                 }
                 return false;
             }
         }
 
-        static ReflowState CaptureState(Component equipmentTab, IDictionary slotViews)
+        static RectTransform RectFor(IDictionary slotViews, object key)
         {
-            ReflowState state = new ReflowState(equipmentTab);
-            foreach (DictionaryEntry entry in slotViews)
-            {
-                Component view = entry.Value as Component;
-                RectTransform rect = view == null ? null : view.transform as RectTransform;
-                if (view == null || rect == null) continue;
-                if (entry.Key != null && DedicatedSlotPresentationRuntime.HeadBandSlotKey != null
-                    && entry.Key.Equals(DedicatedSlotPresentationRuntime.HeadBandSlotKey)) continue;
-                state.OriginalPositions[view.GetInstanceID()] = rect.anchoredPosition;
-            }
+            return slotViews.Contains(key) ? (slotViews[key] as Component)?.transform as RectTransform : null;
+        }
 
-            return state;
+        static Vector3 Bottom(RectTransform rect)
+        {
+            rect.GetWorldCorners(Corners);
+            return (Corners[0] + Corners[3]) * 0.5f;
+        }
+
+        static Vector3 BottomLeft(RectTransform rect)
+        {
+            rect.GetWorldCorners(Corners);
+            return Corners[0];
+        }
+
+        static Vector3 TopRight(RectTransform rect)
+        {
+            rect.GetWorldCorners(Corners);
+            return Corners[2];
+        }
+
+        static void AlignTopLeft(RectTransform target, Vector3 destination)
+        {
+            target.GetWorldCorners(Corners);
+            target.position += destination - Corners[1];
         }
 
         internal static void Reset()
         {
-            foreach (KeyValuePair<int, ReflowState> pair in States)
-            {
-                ReflowState state = pair.Value;
-                Component equipmentTab = state == null ? null : state.EquipmentTab.Target as Component;
-                if (equipmentTab == null) continue;
-
-                IDictionary slotViews = DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField == null
-                    ? null
-                    : DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
-                if (slotViews != null)
-                {
-                    foreach (DictionaryEntry entry in slotViews)
-                    {
-                        Component view = entry.Value as Component;
-                        RectTransform rect = view == null ? null : view.transform as RectTransform;
-                        Vector2 original;
-                        if (view != null && rect != null && state.OriginalPositions.TryGetValue(view.GetInstanceID(), out original))
-                            rect.anchoredPosition = original;
-                    }
-                }
-            }
-
-            States.Clear();
             proofLogged = false;
             failureLogged = false;
         }

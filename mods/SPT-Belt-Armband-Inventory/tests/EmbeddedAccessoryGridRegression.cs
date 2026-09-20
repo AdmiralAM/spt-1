@@ -15,6 +15,9 @@ internal static class EmbeddedAccessoryGridRegression
         Require(source.Contains("EFT.UI.ContainersPanel", StringComparison.Ordinal), "must bind the actual owner of special slots");
         Require(source.Contains("EFT.UI.DragAndDrop.SearchableSlotView", StringComparison.Ordinal), "must resolve the actual native special-slot owner");
         Require(source.Contains("_specSlotsPanel", StringComparison.Ordinal) && source.Contains("specialPanel", StringComparison.Ordinal), "must anchor below the exact native special-slot panel");
+        Require(source.Contains("GetComponentInParent(EquipmentTabType)", StringComparison.Ordinal), "stash placement must not mutate the left character EquipmentTab");
+        Require(source.Contains("HeadBandDownOffset", StringComparison.Ordinal), "HeadBand must use an explicit downward polish offset");
+        Require(source.Contains("beltBottomLeft", StringComparison.Ordinal) && source.Contains("ArmBandDownGap", StringComparison.Ordinal), "ArmBand must follow the live Belt left and bottom edges");
         Require(source.Contains("BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic", StringComparison.Ordinal), "public EFT layout fields must be discoverable at runtime");
         Require(source.Contains("ignoreLayout", StringComparison.Ordinal), "overlay and panels must be excluded from automatic layout");
         Require(source.Contains("_slotPlace", StringComparison.Ordinal) && source.Contains("SetActive(false)", StringComparison.Ordinal), "compact panels must hide the duplicate equipped-item card");
@@ -24,6 +27,7 @@ internal static class EmbeddedAccessoryGridRegression
         Require(projection.Contains("IsProjectedWearable", StringComparison.Ordinal), "native row factory must accept Belt, HeadBand and ArmBand");
         Require(!source.Contains("GeneratedGridsView", StringComparison.Ordinal) && !source.Contains("Instantiate", StringComparison.Ordinal), "must not create detached decorative grid windows");
         Require(!source.Contains("Update(", StringComparison.Ordinal) && !source.Contains("FindObjectsOfType", StringComparison.Ordinal), "embedded panels must not poll or scan the scene");
+        Require(source.Contains("OnItemAdded", StringComparison.Ordinal) && source.Contains("OnItemRemoved", StringComparison.Ordinal) && source.Contains("AfterSlotMutation", StringComparison.Ordinal), "equipped-container changes must trigger an event-driven layout refresh");
         Require(plugin.Contains("new EmbeddedAccessoryGridPatches", StringComparison.Ordinal), "production plugin must install the embedded-grid owner");
         Require(plugin.Contains("embeddedAccessoryGridPatches.Dispose()", StringComparison.Ordinal), "production plugin must release the embedded-grid owner");
     }

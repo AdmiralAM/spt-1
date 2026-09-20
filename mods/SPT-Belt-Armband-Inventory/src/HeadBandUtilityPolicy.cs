@@ -26,30 +26,21 @@ namespace SPTBeltArmbandInventory
             WzWallet
         };
 
-        internal static readonly IReadOnlyList<string> CigaretteTemplateIds = new[]
-        {
-            ApolloSoyuz,
-            Malboro,
-            Wilston,
-            Strike
-        };
+        internal const string DogtagCase = RuntimeIdentity.DogtagCaseItemId;
 
         internal static readonly IReadOnlyList<string> AcceptedTemplateIds = new[]
         {
             Rouble,
             Dollar,
             Euro,
-            ApolloSoyuz,
-            Malboro,
-            Wilston,
-            Strike,
+            DogtagCase,
             VanillaWallet,
             WzWallet
         };
 
         internal static bool IsAccepted(string templateId)
         {
-            return IsCurrencyOrWallet(templateId) || IsCigarette(templateId);
+            return IsCurrencyOrWallet(templateId) || IsDogtagCase(templateId);
         }
 
         internal static bool IsCurrencyOrWallet(string templateId)
@@ -57,9 +48,16 @@ namespace SPTBeltArmbandInventory
             return Contains(CurrencyWalletTemplateIds, templateId);
         }
 
+        internal static bool IsDogtagCase(string templateId)
+        {
+            return string.Equals(templateId, DogtagCase, StringComparison.Ordinal);
+        }
+
+        // V1 profile migration keeps the historical classifier so it remains
+        // replay-safe. V2 owns the cigarette -> sorting table transition.
         internal static bool IsCigarette(string templateId)
         {
-            return Contains(CigaretteTemplateIds, templateId);
+            return Contains(new[] { ApolloSoyuz, Malboro, Wilston, Strike }, templateId);
         }
 
         static bool Contains(IReadOnlyList<string> ids, string templateId)

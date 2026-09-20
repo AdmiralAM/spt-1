@@ -20,7 +20,7 @@ public sealed class ArmBandBotLootRegistration(
         var config = featureConfig.Value.ArmBandRoles;
         if (!config.Enabled)
         {
-            logger.Info("B&A&HB randomized ArmBand bot loot is disabled; original pools retained.");
+            logger.Debug("B&A&HB randomized ArmBand bot loot is disabled; original pools retained.");
             return Task.CompletedTask;
         }
 
@@ -58,7 +58,7 @@ public sealed class ArmBandBotLootRegistration(
             sources += changed;
         }
 
-        logger.Success($"B&A&HB bounded ArmBand bot-pool plan committed: pools={pools}, sourceEntries={sources}, visualPool={config.RaidVisualPool}; original weights preserved.");
+        logger.Debug($"B&A&HB bounded ArmBand bot-pool plan committed: pools={pools}, sourceEntries={sources}, visualPool={config.RaidVisualPool}; original weights preserved.");
         return Task.CompletedTask;
     }
 }

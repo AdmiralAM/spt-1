@@ -8,14 +8,10 @@ internal static class UseItemsAnywhereCompatibilityRegression
     internal static void Run()
     {
         string root = FindModuleRoot();
-        string source = File.ReadAllText(Path.Combine(root, "src", "UseItemsAnywhereCompatibility.cs"));
         string plugin = File.ReadAllText(Path.Combine(root, "src", "Plugin.cs"));
-
-        Require(source.Contains("com.cj.useFromAnywhere", StringComparison.Ordinal), "exact foreign GUID must own detection");
-        Require(source.Contains("!Contains(list, armBand) || Contains(list, belt)", StringComparison.Ordinal), "slot15 must follow only lists where ArmBand is enabled");
-        Require(source.Contains("list.Add(belt)", StringComparison.Ordinal), "runtime list must receive pseudo-slot15");
-        Require(source.Contains("entry.BoxedValue = list", StringComparison.Ordinal), "extended lists must be published through the owning config entry");
-        Require(plugin.Contains("BepInDependency(UseItemsAnywhereCompatibility.PluginGuid", StringComparison.Ordinal), "B&A must load after the optional foreign owner");
+        Require(!File.Exists(Path.Combine(root, "src", "UseItemsAnywhereCompatibility.cs")), "Belt must not ship a second Use Items Anywhere adapter");
+        Require(!plugin.Contains("com.cj.useFromAnywhere", StringComparison.Ordinal), "foreign Use Items Anywhere ownership must be absent from Belt");
+        Require(!plugin.Contains("UseItemsAnywhereCompatibility", StringComparison.Ordinal), "Belt plugin must not detect, install or dispose the Suite-owned adapter");
     }
 
     static void Require(bool condition, string message)

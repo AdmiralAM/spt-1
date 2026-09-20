@@ -16,9 +16,9 @@ public sealed class RuntimeCandidateAssort(
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (PackNStrapCompatibility.IsServerPresentNow() || LocalPackNStrapImportState.Enabled)
+        if (ExternalCompatibilityApi.IsPackNStrap211Claimed || LocalPackNStrapImportState.Enabled)
         {
-            logger.Info("B&A&HB companion mode: Magazine Armband offer skipped.");
+            logger.Debug("B&A&HB companion mode: Magazine Armband offer skipped.");
             return Task.CompletedTask;
         }
         var templateId = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl);
@@ -37,7 +37,7 @@ public sealed class RuntimeCandidateAssort(
         if (existing != null)
         {
             ValidateExistingAssort();
-            logger.Success($"B&A&HB Magazine Armband retained validated Ragman LL{RuntimeCandidateOfferContract.LoyaltyLevel} offer for {RuntimeCandidateOfferContract.PriceRoubles:N0} RUB.");
+            logger.Debug($"B&A&HB Magazine Armband retained validated Ragman LL{RuntimeCandidateOfferContract.LoyaltyLevel} offer for {RuntimeCandidateOfferContract.PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
@@ -52,7 +52,7 @@ public sealed class RuntimeCandidateAssort(
         });
         trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = RuntimeCandidateOfferContract.PriceRoubles, Template = Money.ROUBLES }]]);
         trader.Assort.LoyalLevelItems.Add(id, RuntimeCandidateOfferContract.LoyaltyLevel);
-        logger.Success($"B&A&HB Magazine Armband added to Ragman LL{RuntimeCandidateOfferContract.LoyaltyLevel} for {RuntimeCandidateOfferContract.PriceRoubles:N0} RUB.");
+        logger.Debug($"B&A&HB Magazine Armband added to Ragman LL{RuntimeCandidateOfferContract.LoyaltyLevel} for {RuntimeCandidateOfferContract.PriceRoubles:N0} RUB.");
         return Task.CompletedTask;
 
         void EnsureNoPartialAssortCollision()

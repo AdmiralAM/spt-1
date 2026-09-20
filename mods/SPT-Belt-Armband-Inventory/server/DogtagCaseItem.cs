@@ -11,10 +11,9 @@ using SPTarkov.Server.Core.Services.Modding.Custom;
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Registers a dedicated Dogtag-slot container without replacing the vanilla
-/// player dogtag contract. The container is cloned from EFT's own Dogtag Case,
-/// and its single internal grid copies the source case's exact filter groups so
-/// B&A&HB never broadens what can be stored inside it.
+/// Registers the persistent Dogtag Case used by the Utility HeadBand without
+/// changing the vanilla player-dogtag slot. Its single internal grid copies the
+/// source case's exact filter groups so B&A&HB never broadens its contents.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Preload + 3)]
 public sealed class DogtagCaseItem(
@@ -147,7 +146,6 @@ public sealed class DogtagCaseItem(
             DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);
         canonicalLease.RequireCurrent(templateTable, source);
 
-        DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
 
@@ -157,22 +155,7 @@ public sealed class DogtagCaseItem(
             ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
             canonicalLease.RequireCurrent(templateTable, source);
-            cancellationToken.ThrowIfCancellationRequested();
-            DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
-            try
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                canonicalLease.RequireCurrent(templateTable, source);
-                cancellationToken.ThrowIfCancellationRequested();
-                receipt.Accept();
-            }
-            catch (Exception exception)
-            {
-                if (!receipt.TryRollback())
-                    throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
-                throw;
-            }
-            logger.Success("B&A&HB Dogtag Case retained existing validated template; Preload +2 canonical identity lease and vanilla Dogtag slot filter remained intact and exact container appended.");
+            logger.Debug("B&A&HB Dogtag Case retained as a validated HeadBand utility container without vanilla Dogtag-slot exposure.");
             return Task.CompletedTask;
         }
 
@@ -202,13 +185,13 @@ public sealed class DogtagCaseItem(
                 {
                     Name = "B&A&HB Dogtag Case",
                     ShortName = "Dogtag Case",
-                    Description = "A dedicated dogtag container that can be equipped in the vanilla Dogtag slot while preserving the normal personal dogtag contract."
+                    Description = "A dedicated dogtag container for the Utility HeadBand dogtag pocket."
                 },
                 ["ru"] = new LocaleDetails
                 {
                     Name = "Жетонница B&A&HB",
                     ShortName = "Жетонница",
-                    Description = "Специальный контейнер для жетонов, устанавливаемый в штатный слот Dogtag без замены обычного личного жетона."
+                    Description = "Специальный контейнер для жетонов, устанавливаемый в отдельную ячейку утилитарной налобной повязки."
                 }
             },
             OverrideProperties = new TemplateItemProperties
@@ -253,22 +236,7 @@ public sealed class DogtagCaseItem(
         ValidateExisting(created, source);
         RequireCanonicalRegisteredTemplate(templateTable);
         canonicalLease.RequireCurrent(templateTable, source);
-        cancellationToken.ThrowIfCancellationRequested();
-        DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            canonicalLease.RequireCurrent(templateTable, source);
-            cancellationToken.ThrowIfCancellationRequested();
-            createdReceipt.Accept();
-        }
-        catch (Exception exception)
-        {
-            if (!createdReceipt.TryRollback())
-                throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
-            throw;
-        }
-        logger.Success("B&A&HB Dogtag Case created and revalidated against the exact Preload +2 canonical source identity/root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
+        logger.Debug("B&A&HB Dogtag Case created and revalidated as a HeadBand utility container without vanilla Dogtag-slot exposure.");
         return Task.CompletedTask;
     }
 

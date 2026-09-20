@@ -30,7 +30,8 @@ namespace SPTBeltArmbandInventory
                 string tpl = PickupSlotRuntime.ReadTemplateId(item);
                 int slotValue;
                 bool belt;
-                if (string.Equals(tpl, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal))
+                if (string.Equals(tpl, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)
+                    || TgcCompatibilityPolicy.IsBelt(tpl))
                 {
                     slotValue = RuntimeIdentity.DedicatedBeltEquipmentSlotValue;
                     belt = true;

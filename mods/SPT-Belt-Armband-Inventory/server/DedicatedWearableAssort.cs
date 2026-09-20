@@ -24,7 +24,7 @@ public sealed class DedicatedWearableAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow() || LocalPackNStrapImportState.Enabled;
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed || LocalPackNStrapImportState.Enabled;
         var beltTemplateId = new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var headBandTemplateId = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
         if ((!companionMode && !templateTable.Items.ContainsKey(beltTemplateId)) || !templateTable.Items.ContainsKey(headBandTemplateId))
@@ -52,7 +52,7 @@ public sealed class DedicatedWearableAssort(
         if (beltPlan != null) CommitOffer(beltPlan);
         if (headBandPlan != null) CommitOffer(headBandPlan);
 
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? $"B&A&HB companion offer registered: Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB; Magazine Belt offer skipped."
             : $"B&A&HB product offers registered atomically: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
         return Task.CompletedTask;

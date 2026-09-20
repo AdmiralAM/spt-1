@@ -22,7 +22,7 @@ public sealed class WearableTaxonomyRegistration(
         // Validate every existing persistent identity before mutating TemplateTable.
         // A collision in the second/third node must not leave earlier nodes partially installed.
         TemplateItem? searchableAddition = PrepareNode(SearchableParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
-        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
         // Published B&A item templates keep this parent ID in profiles. Retain
         // the taxonomy node in companion mode without exposing a Belt slot or
         // adding it to any Pack 'n' Strap-owned filter.
@@ -33,7 +33,7 @@ public sealed class WearableTaxonomyRegistration(
         if (beltAddition != null) templateTable.Items.Add(BeltParentTpl, beltAddition);
         if (headBandAddition != null) templateTable.Items.Add(HeadBandParentTpl, headBandAddition);
 
-        logger.Success(companionMode
+        logger.Debug(companionMode
             ? "B&A&HB companion taxonomy registered for HeadBand and legacy profile identities; active Belt ownership remains with Pack 'n' Strap."
             : "B&A&HB #2 wearable taxonomy registered atomically for ArmBand/Belt/HeadBand runtime families.");
         return Task.CompletedTask;

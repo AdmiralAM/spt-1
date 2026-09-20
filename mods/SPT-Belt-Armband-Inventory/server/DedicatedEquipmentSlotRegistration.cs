@@ -31,7 +31,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // DedicatedWearableItems runs at Preload+3. Never publish slot15/16
             // filters until both exact product templates exist and are therefore
             // safe host targets for the remainder of server startup.
-            bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+            bool companionMode = ExternalCompatibilityApi.IsPackNStrap211Claimed;
             if ((!companionMode && !templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl))
                 || !templateTable.Items.ContainsKey(EmergencyHeadBandTpl))
             {
@@ -97,7 +97,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // list positions. Client presentation owns the requested visual anchors.
             inventory.Properties!.Slots = slots;
 
-            logger.Success(companionMode
+            logger.Debug(companionMode
                 ? $"B&A&HB companion equipment contract registered: HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}; Belt remains owned by Pack 'n' Strap."
                 : $"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically after exact product templates: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
         }
