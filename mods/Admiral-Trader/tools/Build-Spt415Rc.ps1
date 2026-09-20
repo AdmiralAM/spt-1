@@ -91,6 +91,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Active-head Trader exact-runtime build failed.
 
 $dll = Join-Path $traderRoot 'server/bin/Release/net10.0/Admiral Trader Server.dll'
 if (-not (Test-Path $dll -PathType Leaf)) { throw "Compiled Trader DLL is missing: $dll" }
+$commonLib = Join-Path $traderRoot 'server/bin/Release/net10.0/WTT-ServerCommonLib.dll'
+if (-not (Test-Path $commonLib -PathType Leaf)) { throw "Embedded CommonLib runtime is missing: $commonLib" }
 $dllHash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
 
 $packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.3.0-SPT415-STABLE-BETA-$sourceHead"
@@ -98,6 +100,7 @@ $modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
 Copy-Item $dll $modTarget
+Copy-Item $commonLib $modTarget
 foreach ($directory in 'db','assets','external') {
     Copy-Item (Join-Path $traderRoot $directory) (Join-Path $modTarget $directory) -Recurse
 }
