@@ -263,7 +263,8 @@ namespace SPTItemIntelligence
                     if (questId.Length == 0 || !projectedQuestIds.Add(questId)) continue;
                     object status = JsonNode.Get(quest, "questStatus", "QuestStatus");
                     QuestProgress state = new QuestProgress(JsonNode.ReadString(JsonNode.Get(status, "status", "Status")),
-                        JsonNode.Values(JsonNode.Get(status, "completedConditions", "CompletedConditions")).Select(JsonNode.ReadString));
+                        JsonNode.Values(JsonNode.Get(status, "completedConditions", "CompletedConditions")).Select(JsonNode.ReadString),
+                        forceCurrent: true);
                     ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
                 }
             }
@@ -377,8 +378,10 @@ namespace SPTItemIntelligence
             int satisfied = 0;
             foreach (object counter in JsonNode.Values(JsonNode.Get(profile, "TaskConditionCounters", "taskConditionCounters")))
             {
+                string id = JsonNode.ReadString(JsonNode.Get(counter, "id", "Id", "_id"));
                 string source = JsonNode.ReadString(JsonNode.Get(counter, "sourceId", "SourceId"));
-                if (!string.Equals(source, conditionId, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!string.Equals(id, conditionId, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(source, conditionId, StringComparison.OrdinalIgnoreCase)) continue;
                 satisfied = Math.Max(satisfied, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(counter, "value", "Value"), 0)));
             }
             return satisfied;
@@ -440,7 +443,8 @@ namespace SPTItemIntelligence
                             object areaProgress = JsonNode.Get(areaProgresses, type);
                             satisfied = Math.Min(count, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(areaProgress, templateId), 0)));
                         }
-                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, foundInRaidRequired: foundInRaid, label: label));
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied,
+                            foundInRaidRequired: foundInRaid, label: label, isCurrentHideoutStage: stage == currentLevel + 1));
                     }
                 }
             }
@@ -462,12 +466,14 @@ namespace SPTItemIntelligence
         {
             readonly string status;
             readonly HashSet<string> completedConditions;
-            public QuestProgress(string status, IEnumerable<string> completedConditions)
+            readonly bool forceCurrent;
+            public QuestProgress(string status, IEnumerable<string> completedConditions, bool forceCurrent = false)
             {
                 this.status = (status ?? string.Empty).Trim().ToLowerInvariant();
                 this.completedConditions = new HashSet<string>(completedConditions ?? new string[0], StringComparer.OrdinalIgnoreCase);
+                this.forceCurrent = forceCurrent;
             }
-            public bool IsCurrent => status == "started" || status == "availableforfinish" || status == "2" || status == "3";
+            public bool IsCurrent => forceCurrent || status == "started" || status == "availableforfinish" || status == "2" || status == "3";
             public bool IsComplete => status == "success" || status == "fail" || status == "failed" || status == "4" || status == "5" || status == "7" || status == "8";
             public bool IsConditionComplete(string conditionId) => !string.IsNullOrEmpty(conditionId) && completedConditions.Contains(conditionId);
         }

@@ -129,7 +129,9 @@ namespace SPTItemIntelligence
                 source.LaterFirRequired,
                 checked(source.ExactOwned + raid.Owned),
                 checked(source.ExactOwnedFir + raid.FoundInRaid),
-                source.HideoutFirRequired);
+                source.HideoutFirRequired,
+                source.HideoutInstalled,
+                source.HideoutCurrentRequired);
             ItemRequirementDecision decision = combined.Keep > 0
                 ? ItemRequirementDecision.Keep
                 : combined.Surplus > 0 ? ItemRequirementDecision.SafeToSell : ItemRequirementDecision.None;

@@ -10,7 +10,8 @@ static class Phase30LocalizedCardInteractionTests
         try
         {
             GameUiText.SetRussian(true);
-            ItemRequirementAllocation allocation = new ItemRequirementAllocation(2, 1, 2, 3, 1, 2, 2);
+            ItemRequirementAllocation allocation = new ItemRequirementAllocation(2, 1, 2, 3, 1, 2, 2,
+                hideoutInstalled: 2, hideoutCurrentRequired: 5);
             ItemHoverText russian = new ItemHoverText("10,000 ₽", "", "", "tpl", 2, 2, 3, 1, 6,
                 ownedFoundInRaid: 1, questNowFoundInRaid: 2, questLaterFoundInRaid: 2, allocation: allocation);
             Expect(russian.SummaryLine == "Нужно ещё ×4 · Оставить ×6", "Russian summary follows the game-language selection and reports total keep demand", ref assertions);
@@ -19,6 +20,12 @@ static class Phase30LocalizedCardInteractionTests
             Expect(russian.QuestNowLine.StartsWith("Для активного квеста:", StringComparison.Ordinal), "Russian active quest allocation is explicit", ref assertions);
             Expect(russian.QuestLaterLine.StartsWith("Для будущего квеста:", StringComparison.Ordinal), "Russian future quest allocation is explicit", ref assertions);
             Expect(russian.HideoutLine.StartsWith("Для убежища после квестов:", StringComparison.Ordinal), "Russian hideout allocation order is explicit", ref assertions);
+            Expect(!russian.HideoutLine.Contains("рейда", StringComparison.OrdinalIgnoreCase),
+                "hideout allocation no longer repeats low-value FIR wording", ref assertions);
+            Expect(russian.HideoutInstalledLine == "В убежище: 2/5",
+                "Russian Full card reports physical current-stage hideout progress", ref assertions);
+            Expect(Contains(russian, ItemTooltipMode.Full, "В убежище: 2/5") && !Contains(russian, ItemTooltipMode.Normal, "В убежище: 2/5"),
+                "physical hideout progress stays in Full mode", ref assertions);
         }
         finally { GameUiText.SetRussian(false); }
 

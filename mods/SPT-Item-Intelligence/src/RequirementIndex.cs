@@ -26,10 +26,11 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementContribution
     {
-        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null)
+        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null, bool isCurrentHideoutStage = false)
         {
             TemplateId = NormalizeId(templateId); Source = source; RequiredCount = Math.Max(0, requiredCount); SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
             FoundInRaidRequired = foundInRaidRequired; CombineMode = combineMode; AlternativeGroup = NormalizeGroup(alternativeGroup); Label = string.IsNullOrWhiteSpace(label) ? string.Empty : label.Trim();
+            IsCurrentHideoutStage = source == RequirementSource.Hideout && isCurrentHideoutStage;
             if (TemplateId.Length == 0) throw new ArgumentException("A contribution requires a template id.", nameof(templateId));
             if (CombineMode == RequirementCombineMode.AlternativeMaximum && AlternativeGroup.Length == 0) throw new ArgumentException("Alternative contributions require a stable group id.", nameof(alternativeGroup));
         }
@@ -42,6 +43,7 @@ namespace SPTItemIntelligence
         public RequirementCombineMode CombineMode { get; }
         public string AlternativeGroup { get; }
         public string Label { get; }
+        public bool IsCurrentHideoutStage { get; }
         static string NormalizeGroup(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         internal static string NormalizeId(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
     }
@@ -116,7 +118,7 @@ namespace SPTItemIntelligence
             if (projection == null) throw new ArgumentNullException(nameof(projection)); options = options ?? new RequirementIndexOptions();
             Dictionary<string, EntryAccumulator> accumulators = new Dictionary<string, EntryAccumulator>(StringComparer.Ordinal);
             for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.ExactOwned = checked(accumulator.ExactOwned + owned.Count); accumulator.ExactFir = checked(accumulator.ExactFir + owned.FoundInRaidCount); if (owned.HasSharedPool) { accumulator.AllocationOwned = Math.Max(accumulator.AllocationOwned, owned.SharedCount); accumulator.AllocationFir = Math.Max(accumulator.AllocationFir, owned.SharedFoundInRaidCount); } else { accumulator.AllocationOwned = checked(accumulator.AllocationOwned + owned.Count); accumulator.AllocationFir = checked(accumulator.AllocationFir + owned.FoundInRaidCount); } }
-            for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (remaining <= 0 || !Included(contribution.Source, options)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
+            for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (!Included(contribution.Source, options) || (remaining <= 0 && !contribution.IsCurrentHideoutStage)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
             Dictionary<string, RequirementIndexEntry> published = new Dictionary<string, RequirementIndexEntry>(accumulators.Count, StringComparer.Ordinal);
             foreach (KeyValuePair<string, EntryAccumulator> pair in accumulators) { RequirementIndexEntry entry = pair.Value.Finish(pair.Key); if (entry.OwnedCount > 0 || entry.HasRequirement) published.Add(pair.Key, entry); }
             return new RequirementIndex(projection.GeneratedAtUnixSeconds, published);
@@ -149,7 +151,7 @@ namespace SPTItemIntelligence
                 List<RequirementContribution> selected = new List<RequirementContribution>(additive);
                 selected.AddRange(alternatives.Values);
                 selected.Sort((a, b) => { int source = a.Source.CompareTo(b.Source); return source != 0 ? source : StringComparer.Ordinal.Compare(a.Label, b.Label); });
-                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0, hideoutFir = 0;
+                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0, hideoutFir = 0, hideoutInstalled = 0, hideoutCurrentRequired = 0;
                 RequirementReasonFlags reasons = RequirementReasonFlags.None;
                 List<RequirementDetail> details = new List<RequirementDetail>();
                 checked
@@ -160,11 +162,12 @@ namespace SPTItemIntelligence
                         if (c.Source == RequirementSource.CurrentQuest) { now += n; if (c.FoundInRaidRequired) nowFir += n; reasons |= RequirementReasonFlags.CurrentQuest; }
                         else if (c.Source == RequirementSource.FutureQuest) { later += n; if (c.FoundInRaidRequired) laterFir += n; reasons |= RequirementReasonFlags.FutureQuest; }
                         else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
+                        if (c.IsCurrentHideoutStage) { hideoutInstalled += c.SatisfiedCount; hideoutCurrentRequired += c.RequiredCount; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
                         details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired);
                 int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
                 return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }

@@ -84,7 +84,11 @@ namespace SPTItemIntelligence
             FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
                 GameUiText.T("For active quest", "Для активного квеста"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
-            HideoutLine = RequirementLine(GameUiText.T("For hideout after quests", "Для убежища после квестов"), HideoutOwned, HideoutNeeded, Allocation.HideoutFirAllocated, Allocation.HideoutFirRequired);
+            HideoutLine = RequirementLine(GameUiText.T("For hideout after quests", "Для убежища после квестов"), HideoutOwned, HideoutNeeded, 0, 0);
+            HideoutInstalledLine = Allocation.HideoutCurrentRequired <= 0 ? string.Empty :
+                GameUiText.T("In hideout: ", "В убежище: ") + Allocation.HideoutInstalled.ToString(CultureInfo.InvariantCulture) + "/" +
+                Allocation.HideoutCurrentRequired.ToString(CultureInfo.InvariantCulture) +
+                (Allocation.HideoutInstalled >= Allocation.HideoutCurrentRequired ? " ✓" : string.Empty);
             QuestLaterLine = RequirementLine(
                 GameUiText.T("For future quest", "Для будущего квеста"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine(GameUiText.T("Keep", "Оставить"), KeepCount);
@@ -100,13 +104,13 @@ namespace SPTItemIntelligence
             TotalOwnedLine = GameUiText.T("Total (stash + raid) ×", "Всего (схрон + рейд) ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
             OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
                 GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
-            int firRequired = Allocation.NowFirRequired + Allocation.LaterFirRequired + Allocation.HideoutFirRequired;
+            int questRequired = Allocation.NowRequired + Allocation.LaterRequired;
+            int firRequired = Allocation.NowFirRequired + Allocation.LaterFirRequired;
             RequirementBreakdownLine = GameUiText.T("Required: total ×", "Требуется: всего ×") +
                 KeepCount.ToString(CultureInfo.InvariantCulture) +
-                (firRequired > 0
-                    ? GameUiText.T(" · FIR ×", " · из рейда ×") + firRequired.ToString(CultureInfo.InvariantCulture)
-                    : GameUiText.T(" · FIR not required", " · из рейда не требуется"));
-            int questRequired = Allocation.NowRequired + Allocation.LaterRequired;
+                (questRequired <= 0 ? string.Empty : firRequired > 0
+                    ? GameUiText.T(" · quest FIR ×", " · для квестов из рейда ×") + firRequired.ToString(CultureInfo.InvariantCulture)
+                    : GameUiText.T(" · quest FIR not required", " · для квестов из рейда не требуется"));
             RequirementSourcesLine = GameUiText.T("Sources: quests ×", "По источникам: квесты ×") +
                 questRequired.ToString(CultureInfo.InvariantCulture) +
                 GameUiText.T(" · hideout ×", " · убежище ×") + Allocation.HideoutRequired.ToString(CultureInfo.InvariantCulture);
@@ -181,6 +185,7 @@ namespace SPTItemIntelligence
         public string QuestNowLine { get; }
         public string QuestLaterLine { get; }
         public string HideoutLine { get; }
+        public string HideoutInstalledLine { get; }
         public string KeepLine { get; }
         public string PerSlotLine { get; }
         public string CraftLine { get; }
@@ -225,6 +230,7 @@ namespace SPTItemIntelligence
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(OwnedBreakdownLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementBreakdownLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementSourcesLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && TryLine(HideoutInstalledLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Full)
             {

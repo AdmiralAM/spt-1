@@ -27,14 +27,22 @@ static class Phase36RaidInventoryTooltipTests
         Expect(text.SummaryOwnedLine == "In raid ×3", "regular modes expose only current-raid stock", ref assertions);
         Expect(text.TotalOwnedLine == "Total (stash + raid) ×5", "Full preserves the combined stash and raid total", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
-        Expect(text.RequirementBreakdownLine == "Required: total ×4 · FIR ×2", "Full states the exact item total and its FIR-only portion", ref assertions);
+        Expect(text.RequirementBreakdownLine == "Required: total ×4 · quest FIR ×2", "Full states the exact item total and its FIR-only quest portion", ref assertions);
         Expect(text.RequirementSourcesLine == "Sources: quests ×3 · hideout ×1",
             "Full makes the quest and hideout contribution to the total explicit", ref assertions);
         ItemHoverText unrestricted = new ItemHoverText("", "", "", "tpl", 0, 0, 0, 9, 9);
-        Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9 · FIR not required", "unrestricted requirements never imply arbitrary item templates", ref assertions);
+        Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9", "hideout-only requirements omit low-value FIR prose", ref assertions);
         ItemRequirementAllocation firHideout = new ItemRequirementAllocation(2, 1, 0, 0, 2, 0, 0, hideoutFir: 2);
         Expect(firHideout.HideoutFirRequired == 2 && firHideout.HideoutFirAllocated == 1 && firHideout.HideoutMissing == 1,
             "FIR-only hideout stock is reserved before unrestricted consumption", ref assertions);
+        ItemHoverText hideoutProgress = new ItemHoverText("", "", "", "hideout", 0, 0, 0, 2, 2,
+            allocation: new ItemRequirementAllocation(0, 0, 0, 0, 2, 0, 0, hideoutFir: 2,
+                hideoutInstalled: 3, hideoutCurrentRequired: 5));
+        Expect(hideoutProgress.HideoutLine == "For hideout after quests: 0/2" &&
+               hideoutProgress.HideoutInstalledLine == "In hideout: 3/5",
+            "Full replaces hideout FIR prose with current-stage installed progress", ref assertions);
+        Expect(hideoutProgress.RequirementBreakdownLine == "Required: total ×2",
+            "generic FIR wording describes quest obligations rather than hideout defaults", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&

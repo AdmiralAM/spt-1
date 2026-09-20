@@ -80,6 +80,8 @@ static class Phase13RuntimeBootstrapTests
         Expect(index.Get("b").QuestNeededNow == 0 && index.Get("b").QuestNeededLater == 0, "completed quest ignored", ref assertions);
         Expect(index.Get("c").QuestNeededLater == 4, "future quest projected", ref assertions);
         Expect(index.Get("d").HideoutNeeded == 7, "deposited Hideout In Progress items reduce the current stage but not a future stage", ref assertions);
+        Expect(index.Get("d").Allocation.HideoutInstalled == 4 && index.Get("d").Allocation.HideoutCurrentRequired == 6,
+            "current hideout stage preserves its physically deposited progress", ref assertions);
         Expect(index.Get("d").OwnedCount == 0, "deposited items are committed and never returned to shared owned inventory", ref assertions);
         Expect(index.Get("f").Allocation.HideoutFirRequired == 2 && index.Get("f").RequiresFoundInRaid,
             "native hideout isSpawnedInSession projects as an FIR-only requirement", ref assertions);
@@ -112,6 +114,10 @@ static class Phase13RuntimeBootstrapTests
                operational.Get("daily-item").Allocation.NowFirRequired == 3 &&
                operational.Get("daily-item").Allocation.NowMissing == 2,
             "accepted operational quest item requirements join the authoritative active-quest allocation", ref assertions);
+        RequirementIndex handedOperational = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(
+            OperationalQuestEnvelope(handedIn: true)));
+        Expect(handedOperational.Get("daily-item").QuestNeededNow == 0 && handedOperational.Get("daily-item").QuestNeededLater == 0,
+            "repeatable handover counters keyed by condition id remove already submitted quest items from Sense", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -266,7 +272,7 @@ static class Phase13RuntimeBootstrapTests
         return new RequirementDataEnvelope(200, profile, Array.Empty<object>(), hideout, Array.Empty<object>(), progress);
     }
 
-    static RequirementDataEnvelope OperationalQuestEnvelope()
+    static RequirementDataEnvelope OperationalQuestEnvelope(bool handedIn = false)
     {
         Dictionary<string, object> profile = new Dictionary<string, object>
         {
@@ -292,7 +298,7 @@ static class Phase13RuntimeBootstrapTests
                         {
                             ["_id"] = "daily-quest",
                             ["name"] = "Daily supplies",
-                            ["questStatus"] = new Dictionary<string, object> { ["status"] = 2 },
+                            ["questStatus"] = new Dictionary<string, object> { ["status"] = 1 },
                             ["conditions"] = new Dictionary<string, object>
                             {
                                 ["AvailableForFinish"] = new object[]
@@ -312,6 +318,17 @@ static class Phase13RuntimeBootstrapTests
                 }
             }
         };
+        if (handedIn)
+        {
+            profile["TaskConditionCounters"] = new object[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["id"] = "daily-condition", ["sourceId"] = "daily-quest", ["value"] = 3,
+                    ["type"] = "HandoverItem"
+                }
+            };
+        }
         return new RequirementDataEnvelope(201, profile, new Dictionary<string, object>(),
             new Dictionary<string, object> { ["areas"] = Array.Empty<object>() }, Array.Empty<object>());
     }
