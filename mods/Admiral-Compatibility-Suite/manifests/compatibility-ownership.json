@@ -23,8 +23,8 @@
       "disposition": "migrate-to-suite",
       "status": "suite-adapter-implemented-belt-removal-pending",
       "runtimeEvidence": {
-        "upstreamVersion": "2.1.3",
-        "installedDllSha256": "AD0CFEDC1C87470FCF9C463D914D9DAA24116893D552C6D350F33C0F1BC1D2BB",
+        "upstreamVersion": "2.1.5",
+        "installedDllSha256": "4F45D3577778F99A7FE4BEAFD89FA5EB1B8CD9E8B573448533F13BB30048B98B",
         "note": "Installed upstream DLL is retained; Admiral behavior is an external Belt-side adapter."
       }
     },

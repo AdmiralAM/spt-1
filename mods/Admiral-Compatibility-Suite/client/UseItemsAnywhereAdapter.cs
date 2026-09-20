@@ -18,7 +18,6 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
 
     private readonly Action<string> logInfo;
     private readonly Action<string> logWarning;
-    private object armBand;
     private object belt;
 
     internal UseItemsAnywhereAdapter(Action<string> logInfo, Action<string> logWarning)
@@ -38,7 +37,6 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
                 return false;
             }
 
-            armBand = Enum.Parse(equipmentSlot, "ArmBand", false);
             belt = Enum.ToObject(equipmentSlot, DedicatedBeltSlotValue);
             int eligible = 0;
             int extended = 0;
@@ -56,15 +54,10 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
                     continue;
                 }
 
-                SlotAccessSyncResult result = SlotAccessSynchronizer.EnsureFollower(list, armBand, belt);
-                if (result == SlotAccessSyncResult.Ineligible)
-                {
-                    continue;
-                }
-
                 eligible++;
-                if (result == SlotAccessSyncResult.Added)
+                if (!list.Contains(belt))
                 {
+                    list.Add(belt);
                     entry.BoxedValue = list;
                     extended++;
                 }
@@ -76,10 +69,10 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
 
             if (eligible == 0)
             {
-                throw new InvalidOperationException("Use Items Anywhere exposes no ArmBand-enabled access list.");
+                throw new InvalidOperationException("Use Items Anywhere exposes no configurable access list.");
             }
 
-            logInfo?.Invoke($"Admiral Compatibility Suite verified {eligible} Use Items Anywhere access lists: added Belt slot15 to {extended}, already present in {alreadyExtended}.");
+            logInfo?.Invoke($"Admiral Compatibility Suite verified {eligible} Use Items Anywhere access lists: enabled Belt slot15 in {extended}, already enabled in {alreadyExtended}.");
             return true;
         }
         catch (Exception exception)
@@ -102,7 +95,6 @@ internal sealed class UseItemsAnywhereAdapter : IDisposable
 
     public void Dispose()
     {
-        armBand = null;
         belt = null;
     }
 }
