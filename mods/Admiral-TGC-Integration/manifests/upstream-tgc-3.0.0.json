@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "product": "Tactical Gear Component",
+  "version": "3.0.0",
+  "releaseUrl": "https://github.com/thuynguyentrungdang/TGC/releases/tag/3.0.0",
+  "sourceUrl": "https://github.com/thuynguyentrungdang/TGC",
+  "license": "MIT",
+  "runtimeFolder": "SPT_Runtime/user/mods/TGC-NG",
+  "upstreamTraderId": "668aaff35fd574b6dcc4a686",
+  "targetTraderId": "d5c27bb3169f8dfbc13f6b69",
+  "expected": {
+    "customItemCount": 117,
+    "rootOfferCount": 114,
+    "barterSchemeCount": 114,
+    "loyaltyOfferCount": 114,
+    "suitCount": 4,
+    "declaredBundleCount": 126
+  },
+  "ownership": {
+    "storefrontAndProgression": "Admiral Trader",
+    "beltArmbandAndSecureContainerPolicy": "B&A&HB",
+    "ordinaryContentAndCompatibility": "Admiral TGC Integration"
+  },
+  "beltDelegation": {
+    "slot15Belts": [
+      "672e2e75a16c1d2034c384cf",
+      "672e2e750ea81b3b93b943ac",
+      "672e2e75a26efb53bc703d45",
+      "672e2e75bfad327651a1a19b",
+      "672e2e751ff683e9432cb5af"
+    ],
+    "secureContainerAllowlist": [
+      "672e2e758808bacbb9d5abc4",
+      "672e2e7526ba61dbb88be7ff"
+    ],
+    "secureContainerDenylist": [
+      "672e2e75b0ab4fcbbf7dc471"
+    ],
+    "authority": "B&A&HB",
+    "sourcePr": 360
+  },
+  "forbiddenFinalRuntime": [
+    "TGC-NG.dll",
+    "Painter-4.0.dll"
+  ]
+}

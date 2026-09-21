@@ -1,0 +1,44 @@
+name: Admiral TGC Integration Validate
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-TGC-Integration/**'
+      - '.github/workflows/admiral-tgc-integration-validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run integration contract tests
+        run: python -m unittest discover -s mods/Admiral-TGC-Integration/tests -v
+
+      - name: Build replacement TGC server DLL
+        run: >-
+          dotnet build
+          mods/Admiral-TGC-Integration/server/Admiral-TGC-Integration.csproj
+          -c Release
+          --nologo
+          --configfile mods/Admiral-TGC-Integration/NuGet.Config
+
+      - name: Reject runtime ownership regressions
+        shell: pwsh
+        run: |
+          $source = Get-Content 'mods/Admiral-TGC-Integration/server/TgcContentIntegration.cs' -Raw
+          foreach ($forbidden in '668aaff35fd574b6dcc4a686','AddTraderAssort','AddTraderSuits','AddToArmband','AddToSecureContainer') {
+            if ($source.Contains($forbidden)) { throw "Forbidden ownership token in runtime source: $forbidden" }
+          }
