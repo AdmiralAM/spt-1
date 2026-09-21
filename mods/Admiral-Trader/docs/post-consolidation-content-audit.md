@@ -50,7 +50,7 @@ The 172 authored records divide into 10 access protocols, 40 paced Arsenal tasks
 | --- | --- | --- |
 | `208db81b5ce195bf0c176852` — **Низкий профиль** | rewritten inside the existing ID | One Interchange raid in Scav Vest + Transformer Bag now requires the KOSTIN service area, first warehouse sector and survived extraction in the same equipment. It is a route discipline task rather than an empty loadout check. |
 | `8dad0d354ac000b7bbf05b9a` — **Акустическая дисциплина** | retained | This is the non-combat headset reconnaissance route through the abandoned convoy and USEC camp. `Акустический контакт` remains its later combat application. |
-| `3c6e085fc02f0597efdb5d5a` — **Операция: Открытый коридор** | rewritten inside the existing ID | Two Scavs in one Ground Zero raid with no range or weapon-model gate, plus a separately tracked survived extraction from Ground Zero. This remains viable with starter equipment. |
+| `3c6e085fc02f0597efdb5d5a` — **Операция: Открытый коридор** | rewritten inside the existing ID | Two Scavs from at least 30 metres in one Ground Zero raid with no weapon-model gate, plus a separately tracked survived extraction. Mounted weapons and grenade launchers remain eligible when SPT attributes the kill to the player. |
 | `31ab6a69a8436df6b3834b0a` — **Операция: Спорная территория** | retained | Its early PMC target is distinct from the Scav clearance before it and the mixed-target extraction test after it. |
 | `e520cec55b83621928e9e4ec` — **Операция: Правильный выход** | rewritten inside the existing ID | Five mixed targets and survived extraction must now occur in one Ground Zero raid; combat progress without returning no longer completes it. |
 

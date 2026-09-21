@@ -60,7 +60,7 @@ quest_counter["oneSessionOnly"] = True
 quest_counter["value"] = 2
 conditions = quest_counter["counter"]["conditions"]
 kills = next(condition for condition in conditions if condition["conditionType"] == "Kills")
-kills["distance"] = {"value": 0, "compareMethod": ">="}
+kills["distance"] = {"value": 30, "compareMethod": ">="}
 save(path, quest)
 
 # Exit Discipline now enforces the extraction promised by its title and brief.
@@ -86,14 +86,14 @@ locale_updates = {
         "96d629538203984d6a1ee835": "Interchange, one raid: Scav Vest + Transformer Bag; KOSTIN; first warehouse sector; survive and extract in the same equipment."
     },
     "db/locales/m8-ru.json": {
-        "3c6e085fc02f0597efdb5d5a description": "Проверь путь через Эпицентр. За один рейд устрани двух Диких без требований к дистанции и модели оружия. Затем выживи и эвакуируйся с Эпицентра. Боевой контакт и эвакуация отмечаются отдельно; дорогой прицел для этой работы не нужен.",
-        "0655c05e2745efd12e740c0d": "За один рейд устранить 2 Диких на Эпицентре без требований к дистанции и оружию.",
+        "3c6e085fc02f0597efdb5d5a description": "Проверь путь через Эпицентр. За один рейд устрани двух Диких с дистанции не менее 30 метров. Модель оружия не ограничена: используй своё оружие, станковый пулемёт или гранатомёт. Затем выживи и эвакуируйся с Эпицентра. Боевая цель и выход учитываются отдельно.",
+        "0655c05e2745efd12e740c0d": "За один рейд устранить 2 Диких на Эпицентре с расстояния от 30 метров любым оружием, в том числе станковым пулемётом или гранатомётом.",
         "e520cec55b83621928e9e4ec description": "Заверши боевую проверку на Эпицентре за один рейд: устрани пять противников и эвакуируйся со статусом «Выжил». Результат без возвращения не засчитывается.",
         "a0d2f4ce6b38983415aff9be": "За один рейд устранить 5 любых противников на Эпицентре, затем эвакуироваться со статусом «Выжил»."
     },
     "db/locales/m8-en.json": {
-        "3c6e085fc02f0597efdb5d5a description": "Check a route through Ground Zero. Eliminate two Scavs in one raid with no distance or weapon-model requirement. Separately, survive and extract from Ground Zero. Combat and extraction are tracked as separate objectives; no expensive optic is needed.",
-        "0655c05e2745efd12e740c0d": "Eliminate 2 Scavs in one Ground Zero raid with no distance or weapon-model requirement.",
+        "3c6e085fc02f0597efdb5d5a description": "Check a route through Ground Zero. Eliminate two Scavs in one raid from at least 30 metres with no weapon-model requirement. Separately, survive and extract from Ground Zero.",
+        "0655c05e2745efd12e740c0d": "Eliminate 2 Scavs in one Ground Zero raid from at least 30 metres with any weapon, including mounted machine guns or grenade launchers.",
         "e520cec55b83621928e9e4ec description": "Complete the Ground Zero combat check in one raid: eliminate five targets and extract with Survived status.",
         "a0d2f4ce6b38983415aff9be": "In one Ground Zero raid, eliminate 5 targets, then extract with Survived status."
     },

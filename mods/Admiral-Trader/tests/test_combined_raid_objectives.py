@@ -22,6 +22,6 @@ def test_open_corridor_has_working_combat_and_extraction_objectives():
     assert kill["value"] == 2 and kill["oneSessionOnly"] is True
     kill_rule = next(c for c in kill["counter"]["conditions"] if c["conditionType"] == "Kills")
     assert kill_rule["weapon"] == []
-    assert kill_rule["distance"] == {"value": 0, "compareMethod": ">="}
+    assert kill_rule["distance"] == {"value": 30, "compareMethod": ">="}
     assert survive["value"] == 1 and survive["oneSessionOnly"] is True
     assert {"Location", "ExitStatus"} == {c["conditionType"] for c in survive["counter"]["conditions"]}
