@@ -41,15 +41,16 @@ class AuditCandidatePolishTests(unittest.TestCase):
             next(row["equipmentInclusive"] for row in nested if row["conditionType"] == "Equipment"),
         )
 
-    def test_open_corridor_is_a_single_raid_ranged_clearance_with_extraction(self):
+    def test_open_corridor_is_a_newcomer_viable_clearance_with_separate_extraction(self):
         objectives = counters(load_quest("3c6e085fc02f0597efdb5d5a"))
         objective = next(row for row in objectives if any(x["conditionType"] == "Kills" for x in row["counter"]["conditions"]))
         nested = objective["counter"]["conditions"]
         kills = next(row for row in nested if row["conditionType"] == "Kills")
         self.assertTrue(objective["oneSessionOnly"])
-        self.assertEqual(4, objective["value"])
+        self.assertEqual(2, objective["value"])
         self.assertEqual("Savage", kills["target"])
-        self.assertEqual({"value": 30, "compareMethod": ">="}, kills["distance"])
+        self.assertEqual([], kills["weapon"])
+        self.assertEqual({"value": 0, "compareMethod": ">="}, kills["distance"])
         extraction = next(row for row in objectives if any(x["conditionType"] == "ExitStatus" for x in row["counter"]["conditions"]))
         self.assertTrue(any(row.get("status") == ["Survived"] for row in extraction["counter"]["conditions"]))
 
@@ -75,7 +76,7 @@ class AuditCandidatePolishTests(unittest.TestCase):
         m8 = json.loads((ROOT / "db/locales/m8-ru.json").read_text(encoding="utf-8-sig"))
         self.assertIn("KOSTIN", m3["96d629538203984d6a1ee835"])
         self.assertIn("первый складской сектор", m3["96d629538203984d6a1ee835"])
-        self.assertIn("30 метров", m8["0655c05e2745efd12e740c0d"])
+        self.assertIn("без требований к дистанции", m8["0655c05e2745efd12e740c0d"])
         self.assertIn("эвакуироваться", m8["ceaae27bfcc1584b32c83936"])
         self.assertIn("5 целей", m8["a0d2f4ce6b38983415aff9be"])
         self.assertIn("эвакуироваться", m8["7710e9019fa024ee58d4adb7"])

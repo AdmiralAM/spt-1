@@ -53,19 +53,14 @@ add_condition(conditions, {
 })
 save(path, quest)
 
-# Open Corridor becomes a single-raid ranged clearance and extraction check.
+# Open Corridor stays viable with starter weapons; extraction is a separate objective.
 path, quest = load_quest("3c6e085fc02f0597efdb5d5a")
 quest_counter = counter(quest)
 quest_counter["oneSessionOnly"] = True
+quest_counter["value"] = 2
 conditions = quest_counter["counter"]["conditions"]
 kills = next(condition for condition in conditions if condition["conditionType"] == "Kills")
-kills["distance"] = {"value": 30, "compareMethod": ">="}
-add_condition(conditions, {
-    "id": "5dadce5038ce46f78d65ed31",
-    "dynamicLocale": False,
-    "conditionType": "ExitStatus",
-    "status": ["Survived"],
-})
+kills["distance"] = {"value": 0, "compareMethod": ">="}
 save(path, quest)
 
 # Exit Discipline now enforces the extraction promised by its title and brief.
@@ -91,14 +86,14 @@ locale_updates = {
         "96d629538203984d6a1ee835": "Interchange, one raid: Scav Vest + Transformer Bag; KOSTIN; first warehouse sector; survive and extract in the same equipment."
     },
     "db/locales/m8-ru.json": {
-        "3c6e085fc02f0597efdb5d5a description": "Расчисти открытый коридор на Эпицентре за один рейд: устрани четырёх Диких с дистанции не менее 30 метров и выйди живым. Мне нужен контролируемый маршрут, а не стрельба вплотную без плана.",
-        "0655c05e2745efd12e740c0d": "За один рейд устранить 4 Диких на Эпицентре с дистанции не менее 30 метров, затем выжить и эвакуироваться.",
+        "3c6e085fc02f0597efdb5d5a description": "Проверь путь через Эпицентр. За один рейд устрани двух Диких без требований к дистанции и модели оружия. Затем выживи и эвакуируйся с Эпицентра. Боевой контакт и эвакуация отмечаются отдельно; дорогой прицел для этой работы не нужен.",
+        "0655c05e2745efd12e740c0d": "За один рейд устранить 2 Диких на Эпицентре без требований к дистанции и оружию.",
         "e520cec55b83621928e9e4ec description": "Заверши боевую проверку на Эпицентре за один рейд: устрани пять противников и эвакуируйся со статусом «Выжил». Результат без возвращения не засчитывается.",
         "a0d2f4ce6b38983415aff9be": "За один рейд устранить 5 любых противников на Эпицентре, затем эвакуироваться со статусом «Выжил»."
     },
     "db/locales/m8-en.json": {
-        "3c6e085fc02f0597efdb5d5a description": "Clear an open Ground Zero corridor in one raid: eliminate four Scavs from at least 30 metres and survive the extraction.",
-        "0655c05e2745efd12e740c0d": "In one Ground Zero raid, eliminate 4 Scavs from at least 30 metres, then survive and extract.",
+        "3c6e085fc02f0597efdb5d5a description": "Check a route through Ground Zero. Eliminate two Scavs in one raid with no distance or weapon-model requirement. Separately, survive and extract from Ground Zero. Combat and extraction are tracked as separate objectives; no expensive optic is needed.",
+        "0655c05e2745efd12e740c0d": "Eliminate 2 Scavs in one Ground Zero raid with no distance or weapon-model requirement.",
         "e520cec55b83621928e9e4ec description": "Complete the Ground Zero combat check in one raid: eliminate five targets and extract with Survived status.",
         "a0d2f4ce6b38983415aff9be": "In one Ground Zero raid, eliminate 5 targets, then extract with Survived status."
     },
