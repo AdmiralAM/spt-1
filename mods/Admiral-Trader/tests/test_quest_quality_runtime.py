@@ -103,16 +103,14 @@ class QuestQualityRuntimeTests(unittest.TestCase):
         quest = by_id[qid]
         counter = quest["conditions"]["AvailableForFinish"][0]
         nested = counter["counter"]["conditions"]
-        self.assertEqual(counter["type"], "Exploration")
+        self.assertEqual(counter["type"], "Completion")
         self.assertEqual(counter["value"], 1)
-        self.assertTrue(counter["oneSessionOnly"])
+        self.assertFalse(counter["oneSessionOnly"])
         self.assertNotIn("Kills", {row["conditionType"] for row in nested})
-        equipment = next(row for row in nested if row["conditionType"] == "Equipment")
-        self.assertEqual(len(equipment["equipmentInclusive"]), 2)
-        self.assertEqual({len(group) for group in equipment["equipmentInclusive"]}, {3})
+        self.assertEqual({row["conditionType"] for row in nested}, {"Location", "ExitStatus"})
         reward_tpls = {item["_tpl"] for reward in quest["rewards"]["Success"] for item in reward.get("items", [])}
         self.assertIn("5e9dcf5986f7746c417435b3", reward_tpls)
-        self.assertIn("Задача:", self.locales["ru"][qid + " description"])
+        self.assertIn("конкретные модели не проверяются", self.locales["ru"][qid + " description"])
 
     def test_later_equipment_qualifications_require_combat_and_explain_exact_gear(self):
         ids = {
@@ -126,19 +124,29 @@ class QuestQualityRuntimeTests(unittest.TestCase):
             combat = next(row for row in objectives if any(x.get("conditionType") == "Kills" for x in row["counter"]["conditions"]))
             extraction = next(row for row in objectives if any(x.get("conditionType") == "ExitStatus" for x in row["counter"]["conditions"]))
             self.assertTrue({"Equipment", "Kills", "Location"} <= {row["conditionType"] for row in combat["counter"]["conditions"]}, qid)
-            self.assertTrue({"Equipment", "Location", "ExitStatus"} <= {row["conditionType"] for row in extraction["counter"]["conditions"]}, qid)
+            self.assertEqual({"Location", "ExitStatus"}, {row["conditionType"] for row in extraction["counter"]["conditions"]}, qid)
             self.assertTrue(combat["oneSessionOnly"], qid)
-            self.assertTrue(extraction["oneSessionOnly"], qid)
+            self.assertFalse(extraction["oneSessionOnly"], qid)
             self.assertIn("Уточнение:", self.locales["ru"][qid + " description"], qid)
             self.assertIn("Задача:", self.locales["ru"][qid + " description"], qid)
 
-    def test_acoustic_discipline_names_all_five_allowed_headsets_and_woods(self):
+    def test_extraction_counters_do_not_mix_raid_events(self):
+        for quest in self.quests:
+            for objective in quest["conditions"]["AvailableForFinish"]:
+                if objective.get("conditionType") != "CounterCreator":
+                    continue
+                kinds = {row["conditionType"] for row in objective["counter"]["conditions"]}
+                if "ExitStatus" in kinds:
+                    self.assertFalse(kinds & {"Equipment", "Kills", "VisitPlace"}, quest["_id"])
+
+    def test_acoustic_discipline_uses_woods_and_separate_visit_objectives(self):
         qid = "8dad0d354ac000b7bbf05b9a"
         quest = next(q for q in self.quests if q["_id"] == qid)
         self.assertEqual(quest["location"], "5704e3c2d2720bac5b8b4567")
         description = self.locales["ru"][qid + " description"]
-        for name in ("ГСШ-01", "Peltor Tactical Sport", "Walker’s Razor Digital", "OPSMEN Earmor M32", "Peltor ComTac IV Hybrid"):
-            self.assertIn(name, description)
+        self.assertIn("Лесу", description)
+        self.assertIn("конкретная модель не проверяется", description)
+        self.assertEqual(3, len(quest["conditions"]["AvailableForFinish"]))
 
     def test_single_map_runtime_conditions_are_not_presented_as_any_location(self):
         aliases = {"sandbox_high": "sandbox", "factory4_night": "factory4_day"}

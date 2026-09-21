@@ -23,23 +23,20 @@ def counters(quest):
 
 
 class AuditCandidatePolishTests(unittest.TestCase):
-    def test_low_profile_is_a_real_interchange_route_in_the_same_equipment(self):
+    def test_low_profile_uses_separate_native_route_and_extraction_conditions(self):
         quest = load_quest("208db81b5ce195bf0c176852")
-        objective = counter(quest)
-        nested = objective["counter"]["conditions"]
-        self.assertTrue(objective["oneSessionOnly"])
+        objectives = counters(quest)
+        self.assertEqual(3, len(objectives))
+        nested = [row for objective in objectives for row in objective["counter"]["conditions"]]
         self.assertEqual(
-            {"Equipment", "Location", "VisitPlace", "ExitStatus"},
+            {"Location", "VisitPlace", "ExitStatus"},
             {row["conditionType"] for row in nested},
         )
         self.assertEqual(
             {"place_SALE_03_KOSTIN", "place_WARBLOOD_04_1"},
             {row["target"] for row in nested if row["conditionType"] == "VisitPlace"},
         )
-        self.assertEqual(
-            [["572b7adb24597762ae139821"], ["56e33680d2720be2748b4576"]],
-            next(row["equipmentInclusive"] for row in nested if row["conditionType"] == "Equipment"),
-        )
+        self.assertEqual(1, sum(row["conditionType"] == "ExitStatus" for row in nested))
 
     def test_open_corridor_is_a_newcomer_viable_clearance_with_separate_extraction(self):
         objectives = counters(load_quest("3c6e085fc02f0597efdb5d5a"))
@@ -65,17 +62,17 @@ class AuditCandidatePolishTests(unittest.TestCase):
         self.assertTrue(any(row.get("status") == ["Survived"] for row in extraction["counter"]["conditions"]))
 
     def test_retained_candidates_have_distinct_runtime_roles(self):
-        acoustic = counter(load_quest("8dad0d354ac000b7bbf05b9a"))["counter"]["conditions"]
+        acoustic = [row for objective in counters(load_quest("8dad0d354ac000b7bbf05b9a")) for row in objective["counter"]["conditions"]]
         contested = counter(load_quest("31ab6a69a8436df6b3834b0a"))["counter"]["conditions"]
         self.assertEqual(2, sum(row["conditionType"] == "VisitPlace" for row in acoustic))
-        self.assertTrue(any(row["conditionType"] == "Equipment" for row in acoustic))
+        self.assertFalse(any(row["conditionType"] == "Equipment" for row in acoustic))
         self.assertEqual("AnyPmc", next(row for row in contested if row["conditionType"] == "Kills")["target"])
 
     def test_player_facing_objectives_state_every_new_constraint(self):
         m3 = json.loads((ROOT / "db/locales/m3-ru.json").read_text(encoding="utf-8-sig"))
         m8 = json.loads((ROOT / "db/locales/m8-ru.json").read_text(encoding="utf-8-sig"))
-        self.assertIn("KOSTIN", m3["96d629538203984d6a1ee835"])
-        self.assertIn("первый складской сектор", m3["96d629538203984d6a1ee835"])
+        self.assertIn("KOSTIN", m3["25781d0c6bfda0e12cd9dddd"])
+        self.assertIn("первый складской сектор", m3["1e697394af15421d80591d6e"])
         self.assertIn("30 метров", m8["0655c05e2745efd12e740c0d"])
         self.assertIn("станковым пулемётом", m8["0655c05e2745efd12e740c0d"])
         self.assertIn("эвакуироваться", m8["ceaae27bfcc1584b32c83936"])

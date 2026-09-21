@@ -192,7 +192,9 @@
     "8dad0d354ac000b7bbf05b9a": {
       "questName": "Акустическая дисциплина",
       "finishConditionIds": [
-        "4aad9529573642ec30c9105c"
+        "4aad9529573642ec30c9105c",
+        "e0e4fc81df436545de81aaab",
+        "9a648a530f20b3be24784b8c"
       ]
     },
     "56813681ae0690016376f163": {
@@ -206,7 +208,9 @@
     "208db81b5ce195bf0c176852": {
       "questName": "Низкий профиль",
       "finishConditionIds": [
-        "96d629538203984d6a1ee835"
+        "96d629538203984d6a1ee835",
+        "25781d0c6bfda0e12cd9dddd",
+        "1e697394af15421d80591d6e"
       ]
     },
     "6574a072f763d0b09a553401": {
@@ -273,41 +277,8 @@
       ]
     }
   },
-  "equipmentObjectiveCount": 11,
+  "equipmentObjectiveCount": 8,
   "equipmentObjectives": [
-    {
-      "questId": "8dad0d354ac000b7bbf05b9a",
-      "conditionId": "4aad9529573642ec30c9105c",
-      "equipmentInclusive": [
-        [
-          "5b432b965acfc47a8774094e",
-          "5c165d832e2216398b5a7e36",
-          "5e4d34ca86f774264f758330",
-          "6033fa48ffd42c541047f728",
-          "628e4e576d783146b124c64d"
-        ]
-      ],
-      "en": "Woods: wear one of the listed equipment sets; visit the abandoned convoy; visit the USEC camp; survive and extract.",
-      "ru": "Лес: надеть один из перечисленных комплектов; посетить брошенную колонну; посетить лагерь USEC; выжить и эвакуироваться.",
-      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Peltor Tactical Sport headset, Walker’s Razor Digital headset, OPSMEN Earmor M32 headset, Peltor ComTac IV Hybrid headset (Coyote Brown)]; on Woods; visit the abandoned convoy; visit the USEC camp; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Активные наушники ГСШ-01, Активные наушники Peltor Tactical Sport, Активные наушники Walker’s Razor Digital, Активные наушники OPSMEN Earmor M32, Активные наушники Peltor ComTac IV Hybrid (Coyote Brown)]; на локации Лес; посетить брошенную колонну; посетить лагерь USEC; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
-    },
-    {
-      "questId": "208db81b5ce195bf0c176852",
-      "conditionId": "96d629538203984d6a1ee835",
-      "equipmentInclusive": [
-        [
-          "572b7adb24597762ae139821"
-        ],
-        [
-          "56e33680d2720be2748b4576"
-        ]
-      ],
-      "en": "Interchange, one raid: Scav Vest + Transformer Bag; KOSTIN; first warehouse sector; survive and extract in the same equipment.",
-      "ru": "Развязка, один рейд: Жилет Дикого + Сумка-трансформер; KOSTIN; первый складской сектор; выжить и эвакуироваться в том же комплекте.",
-      "detailsEn": "In one raid, wear a Scav Vest and Transformer Bag; on Interchange; visit the KOSTIN service area; visit the first warehouse sector; survive and extract in the same equipment. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: надеть Жилет Дикого и Сумку-трансформер; на локации Развязка; посетить служебную зону KOSTIN; посетить первый складской сектор; выжить и эвакуироваться в том же комплекте. Статус «Найдено в рейде» не применяется."
-    },
     {
       "questId": "6574a072f763d0b09a553401",
       "conditionId": "1f59a3743e20869842a50162",
@@ -361,26 +332,6 @@
       "ru": "Завод (день): надеть один из перечисленных комплектов; устранить 4 Диких.",
       "detailsEn": "In one raid, wear one of [FORT Redut-M body armor, FORT Redut-T5 body armor (Smog), FORT Defender-2 body armor, NPP KlASS Korund-VM body armor (Black)] and one of [Altyn bulletproof helmet (Olive Drab), Vulkan-5 LShZ-5 bulletproof helmet (Black), Rys-T bulletproof helmet (Black)]; eliminate 4 Scavs; on Factory (day). Found-in-raid status does not apply.",
       "detailsRu": "За один рейд: использовать один предмет из списка [Бронежилет ФОРТ Редут-М, Бронежилет ФОРТ Редут-Т5 (Смог), Бронежилет ФОРТ Дефендер-2, Бронежилет НПП КлАСС Корунд-ВМ (Черный)] и один предмет из списка [Бронешлем Алтын (Олива), Бронешлем ЛШЗ-5 Вулкан-5 (Черный), Бронешлем Рысь-Т (Черный)]; устранить 4 Диких; на локации Завод (день). Статус «Найдено в рейде» не применяется."
-    },
-    {
-      "questId": "4a8f533e1ed458e83b41c01f",
-      "conditionId": "44032afbb94e8afb1c903ade",
-      "equipmentInclusive": [
-        [
-          "572b7adb24597762ae139821",
-          "5e4abc1f86f774069619fbaa",
-          "6034d0230ca681766b6a0fb5"
-        ],
-        [
-          "544a5cde4bdc2d39388b456b",
-          "56e33680d2720be2748b4576",
-          "56e335e4d2720b6c058b456d"
-        ]
-      ],
-      "en": "Ground Zero/Ground Zero (level 21+)/Customs/Woods: wear one of the listed equipment sets; survive and extract.",
-      "ru": "Эпицентр/Эпицентр (уровень 21+)/Таможня/Лес: надеть один из перечисленных комплектов; выжить и эвакуироваться.",
-      "detailsEn": "In one raid, wear one of [Scav Vest, Spiritus Systems Bank Robber chest rig (MultiCam Black), CSA chest rig (Black)] and one of [Flyye MBSS backpack (UCP), Transformer Bag, Scav backpack]; on Ground Zero/Ground Zero (level 21+)/Customs/Woods; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Жилет Дикого, Разгрузочная нагрудная система Spiritus Systems Bank Robber (MultiCam Black), Разгрузочная нагрудная система CSA (Черная)] и один предмет из списка [Рюкзак Flyye MBSS (UCP), Сумка-трансформер, Рюкзак Дикого]; на локации Эпицентр/Эпицентр (уровень 21+)/Таможня/Лес; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
     },
     {
       "questId": "4ab0b49478adb233ae900b33",

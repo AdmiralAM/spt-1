@@ -84,8 +84,8 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
     def test_every_equipment_objective_has_explicit_runtime_copy(self):
         contract = load("manifests/quest-quality-runtime.json")
         rows = contract["equipmentObjectives"]
-        self.assertEqual(11, contract["equipmentObjectiveCount"])
-        self.assertEqual(11, len(rows))
+        self.assertEqual(8, contract["equipmentObjectiveCount"])
+        self.assertEqual(8, len(rows))
 
         locales = {"en": {}, "ru": {}}
         for lang in locales:
@@ -103,7 +103,7 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
                 if equipment and (quest_id, condition["id"]) in authored_keys:
                     runtime_rows[(quest_id, condition["id"])] = equipment["equipmentInclusive"]
 
-        self.assertEqual(11, len(runtime_rows))
+        self.assertEqual(8, len(runtime_rows))
         for row in rows:
             key = (row["questId"], row["conditionId"])
             self.assertEqual(runtime_rows[key], row["equipmentInclusive"], key)
@@ -111,12 +111,7 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
             self.assertEqual(row["ru"], locales["ru"][row["conditionId"]], key)
             self.assertNotIn("назначенн", row["ru"].lower(), key)
 
-        low_profile = next(row for row in rows if row["questId"] == "208db81b5ce195bf0c176852")
-        self.assertIn("Жилет Дикого", low_profile["ru"])
-        self.assertIn("Сумк", low_profile["ru"])
-        self.assertIn("трансформер", low_profile["ru"])
-        self.assertIn("Развязк", low_profile["ru"])
-        self.assertIn("выжить и эвакуироваться", low_profile["ru"])
+        self.assertNotIn("208db81b5ce195bf0c176852", {row["questId"] for row in rows})
 
 
 if __name__ == "__main__":
