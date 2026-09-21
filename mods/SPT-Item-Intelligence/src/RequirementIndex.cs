@@ -10,13 +10,17 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementDetail
     {
-        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false)
+        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false, int requiredCount = 0, int satisfiedCount = 0)
         {
             Source = source; Label = NormalizeLabel(label); RemainingCount = Math.Max(0, remainingCount); FoundInRaidRequired = foundInRaidRequired;
+            RequiredCount = requiredCount > 0 ? requiredCount : RemainingCount;
+            SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
         }
         public RequirementSource Source { get; }
         public string Label { get; }
         public int RemainingCount { get; }
+        public int RequiredCount { get; }
+        public int SatisfiedCount { get; }
         public bool FoundInRaidRequired { get; }
         static string NormalizeLabel(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : string.Join(" ", value.Trim().Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
@@ -82,7 +86,7 @@ namespace SPTItemIntelligence
         internal RequirementIndexEntry(string templateId, int questNeededNow, int questNeededLater, int hideoutNeeded, int keepCount, int ownedCount, int surplusCount, RequirementReasonFlags reasons, IEnumerable<RequirementDetail> details, ItemRequirementAllocation allocation = null)
         {
             Allocation = allocation ?? new ItemRequirementAllocation(ownedCount, 0, questNeededNow, questNeededLater, hideoutNeeded, 0, 0); TemplateId = templateId; QuestNeededNow = questNeededNow; QuestNeededLater = questNeededLater; HideoutNeeded = hideoutNeeded; KeepCount = keepCount; OwnedCount = ownedCount; SurplusCount = surplusCount; Reasons = reasons;
-            List<RequirementDetail> copied = new List<RequirementDetail>(); if (details != null) foreach (RequirementDetail detail in details) if (detail != null && detail.RemainingCount > 0 && detail.Label.Length > 0) copied.Add(detail); Details = copied.AsReadOnly();
+            List<RequirementDetail> copied = new List<RequirementDetail>(); if (details != null) foreach (RequirementDetail detail in details) if (detail != null && (detail.RemainingCount > 0 || detail.SatisfiedCount > 0) && detail.Label.Length > 0) copied.Add(detail); Details = copied.AsReadOnly();
         }
         public string TemplateId { get; }
         public int QuestNeededNow { get; }
@@ -164,7 +168,7 @@ namespace SPTItemIntelligence
                         else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
                         if (c.IsCurrentHideoutStage) { hideoutInstalled += c.SatisfiedCount; hideoutCurrentRequired += c.RequiredCount; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
-                        details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
+                details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired, c.RequiredCount, c.SatisfiedCount));
                     }
                 }
                 ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired);

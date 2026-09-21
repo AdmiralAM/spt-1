@@ -138,6 +138,11 @@ static class Phase13RuntimeBootstrapTests
         ItemHoverText missingHideout = controller.OnHoverEnter("d");
         Expect(missingHideout.HideoutLine == "For hideout after quests: 0/7" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
             "numeric server hideout requirement reaches runtime marker classification", ref assertions);
+        bool installedInDetail = false;
+        for (int line = 0; line < missingHideout.GetLineCount(ItemTooltipMode.Full); line++)
+            if (missingHideout.GetLine(ItemTooltipMode.Full, line).Contains("Hideout:") &&
+                missingHideout.GetLine(ItemTooltipMode.Full, line).Contains("4/6 (installed 4)")) installedInDetail = true;
+        Expect(installedInDetail, "Full attaches installed/current-stage count to the concrete hideout row", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.SummaryLine == "Not Needed" && unknown.DataState == ItemDataState.Ready && !unknown.IsDiagnostic,
             "a successfully indexed item with no requirement has the authoritative Not Needed state", ref assertions);

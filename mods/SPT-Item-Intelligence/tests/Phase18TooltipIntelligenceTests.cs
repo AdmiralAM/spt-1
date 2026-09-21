@@ -103,9 +103,9 @@ static class Phase18TooltipIntelligenceTests
         Expect(text.Primary == "42,000 ₽ · Therapist", "vendor mode exposes named highest trader value", ref assertions);
         Expect(text.Secondary == "Flea: 12,000 ₽", "vendor mode retains alternate flea value for Full", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 21,000 ₽"), "full mode exposes value per slot", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Detailed, "Active quest: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
-        Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current) ×3"), "detailed mode stops after the single nearest target", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) ×3"), "full mode retains the hideout target", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Detailed, "Active quest: Signal - Part 1 · 0/2 · FIR"), "detailed mode names and counts the active quest", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current)"), "detailed mode stops after the single nearest target", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) · 1/3"), "full mode counts the concrete hideout target", ref assertions);
 
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
         {

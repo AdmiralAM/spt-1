@@ -25,11 +25,11 @@ static class Phase36RaidInventoryTooltipTests
 
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(combined));
         Expect(text.SummaryOwnedLine == "In raid ×3", "regular modes expose only current-raid stock", ref assertions);
-        Expect(text.TotalOwnedLine == "Total (stash + raid) ×5", "Full preserves the combined stash and raid total", ref assertions);
+        Expect(text.TotalOwnedLine == "Stash ×2 · Raid ×3 · Total ×5", "Full gives stash, raid and combined counts in one line", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
         Expect(text.RequirementBreakdownLine == "Required: total ×4 · quest FIR ×2", "Full states the exact item total and its FIR-only quest portion", ref assertions);
-        Expect(text.RequirementSourcesLine == "Sources: quests ×3 · hideout ×1",
-            "Full makes the quest and hideout contribution to the total explicit", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Full, "Sources:"),
+            "Full omits the redundant source summary", ref assertions);
         ItemHoverText unrestricted = new ItemHoverText("", "", "", "tpl", 0, 0, 0, 9, 9);
         Expect(unrestricted.RequirementBreakdownLine == "Required: total ×9", "hideout-only requirements omit low-value FIR prose", ref assertions);
         ItemRequirementAllocation firHideout = new ItemRequirementAllocation(2, 1, 0, 0, 2, 0, 0, hideoutFir: 2);
@@ -39,14 +39,14 @@ static class Phase36RaidInventoryTooltipTests
             allocation: new ItemRequirementAllocation(0, 0, 0, 0, 2, 0, 0, hideoutFir: 2,
                 hideoutInstalled: 3, hideoutCurrentRequired: 5));
         Expect(hideoutProgress.HideoutLine == "For hideout after quests: 0/2" &&
-               hideoutProgress.HideoutInstalledLine == "In hideout: 3/5",
-            "Full replaces hideout FIR prose with current-stage installed progress", ref assertions);
+               !Contains(hideoutProgress, ItemTooltipMode.Full, "In hideout:"),
+            "Full omits detached hideout progress", ref assertions);
         Expect(hideoutProgress.RequirementBreakdownLine == "Required: total ×2",
             "generic FIR wording describes quest obligations rather than hideout defaults", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
-        Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&
-               Contains(text, ItemTooltipMode.Full, "Total (stash + raid) ×5"),
+        Expect(!Contains(text, ItemTooltipMode.Normal, "Stash ×2 · Raid ×3 · Total ×5") &&
+               Contains(text, ItemTooltipMode.Full, "Stash ×2 · Raid ×3 · Total ×5"),
             "combined stock is available only from Full", ref assertions);
         string sink = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "ItemHoverOverlaySink.cs"));
         Expect(sink.Contains("if (pinnedView != null || Volatile.Read(ref hoveredView) != null)") &&

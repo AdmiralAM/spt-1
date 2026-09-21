@@ -22,10 +22,8 @@ static class Phase30LocalizedCardInteractionTests
             Expect(russian.HideoutLine.StartsWith("Для убежища после квестов:", StringComparison.Ordinal), "Russian hideout allocation order is explicit", ref assertions);
             Expect(!russian.HideoutLine.Contains("рейда", StringComparison.OrdinalIgnoreCase),
                 "hideout allocation no longer repeats low-value FIR wording", ref assertions);
-            Expect(russian.HideoutInstalledLine == "В убежище: 2/5",
-                "Russian Full card reports physical current-stage hideout progress", ref assertions);
-            Expect(Contains(russian, ItemTooltipMode.Full, "В убежище: 2/5") && !Contains(russian, ItemTooltipMode.Normal, "В убежище: 2/5"),
-                "physical hideout progress stays in Full mode", ref assertions);
+            Expect(!Contains(russian, ItemTooltipMode.Full, "В убежище:"),
+                "Full avoids a detached hideout progress summary", ref assertions);
         }
         finally { GameUiText.SetRussian(false); }
 
