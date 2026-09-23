@@ -4,6 +4,8 @@ Admiral Tactical HUD `1.13.3` for SPT 4.1.x.
 
 The current accepted runtime state is **Stable Beta**: it is user-confirmed playable and suitable for normal use, but it is **not final stable**. Further polish and expansion continue later from the same product line.
 
+The Compass C1 package built from this PR is an unaccepted preview and does not replace the accepted Stable Beta baseline until its in-game gate passes.
+
 | Component | Version |
 | --- | --- |
 | Compact client | `1.13.3` |
@@ -20,6 +22,7 @@ Admiral Tactical HUD currently owns:
 - compact population display;
 - optional Full Census population display;
 - player status display;
+- optional item-gated compass heading strip (development candidate; physical raid acceptance pending);
 - HUD edit mode;
 - HUD assets and their validation/optimization pipeline.
 
@@ -57,11 +60,17 @@ The original Admiral Tactical HUD sprite atlas and approved source cells are **r
 
 Both the Bot Census population glyphs and the Admiral reserve atlas are embedded in the relevant client assemblies. The external `assets/hud-sprites.png` remains packaged for compatibility, but losing that file no longer removes all HUD icons.
 
+## Compass C1 preview
+
+The Compact client now includes an optional heading strip. By default it appears in raid only while the vanilla EYE MK.2 compass is equipped in one of the three special slots. `Compass` settings in F12 control visibility, item requirement, degrees, Russian direction labels, scale, opacity and top offset. The strip uses the existing HUD raid lifecycle; its in-game orientation and slot behavior still need physical acceptance.
+
+The 80-degree heading projection and compass presentation are adapted from [Vinarator/Compass-HUD 1.1.2](https://github.com/Vinarat0r/Compass-HUD) under MIT; its license is preserved in `THIRD-PARTY-LICENSES/CompassHUD-LICENSE.txt`. No source or asset was taken from Immersive Compass because its published source URL is unavailable. Marker integrations remain separate roadmap stages.
+
 ## Source layout
 
 - `client/` — Compact and Full Census BepInEx sources plus maintained HUD assets.
 - `server/` — SPT server companion.
-- `docs/compass-navigation-roadmap.md` — deferred compass, Dynamic Maps and mono-audio accessibility design draft.
+- `docs/compass-navigation-roadmap.md` — compass donor audit and C1–C5 implementation contracts.
 - `tools/` — deterministic asset, optics and hot-path validation tools.
 - `THIRD-PARTY-LICENSES/` — retained licenses for incorporated third-party material.
 - `RELEASE_NOTES.md` — Stable Beta release notes.

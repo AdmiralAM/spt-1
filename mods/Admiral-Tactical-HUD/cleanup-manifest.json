@@ -22,9 +22,8 @@
     "BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png",
     "SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll",
     "SPT_Runtime/user/mods/Admiral Tactical HUD/README.md",
-    "SPT_Runtime/user/mods/Admiral Tactical HUD/RELEASE_NOTES.md",
-    "SPT_Runtime/user/mods/Admiral Tactical HUD/release-metadata.json",
     "SPT_Runtime/user/mods/Admiral Tactical HUD/cleanup-manifest.json",
-    "SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt"
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/CompassHUD-LICENSE.txt"
   ]
 }

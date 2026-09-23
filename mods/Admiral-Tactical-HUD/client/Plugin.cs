@@ -88,6 +88,8 @@ namespace SPTPopCounter
             weightHeavy = C("Player Status Colors", "Weight Heavy", .78f, .68f, .39f);
             weightCritical = C("Player Status Colors", "Weight Critical", .75f, .42f, .39f);
 
+            BindCompass();
+
             Logger.LogInfo("Admiral Tactical HUD v1.13.3 loaded (optimized runtime, HUD state " + mode + ")");
         }
 
@@ -113,6 +115,7 @@ namespace SPTPopCounter
             if (toggleKey.Value.IsDown()) SetHudMode((mode + 1) % 3);
 
             float now = Time.unscaledTime;
+            UpdateCompass();
             if (now >= nextRefresh)
             {
                 Refresh();
@@ -156,6 +159,7 @@ namespace SPTPopCounter
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             if (visualRenderer != null) visualRenderer.Dispose();
+            DisposeCompass();
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode loadMode)
@@ -165,6 +169,7 @@ namespace SPTPopCounter
             outsideProfile = null;
             globalConfiguration = null;
             nextRefresh = 0f;
+            ResetCompass();
             ArmVersionSearch(.25f);
         }
 
@@ -179,6 +184,7 @@ namespace SPTPopCounter
             bool couldRender = editMode.Value || workAlways.Value || inRaid || (statusOutside.Value && StatusActive);
             if (!couldRender) return;
             RenderVisualHud();
+            RenderCompass();
         }
 
         void Refresh()
@@ -219,6 +225,7 @@ namespace SPTPopCounter
                 }
 
                 SetRaidState(true);
+                RefreshCompass(local);
 
                 bool needPopulation = PopulationActive;
                 bool needStatus = StatusActive;
@@ -270,6 +277,7 @@ namespace SPTPopCounter
         {
             if (inRaid == value) return;
             inRaid = value;
+            if (!inRaid) ResetCompass();
             pmc = scav = boss = reinforced = 0;
             if (!inRaid && !statusOutside.Value)
                 hydration = energy = weight = overweightLimit = walkDrainLimit = 0f;

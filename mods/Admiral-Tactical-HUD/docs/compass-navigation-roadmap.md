@@ -1,6 +1,13 @@
 # Compass navigation and mono-audio accessibility roadmap
 
-Status: design draft only. This document does not add work to the active `1.13.3` release gate and does not authorize implementation before the current Admiral Tactical HUD milestones are complete.
+Status: implementation started by explicit user request on 2026-09-23. The accepted `1.13.3` Stable Beta runtime remains the reference build; compass work belongs to the same live HUD PR.
+
+## Donor audit and first implementation slice
+
+- [Vinarator/Compass-HUD](https://github.com/Vinarat0r/Compass-HUD), source version `1.1.2`, MIT: provides the 80-degree heading projection, cardinal/degree scale, EN/RU direction names, and optional extraction/transit/quest marker concepts. The initial Admiral slice adapts the heading projection and labels. It uses the existing HUD raid/player lifecycle and a cached camera, without the donor's recurring scene searches, directory-wide icon searches, or per-repaint style allocation.
+- Immersive Compass (EN|RU) `1.0.0`, SPT `3.8.3`, MIT: the older donor demonstrates item-driven visibility and quest/extraction navigation. Its published source URL currently returns HTTP 410, so no code or assets from it have been incorporated.
+- C1 in source: the compact heading strip is gated by the vanilla EYE MK.2 compass template in `SpecialSlot1`–`SpecialSlot3` by default. F12 settings control visibility, language, degrees, scale, opacity and top offset. The physical raid behavior still requires an in-game acceptance check.
+- C2–C4 adapters remain separate: no marker, sound or kill information is inferred from hidden world entities in this slice.
 
 ## Product intent
 
