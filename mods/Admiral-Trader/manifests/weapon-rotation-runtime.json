@@ -50,7 +50,7 @@
         "Factory",
         "Woods"
       ],
-      "semantics": "close-range eliminations",
+      "semantics": "close-range eliminations within 25 metres",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 1
     },
@@ -95,7 +95,7 @@
         "Interchange",
         "Streets"
       ],
-      "semantics": "survive after eliminations",
+      "semantics": "eliminations followed by a survived extraction",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 2
     },
@@ -110,7 +110,7 @@
         "Streets",
         "Interchange"
       ],
-      "semantics": "close-range PMC eliminations",
+      "semantics": "PMC eliminations across raids",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -125,7 +125,7 @@
         "Reserve",
         "Streets"
       ],
-      "semantics": "mixed-faction eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -140,7 +140,7 @@
         "Interchange",
         "Streets"
       ],
-      "semantics": "eliminations with one survived raid",
+      "semantics": "eliminations followed by a survived extraction",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 2
     },
@@ -155,7 +155,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "suppressed eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 1
     },
@@ -170,7 +170,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "armored-target eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -200,7 +200,7 @@
         "Shoreline",
         "Streets"
       ],
-      "semantics": "handling trial with survival",
+      "semantics": "eliminations followed by a survived extraction",
       "nativeWeaponCount": 6,
       "optionalWeaponCount": 0
     },
@@ -215,7 +215,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "high-risk close eliminations",
+      "semantics": "high-risk-map close eliminations within 25 metres",
       "nativeWeaponCount": 7,
       "optionalWeaponCount": 0
     },
@@ -230,7 +230,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "night suppressed eliminations",
+      "semantics": "night-time suppressed sidearm eliminations",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -245,7 +245,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "sustained mixed-faction eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -260,7 +260,7 @@
         "Lighthouse",
         "The Lab"
       ],
-      "semantics": "elite-faction eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -290,7 +290,7 @@
         "Streets",
         "The Lab"
       ],
-      "semantics": "one-raid close mastery",
+      "semantics": "close-combat eliminations within 25 metres in one raid",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 0
     },
@@ -350,7 +350,7 @@
         "Customs",
         "Interchange"
       ],
-      "semantics": "close-to-medium eliminations",
+      "semantics": "compact-rifle eliminations within 60 metres",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 1
     },
@@ -365,7 +365,7 @@
         "Woods",
         "Shoreline"
       ],
-      "semantics": "medium-range eliminations",
+      "semantics": "Scav eliminations at 40 metres or farther",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -380,7 +380,7 @@
         "Woods",
         "Shoreline"
       ],
-      "semantics": "survive after eliminations",
+      "semantics": "eliminations followed by a survived extraction",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 0
     },
@@ -393,7 +393,7 @@
       "locations": [
         "any"
       ],
-      "semantics": "mixed-faction eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 6,
       "optionalWeaponCount": 2
     },
@@ -408,7 +408,7 @@
         "Shoreline",
         "Interchange"
       ],
-      "semantics": "optic-assisted eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 15
     },
@@ -453,7 +453,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "suppressed eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -468,7 +468,7 @@
         "Shoreline",
         "Lighthouse"
       ],
-      "semantics": "distance eliminations",
+      "semantics": "marksman-rifle eliminations across raids",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -483,7 +483,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "PMC distance eliminations",
+      "semantics": "PMC eliminations across raids",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 0
     },
@@ -498,7 +498,7 @@
         "Shoreline",
         "Lighthouse"
       ],
-      "semantics": "precision eliminations across raids",
+      "semantics": "Scav eliminations at 100 metres or farther",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 0
     },
@@ -513,7 +513,7 @@
         "Reserve",
         "Lighthouse"
       ],
-      "semantics": "long-range eliminations",
+      "semantics": "Scav eliminations at 200 metres or farther",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -528,7 +528,7 @@
         "Lighthouse",
         "The Lab"
       ],
-      "semantics": "small high-value target count",
+      "semantics": "Scav eliminations at 300 metres or farther",
       "nativeWeaponCount": 4,
       "optionalWeaponCount": 0
     },
@@ -543,7 +543,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "mixed-distance PMC eliminations",
+      "semantics": "PMC eliminations across raids",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -558,7 +558,7 @@
         "Lighthouse",
         "The Lab"
       ],
-      "semantics": "elite-faction eliminations",
+      "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 3,
       "optionalWeaponCount": 0
     },
@@ -573,7 +573,7 @@
         "Lighthouse",
         "Streets"
       ],
-      "semantics": "controlled fire with survival",
+      "semantics": "eliminations followed by a survived extraction",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
@@ -588,7 +588,7 @@
         "Streets",
         "The Lab"
       ],
-      "semantics": "one-raid modular-rifle mastery",
+      "semantics": "all required eliminations in one raid",
       "nativeWeaponCount": 5,
       "optionalWeaponCount": 0
     },
