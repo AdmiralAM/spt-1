@@ -85,12 +85,14 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Sense uses its owned category icons and applies the aggregate container-value color tier", ref assertions);
         Expect(adapter.Contains("IsContainerRoot(senseItem, item, contained)") &&
                adapter.Contains("state.Price.TraderUnitValue") && adapter.Contains("state.Price.FleaUnitValue") &&
-               adapter.Contains("AppendNativeContainerValue") && adapter.Contains("RestoreNativeContainerValue"),
-            "container price sums contained stack instances, excludes the container itself, follows F12 source and keeps native Sense labels", ref assertions);
+               adapter.Contains("SenseContainerValuePolicy.Resolve(containerTotalValue)") &&
+               !adapter.Contains("AppendNativeContainerValue") && !adapter.Contains(" ₽</color>"),
+            "container value only chooses a marker color from contained stack values and never adds a price label", ref assertions);
         Expect(adapter.Contains("type == \"ElectronicKeys\" || type == \"MechanicalKeys\"") &&
                adapter.Contains("type == \"KappaItems\" || type == \"RareItems\" || type == \"WishList\"") &&
                adapter.Contains("if (IsContainer(senseItem)) return false") &&
-               adapter.Contains("RestoreNativeContainerValue(Member(senseItem, \"typeText\"))"),
+               adapter.Contains("if (type == \"QuestItems\") return !IsContainer(senseItem)") &&
+               adapter.Contains("ItemNeedReason[] order = { ItemNeedReason.Food, ItemNeedReason.Water, ItemNeedReason.Grenade, ItemNeedReason.Key, ItemNeedReason.Currency }"),
             "II key markers can replace the native electronic/mechanical key category while rare/favorite visuals and text restore safely", ref assertions);
         Expect(adapter.Contains("Text(Member(senseItem, \"senseItemType\")) == \"ElectronicKeys\"") &&
                adapter.Contains("icon_keys_electronic.png") && adapter.Contains("icon_keys_mechanic.png"),
@@ -115,7 +117,7 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                adapter.Contains("if (status == null) return true"),
             "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
         Expect(adapter.Contains("CompactText(textPolicy, primary, stock, isContainer") &&
-               adapter.Contains("completedContainer") && adapter.Contains("if (isContainer && policy.Stock == SenseStockState.Complete) return value.Trim()") &&
+               adapter.Contains("completedContainer") && adapter.Contains("if (isContainer && policy.Stock == SenseStockState.Complete) return string.Empty") &&
                !adapter.Contains("ALL ✓") && !adapter.Contains("ВСЁ ✓") &&
                !adapter.Contains(">\\n<"),
             "completed containers collapse to a green check while other Sense status stays on one compact line", ref assertions);

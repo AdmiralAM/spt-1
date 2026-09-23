@@ -309,6 +309,7 @@ namespace SPTItemIntelligence
             registry.RegisterParent("543be5e94bdc2df1348b4568", ItemCategory.Key);
             registry.RegisterParent("543be6564bdc2df4348b4568", ItemCategory.Grenade);
             registry.RegisterParent("543be5dd4bdc2deb348b4569", ItemCategory.Currency);
+            registry.RegisterParent("5448e8d04bdc2ddf718b4569", ItemCategory.Food);
             return registry;
         }
 

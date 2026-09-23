@@ -19,7 +19,6 @@ namespace SPTItemIntelligence
         readonly HashSet<object> trackedSenseItems = new HashSet<object>(ReferenceEqualityComparer.Instance);
         readonly List<object> staleSenseItems = new List<object>();
         readonly Dictionary<object, SenseEvaluationCache> evaluationCache = new Dictionary<object, SenseEvaluationCache>(ReferenceEqualityComparer.Instance);
-        readonly Dictionary<object, string> nativeTypeText = new Dictionary<object, string>(ReferenceEqualityComparer.Instance);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
@@ -99,7 +98,6 @@ namespace SPTItemIntelligence
             bool wantsContainerValue = isContainer && settings.SenseContainerValues;
             if (!settings.SenseRequiredItems && !settings.SenseCategories && !wantsContainerValue)
             {
-                RestoreNativeContainerValue(Member(senseItem, "typeText"));
                 if (isContainer) ApplyContainerNameScale(senseItem);
                 return;
             }
@@ -188,7 +186,6 @@ namespace SPTItemIntelligence
             bool preserveNative = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy && !hasContainerValue;
             if (!policy.HasItemIntelligence && !hasContainerValue || preserveNative)
             {
-                RestoreNativeContainerValue(Member(senseItem, "typeText"));
                 return;
             }
 
@@ -197,10 +194,12 @@ namespace SPTItemIntelligence
             bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
             bool preserveIcon = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy;
             Color valueColor = hasContainerValue ? settings.GetSenseContainerValueColor(SenseContainerValuePolicy.Resolve(containerTotalValue)) : primary;
-            Color renderColor = completedContainer ? stock : hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary;
+            Color renderColor = completedContainer ? stock : hasRequirementPolicy || policy.HasItemIntelligence ? primary : hasContainerValue ? valueColor : primary;
             if (!preserveIcon && (policy.HasItemIntelligence || hasContainerValue)) SetField(senseItem, "color", renderColor);
-            Color secondary = !policy.HasItemIntelligence || policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
-                ? primary : settings.GetSenseColor(policy.SecondaryCategory);
+            Color secondary = policy.HasItemIntelligence && policy.Stock == SenseStockState.None && hasContainerValue
+                ? valueColor
+                : !policy.HasItemIntelligence || policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
+                    ? primary : settings.GetSenseColor(policy.SecondaryCategory);
             if (policy.HasItemIntelligence && !preserveIcon) SetField(senseItem, "outlineColor", secondary);
 
             ItemNeedIcon renderedIcon = completedContainer ? ItemNeedIcon.Complete : policy.Icon;
@@ -211,16 +210,9 @@ namespace SPTItemIntelligence
             object typeText = Member(senseItem, "typeText");
             if (settings.SenseRemainingText)
             {
-                if (preserveIcon && hasContainerValue)
-                    AppendNativeContainerValue(typeText, containerTotalValue, valueColor);
-                else
-                {
-                    nativeTypeText.Remove(typeText);
-                    SenseVisualPolicy textPolicy = preserveIcon ? new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0) : policy;
-                    ApplyText(typeText, CompactText(textPolicy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount), containerTotalValue, valueColor), Color.white, secondary);
-                }
+                SenseVisualPolicy textPolicy = preserveIcon ? new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0) : policy;
+                ApplyText(typeText, CompactText(textPolicy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount)), Color.white, secondary);
             }
-            else RestoreNativeContainerValue(typeText);
         }
 
         internal void RefreshActive()
@@ -369,7 +361,6 @@ namespace SPTItemIntelligence
             trackedSenseItems.Clear();
             staleSenseItems.Clear();
             evaluationCache.Clear();
-            nativeTypeText.Clear();
             if (ledger.Revision != revision && raidChanged != null) raidChanged();
         }
 
@@ -389,54 +380,26 @@ namespace SPTItemIntelligence
             return GameUiText.T("FUTURE", "ПОТОМ");
         }
 
-        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer, Color countColor,
-            long containerTotalValue, Color valueColor)
+        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer, Color countColor)
         {
-            string value = isContainer && containerTotalValue > 0
-                ? "  •  <color=#" + ColorUtility.ToHtmlStringRGB(valueColor) + ">" + containerTotalValue.ToString("N0") + " ₽</color>"
-                : string.Empty;
-            if (isContainer && policy.Stock == SenseStockState.Complete) return value.Trim();
-            if (!policy.HasItemIntelligence) return value.Length == 0 ? string.Empty : value.Trim();
+            if (isContainer && policy.Stock == SenseStockState.Complete) return string.Empty;
+            if (!policy.HasItemIntelligence) return string.Empty;
             if (policy.Stock == SenseStockState.None)
                 return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>" +
-                       (isContainer ? " <color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" : string.Empty) + value;
+                       (isContainer ? " <color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" : string.Empty);
             if (isContainer)
                 return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color> " +
-                       "<color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" + value;
+                       "<color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>";
             if (policy.Stock == SenseStockState.Complete)
                 return "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>";
             return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color> " +
                    "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">−" + policy.Remaining + "</color>";
         }
 
-        void AppendNativeContainerValue(object text, long value, Color color)
-        {
-            if (text == null || value <= 0) return;
-            string current = Text(Member(text, "text"));
-            int separator = current.LastIndexOf("  •  ", StringComparison.Ordinal);
-            string original = separator >= 0 ? current.Substring(0, separator) : current;
-            if (nativeTypeText.Count >= 512) nativeTypeText.Clear();
-            nativeTypeText[text] = original;
-            string suffix = "  •  <color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + value.ToString("N0") + " ₽</color>";
-            SetMember(text, "text", original + suffix);
-        }
-
-        void RestoreNativeContainerValue(object text)
-        {
-            if (text == null) return;
-            string original;
-            bool tracked = nativeTypeText.TryGetValue(text, out original);
-            string current = Text(Member(text, "text"));
-            int separator = current.LastIndexOf("  •  ", StringComparison.Ordinal);
-            if (separator >= 0)
-                SetMember(text, "text", tracked ? original : current.Substring(0, separator));
-            nativeTypeText.Remove(text);
-        }
-
         static SenseVisualPolicy CategoryPolicy(Dictionary<ItemNeedReason, int> counts, string currencyCode)
         {
             if (counts == null || counts.Count == 0) return new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0);
-            ItemNeedReason[] order = { ItemNeedReason.Key, ItemNeedReason.Grenade, ItemNeedReason.Currency, ItemNeedReason.Water, ItemNeedReason.Food };
+            ItemNeedReason[] order = { ItemNeedReason.Food, ItemNeedReason.Water, ItemNeedReason.Grenade, ItemNeedReason.Key, ItemNeedReason.Currency };
             for (int i = 0; i < order.Length; i++)
             {
                 int count;
@@ -504,7 +467,9 @@ namespace SPTItemIntelligence
         static bool HasProtectedSenseVisual(object senseItem)
         {
             string type = Text(Member(senseItem, "senseItemType"));
-            if (type == "Valuables" || type == "QuestItems" || type == "KappaItems" || type == "RareItems" || type == "WishList") return true;
+            if (type == "Valuables" || type == "KappaItems" || type == "RareItems" || type == "WishList") return true;
+            if (type == "QuestItems") return !IsContainer(senseItem);
+            if (type == "QuestItems") return !IsContainer(senseItem);
             if (type == "ElectronicKeys" || type == "MechanicalKeys") return false;
             if (IsContainer(senseItem)) return false;
             object raw = Member(senseItem, "color");
@@ -693,10 +658,6 @@ namespace SPTItemIntelligence
         public void Dispose()
         {
             if (ReferenceEquals(active, this)) active = null;
-            foreach (object senseItem in trackedSenseItems)
-            {
-                try { RestoreNativeContainerValue(Member(senseItem, "typeText")); } catch { }
-            }
             if (harmony != null)
             {
                 try { MethodInfo unpatch = harmony.GetType().GetMethod("UnpatchAll", new[] { typeof(string) }); if (unpatch != null) unpatch.Invoke(harmony, new object[] { HarmonyId }); } catch { }

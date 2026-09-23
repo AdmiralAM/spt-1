@@ -48,9 +48,9 @@ static class Phase38SenseVisualPolicyTests
                SenseContainerValuePolicy.Resolve(200000) == SenseContainerValueTier.BrightYellow,
             "container total value color tiers honor every threshold boundary", ref assertions);
         SenseVisualPolicy categoryFallback = SenseVisualPolicy.CategoryOnly(ItemNeedReason.Water, 1);
-        SenseVisualPolicy afterValue = SenseContainerPolicyEngine.Select(new[] { complete }, categoryFallback, false, 60000);
+        SenseVisualPolicy afterValue = SenseContainerPolicyEngine.Select(new[] { complete }, categoryFallback, false, 0);
         Expect(afterValue.Category == ItemNeedReason.Water && afterValue.Stock == SenseStockState.None,
-            "a more useful contained category or value band outranks a completed requirement marker", ref assertions);
+            "a contained category outranks a completed requirement even below the value-color threshold", ref assertions);
         SenseVisualPolicy afterNativeValue = SenseContainerPolicyEngine.Select(new[] { complete }, categoryFallback, true, 0);
         Expect(!afterNativeValue.HasItemIntelligence,
             "native protected valuable and favorite indicators outrank completed requirements and fallback categories", ref assertions);
@@ -63,8 +63,9 @@ static class Phase38SenseVisualPolicyTests
         ItemRegistry registry = ItemRegistry.CreateDefault();
         Expect(registry.Resolve(new ItemDescriptor("test-key", "543be5e94bdc2df1348b4568", "unknown key", "key", "Template")).Category == ItemCategory.Key &&
                registry.Resolve(new ItemDescriptor("test-grenade", "543be6564bdc2df4348b4568", "unknown grenade", "grenade", "Template")).Category == ItemCategory.Grenade &&
-               registry.Resolve(new ItemDescriptor("test-money", "543be5dd4bdc2deb348b4569", "unknown currency", "cash", "Template")).Category == ItemCategory.Currency,
-            "unknown derived template IDs inherit vanilla key, grenade and currency semantics from parent IDs", ref assertions);
+               registry.Resolve(new ItemDescriptor("test-money", "543be5dd4bdc2deb348b4569", "unknown currency", "cash", "Template")).Category == ItemCategory.Currency &&
+               registry.Resolve(new ItemDescriptor("656df4fec921ad01000481a2", "5448e8d04bdc2ddf718b4569", "Pack of instant noodles", "Noodles", "ItemTemplate")).Category == ItemCategory.Food,
+            "unknown derived IDs inherit vanilla key, grenade, currency and food semantics from stable parent IDs", ref assertions);
         return assertions;
     }
     static void Expect(bool value, string message, ref int assertions) { assertions++; if (!value) throw new InvalidOperationException("Phase 38 assertion failed: " + message); }
