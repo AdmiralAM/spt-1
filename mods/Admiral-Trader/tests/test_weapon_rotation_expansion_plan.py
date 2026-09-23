@@ -35,8 +35,7 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
                 self.assertGreaterEqual(len(pools[pool_name]), 2)
                 self.assertEqual(len(pools[pool_name]), len(set(pools[pool_name])))
                 self.assertTrue(all(len(tpl) == 24 for tpl in pools[pool_name]))
-                self.assertGreaterEqual(len(locations), 2)
-                self.assertLessEqual(len(locations), 4)
+                self.assertTrue(locations == ["any"] or 2 <= len(locations) <= 4)
                 referenced.extend(pools[pool_name])
         self.assertGreaterEqual(len(set(referenced)), 100)
 

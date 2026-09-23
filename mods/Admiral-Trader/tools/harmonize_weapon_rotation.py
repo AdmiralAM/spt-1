@@ -199,13 +199,19 @@ def main():
             for kill_row in kill_rows:
                 kill_row["weapon"] = weapons
                 location_rows = [node for node in walk(quest["conditions"]["AvailableForFinish"]) if node.get("conditionType") == "Location"]
-                targets = [runtime for label in locations for runtime in LOCATION_IDS[label]]
-                if location_rows:
-                    for location_row in location_rows:
-                        location_row["target"] = targets
+                if locations == ["any"]:
+                    for parent in walk(quest["conditions"]["AvailableForFinish"]):
+                        conditions = parent.get("counter", {}).get("conditions")
+                        if conditions is not None:
+                            conditions[:] = [node for node in conditions if node.get("conditionType") != "Location"]
                 else:
-                    parent = next(node for node in walk(quest["conditions"]["AvailableForFinish"]) if node.get("counter", {}).get("conditions") is not None)
-                    parent["counter"]["conditions"].append({"id": hid(quest_id + ":rotation-location"), "dynamicLocale": False, "conditionType": "Location", "target": targets})
+                    targets = [runtime for label in locations for runtime in LOCATION_IDS[label]]
+                    if location_rows:
+                        for location_row in location_rows:
+                            location_row["target"] = targets
+                    else:
+                        parent = next(node for node in walk(quest["conditions"]["AvailableForFinish"]) if node.get("counter", {}).get("conditions") is not None)
+                        parent["counter"]["conditions"].append({"id": hid(quest_id + ":rotation-location"), "dynamicLocale": False, "conditionType": "Location", "target": targets})
             start = quest["conditions"]["AvailableForStart"]
             level = int(level_band.split("-")[0]) if "-" in level_band else 40
             level_row = next(node for node in start if node.get("conditionType") == "Level")

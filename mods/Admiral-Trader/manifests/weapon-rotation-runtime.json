@@ -391,12 +391,10 @@
       "pool": "classic-ak-762",
       "levelBand": "13-19",
       "locations": [
-        "Customs",
-        "Interchange",
-        "Shoreline"
+        "any"
       ],
       "semantics": "mixed-faction eliminations",
-      "nativeWeaponCount": 5,
+      "nativeWeaponCount": 6,
       "optionalWeaponCount": 2
     },
     {

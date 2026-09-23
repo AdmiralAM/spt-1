@@ -10,6 +10,26 @@ def load(relative):
 
 
 class CampaignAuditCorrectionTests(unittest.TestCase):
+    def test_b6_classic_762_ak_rotation_counts_any_location_and_ak104(self):
+        quest_id = "5d3a863ab1f890166c5d96ff"
+        quest = next(
+            load(path.relative_to(ROOT))
+            for path in (ROOT / "db/quests").glob("40-*.json")
+            if load(path.relative_to(ROOT))["_id"] == quest_id
+        )
+        runtime = load("manifests/weapon-rotation-runtime.json")
+        assignment = next(row for row in runtime["assignments"] if row["id"] == quest_id)
+        self.assertEqual(["any"], assignment["locations"])
+        group = next(row for row in quest["conditions"]["AvailableForFinish"] if row.get("counter"))
+        counter_conditions = group["counter"]["conditions"]
+        self.assertFalse(any(row.get("conditionType") == "Location" for row in counter_conditions))
+        kills = next(row for row in counter_conditions if row.get("conditionType") == "Kills")
+        self.assertEqual(12, group["value"])
+        self.assertIn("5ac66d725acfc43b321d4b60", kills["weapon"])  # AK-104
+        plan = load("manifests/weapon-rotation-expansion-plan.json")
+        self.assertEqual(["any"], plan["lanes"]["B-rifle-precision"][5][3])
+        self.assertIn("5ac66d725acfc43b321d4b60", plan["pools"]["classic-ak-762"])
+
     def test_stage_pools_are_disjoint_and_cover_all_49_weapons_once(self):
         pools = load("manifests/weapon-family-runtime-pools.json")
         total = 0
