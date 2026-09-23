@@ -131,7 +131,8 @@ namespace SPTItemIntelligence
                 checked(source.ExactOwnedFir + raid.FoundInRaid),
                 source.HideoutFirRequired,
                 source.HideoutInstalled,
-                source.HideoutCurrentRequired);
+                source.HideoutCurrentRequired,
+                source.HasSharedAlternativePool);
             ItemRequirementDecision decision = combined.Keep > 0
                 ? ItemRequirementDecision.Keep
                 : combined.Surplus > 0 ? ItemRequirementDecision.SafeToSell : ItemRequirementDecision.None;

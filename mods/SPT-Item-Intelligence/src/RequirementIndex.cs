@@ -10,17 +10,21 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementDetail
     {
-        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false, int requiredCount = 0, int satisfiedCount = 0)
+        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false, int requiredCount = 0, int satisfiedCount = 0, bool alternative = false, int alternativeItemCount = 0)
         {
             Source = source; Label = NormalizeLabel(label); RemainingCount = Math.Max(0, remainingCount); FoundInRaidRequired = foundInRaidRequired;
             RequiredCount = requiredCount > 0 ? requiredCount : RemainingCount;
             SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
+            IsAlternative = alternative;
+            AlternativeItemCount = Math.Max(0, alternativeItemCount);
         }
         public RequirementSource Source { get; }
         public string Label { get; }
         public int RemainingCount { get; }
         public int RequiredCount { get; }
         public int SatisfiedCount { get; }
+        public bool IsAlternative { get; }
+        public int AlternativeItemCount { get; }
         public bool FoundInRaidRequired { get; }
         static string NormalizeLabel(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : string.Join(" ", value.Trim().Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
@@ -30,11 +34,12 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementContribution
     {
-        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null, bool isCurrentHideoutStage = false)
+        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null, bool isCurrentHideoutStage = false, int alternativeItemCount = 0)
         {
             TemplateId = NormalizeId(templateId); Source = source; RequiredCount = Math.Max(0, requiredCount); SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
             FoundInRaidRequired = foundInRaidRequired; CombineMode = combineMode; AlternativeGroup = NormalizeGroup(alternativeGroup); Label = string.IsNullOrWhiteSpace(label) ? string.Empty : label.Trim();
             IsCurrentHideoutStage = source == RequirementSource.Hideout && isCurrentHideoutStage;
+            AlternativeItemCount = Math.Max(0, alternativeItemCount);
             if (TemplateId.Length == 0) throw new ArgumentException("A contribution requires a template id.", nameof(templateId));
             if (CombineMode == RequirementCombineMode.AlternativeMaximum && AlternativeGroup.Length == 0) throw new ArgumentException("Alternative contributions require a stable group id.", nameof(alternativeGroup));
         }
@@ -48,6 +53,7 @@ namespace SPTItemIntelligence
         public string AlternativeGroup { get; }
         public string Label { get; }
         public bool IsCurrentHideoutStage { get; }
+        public int AlternativeItemCount { get; }
         static string NormalizeGroup(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         internal static string NormalizeId(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
     }
@@ -138,9 +144,11 @@ namespace SPTItemIntelligence
             public int ExactFir;
             public int AllocationOwned;
             public int AllocationFir;
+            public bool HasAlternativePool;
 
             public void Add(RequirementContribution contribution, int remaining)
             {
+                if (contribution.AlternativeItemCount > 1) HasAlternativePool = true;
                 if (contribution.CombineMode == RequirementCombineMode.Additive) { additive.Add(contribution); return; }
                 // Explicit alternatives stay alternatives; unrelated future quests are additive.
                 string key = contribution.Source + "|" + contribution.AlternativeGroup;
@@ -168,10 +176,11 @@ namespace SPTItemIntelligence
                         else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
                         if (c.IsCurrentHideoutStage) { hideoutInstalled += c.SatisfiedCount; hideoutCurrentRequired += c.RequiredCount; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
-                details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired, c.RequiredCount, c.SatisfiedCount));
+                        details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired, c.RequiredCount, c.SatisfiedCount,
+                            c.AlternativeItemCount > 1, c.AlternativeItemCount));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired, HasAlternativePool);
                 int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
                 return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }

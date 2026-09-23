@@ -357,11 +357,11 @@ namespace SPTItemIntelligence
             {
                 RequirementDetail detail = details[i];
                 if (detail == null || detail.Label.Length == 0 || (detail.RemainingCount <= 0 && detail.SatisfiedCount <= 0)) continue;
-                string key = ((int)detail.Source).ToString(CultureInfo.InvariantCulture) + "|" + detail.Label + "|" + (detail.FoundInRaidRequired ? "1" : "0");
+                string key = ((int)detail.Source).ToString(CultureInfo.InvariantCulture) + "|" + detail.Label + "|" + (detail.FoundInRaidRequired ? "1" : "0") + "|" + (detail.IsAlternative ? detail.AlternativeItemCount.ToString(CultureInfo.InvariantCulture) : "0");
                 DetailAggregate aggregate;
                 if (!grouped.TryGetValue(key, out aggregate))
                 {
-                    aggregate = new DetailAggregate(detail.Source, detail.Label, detail.FoundInRaidRequired);
+                    aggregate = new DetailAggregate(detail.Source, detail.Label, detail.FoundInRaidRequired, detail.IsAlternative, detail.AlternativeItemCount);
                     grouped.Add(key, aggregate);
                     ordered.Add(aggregate);
                 }
@@ -399,7 +399,15 @@ namespace SPTItemIntelligence
                 string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Active quest", "Активный квест") :
                     detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Future quest", "Будущий квест") : GameUiText.T("Hideout", "Убежище");
                 int covered = detail.SatisfiedCount + detail.Allocated;
-                string line = prefix + ": " + detail.Label + " · " + covered.ToString(CultureInfo.InvariantCulture) + "/" + detail.RequiredCount.ToString(CultureInfo.InvariantCulture);
+                string line = prefix + ": " + detail.Label;
+                if (detail.IsAlternative)
+                {
+                    line += GameUiText.T(" · any of ", " · из любых ") + detail.AlternativeItemCount.ToString(CultureInfo.InvariantCulture) +
+                        GameUiText.T(" item types ", " видов предметов ") + covered.ToString(CultureInfo.InvariantCulture) + "/" +
+                        detail.RequiredCount.ToString(CultureInfo.InvariantCulture) +
+                        GameUiText.T(" · this type owned ×", " · этого типа в наличии ×") + allocation.ExactOwned.ToString(CultureInfo.InvariantCulture);
+                }
+                else line += " · " + covered.ToString(CultureInfo.InvariantCulture) + "/" + detail.RequiredCount.ToString(CultureInfo.InvariantCulture);
                 if (detail.Source == RequirementSource.Hideout && detail.SatisfiedCount > 0)
                     line += GameUiText.T(" (installed ", " (установлено ") + detail.SatisfiedCount.ToString(CultureInfo.InvariantCulture) + ")";
                 if (detail.FoundInRaidRequired && detail.Source != RequirementSource.Hideout)
@@ -411,15 +419,19 @@ namespace SPTItemIntelligence
 
         sealed class DetailAggregate
         {
-            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired)
+            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired, bool isAlternative, int alternativeItemCount)
             {
                 Source = source;
                 Label = label;
                 FoundInRaidRequired = foundInRaidRequired;
+                IsAlternative = isAlternative;
+                AlternativeItemCount = alternativeItemCount;
             }
             public RequirementSource Source { get; }
             public string Label { get; }
             public bool FoundInRaidRequired { get; }
+            public bool IsAlternative { get; }
+            public int AlternativeItemCount { get; }
             public int RemainingCount { get; set; }
             public int RequiredCount { get; set; }
             public int SatisfiedCount { get; set; }

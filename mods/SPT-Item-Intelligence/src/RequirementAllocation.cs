@@ -8,7 +8,7 @@ namespace SPTItemIntelligence
     // First reserve all FIR-only obligations, then spend unrestricted inventory.
     public sealed class ItemRequirementAllocation
     {
-        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir, int exactOwned = -1, int exactFirOwned = -1, int hideoutFir = 0, int hideoutInstalled = 0, int hideoutCurrentRequired = 0)
+        public ItemRequirementAllocation(int owned, int firOwned, int now, int later, int hideout, int nowFir, int laterFir, int exactOwned = -1, int exactFirOwned = -1, int hideoutFir = 0, int hideoutInstalled = 0, int hideoutCurrentRequired = 0, bool sharedAlternativePool = false)
         {
             Owned = Math.Max(0, owned);
             OwnedFir = Math.Min(Owned, Math.Max(0, firOwned));
@@ -22,6 +22,7 @@ namespace SPTItemIntelligence
             HideoutFirRequired = Math.Min(HideoutRequired, Math.Max(0, hideoutFir));
             HideoutCurrentRequired = Math.Max(0, hideoutCurrentRequired);
             HideoutInstalled = Math.Min(HideoutCurrentRequired, Math.Max(0, hideoutInstalled));
+            HasSharedAlternativePool = sharedAlternativePool;
             Keep = checked(NowRequired + LaterRequired + HideoutRequired);
             int fir = OwnedFir;
             int nonFir = Owned - fir;
@@ -48,6 +49,7 @@ namespace SPTItemIntelligence
         public int HideoutFirAllocated { get; }
         public int HideoutInstalled { get; }
         public int HideoutCurrentRequired { get; }
+        public bool HasSharedAlternativePool { get; }
         public int NowAllocated { get; }
         public int LaterAllocated { get; }
         public int HideoutAllocated { get; }

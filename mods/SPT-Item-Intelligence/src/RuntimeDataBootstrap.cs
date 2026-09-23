@@ -296,7 +296,8 @@ namespace SPTItemIntelligence
                     if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
                     if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
                     int satisfied = ReadSatisfied(profile, condition.Id);
-                    output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
+                    output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid,
+                        label: questLabel, alternativeItemCount: condition.Targets.Count));
                 }
             }
         }
