@@ -60,11 +60,13 @@ The original Admiral Tactical HUD sprite atlas and approved source cells are **r
 
 Both the Bot Census population glyphs and the Admiral reserve atlas are embedded in the relevant client assemblies. The external `assets/hud-sprites.png` remains packaged for compatibility, but losing that file no longer removes all HUD icons.
 
-## Compass preview (C1–C2 source)
+## Compass preview (C1–C3 source)
 
-The Compact client now includes an optional heading strip. By default it appears in raid only while the vanilla EYE MK.2 compass is equipped in one of the three special slots. `Compass` settings in F12 control visibility, item requirement, degrees, Russian direction labels, scale, opacity and top offset. The strip uses the existing HUD raid lifecycle; its in-game orientation and slot behavior still need physical acceptance.
+The Compact client now includes an optional heading strip. The current test preview works without equipping the vanilla EYE MK.2 compass; special-slot gating is deferred and not active. `Compass` settings in F12 control visibility, degrees, Russian direction labels, scale, opacity and top offset. The strip uses the existing HUD raid lifecycle; its in-game orientation still needs physical acceptance.
 
-The compass can also show eligible exits (`В`), transits (`П`) and active quest objectives (`З`). The latter require the optional Dynamic Maps mod; the F12 `Compass` settings control each category. `Compass Events` adds a 15-second red skull for player-caused or nearby deaths, plus small body indicators within 25 m. These markers still require in-game acceptance and are not part of the accepted Stable Beta baseline. The 80-degree heading projection and compass presentation are adapted from [Vinarator/Compass-HUD 1.1.2](https://github.com/Vinarat0r/Compass-HUD) under MIT; its license is preserved in `THIRD-PARTY-LICENSES/CompassHUD-LICENSE.txt`. No source or asset was taken from Immersive Compass because its published source URL is unavailable.
+The compass can also show eligible exits (`В`), transits (`П`) and active quest objectives (`З`). The latter require the optional Dynamic Maps mod; the F12 `Compass` settings control each category. `Compass Events` adds a 15-second red skull for player-caused or nearby deaths, plus gray skulls for bodies within 25 m. Dynamic Maps floor bounds determine whether a skull gets a green-above or red-below chevron; when bounds are unavailable, only a clear 3 m vertical separation gets one. Accessibility Indicators integration is deferred. These markers still require in-game acceptance and are not part of the accepted Stable Beta baseline. The 80-degree heading projection and compass presentation are adapted from [Vinarator/Compass-HUD 1.1.2](https://github.com/Vinarat0r/Compass-HUD) under MIT; its license is preserved in `THIRD-PARTY-LICENSES/CompassHUD-LICENSE.txt`. No source or asset was taken from Immersive Compass because its published source URL is unavailable.
+
+After the compass test, population categories should expand beyond PMC, Scav, boss and entourage to distinguish actual on-map RUAF, Black Division, ex-USEC, cultists and other supported special groups. This is planned, not implemented in the current preview.
 
 ## Source layout
 

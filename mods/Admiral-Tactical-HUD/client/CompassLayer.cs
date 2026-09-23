@@ -10,14 +10,13 @@ namespace SPTPopCounter
     public sealed partial class Plugin
     {
         // The heading strip and its 80-degree projection follow the MIT-licensed
-        // Vinarator Compass HUD 1.1.2. The lifecycle, item gate and renderer are
+        // Vinarator Compass HUD 1.1.2. The lifecycle and renderer are
         // integrated with Admiral HUD so there is no second world scan or plugin.
-        const string VanillaCompassTemplate = "5f4f9eb969cdc30ff33f09db";
         static readonly string[] DirectionsEn = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
         static readonly string[] DirectionsRu = { "С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ" };
         static readonly string[] DegreeLabels = CreateDegreeLabels();
 
-        ConfigEntry<bool> compassEnabled, compassRequireItem, compassShowDegrees, compassRussianDirections;
+        ConfigEntry<bool> compassEnabled, compassShowDegrees, compassRussianDirections;
         ConfigEntry<float> compassScale, compassOpacity, compassTopOffset;
         ConfigEntry<bool> compassShowExtracts, compassShowTransits, compassShowQuests;
         readonly List<CompassMarker> compassMarkers = new List<CompassMarker>(32);
@@ -36,11 +35,7 @@ namespace SPTPopCounter
             public bool IsTransit;
             public bool IsQuest;
         }
-        Type compassEquipmentType;
-        MethodInfo compassGetSlot;
-        object[] compassSlotArguments;
-        object[] compassSpecialSlots;
-        bool compassHasItem;
+        bool compassLocalReady;
         Camera compassCamera;
         float compassYaw;
         int compassRoundedHeading = -1;
@@ -57,8 +52,6 @@ namespace SPTPopCounter
         void BindCompass()
         {
             compassEnabled = Config.Bind("Compass", "Enabled", true, "Показывать шкалу компаса в рейде");
-            compassRequireItem = Config.Bind("Compass", "Require compass in special slot", true,
-                "Показывать шкалу только с компасом EYE MK.2 в одном из трёх специальных слотов");
             compassShowDegrees = Config.Bind("Compass", "Show degrees", true, "Показывать градусы и азимут");
             compassRussianDirections = Config.Bind("Compass", "Russian directions", true, "Русские обозначения сторон света");
             compassScale = Config.Bind("Compass", "Scale", 1f,
@@ -77,7 +70,7 @@ namespace SPTPopCounter
 
         void RefreshCompassMarkers(object world, object localPlayer)
         {
-            if (!compassEnabled.Value || (compassRequireItem.Value && !compassHasItem))
+            if (!compassEnabled.Value || !compassLocalReady)
             {
                 compassMarkers.Clear();
                 compassNextMarkerCapture = 0f;
@@ -216,62 +209,12 @@ namespace SPTPopCounter
 
         void RefreshCompass(object localPlayer)
         {
-            if (!compassEnabled.Value || !IsUsableUnityObject(localPlayer))
-            {
-                compassHasItem = false;
-                return;
-            }
-            compassHasItem = !compassRequireItem.Value || HasSpecialSlotCompass(localPlayer);
-        }
-
-        bool HasSpecialSlotCompass(object player)
-        {
-            try
-            {
-                object controller = ReadMember(player, "InventoryController");
-                object inventory = ReadMember(controller, "Inventory");
-                object equipment = ReadMember(inventory, "Equipment");
-                if (equipment == null) return false;
-
-                if (compassGetSlot == null || compassEquipmentType != equipment.GetType())
-                {
-                    compassGetSlot = null;
-                    MethodInfo[] methods = equipment.GetType().GetMethods(InstanceFlags);
-                    for (int i = 0; i < methods.Length; i++)
-                    {
-                        if (methods[i].Name != "GetSlot") continue;
-                        ParameterInfo[] parameters = methods[i].GetParameters();
-                        if (parameters.Length != 1 || !parameters[0].ParameterType.IsEnum) continue;
-                        compassGetSlot = methods[i];
-                        break;
-                    }
-                    if (compassGetSlot == null) return false;
-                    compassSlotArguments = new object[1];
-                    compassEquipmentType = equipment.GetType();
-                    Type slotType = compassGetSlot.GetParameters()[0].ParameterType;
-                    compassSpecialSlots = new object[3];
-                    for (int i = 0; i < compassSpecialSlots.Length; i++)
-                        compassSpecialSlots[i] = Enum.Parse(slotType, "SpecialSlot" + (i + 1));
-                }
-
-                for (int i = 0; i < compassSpecialSlots.Length; i++)
-                {
-                    compassSlotArguments[0] = compassSpecialSlots[i];
-                    object slot = compassGetSlot.Invoke(equipment, compassSlotArguments);
-                    object item = ReadMember(slot, "ContainedItem");
-                    string templateId = (ReadMember(item, "TemplateId") ??
-                        ReadMember(ReadMember(item, "Template"), "_id") ??
-                        ReadMember(ReadMember(item, "Template"), "Id"))?.ToString();
-                    if (string.Equals(templateId, VanillaCompassTemplate, StringComparison.OrdinalIgnoreCase)) return true;
-                }
-            }
-            catch { /* Missing/changed EFT slot API hides only the compass. */ }
-            return false;
+            compassLocalReady = compassEnabled.Value && IsUsableUnityObject(localPlayer);
         }
 
         void UpdateCompass()
         {
-            if (!inRaid || !compassEnabled.Value || (compassRequireItem.Value && !compassHasItem)) return;
+            if (!inRaid || !compassEnabled.Value || !compassLocalReady) return;
             if (compassCamera == null) compassCamera = Camera.main;
             if (compassCamera == null) return;
 
@@ -294,11 +237,7 @@ namespace SPTPopCounter
             compassQuestUtilsType = null;
             compassQuestCapture = compassQuestMarkers = compassQuestDiscard = null;
             compassQuestArguments[0] = null;
-            compassEquipmentType = null;
-            compassGetSlot = null;
-            compassSlotArguments = null;
-            compassSpecialSlots = null;
-            compassHasItem = false;
+            compassLocalReady = false;
             compassCamera = null;
             compassRoundedHeading = -1;
             compassMarkers.Clear();
@@ -317,7 +256,7 @@ namespace SPTPopCounter
         void RenderCompass()
         {
             if (Event.current.type != EventType.Repaint || !inRaid || !compassEnabled.Value ||
-                (compassRequireItem.Value && !compassHasItem) || compassCamera == null || Cursor.visible) return;
+                !compassLocalReady || compassCamera == null || Cursor.visible) return;
 
             if (compassTextStyle == null)
             {

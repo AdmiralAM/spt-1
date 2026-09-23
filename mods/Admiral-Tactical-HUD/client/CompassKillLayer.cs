@@ -19,12 +19,14 @@ namespace SPTPopCounter
         {
             public Vector3 Position;
             public float ExpiresAt;
+            public int HeightRelation;
         }
 
         sealed class CompassCorpseMarker
         {
             public Vector3 Position;
             public float DistanceSq;
+            public int HeightRelation;
         }
 
         ConfigEntry<bool> compassKillEnabled;
@@ -56,8 +58,7 @@ namespace SPTPopCounter
 
         void RefreshCompassKillTracking(object world, object localPlayer, List<object> players)
         {
-            if (!compassEnabled.Value ||
-                (compassRequireItem.Value && !compassHasItem))
+            if (!compassEnabled.Value || !compassLocalReady)
             {
                 ResetCompassKills();
                 return;
@@ -70,7 +71,12 @@ namespace SPTPopCounter
             compassLocalProfileId = (ReadMember(localPlayer, "ProfileId") ??
                 ReadMember(ReadMember(localPlayer, "Profile"), "Id"))?.ToString();
             if (string.IsNullOrEmpty(compassLocalProfileId)) return;
+            RefreshCompassFloorBounds();
             RefreshNearbyCompassBodies(world);
+            if (compassPlayerTransform != null)
+                for (int i = 0; i < compassKillMarkers.Count; i++)
+                    compassKillMarkers[i].HeightRelation = CompassHeightRelation(
+                        compassPlayerTransform.position, compassKillMarkers[i].Position);
             if (!compassKillEnabled.Value)
             {
                 ClearCompassKillSubscriptions();
@@ -117,7 +123,9 @@ namespace SPTPopCounter
                 compassKillMarkers.Add(new CompassKillMarker
                 {
                     Position = component.transform.position,
-                    ExpiresAt = Time.unscaledTime + compassKillLifetime.Value
+                    ExpiresAt = Time.unscaledTime + compassKillLifetime.Value,
+                    HeightRelation = CompassHeightRelation(
+                        compassPlayerTransform.position, component.transform.position)
                 });
             }
             UntrackCompassKillSource(victim);
@@ -147,7 +155,12 @@ namespace SPTPopCounter
                 if (distanceSq > limit) continue;
                 if (compassCorpseMarkers.Count < 8)
                 {
-                    compassCorpseMarkers.Add(new CompassCorpseMarker { Position = position, DistanceSq = distanceSq });
+                    compassCorpseMarkers.Add(new CompassCorpseMarker
+                    {
+                        Position = position,
+                        DistanceSq = distanceSq,
+                        HeightRelation = CompassHeightRelation(origin, position)
+                    });
                     continue;
                 }
                 int farthest = 0;
@@ -158,6 +171,7 @@ namespace SPTPopCounter
                 {
                     compassCorpseMarkers[farthest].Position = position;
                     compassCorpseMarkers[farthest].DistanceSq = distanceSq;
+                    compassCorpseMarkers[farthest].HeightRelation = CompassHeightRelation(origin, position);
                 }
             }
         }
@@ -184,6 +198,7 @@ namespace SPTPopCounter
             compassKillWorld = null;
             compassLocalProfileId = null;
             compassNextCorpseRefresh = 0f;
+            ResetCompassFloorBounds();
         }
 
         void ClearCompassKillSubscriptions()
@@ -198,6 +213,7 @@ namespace SPTPopCounter
             ResetCompassKills();
             if (compassSkullTexture != null) Destroy(compassSkullTexture);
             compassSkullTexture = null;
+            DisposeCompassHeightTextures();
         }
 
         void EnsureCompassSkullTexture()
@@ -224,7 +240,8 @@ namespace SPTPopCounter
         void RenderCompassKills(float center, float top, float scale, float pixelsPerDegree, float opacity)
         {
             if (compassPlayerTransform == null) return;
-            if (compassKillMarkers.Count > 0) EnsureCompassSkullTexture();
+            if (compassKillMarkers.Count > 0 || compassCorpseMarkers.Count > 0)
+                EnsureCompassSkullTexture();
             Vector3 origin = compassPlayerTransform.position;
             for (int i = 0; i < compassCorpseMarkers.Count; i++)
             {
@@ -233,9 +250,16 @@ namespace SPTPopCounter
                 float bearing = Mathf.Repeat(Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + 180f, 360f);
                 float delta = Mathf.DeltaAngle(compassYaw, bearing);
                 float x = center + Mathf.Clamp(delta, -39f, 39f) * pixelsPerDegree;
+                bool freshDeath = false;
+                for (int k = 0; k < compassKillMarkers.Count; k++)
+                    if ((compassKillMarkers[k].Position - compassCorpseMarkers[i].Position).sqrMagnitude < 1f)
+                    { freshDeath = true; break; }
+                if (freshDeath) continue;
                 GUI.color = new Color(.74f, .77f, .79f, opacity * .8f);
-                GUI.DrawTexture(new Rect(x - 3f * scale, top + 67f * scale, 6f * scale, 6f * scale),
-                    Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(x - 7f * scale, top + 61f * scale, 14f * scale, 14f * scale),
+                    compassSkullTexture);
+                RenderCompassHeightMarker(x, top + 61f * scale, 14f * scale,
+                    compassCorpseMarkers[i].HeightRelation, scale, opacity);
             }
             for (int i = 0; i < compassKillMarkers.Count; i++)
             {
@@ -247,6 +271,8 @@ namespace SPTPopCounter
                 GUI.color = new Color(1f, .30f, .30f, opacity);
                 GUI.DrawTexture(new Rect(x - 9f * scale, top + 58f * scale, 18f * scale, 18f * scale),
                     compassSkullTexture);
+                RenderCompassHeightMarker(x, top + 58f * scale, 18f * scale,
+                    compassKillMarkers[i].HeightRelation, scale, opacity);
             }
         }
     }

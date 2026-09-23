@@ -6,23 +6,23 @@ Status: implementation started by explicit user request on 2026-09-23. The accep
 
 - [Vinarator/Compass-HUD](https://github.com/Vinarat0r/Compass-HUD), source version `1.1.2`, MIT: provides the 80-degree heading projection, cardinal/degree scale, EN/RU direction names, and optional extraction/transit/quest marker concepts. The initial Admiral slice adapts the heading projection and labels. It uses the existing HUD raid/player lifecycle and a cached camera, without the donor's recurring scene searches, directory-wide icon searches, or per-repaint style allocation.
 - Immersive Compass (EN|RU) `1.0.0`, SPT `3.8.3`, MIT: the older donor demonstrates item-driven visibility and quest/extraction navigation. Its published source URL currently returns HTTP 410, so no code or assets from it have been incorporated.
-- C1 in source: the compact heading strip is gated by the vanilla EYE MK.2 compass template in `SpecialSlot1`–`SpecialSlot3` by default. F12 settings control visibility, language, degrees, scale, opacity and top offset. The physical raid behavior still requires an in-game acceptance check.
+- C1 in source: the compact heading strip runs without a physical item in the current test preview. Special-slot gating is not active and is deferred by user instruction. F12 settings control visibility, language, degrees, scale, opacity and top offset. The physical raid behavior still requires an in-game acceptance check.
 - C2 source work in progress: eligible exfiltration points and transit points are read from the same raid controllers used by Dynamic Maps. The optional Dynamic Maps quest adapter reuses its active/incomplete quest qualification and map-position data; it performs the donor's one-time quest trigger/item capture after raid startup, then refreshes only the selected objectives. Missing or incompatible Dynamic Maps disables quest markers alone. This is not yet physical C2 acceptance.
-- C3 source work in progress: death callbacks on already-registered players create a 15-second skull only when the local player caused the kill or the death happened within 25 m. Nearby corpses are read from `AllPlayersEverExisted` using the same `Corpse` field as Dynamic Maps and shown only within a configurable 25 m radius; no scene-wide search or remote-death notification is added. Physical acceptance remains open.
-- C4 audio integration remains separate: no sound information is inferred from hidden world entities.
+- C3 source work in progress: death callbacks on already-registered players create a 15-second skull only when the local player caused the kill or the death happened within 25 m. Nearby corpses are read from `AllPlayersEverExisted` using the same `Corpse` field as Dynamic Maps and shown only within a configurable 25 m radius. Dynamic Maps floor bounds provide above/below status; clear 3 m vertical separation is the fallback. No scene-wide search or remote-death notification is added. Physical acceptance remains open.
+- C4 audio integration is explicitly deferred: no sound information is inferred from hidden world entities in this test preview.
 
 ## Product intent
 
-Add an optional, lightweight compass strip to Admiral Tactical HUD. Navigation features are available only while a physical in-game compass is installed in a special slot. The strip may consume markers from Dynamic Maps and short-lived event direction from the raid.
+Add an optional, lightweight compass strip to Admiral Tactical HUD. The current basic test preview has no required physical item. Special-slot gating is a later feature. The strip may consume markers from Dynamic Maps and short-lived event direction from the raid.
 
 The audio direction layer is an accessibility aid for players using mono speakers. It must integrate with the installed Accessibility Indicators mod instead of introducing a second sound-detection engine. It visualizes only information that the existing audio/accessibility path already exposes; it must not inspect hidden bot positions or become a radar.
 
 ## Experience contract
 
-- No compass item in a special slot: no compass scale and no navigation/map markers.
-- Compass item installed: show a thin heading strip with cardinal directions and optional degrees.
+- Current test preview: show the thin heading strip with cardinal directions and optional degrees without a compass item.
+- Later phase only: optional special-slot compass gating may hide the strip and markers without the item.
 - Dynamic Maps is optional. When present, selected player markers can appear on the heading strip; when absent, the compass continues to work.
-- Accessibility Indicators is optional and independently configurable. When present, its already-qualified sound events may be represented as approximate directional sectors.
+- Accessibility Indicators integration is deferred until after the basic compass test; later it will consume only already-qualified sound events.
 - Sound sectors communicate direction, broad distance and event class, never exact world position or exact distance.
 - Kill markers are short-lived and limited to player-caused or immediately nearby deaths (25 m by default). They never reveal arbitrary remote deaths elsewhere on the map.
 - Every integration fails closed and leaves the base HUD usable when its donor mod is absent or incompatible.
@@ -30,12 +30,11 @@ The audio direction layer is an accessibility aid for players using mono speaker
 ## Proposed settings
 
 - `Compass > Enabled`
-- `Compass > Require compass in special slot` (default `true`)
+- Special-slot compass requirement: deferred, not a setting in the basic test preview.
 - `Compass > Show degrees`
 - `Compass > Opacity`, scale and vertical offset
-- `Dynamic Maps > Marker bridge`
-- `Dynamic Maps > Marker categories`
-- `Events > Kill direction marker`
+- `Compass > Show eligible extracts / Show transits / Show active quest objectives (Dynamic Maps)`
+- `Compass Events > Player kill direction`
 - `Compass Events > Kill marker lifetime` (default `15 s`)
 - `Compass Events > Nearby bodies` and `Body detection radius` (default `25 m`)
 - `Accessibility > Audio direction sectors`
