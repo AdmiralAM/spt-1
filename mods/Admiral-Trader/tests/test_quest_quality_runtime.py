@@ -129,6 +129,16 @@ class QuestQualityRuntimeTests(unittest.TestCase):
             self.assertFalse(extraction["oneSessionOnly"], qid)
             self.assertIn("Уточнение:", self.locales["ru"][qid + " description"], qid)
             self.assertIn("Задача:", self.locales["ru"][qid + " description"], qid)
+        acoustic = by_id["4ab0b49478adb233ae900b33"]
+        acoustic_kills = next(row for row in acoustic["conditions"]["AvailableForFinish"] if row["type"] == "Elimination")
+        self.assertTrue(acoustic_kills["oneSessionOnly"])
+        acoustic_rows = acoustic_kills["counter"]["conditions"]
+        self.assertEqual({"Equipment", "Kills", "Location"}, {row["conditionType"] for row in acoustic_rows})
+        self.assertTrue(next(row for row in acoustic_rows if row["conditionType"] == "Kills")["resetOnSessionEnd"])
+        self.assertEqual(4, acoustic_kills["value"])
+        description = self.locales["ru"]["4ab0b49478adb233ae900b33 description"]
+        self.assertIn("наушники ГСШ-01", description)
+        self.assertIn("за один рейд", description)
 
     def test_extraction_counters_do_not_mix_raid_events(self):
         for quest in self.quests:
@@ -138,6 +148,15 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 kinds = {row["conditionType"] for row in objective["counter"]["conditions"]}
                 if "ExitStatus" in kinds:
                     self.assertFalse(kinds & {"Equipment", "Kills", "VisitPlace"}, quest["_id"])
+
+    def test_single_raid_kill_counters_use_the_spt_session_end_reset(self):
+        for quest in self.quests:
+            for objective in quest["conditions"]["AvailableForFinish"]:
+                if objective.get("conditionType") != "CounterCreator" or objective.get("oneSessionOnly") is not True:
+                    continue
+                for condition in objective["counter"]["conditions"]:
+                    if condition.get("conditionType") == "Kills":
+                        self.assertTrue(condition.get("resetOnSessionEnd"), quest["_id"])
 
     def test_acoustic_discipline_uses_woods_and_separate_visit_objectives(self):
         qid = "8dad0d354ac000b7bbf05b9a"

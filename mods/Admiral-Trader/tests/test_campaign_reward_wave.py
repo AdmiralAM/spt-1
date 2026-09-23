@@ -30,15 +30,15 @@ class CampaignRewardWaveTests(unittest.TestCase):
         self.assertEqual(self.manifest["earlyCompleteWeaponRewardTrades"], 4)
         self.assertEqual(self.manifest["nativeFieldSupportRewardTrades"], 20)
         self.assertEqual(self.manifest["nativeTacticalRewardTrades"], 11)
-        self.assertEqual(self.manifest["optionalBeltEquipmentRewardTrades"], 32)
-        self.assertEqual(self.manifest["directBeltProductRewardTrades"], 16)
+        self.assertEqual(self.manifest["optionalBeltEquipmentRewardTrades"], 31)
+        self.assertEqual(self.manifest["directBeltProductRewardTrades"], 15)
         self.assertEqual(self.manifest["additionalBeltPackCandidateRewardTrades"], 16)
         self.assertFalse(self.manifest["requiredDependencies"])
         self.assertEqual(len(self.signature), 10)
         self.assertEqual(len(self.early), 4)
         self.assertEqual(len(self.field_support), 20)
         self.assertEqual(len(self.tactical), 11)
-        self.assertEqual(len(self.belt), 32)
+        self.assertEqual(len(self.belt), 31)
         self.assertEqual(
             self.manifest["fieldSupportTrades"],
             [
@@ -57,7 +57,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
             level = next(row["value"] for row in self.quests[quest_id]["conditions"]["AvailableForStart"] if row["conditionType"] == "Level")
             early_levels.append(int(level))
         self.assertGreaterEqual(sum(level <= 10 for level in early_levels), 9)
-        self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 24)
+        self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 23)
 
         weapon_levels = []
         for quest_id in self.early:
@@ -98,10 +98,23 @@ class CampaignRewardWaveTests(unittest.TestCase):
             "68ac00000000000000000013",
         }
         direct = [trade for trade in self.belt.values() if trade["reward"]["items"][0]["_tpl"] in stable_belt_ids]
-        self.assertEqual(len(direct), 16)
+        self.assertEqual(len(direct), 15)
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac00000000000000000006" for trade in direct))
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac0000000000000000000c" for trade in direct))
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac0000000000000000000f" for trade in direct))
+
+    def test_acoustic_control_keeps_one_raid_kill_counter_and_does_not_repeat_wallet(self):
+        quest = self.quests["4ab0b49478adb233ae900b33"]
+        elimination = next(row for row in quest["conditions"]["AvailableForFinish"] if row["type"] == "Elimination")
+        self.assertTrue(elimination["oneSessionOnly"])
+        self.assertEqual(elimination["value"], 4)
+        self.assertEqual({row["conditionType"] for row in elimination["counter"]["conditions"]}, {"Equipment", "Kills", "Location"})
+        kills = next(row for row in elimination["counter"]["conditions"] if row["conditionType"] == "Kills")
+        self.assertTrue(kills["resetOnSessionEnd"])
+        headset = next(row for row in elimination["counter"]["conditions"] if row["conditionType"] == "Equipment")
+        self.assertEqual(headset["equipmentInclusive"], [["5b432b965acfc47a8774094e", "5e4d34ca86f774264f758330"]])
+        self.assertNotIn("4ab0b49478adb233ae900b33", self.belt)
+        self.assertEqual(quest["rewards"]["Success"][-1]["items"][0]["_tpl"], "5aa2ba71e5b5b000137b758f")
 
     def test_runtime_skips_pack_trade_without_template_and_preserves_cash(self):
         source = (ROOT / "server/OptionalContentRegistration.cs").read_text(encoding="utf-8")

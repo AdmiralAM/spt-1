@@ -336,16 +336,16 @@
     {
       "questId": "4ab0b49478adb233ae900b33",
       "conditionId": "c26e0b33a999feeec0746957",
+      "en": "Customs, Woods or Shoreline: wear one listed headset and eliminate 4 targets in one raid.",
+      "ru": "Таможня, Лес или Берег: надеть одну из указанных гарнитур и за один рейд устранить 4 цели.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Walker’s Razor Digital headset] and eliminate 4 targets on Customs/Woods/Shoreline. Separately survive and extract from one of those maps. Found-in-raid status does not apply.",
+      "detailsRu": "За один рейд: использовать одну из гарнитур [Активные наушники ГСШ-01, Активные наушники Walker’s Razor Digital]; устранить 4 цели на Таможне, Лесу или Берегу. Отдельно выжить и эвакуироваться с одной из этих карт. Статус «Найдено в рейде» не применяется.",
       "equipmentInclusive": [
         [
           "5b432b965acfc47a8774094e",
           "5e4d34ca86f774264f758330"
         ]
-      ],
-      "en": "Customs, Woods or Shoreline: eliminate 4 targets in one raid while wearing one listed loadout.",
-      "ru": "Таможня, Лес или Берег: за один рейд устранить 4 цели в одном из указанных комплектов.",
-      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Walker’s Razor Digital headset]; eliminate 4 targets; on Customs/Woods/Shoreline; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Активные наушники ГСШ-01, Активные наушники Walker’s Razor Digital]; устранить 4 целей; на локации Таможня/Лес/Берег; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
+      ]
     },
     {
       "questId": "ca33fab8b9cc5f5f5ad322c0",

@@ -146,27 +146,6 @@
       ]
     }
   },
-  "4ab0b49478adb233ae900b33": {
-    "cashReductionRub": 10000,
-    "name": "Наручный кошелёк B&A&HB",
-    "reward": {
-      "value": 1,
-      "id": "9b9aeb6acf1a34292e83a247",
-      "type": "Item",
-      "target": "7a3e4b53ed911f99d9fc455b",
-      "index": 3,
-      "items": [
-        {
-          "_id": "7a3e4b53ed911f99d9fc455b",
-          "_tpl": "68ac00000000000000000006",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
   "ca33fab8b9cc5f5f5ad322c0": {
     "cashReductionRub": 12000,
     "name": "Подсумок для магазинов B&A&HB",
