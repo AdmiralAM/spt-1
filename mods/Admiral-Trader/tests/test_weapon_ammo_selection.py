@@ -27,20 +27,21 @@ class WeaponAmmoSelectionTests(unittest.TestCase):
         ]
         self.assertEqual(module.choose_candidate(ammo, 36)["tpl"], "c")
 
-    def test_special_weapons_never_get_permanent_unlock(self):
-        pools = {"targetSptVersion":"4.1.3","families":{"special-weapons":{"ammo":[]}}}
+    def test_special_weapons_uses_fixed_verified_finite_unlock(self):
+        pools = {"targetSptVersion":"4.1.5","families":{"special-weapons":{"ammo":[],"excludedAmmo":[{"tpl":"m576","name":"M576","caliber":"Caliber40x46","tier":"special","penetration":5,"damage":160}]}}}
         policy = {
-            "targetSptVersion":"4.1.3",
-            "globalRules":{"permanentUnlockFamilies":0},
-            "families":{"special-weapons":{"maxPermanentPenetration":None,"sampleUnits":1,"stockPerReset":0,"buyRestriction":0,"permanentUnlock":False}},
+            "targetSptVersion":"4.1.5",
+            "globalRules":{"permanentUnlockFamilies":1},
+            "families":{"special-weapons":{"fixedVerifiedTpl":"m576","maxPermanentPenetration":None,"sampleUnits":1,"stockPerReset":2,"buyRestriction":2}},
         }
         result = module.build_selection(pools, policy)
-        self.assertFalse(result["families"]["special-weapons"]["permanentUnlock"])
+        self.assertTrue(result["families"]["special-weapons"]["permanentUnlock"])
+        self.assertEqual(result["families"]["special-weapons"]["tpl"], "m576")
         self.assertEqual(result["families"]["special-weapons"]["sampleUnits"], 1)
 
-    def test_rejects_non_413_inputs(self):
+    def test_rejects_non_415_inputs(self):
         with self.assertRaises(ValueError):
-            module.build_selection({"targetSptVersion":"4.1.2","families":{}}, {"targetSptVersion":"4.1.3","globalRules":{"permanentUnlockFamilies":0},"families":{}})
+            module.build_selection({"targetSptVersion":"4.1.4","families":{}}, {"targetSptVersion":"4.1.5","globalRules":{"permanentUnlockFamilies":0},"families":{}})
 
 
 if __name__ == "__main__":

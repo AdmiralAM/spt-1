@@ -26,8 +26,10 @@ class WeaponAmmoRuntimeTemplateTests(unittest.TestCase):
         self.assertEqual(len(ammo), 1)
         self.assertEqual(ammo[0]["items"][0]["upd"]["StackObjectsCount"], 30)
 
-    def test_special_sample_is_deferred_not_invented(self):
-        self.assertEqual(module.success_rewards("x", {"sampleAmmoUnits": 1}, None), [])
+    def test_single_special_sample_uses_verified_capability(self):
+        rewards = module.success_rewards("x", {"sampleAmmoUnits": 1}, {"tpl": "m576"})
+        self.assertEqual(rewards[0]["items"][0]["_tpl"], "m576")
+        self.assertEqual(rewards[0]["items"][0]["upd"]["StackObjectsCount"], 1)
 
     def test_empty_weapon_pool_is_rejected(self):
         with self.assertRaises(ValueError):

@@ -63,7 +63,7 @@ exit 0
     $runtime = [ordered]@{
         BuildIdentity = [ordered]@{
             Product = 'Economy Admiral'
-            TargetRuntime = 'SPT 4.1.3'
+            TargetRuntime = 'SPT 4.1.4'
             HeadSha = '0123456789abcdef0123456789abcdef01234567'
             WorkflowRunId = '123'
         }

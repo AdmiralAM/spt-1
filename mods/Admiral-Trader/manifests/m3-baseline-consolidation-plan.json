@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-M2-baseline-consolidation-plan-only",
+  "runtimeMaterialize": false,
+  "authority": "m3-baseline-quality-debt.json",
+  "purpose": "Describe how the 31-quest frozen acceptance baseline can become a smaller authored campaign after lifecycle/reward correctness is proven. Counts below are design candidates, not quotas and not permission to retire runtime quest IDs before migration rules exist.",
+  "accessConsolidation": {
+    "currentQuestCount": 10,
+    "candidateOperations": [
+      {
+        "key": "access-fundamentals",
+        "sourceQuestIds": ["5d404ebd654de4efecef71d2"],
+        "decision": "KEEP-ONE-INTRO-IF-NEEDED",
+        "purpose": "One early, lightweight proof that the player understands Admiral's access doctrine before route-use operations begin.",
+        "mechanicPreference": "A small representative possession check is acceptable once as onboarding if no honest native use-of-key event exists.",
+        "qualityBoundary": "This is the only generic key-possession quest allowed. It must not become the first rung of a map-by-map possession series."
+      },
+      {
+        "key": "borrowed-access",
+        "sourceQuestIds": ["cba3374f11375c4e7eea9efe"],
+        "decision": "SUPERSEDE-WITH-M3-ROUTE-USE",
+        "purpose": "Turn Customs access from representative-key possession into proving that one restricted route actually supports movement.",
+        "mechanicPreference": "VisitPlace or another truthful native route-use proxy plus successful extraction.",
+        "qualityBoundary": "Do not claim that a door was unlocked with a specific key unless exact SPT 4.1.5 can observe that action."
+      },
+      {
+        "key": "restricted-site-clearance",
+        "sourceQuestIds": ["a8b05eb5c5f0e67ee881df52", "68a6527a3c73b2e85977d7a1"],
+        "decision": "MERGE-LABS-READINESS-AND-CLEARANCE",
+        "purpose": "One late-game proof that the player has real Laboratory access capability before Internal Security can use that clearance under pressure.",
+        "mechanicPreference": "Use the strongest exact SPT 4.1.5 access-capability condition available; item possession is acceptable only if runtime cannot observe actual access use.",
+        "qualityBoundary": "No second Labs access checklist solely to increase difficulty or unlock count."
+      }
+    ],
+    "retirementCandidates": [
+      {"questId": "1b92e4cf212d895be4f70b2c", "slug": "keys-factory", "reason": "Map-only possession copy; no distinct access decision identified."},
+      {"questId": "80c11744c2310e1bfe160a8b", "slug": "keys-woods", "reason": "Map-only possession copy; Woods M3 reconnaissance has a stronger non-key purpose."},
+      {"questId": "42ff30bc152b8212dc15b20a", "slug": "keys-interchange", "reason": "Map-only possession copy; Low Profile uses Interchange for a different equipment decision."},
+      {"questId": "d737e3b990c371708db369f0", "slug": "keys-shoreline", "reason": "Map-only possession copy; no unique access operation currently justified."},
+      {"questId": "9c438fa48f645044ddc75e8d", "slug": "keys-reserve", "reason": "Reserve possession gate is not inherently required for Contractor Intercept; retain only if a real access decision is later authored."},
+      {"questId": "59a36c5ee68210f9154d94d0", "slug": "keys-lighthouse", "reason": "Rogue perimeter disruption does not depend on key ownership and no separate access purpose is currently justified."}
+    ],
+    "candidateCount": 3,
+    "countIsQuota": false
+  },
+  "arsenalConsolidation": {
+    "currentQuestCount": 21,
+    "currentPattern": "7 weapon families x Qualification/Fieldwork/Munitions using progressively larger elimination counters",
+    "doctrine": "One tactical role should normally require one authored qualification, not three copies of the same kill mechanic. Controlled ammunition access is a payoff of demonstrated capability, not justification for a third counter stage.",
+    "candidateOperations": [
+      {
+        "key": "sidearm-contingency",
+        "sourceFamily": "handguns",
+        "decision": "COLLAPSE-3-TO-1",
+        "purpose": "Prove that the player can solve a close emergency with a sidearm when the primary plan has failed.",
+        "mechanicDirection": "Small close-range or selected-location sidearm problem; exact native distance/location semantics required before finalization.",
+        "payoffDirection": "One controlled sidearm-ammunition sample/unlock only if still justified by the economy policy."
+      },
+      {
+        "key": "close-quarter-control",
+        "sourceFamilies": ["smg-pdw", "shotguns"],
+        "decision": "MERGE-6-INTO-ONE-OR-TWO-CONTEXTUAL-QUALIFICATIONS",
+        "purpose": "Use a weapon suited to compressed space and fast target transitions rather than proving two near-identical families through six counters.",
+        "mechanicDirection": "Factory or another genuinely compressed environment; final weapon allowlist may accept SMG/PDW and shotgun solutions if the objective remains coherent.",
+        "splitOnlyIf": "Exact mechanics and reward identity create two materially different player decisions, not merely different weapon lists."
+      },
+      {
+        "key": "general-purpose-rifle",
+        "sourceFamily": "assault-rifles",
+        "decision": "COLLAPSE-3-TO-1",
+        "purpose": "Demonstrate a general-purpose rifle across a practical mixed engagement rather than repeat the same family kill counter three times.",
+        "mechanicDirection": "One contextual field operation; no handover and no per-caliber copies."
+      },
+      {
+        "key": "stand-off-control",
+        "sourceFamilies": ["marksman-battle", "precision"],
+        "decision": "MERGE-WITH-AUTHORED-PRECISION-PATH",
+        "purpose": "Progress from medium/long-range rifle competence into M3 Observation Window instead of maintaining six generic rifle-count quests.",
+        "mechanicDirection": "At most one preparatory marksman qualification; Observation Window owns the later precision application.",
+        "qualityBoundary": "No 10m distance staircase and no separate sniper stage whose only new requirement is a larger counter."
+      },
+      {
+        "key": "specialist-platform",
+        "sourceFamily": "special-weapons",
+        "decision": "OPTIONAL-ONE-QUALIFICATION",
+        "purpose": "Keep unusual platforms as optional specialist capability only if the final weapon pool produces a fun, feasible task.",
+        "mechanicDirection": "Small target count, no explosive/heavy-ammo storefront and no mandatory gate into the main campaign.",
+        "dropIf": "The special-weapons pool is too heterogeneous to express one coherent operation."
+      }
+    ],
+    "candidateCountRange": [4, 6],
+    "countIsQuota": false,
+    "rewardRule": "Recalculate rewards for final consolidated difficulty. Historical 21-quest XP/RUB/standing totals are not a budget to preserve."
+  },
+  "candidatePostM2Shape": {
+    "accessOperations": 3,
+    "arsenalOperationsRange": [4, 6],
+    "m3AuthoredOperations": 12,
+    "illustrativeTotalRange": [19, 21],
+    "warning": "The illustrative total is not a target. Stronger future M4 operations may be added and weak candidates may still be dropped."
+  },
+  "migrationSafety": {
+    "retireQuestIdByDeletionWithoutProfilePlanAllowed": false,
+    "completedHistoricalQuestRecordsMustRemainSafe": true,
+    "activeLegacyQuestRequiresCompletionOrMigrationPolicy": true,
+    "newProfileShouldSeeOnlyFinalCuratedGraph": true,
+    "questassortUnlockMigrationMustBeReviewed": true,
+    "standingAndRewardCompensationForRemovedUncompletedQuestsRequired": false,
+    "physicalTestMustBeBatched": true
+  },
+  "materializationGate": {
+    "requiresM1LifecyclePass": true,
+    "requiresM2ExistingCampaignPass": true,
+    "requiresExactSpt415ConditionProof": true,
+    "requiresProfileMigrationPlan": true,
+    "requiresRewardRecalculation": true,
+    "requiresCurrentVanillaOverlapReview": true,
+    "requiresFinalEnRuAuthoredCopy": true
+  }
+}

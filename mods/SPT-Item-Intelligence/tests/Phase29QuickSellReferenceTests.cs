@@ -21,8 +21,8 @@ static class Phase29QuickSellReferenceTests
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateIndex.Empty, index);
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("cache-template")), ItemValueMode.Vendor);
-        Expect(Contains(text, ItemTooltipMode.Full, "Best sell: Flea"), "Full mode answers where to sell", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Full, "Best trader: Mechanic · 100,000 ₽"), "Full mode exposes best trader and trader sell price", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Full, "Best sell:"), "Full mode omits the redundant sell recommendation", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Trader: Mechanic · 100,000 ₽"), "Full mode exposes trader and sell price", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Flea: 125,000 ₽"), "Full mode exposes flea price", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 62,500 ₽"), "Full mode exposes prepared value per slot", ref assertions);
 
@@ -35,8 +35,8 @@ static class Phase29QuickSellReferenceTests
             "steady-state tooltip string transformations are cached instead of rebuilt on every repaint", ref assertions);
         Expect(renderer.Contains("RenderCacheLimit = 1024") && renderer.Contains("GetCachedPriceLine") && renderer.Contains("GetCachedSemanticLine"),
             "renderer caches are explicitly bounded and used by the draw path", ref assertions);
-        Expect(overlay.Contains("Event.current.type != EventType.Repaint") && overlay.Contains("if (activeView == null) return"),
-            "overlay keeps cheap early returns ahead of tooltip rendering", ref assertions);
+        Expect(overlay.Contains("if (!repaint && !click) return") && overlay.Contains("if (activeView == null) return"),
+            "overlay accepts only repaint and deliberate click events before tooltip rendering", ref assertions);
         Expect(server.Contains("BuildPrices") && server.Contains("BuildSnapshotAsync") && !server.Contains("Timer") && !server.Contains("Update()"),
             "server pricing remains snapshot-built with no raid polling loop", ref assertions);
 

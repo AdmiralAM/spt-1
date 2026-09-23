@@ -6,16 +6,18 @@ namespace SPTItemIntelligence
     public sealed class RelevanceSnapshotDecoder : IRequirementSnapshotDecoder
     {
         readonly IRequirementSnapshotDecoder inner;
+        readonly Func<bool> enabled;
 
-        public RelevanceSnapshotDecoder(IRequirementSnapshotDecoder inner)
+        public RelevanceSnapshotDecoder(IRequirementSnapshotDecoder inner, Func<bool> enabled = null)
         {
             this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            this.enabled = enabled ?? (() => true);
         }
 
         public RequirementDataEnvelope Decode(string json)
         {
             RequirementDataEnvelope snapshot = inner.Decode(json);
-            ItemRelevanceRegistry.Replace(ProjectStatic(snapshot.prices));
+            ItemRelevanceRegistry.Replace(enabled() ? ProjectStatic(snapshot.prices) : null);
             return snapshot;
         }
 

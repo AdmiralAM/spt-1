@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 5,
+  "productRole": "specialist-trader-and-capability-broker",
+  "campaign": {
+    "runtimeQuestCount": 43,
+    "frozenBaselineQuestCount": 31,
+    "operationQuestCount": 12,
+    "accessQuestCount": 10,
+    "arsenalQuestCount": 21,
+    "repeatableQuestsAllowed": false
+  },
+  "traderStock": {
+    "baselineStockRequired": true,
+    "baselineOffersMustBeQuestGated": false,
+    "baselineOffersMustBeFinite": true,
+    "relationshipStockAllowed": true,
+    "relationshipOffersMustBeFinite": true,
+    "relationshipOffersMayUseLoyalty": true,
+    "generalPurposeSupermarketAllowed": false
+  },
+  "logistics": {
+    "expectedBaselineOfferCount": 4,
+    "expectedRelationshipOfferCount": 3,
+    "expectedMilestonePermanentOfferCount": 8,
+    "maximumPermanentOfferStockPerReset": 80,
+    "milestoneOffersMustBeQuestGated": true,
+    "offersMustBeFinite": true,
+    "specialWeaponsPermanentOfferAllowed": true,
+    "specialWeaponsSampleOnly": false
+  },
+  "loyalty": {
+    "role": "relationship-status",
+    "capabilityAuthority": false,
+    "standingMayBypassQuestGates": false,
+    "salesSumMayGateProgression": false,
+    "relationshipStockMayUseLoyalty": true,
+    "expectedTierCount": 4,
+    "expectedStandingThresholds": [0.0, 0.1, 0.3, 0.55],
+    "expectedMinimumLevels": [1, 15, 25, 35]
+  }
+}

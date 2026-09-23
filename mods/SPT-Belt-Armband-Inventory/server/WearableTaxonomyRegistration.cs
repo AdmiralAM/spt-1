@@ -19,18 +19,31 @@ public sealed class WearableTaxonomyRegistration(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        EnsureNode(SearchableParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
-        EnsureNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl);
-        EnsureNode(HeadBandParentTpl, "BAndHBCustomHeadBandItem", SearchableParentTpl);
-        logger.Success("B&A&HB #2 wearable taxonomy registered for ArmBand/Belt/HeadBand runtime families.");
+        // Validate every existing persistent identity before mutating TemplateTable.
+        // A collision in the second/third node must not leave earlier nodes partially installed.
+        TemplateItem? searchableAddition = PrepareNode(SearchableParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
+        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        // Published B&A item templates keep this parent ID in profiles. Retain
+        // the taxonomy node in companion mode without exposing a Belt slot or
+        // adding it to any Pack 'n' Strap-owned filter.
+        TemplateItem? beltAddition = PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl);
+        TemplateItem? headBandAddition = PrepareNode(HeadBandParentTpl, "BAndHBCustomHeadBandItem", SearchableParentTpl);
+
+        if (searchableAddition != null) templateTable.Items.Add(SearchableParentTpl, searchableAddition);
+        if (beltAddition != null) templateTable.Items.Add(BeltParentTpl, beltAddition);
+        if (headBandAddition != null) templateTable.Items.Add(HeadBandParentTpl, headBandAddition);
+
+        logger.Success(companionMode
+            ? "B&A&HB companion taxonomy registered for HeadBand and legacy profile identities; active Belt ownership remains with Pack 'n' Strap."
+            : "B&A&HB #2 wearable taxonomy registered atomically for ArmBand/Belt/HeadBand runtime families.");
         return Task.CompletedTask;
     }
 
-    private void EnsureNode(MongoId id, string name, MongoId parent)
+    private TemplateItem? PrepareNode(MongoId id, string name, MongoId parent)
     {
         if (!templateTable.Items.TryGetValue(id, out var existing))
         {
-            templateTable.Items[id] = new TemplateItem
+            return new TemplateItem
             {
                 Id = id,
                 Name = name,
@@ -38,7 +51,6 @@ public sealed class WearableTaxonomyRegistration(
                 Type = "Node",
                 Properties = new TemplateItemProperties()
             };
-            return;
         }
 
         if (!Equals(existing.Id, id)
@@ -46,5 +58,7 @@ public sealed class WearableTaxonomyRegistration(
             || !string.Equals(existing.Name, name, StringComparison.Ordinal)
             || !string.Equals(existing.Type, "Node", StringComparison.Ordinal))
             throw new InvalidOperationException($"B&A&HB taxonomy ID collision: {id}.");
+
+        return null;
     }
 }

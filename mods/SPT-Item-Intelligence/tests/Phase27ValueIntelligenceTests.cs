@@ -17,8 +17,8 @@ static class Phase27ValueIntelligenceTests
         ItemHoverState hover = new ItemHoverState(store.Get("value-rd"));
         ItemHoverText vendor = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Vendor);
         Expect(vendor.ValueLine == "Value: 118,230 ₽ · Therapist", "selected vendor value remains the compact-mode primary line", ref assertions);
-        Expect(Contains(vendor, ItemTooltipMode.Full, "Best sell: Flea"), "Full exposes the best sell destination from prepared price state", ref assertions);
-        Expect(Contains(vendor, ItemTooltipMode.Full, "Best trader: Therapist · 118,230 ₽"), "Full exposes named best trader and sell price", ref assertions);
+        Expect(!Contains(vendor, ItemTooltipMode.Full, "Best sell:"), "Full omits the redundant best-sell destination", ref assertions);
+        Expect(Contains(vendor, ItemTooltipMode.Full, "Trader: Therapist · 118,230 ₽"), "Full exposes named trader and sell price", ref assertions);
         Expect(Contains(vendor, ItemTooltipMode.Full, "Flea: 142,479 ₽"), "Full exposes flea value", ref assertions);
         Expect(Contains(vendor, ItemTooltipMode.Full, "Per slot: 35,619 ₽"), "Full exposes cached best-value per-slot intelligence", ref assertions);
         Expect(!Contains(vendor, ItemTooltipMode.Full, "Value: 118,230 ₽ · Therapist"), "Full avoids duplicating the compact selected-source Value row", ref assertions);
@@ -27,8 +27,8 @@ static class Phase27ValueIntelligenceTests
 
         ItemHoverText flea = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Flea);
         Expect(flea.ValueLine == "Value: 142,479 ₽ · Flea", "selected flea value remains the compact-mode primary line", ref assertions);
-        Expect(Contains(flea, ItemTooltipMode.Full, "Best sell: Flea"), "Full sell destination is independent from preferred compact value mode", ref assertions);
-        Expect(Contains(flea, ItemTooltipMode.Full, "Best trader: Therapist · 118,230 ₽"), "Full preserves named best trader regardless of preferred compact source", ref assertions);
+        Expect(!Contains(flea, ItemTooltipMode.Full, "Best sell:"), "Full stays free of the removed best-sell destination", ref assertions);
+        Expect(Contains(flea, ItemTooltipMode.Full, "Trader: Therapist · 118,230 ₽"), "Full preserves named trader regardless of preferred compact source", ref assertions);
 
         ItemPresentationStore fallbackStore = new ItemPresentationStore();
         fallbackStore.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
@@ -40,13 +40,13 @@ static class Phase27ValueIntelligenceTests
             new ItemHoverState(fallbackStore.Get("flea-only")), ItemValueMode.Vendor);
         Expect(vendorFallback.ValueLine == "Value: 75,000 ₽ · Flea" && vendorFallback.Secondary.Length == 0,
             "unavailable selected vendor source falls back to flea instead of rendering an empty value tooltip", ref assertions);
-        Expect(Contains(vendorFallback, ItemTooltipMode.Full, "Best sell: Flea") && Contains(vendorFallback, ItemTooltipMode.Full, "Flea: 75,000 ₽"),
+        Expect(!Contains(vendorFallback, ItemTooltipMode.Full, "Best sell:") && Contains(vendorFallback, ItemTooltipMode.Full, "Flea: 75,000 ₽"),
             "flea-only items still expose an explicit sell destination and price", ref assertions);
         ItemHoverText fleaFallback = new ItemHoverTextFormatter().Format(
             new ItemHoverState(fallbackStore.Get("trader-only")), ItemValueMode.Flea);
         Expect(fleaFallback.ValueLine == "Value: 64,000 ₽ · Mechanic" && fleaFallback.Secondary.Length == 0,
             "unavailable selected flea source falls back to the named trader", ref assertions);
-        Expect(Contains(fleaFallback, ItemTooltipMode.Full, "Best sell: Mechanic") && Contains(fleaFallback, ItemTooltipMode.Full, "Best trader: Mechanic · 64,000 ₽"),
+        Expect(!Contains(fleaFallback, ItemTooltipMode.Full, "Best sell:") && Contains(fleaFallback, ItemTooltipMode.Full, "Trader: Mechanic · 64,000 ₽"),
             "trader-only items still expose explicit best trader destination and price", ref assertions);
 
         string root = FindRepositoryRoot();

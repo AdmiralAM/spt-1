@@ -20,13 +20,15 @@ namespace SPTBeltArmbandInventory
             internal readonly WeakReference Window;
             internal readonly int Columns;
             internal readonly int Rows;
+            internal readonly bool SplitHeadBand;
             internal int Attempts;
 
-            internal PendingWindow(object window, int columns, int rows)
+            internal PendingWindow(object window, int columns, int rows, bool splitHeadBand)
             {
                 Window = new WeakReference(window);
                 Columns = columns;
                 Rows = rows;
+                SplitHeadBand = splitHeadBand;
             }
         }
 
@@ -62,7 +64,8 @@ namespace SPTBeltArmbandInventory
                     object item = ReflectionTools.ReadMember(windowData, "Item");
                     if (!TryResolveDescriptor(item, out WearableItemDescriptor descriptor)) continue;
 
-                    ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows);
+                    ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows,
+                        string.Equals(descriptor.TemplateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal));
                     return;
                 }
             }
@@ -73,9 +76,9 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static void ObserveWindow(object window, int columns, int rows)
+        static void ObserveWindow(object window, int columns, int rows, bool splitHeadBand)
         {
-            TryAdjust(window, columns, rows);
+            TryAdjust(window, columns, rows, splitHeadBand);
 
             for (int i = 0; i < PendingWindows.Count; i++)
             {
@@ -90,7 +93,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            PendingWindows.Add(new PendingWindow(window, columns, rows));
+            PendingWindows.Add(new PendingWindow(window, columns, rows, splitHeadBand));
             RequestFlush?.Invoke();
         }
 
@@ -107,16 +110,16 @@ namespace SPTBeltArmbandInventory
                     continue;
                 }
 
-                TryAdjust(window, pending.Columns, pending.Rows);
+                TryAdjust(window, pending.Columns, pending.Rows, pending.SplitHeadBand);
                 pending.Attempts++;
                 if (pending.Attempts < MaxDeferredAttempts) continue;
 
-                LogFinalFit(window, pending.Columns, pending.Rows);
+                LogFinalFit(window, pending.Columns, pending.Rows, pending.SplitHeadBand);
                 PendingWindows.RemoveAt(i--);
             }
         }
 
-        static bool TryAdjust(object window, int columns, int rows)
+        static bool TryAdjust(object window, int columns, int rows, bool splitHeadBand)
         {
             Component component = window as Component;
             if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) return false;
@@ -127,8 +130,14 @@ namespace SPTBeltArmbandInventory
             // Geometry comes from the registered item descriptor. No hierarchy
             // scan and no artificial minimum: declared cell extent + calibrated
             // native GridWindow chrome only.
-            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
-            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
+            // Utility HeadBand follows the compact ArmBand direction: two
+            // separately-filtered 1x1 grids in one strict vertical 1x2 strip.
+            float width = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowWidth(1)
+                : AccessoryGridPolicy.ExactWindowWidth(columns);
+            float height = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowHeight(2)
+                : AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
             float beforeWidth = rect.rect.width;
@@ -140,6 +149,8 @@ namespace SPTBeltArmbandInventory
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
 
             ApplyLayoutElement(component.gameObject, width, height);
+            if (splitHeadBand)
+                ApplySplitHeadBandContent(window);
 
             string shape = columns + "x" + rows;
             if (FitProofShapes.Add(shape))
@@ -152,14 +163,18 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
-        static void LogFinalFit(object window, int columns, int rows)
+        static void LogFinalFit(object window, int columns, int rows, bool splitHeadBand)
         {
             Component component = window as Component;
             RectTransform rect = component == null ? null : component.transform as RectTransform;
             if (rect == null) return;
 
-            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
-            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
+            float width = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowWidth(1)
+                : AccessoryGridPolicy.ExactWindowWidth(columns);
+            float height = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowHeight(2)
+                : AccessoryGridPolicy.ExactWindowHeight(rows);
             float finalWidth = rect.rect.width;
             float finalHeight = rect.rect.height;
             string shape = columns + "x" + rows;
@@ -198,6 +213,8 @@ namespace SPTBeltArmbandInventory
             {
                 Type layoutElementType = Type.GetType("UnityEngine.UI.LayoutElement, UnityEngine.UI", false);
                 Component layout = layoutElementType == null ? null : gameObject.GetComponent(layoutElementType);
+                if (layout == null && layoutElementType != null)
+                    layout = gameObject.AddComponent(layoutElementType);
                 if (layout == null) return;
                 SetFloat(layout, "minWidth", width);
                 SetFloat(layout, "preferredWidth", width);
@@ -207,6 +224,49 @@ namespace SPTBeltArmbandInventory
             catch (Exception exception)
             {
                 LogWarning?.Invoke("Could not apply exact-fit wearable GridWindow layout element: " + Unwrap(exception).Message);
+            }
+        }
+
+        static void ApplySplitHeadBandContent(object window)
+        {
+            try
+            {
+                object containedGrids = ReflectionTools.ReadMember(window, "_containedGrids");
+                Component containedComponent = containedGrids as Component;
+                RectTransform containedRect = containedComponent == null ? null : containedComponent.transform as RectTransform;
+                IEnumerable gridViews = ReflectionTools.ReadMember(containedGrids, "GridViews") as IEnumerable
+                    ?? ReflectionTools.ReadMember(containedGrids, "_gridViews") as IEnumerable;
+                if (containedRect == null || gridViews == null) return;
+
+                const float cell = 63f;
+                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cell);
+                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell * 2f);
+                ApplyLayoutElement(containedComponent.gameObject, cell, cell * 2f);
+
+                Type layoutGroupType = Type.GetType("UnityEngine.UI.LayoutGroup, UnityEngine.UI", false);
+                Component[] layoutGroups = layoutGroupType == null ? new Component[0] : containedComponent.gameObject.GetComponents(layoutGroupType);
+                for (int groupIndex = 0; groupIndex < layoutGroups.Length; groupIndex++)
+                    if (layoutGroups[groupIndex] is Behaviour behaviour) behaviour.enabled = false;
+
+                int index = 0;
+                foreach (object gridView in gridViews)
+                {
+                    Component gridComponent = gridView as Component;
+                    RectTransform gridRect = gridComponent == null ? null : gridComponent.transform as RectTransform;
+                    if (gridRect == null || index >= 2) continue;
+                    gridRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cell);
+                    gridRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell);
+                    gridRect.anchorMin = new Vector2(0.5f, 1f);
+                    gridRect.anchorMax = new Vector2(0.5f, 1f);
+                    gridRect.pivot = new Vector2(0.5f, 1f);
+                    gridRect.anchoredPosition = new Vector2(0f, -cell * index);
+                    ApplyLayoutElement(gridComponent.gameObject, cell, cell);
+                    index++;
+                }
+            }
+            catch (Exception exception)
+            {
+                LogWarning?.Invoke("Could not normalize Utility HeadBand split-grid content: " + Unwrap(exception).Message);
             }
         }
 

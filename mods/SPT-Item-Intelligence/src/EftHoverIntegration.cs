@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace SPTItemIntelligence
 {
+    public interface IInventorySessionLifecycle { void OnViewInitialized(); }
     public interface IItemHoverAnchorSink
     {
         void SetAnchor(object itemView);
@@ -306,6 +307,7 @@ namespace SPTItemIntelligence
             if (disposed || registrySink == null) return false;
             string templateId = EftItemTemplateIdResolver.Resolve(itemView);
             if (templateId.Length == 0) return false;
+            (registrySink as IInventorySessionLifecycle)?.OnViewInitialized();
             registrySink.RegisterView(itemView, templateId);
             return true;
         }

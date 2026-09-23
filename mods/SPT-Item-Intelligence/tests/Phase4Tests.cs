@@ -77,8 +77,8 @@ public static class Phase4Tests
                 new RequirementContribution("salewa", RequirementSource.FutureQuest, 4, label: "Future quest B"),
                 new RequirementContribution("salewa", RequirementSource.FutureQuest, 2, label: "Future quest B")
             }).Get("salewa");
-        Expect(entry.QuestNeededLater == 6, "future summary reserves the largest per-quest quantity instead of summing the whole quest database");
-        Expect(entry.KeepCount == 6, "future keep reserve follows the largest single future quest requirement");
+        Expect(entry.QuestNeededLater == 11, "future summary adds independent consumptive requirements");
+        Expect(entry.KeepCount == 11, "future keep covers all independent future obligations");
         Expect(entry.Details.Count == 3, "full future quest detail remains available after summary normalization");
     }
 
@@ -95,7 +95,7 @@ public static class Phase4Tests
                 new RequirementContribution("mixed", RequirementSource.FutureQuest, 7, satisfiedCount: 2, combineMode: RequirementCombineMode.AlternativeMaximum, alternativeGroup: "path")
             });
         RequirementIndexEntry entry = index.Get("mixed");
-        Expect(entry.QuestNeededNow == 2 && entry.HideoutNeeded == 3 && entry.QuestNeededLater == 9, "source facts preserve raw outstanding totals");
+        Expect(entry.QuestNeededNow == 2 && entry.HideoutNeeded == 3 && entry.QuestNeededLater == 5, "source totals use the selected explicit alternative");
         Expect(entry.KeepCount == 10, "additive sources plus maximum alternative contribution");
 
         bool rejected = false;
@@ -190,3 +190,4 @@ public static class Phase4Tests
         public RequirementProjection Project(RequirementDataEnvelope snapshot) { throw new InvalidOperationException("projection failed"); }
     }
 }
+

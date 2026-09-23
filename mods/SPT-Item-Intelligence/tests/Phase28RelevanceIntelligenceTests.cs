@@ -42,8 +42,10 @@ static class Phase28RelevanceIntelligenceTests
         Expect(Contains(text, ItemTooltipMode.Full, "Craft ×2"), "Full exposes compact craft relevance", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Barter ×4"), "Full exposes compact barter relevance", ref assertions);
         Expect(!ContainsFragment(text, ItemTooltipMode.Full, "On You"), "Full does not show stale on-you data", ref assertions);
-        Expect(!Contains(text, ItemTooltipMode.Normal, "Craft ×2") && !Contains(text, ItemTooltipMode.Detailed, "Barter ×4"),
-            "craft and barter relevance stay Full-only", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Normal, "Craft ×2") && Contains(text, ItemTooltipMode.Detailed, "Barter ×4"),
+            "craft and barter relevance remains visible during regular play", ref assertions);
+        Expect(ItemMarkerPresentation.From(text, contextual: true).IsVisible,
+            "craft/barter-only items receive a contextual intelligence marker", ref assertions);
 
         ItemRelevanceRegistry.Replace(null);
         return assertions;

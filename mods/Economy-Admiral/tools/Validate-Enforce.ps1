@@ -107,7 +107,7 @@ if (Test-Path -LiteralPath $groupedPath -PathType Leaf) {
 }
 
 $build = $manifest.BuildIdentity
-$buildIdentityValid = $null -ne $build -and [string]$build.Product -eq 'Economy Admiral' -and [string]$build.TargetRuntime -eq 'SPT 4.1.3' -and [string]$build.HeadSha -match '^[0-9a-fA-F]{40}$'
+$buildIdentityValid = $null -ne $build -and [string]$build.Product -eq 'Economy Admiral' -and [string]$build.TargetRuntime -eq 'SPT 4.1.4' -and [string]$build.HeadSha -match '^[0-9a-fA-F]{40}$'
 if (-not $buildIdentityValid) {
     Write-Host '[Economy Admiral] build identity metadata: unavailable/invalid (non-blocking for physical economy validation)' -ForegroundColor Yellow
 }

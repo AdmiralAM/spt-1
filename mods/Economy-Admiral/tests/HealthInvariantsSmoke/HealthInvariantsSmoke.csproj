@@ -11,6 +11,9 @@
     <Compile Include="../../server/EffectiveAcquisitionGraph.cs" Link="EffectiveAcquisitionGraph.cs" />
     <Compile Include="../../server/SourcePressureObservationModels.cs" Link="SourcePressureObservationModels.cs" />
     <Compile Include="../../server/AdmiralTraderAdapterEvidence.cs" Link="AdmiralTraderAdapterEvidence.cs" />
+    <Compile Include="../../server/AdmiralTraderItemAdapter.cs" Link="AdmiralTraderItemAdapter.cs" />
+    <Compile Include="../../server/EffectiveQuestGateEvidence.cs" Link="EffectiveQuestGateEvidence.cs" />
+    <Compile Include="../../server/QuestGateJsonParser.cs" Link="QuestGateJsonParser.cs" />
     <Compile Include="../../server/AdmiralTraderRuntimeAdapterReport.cs" Link="AdmiralTraderRuntimeAdapterReport.cs" />
     <Compile Include="../../server/SourcePressureRuntimeReport.cs" Link="SourcePressureRuntimeReport.cs" />
     <Compile Include="../../server/EconomyAttributionEvidence.cs" Link="EconomyAttributionEvidence.cs" />

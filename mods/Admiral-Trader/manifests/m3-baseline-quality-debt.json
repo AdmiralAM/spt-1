@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-baseline-quality-debt-review-only",
+  "runtimeMaterialize": false,
+  "baselineBoundary": {
+    "historicalQuestCount": 31,
+    "accessQuestCount": 10,
+    "arsenalQuestCount": 21,
+    "purposeOfM2": "Prove lifecycle, reward, unlock and persistence correctness on the existing campaign before changing its content surface.",
+    "m2AcceptanceMeansFinalContentQuality": false,
+    "note": "Passing M2 makes the current campaign a trustworthy runtime baseline. It does not make repetitive baseline quest design permanent product doctrine."
+  },
+  "findings": {
+    "access": {
+      "questCount": 10,
+      "authority": "keys-authored-spec.json",
+      "dominantMechanic": "possess representative keys or representative access capability",
+      "repetitionFinding": "Most map quests vary the map and key pool while keeping the same possess-representative-keys decision. The text repeatedly describes access coverage and the success copy repeatedly confirms coverage. This is substantially better than the 27-quest legacy key ladder, but it is still a map-by-map capability checklist rather than ten distinct operations.",
+      "playerFacingExamplesOfDebt": [
+        "Establish representative <map> access coverage.",
+        "<Map> access coverage confirmed.",
+        "Build/maintain/show a practical key set."
+      ],
+      "qualityClassification": "FUNCTIONAL-BASELINE-NOT-FINAL",
+      "postM2Direction": "Retain only access milestones that enable a different player decision. Prefer real route-use/VisitPlace operations when exact SPT semantics permit, and remove map-only copies that exist solely because a map has keys."
+    },
+    "arsenal": {
+      "questCount": 21,
+      "authority": "weapon-ammo-authored-spec.json + weapon-ammo-runtime-plan.json",
+      "familyCount": 7,
+      "stagesPerFamily": 3,
+      "dominantMechanic": "family eliminations",
+      "repetitionFinding": "Seven weapon families each repeat Qualification -> Fieldwork -> Munitions using the same core elimination mechanic with a larger counter. The munitions stage adds a controlled ammo payoff, but the player's action still repeats. This is a deterministic, economy-safe replacement for hundreds of legacy weapon/ammo quests, not a final authored campaign standard.",
+      "playerFacingExamplesOfDebt": [
+        "Show me you can use <family> effectively under real conditions.",
+        "Keep using <family> in the field and show consistent results.",
+        "Prove the capability once more and I will open a controlled ammunition allotment."
+      ],
+      "qualityClassification": "FUNCTIONAL-BASELINE-NOT-FINAL",
+      "postM2Direction": "Collapse repeated family stages. A weapon family should earn its place through a distinct tactical role or a single meaningful qualification; ammo access should be a payoff, not a reason to repeat the same kill objective a third time."
+    }
+  },
+  "doNotDo": [
+    "Do not rewrite the runtime 31-quest baseline before M1 lifecycle correctness and M2 physical acceptance are complete.",
+    "Do not preserve 31 quests after M2 merely because 31 was the frozen test shape.",
+    "Do not transfer removed quest rewards into surviving quests as a quota.",
+    "Do not replace removed Access or Arsenal copies with filler to maintain quest count.",
+    "Do not hide identical mechanics behind longer EN/RU text."
+  ],
+  "postM2QualityGate": {
+    "accessMapCopyWithoutNewDecisionAllowed": false,
+    "arsenalSameFamilyCounterStageAllowed": false,
+    "thirdRepeatedMechanicStageAllowedOnlyForUnlock": false,
+    "ammoUnlockMustRequireThirdSameKillQuest": false,
+    "existingQuestIdsMayBeRetiredOnlyWithMigrationPlan": true,
+    "profileHistoryPreservationRequired": true,
+    "M3GraphMustBeRevalidatedAfterBaselineRetirement": true
+  },
+  "interactionWithCurrentM3": {
+    "borrowedAccess": "Designed as a route-use operation and intentionally demonstrates the quality direction for future Access cleanup.",
+    "observationWindow": "Designed as a contextual application of existing Precision Fieldwork rather than another generic precision kill-counter stage.",
+    "heavyAssault": "Does not require an assault-rifle family gate because protective fieldcraft is the actual decision.",
+    "principle": "Future authored operations should consume proven capabilities from the baseline, then progressively make redundant baseline checklist quests retireable."
+  }
+}

@@ -127,7 +127,9 @@ def start_conditions(quest: dict[str, Any]) -> list[dict[str, Any]]:
 
 def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[str, Any]]:
     slug = str(quest["slug"])
-    count = int((quest.get("objective") or {}).get("representativeCount", 1))
+    objective = quest.get("objective") or {}
+    count = int(objective.get("representativeCount", 1))
+    targets = [str(value) for value in objective.get("targetTpls") or key_pool]
     return [
         {
             "id": condition_id(slug, "representative-keys"),
@@ -141,7 +143,7 @@ def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[s
             "minDurability": 0,
             "onlyFoundInRaid": False,
             "parentId": "",
-            "target": key_pool,
+            "target": targets,
             "value": count,
             "visibilityConditions": [],
         }
@@ -199,8 +201,6 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "conditions": {
             "AvailableForFinish": finish_conditions(quest, key_pool),
             "AvailableForStart": start_conditions(quest),
-            "Started": [],
-            "Success": [],
             "Fail": [],
         },
         "declinePlayerMessage": f"{qid} declinePlayerMessage",
@@ -220,6 +220,11 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "successMessageText": f"{qid} successMessageText",
         "traderId": TRADER_ID,
         "type": "PickUp",
+        "status": 0,
+        "progressSource": "eft",
+        "gameModes": [],
+        "rankingModes": [],
+        "arenaLocations": [],
     }
     return template, deferred_unlocks
 

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "status": "installed-inventory-verified-runtime-smoke-blocked-externally",
+  "observedInstallationDate": "2026-09-12",
+  "runtimeChangesAuthorized": false,
+  "stableCampaignChanges": {
+    "quests": 0,
+    "graphEdges": 0,
+    "rewards": 0,
+    "offers": 0,
+    "mechanics": 0,
+    "dependencies": 0
+  },
+  "globalContract": {
+    "worksWhenAllCandidatesAbsent": true,
+    "coreGraphMayDependOnCandidate": false,
+    "exactRuntimeIdsRequired": true,
+    "displayNameDetectionAllowed": false,
+    "foreignRuntimeCopied": false,
+    "moderateRewardPolicyRequired": true
+  },
+  "candidates": [
+    {
+      "name": "WTT Armory",
+      "installed": true,
+      "runtime": {
+        "guid": "com.wtt.armory",
+        "version": "2.0.5",
+        "claimedFolderVersionWasAccurate": false,
+        "targetSpt": "~4.1.0",
+        "templateCount": 833,
+        "weaponShapedTemplateCount": 77,
+        "representativeWeaponTemplateIds": ["6868d249cdee524f8c0ba45f", "68fd4feab87d77a5aaf6bf64", "6920a431c8f2ed5000c540a0"]
+      },
+      "roles": ["weapon rotation", "optional weapon objectives", "quest rewards", "finite quest-gated offers"],
+      "nativeInsertionAuthority": "weapon-rotation-expansion-plan.json#/wttArmory",
+      "requiredEvidence": ["weapon template IDs", "magazine and ammunition IDs", "complete preset parts", "effective retained-trader overlap"],
+      "fallback": "native weapon pool remains complete"
+    },
+    {
+      "name": "WTT Content Backport",
+      "installed": true,
+      "runtime": {
+        "guid": "com.wtt.contentbackport",
+        "version": "2.0.1",
+        "targetSpt": "~4.1.1",
+        "templateCount": 642,
+        "weaponShapedTemplateCount": 14,
+        "representativeWeaponTemplateIds": ["6871284e9a353bb50606f3ed", "69f9ebbcaae020b0db02f65d", "68aee763130c00663d08aea8"]
+      },
+      "roles": ["weapon rotation", "optional weapon objectives", "quest rewards", "finite quest-gated offers", "future optional operations"],
+      "requiredEvidence": ["final runtime weapon class", "magazine and ammunition IDs", "complete preset parts", "authored handbook and flea values", "effective acquisition sources"],
+      "fallback": "native weapon pool remains complete"
+    },
+    {
+      "name": "WTT CommonLib",
+      "installed": true,
+      "runtime": {
+        "guid": "com.wtt.commonlib",
+        "version": "3.0.6",
+        "targetSpt": "~4.1.3",
+        "clientRoutesObserved": true
+      },
+      "roles": ["optional WTT runtime support"],
+      "fallback": "Admiral has no direct CommonLib dependency"
+    },
+    {
+      "name": "Icebreaker",
+      "installed": false,
+      "roles": ["optional map operations"],
+      "requiredEvidence": ["location ID", "access contract", "extract IDs", "existing quest progression"],
+      "fallback": "no Icebreaker quest records are published"
+    },
+    {
+      "name": "RUAF / Black Division",
+      "installed": false,
+      "roles": ["rare optional combat targets"],
+      "requiredEvidence": ["exact role IDs", "observed spawn availability", "ownership of spawn behavior"],
+      "spawnControlOwnedByAdmiral": false,
+      "fallback": "core campaign never requires the encounter"
+    },
+    {
+      "name": "Pack 'n' Strap",
+      "installed": false,
+      "roles": ["equipment objectives", "proportional rewards", "finite unlocks"],
+      "requiredEvidence": ["container template IDs", "slot and capacity contract", "value", "effective retained-trader overlap"],
+      "fallback": "native equipment objectives and rewards remain unchanged"
+    }
+  ],
+  "compatibilityEvidence": {
+    "exactSptVersion": "4.1.5",
+    "crossModTemplateIdCollisions": 0,
+    "nativeTemplateIdCollisions": 0,
+    "serverMetadataValidationPassed": true,
+    "completeCombinedStartupPassed": false,
+    "combinedStartupBlocker": "B&A&HB Dogtag Case canonical-parent preflight stopped startup before WTT callbacks and final Economy analysis",
+    "admiralRuntimeChangeRequired": false,
+    "economyContract": {
+      "foreignTemplateMutationAllowed": false,
+      "authoredBarterMutationAllowed": false,
+      "configuredGlobalFiatPressureApplies": true,
+      "configuredGlobalSellPressureApplies": true,
+      "configuredGlobalFleaPressureApplies": true,
+      "configuredGlobalMapLootScaleApplies": true,
+      "unknownAcquisitionMayBeGuessed": false
+    }
+  },
+  "excluded": [
+    {"name": "ORBIT", "runtimeTraderIntegration": false},
+    {"name": "Extra Lives", "runtimeTraderIntegration": false}
+  ]
+}

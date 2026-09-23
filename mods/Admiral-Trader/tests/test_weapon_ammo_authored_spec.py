@@ -24,7 +24,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
     def make_spec(self):
         families = []
         for family_id in sorted(module.EXPECTED_FAMILY_IDS):
-            unlock_slots = 0 if family_id == "special-weapons" else 1
+            unlock_slots = 1
             sample_units = 1 if family_id == "special-weapons" else 30
             families.append({
                 "id": family_id,
@@ -36,7 +36,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
                 ],
             })
         return {
-            "targetSptVersion": "4.1.3",
+            "targetSptVersion": "4.1.5",
             "domain": "weaponAmmo",
             "legacySource": {"questCount": 438, "assortmentUnlockCount": 768, "crossBundleEdgeCount": 23},
             "designRules": {
@@ -46,7 +46,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
                 "currencySpamRewards": False,
                 "highEndAmmoUnlimited": False,
                 "containerRewards": False,
-                "specialWeaponPermanentAmmoUnlock": False,
+                "specialWeaponAmmoUnlockFinite": True,
                 "sampleAmmoBeforeUnlock": True,
                 "controlledAmmoUnlocksOnly": True,
                 "maximumPermanentUnlocksPerQuest": 1,
@@ -59,7 +59,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
         result = module.validate(self.make_spec(), self.make_policy())
         self.assertEqual(result["familyCount"], 7)
         self.assertEqual(result["questCount"], 21)
-        self.assertEqual(result["unlockCount"], 6)
+        self.assertEqual(result["unlockCount"], 7)
 
     def test_rejects_unlock_on_qualification(self):
         spec_data = self.make_spec()
@@ -73,10 +73,10 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             module.validate(spec_data, self.make_policy())
 
-    def test_rejects_special_permanent_unlock(self):
+    def test_requires_special_permanent_unlock(self):
         spec_data = self.make_spec()
         special = next(f for f in spec_data["families"] if f["id"] == "special-weapons")
-        special["stages"][2]["unlockSlots"] = 1
+        special["stages"][2]["unlockSlots"] = 0
         with self.assertRaises(SystemExit):
             module.validate(spec_data, self.make_policy())
 

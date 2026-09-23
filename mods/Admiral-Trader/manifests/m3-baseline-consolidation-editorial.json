@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-M2-baseline-consolidation-editorial-only",
+  "runtimeMaterialize": false,
+  "consolidationAuthority": "m3-baseline-consolidation-plan.json",
+  "note": "Borrowed Access already has canonical EN/RU copy in m3-campaign-editorial-copy.json and is not duplicated here.",
+  "concepts": [
+    {
+      "key": "access-fundamentals",
+      "title": {"en": "Working Set", "ru": "Рабочая связка"},
+      "briefing": {
+        "en": "A key is useful only if you know why you carry it. I am not interested in a ring heavy enough to stop a bullet. Put together a small set that gives you practical options and keep it ready. After this, I will judge access by what you do with it, not by how much metal you own.",
+        "ru": "Ключ полезен только тогда, когда понимаешь, зачем носишь его с собой. Связка весом с кирпич меня не интересует. Собери небольшой рабочий набор, который действительно даёт варианты, и держи его готовым. Дальше я буду судить о доступе по тому, как ты им пользуешься, а не по количеству железа в кармане."
+      },
+      "objectiveIntent": {
+        "en": "Maintain one small representative working set of useful access keys.",
+        "ru": "Иметь при себе небольшой рабочий набор полезных ключей доступа."
+      },
+      "success": {
+        "en": "Enough. You have options without carrying a locksmith's inventory. The next question is whether those options lead anywhere useful.",
+        "ru": "Достаточно. Варианты у тебя есть, а склад слесаря с собой таскать не приходится. Теперь посмотрим, ведут ли эти варианты куда-нибудь полезное."
+      }
+    },
+    {
+      "key": "restricted-site-clearance",
+      "title": {"en": "Clearance", "ru": "Допуск"},
+      "briefing": {
+        "en": "The Laboratory is not another locked room. Once you commit to going in, the cost of a bad access plan rises quickly. I want one thing established before I use you there: you have a legitimate way through the door and you can keep that capability available. Prove the access. I will decide what to do with it afterward.",
+        "ru": "Лаборатория — не ещё одна запертая комната. Стоит решиться на вход, и цена плохого плана доступа растёт очень быстро. До того как я начну использовать тебя там, нужно установить одно: у тебя есть реальный способ попасть внутрь и ты способен держать этот доступ готовым. Подтверди допуск. Что с ним делать дальше — решим потом."
+      },
+      "objectiveIntent": {
+        "en": "Prove an operational Laboratory access capability using the strongest truthful SPT 4.1.5 condition available.",
+        "ru": "Подтвердить реальную возможность доступа в Лабораторию через наиболее достоверное условие, доступное в SPT 4.1.5."
+      },
+      "success": {
+        "en": "Clearance confirmed. From this point on I will assume you can get inside. Whether you can still think after the doors close is a different test.",
+        "ru": "Допуск подтверждён. С этого момента считаю, что внутрь ты попасть можешь. Сможешь ли продолжать думать после того, как двери закроются, — это уже другая проверка."
+      }
+    },
+    {
+      "key": "sidearm-contingency",
+      "title": {"en": "Second Line", "ru": "Вторая линия"},
+      "briefing": {
+        "en": "A sidearm is not a smaller primary weapon. It is what remains when the first plan has stopped working. I want to see whether you can solve a close problem without pretending the pistol has the reach or capacity of a rifle. Keep the engagement short, make the shots count, and leave before the contingency becomes the entire operation.",
+        "ru": "Пистолет — не уменьшенная основная винтовка. Это то, что остаётся, когда первый план уже перестал работать. Хочу увидеть, умеешь ли ты решить близкую проблему, не притворяясь, будто у пистолета дальность и запас огня как у автомата. Бой должен быть коротким, выстрелы — осмысленными, а резервный вариант не должен превращаться во всю операцию."
+      },
+      "objectiveIntent": {
+        "en": "Resolve one small close-range contingency with an approved sidearm and survive the operation.",
+        "ru": "Решить одну короткую задачу ближнего боя с подходящим пистолетом и выжить в операции."
+      },
+      "success": {
+        "en": "Good. You used the pistol for the problem it was meant to solve and stopped there. A backup weapon earns its place by being enough when it matters.",
+        "ru": "Хорошо. Ты использовал пистолет ровно для той проблемы, для которой он нужен, и на этом остановился. Резервное оружие оправдывает место тогда, когда в нужный момент его достаточно."
+      }
+    },
+    {
+      "key": "close-quarter-control",
+      "title": {"en": "Inside Distance", "ru": "На короткой дистанции"},
+      "briefing": {
+        "en": "In a tight space, speed matters only if you still control where the muzzle goes. Pick a platform made for short distances, enter a compressed fight, and clear the immediate problem without turning the building into a shooting gallery. I care about control, not which catalog page the weapon came from.",
+        "ru": "В тесном помещении скорость полезна только пока ты контролируешь, куда смотрит ствол. Возьми оружие, которому подходит короткая дистанция, войди в плотный бой и закрой непосредственную проблему, не превращая здание в тир. Меня интересует контроль, а не страница каталога, с которой взяли оружие."
+      },
+      "objectiveIntent": {
+        "en": "Complete one compressed-space engagement using the final approved close-quarter weapon pool and survive.",
+        "ru": "Провести один бой в тесном пространстве с оружием из итогового набора для ближней дистанции и выжить."
+      },
+      "success": {
+        "en": "That is the point of a short weapon: less room wasted, not less discipline. Keep it that way.",
+        "ru": "В этом и смысл компактного оружия: меньше лишнего пространства, а не меньше дисциплины. Так и оставь."
+      }
+    },
+    {
+      "key": "general-purpose-rifle",
+      "title": {"en": "Working Rifle", "ru": "Рабочая винтовка"},
+      "briefing": {
+        "en": "Most jobs do not give you the courtesy of one perfect engagement distance. A useful rifle has to survive the change from open ground to cover without forcing you to redesign the operation around it. Take a general-purpose rifle through a mixed route, solve what blocks you, and bring yourself back. I am testing the tool by the work, not the other way around.",
+        "ru": "Большинство задач не спрашивает, на какой дистанции тебе удобнее стрелять. Нормальная винтовка должна пережить переход от открытой местности к укрытиям, не заставляя строить всю операцию вокруг себя. Пройди смешанный маршрут с рабочей винтовкой, убери то, что мешает, и вернись. Инструмент проверяем работой, а не работу инструментом."
+      },
+      "objectiveIntent": {
+        "en": "Complete one mixed-distance field operation with an approved general-purpose rifle and extract successfully.",
+        "ru": "Завершить одну полевую операцию со смешанными дистанциями с подходящей универсальной винтовкой и успешно выйти."
+      },
+      "success": {
+        "en": "The rifle did not dictate the route and you did not ask it to solve the wrong problem. That is a working weapon.",
+        "ru": "Винтовка не диктовала маршрут, а ты не заставлял её решать чужую задачу. Вот это и есть рабочее оружие."
+      }
+    },
+    {
+      "key": "stand-off-control",
+      "title": {"en": "Stand-Off", "ru": "Держать дистанцию"},
+      "briefing": {
+        "en": "A longer rifle buys you one thing above all: the chance to decide before the other man can force the decision. Prove you can use that space. Pick a position, solve a small number of threats from meaningful distance, and move before the position becomes obvious. After that, the real precision work begins.",
+        "ru": "Дальнобойная винтовка прежде всего покупает тебе возможность принять решение раньше, чем противник навяжет своё. Докажи, что умеешь пользоваться этим пространством. Выбери позицию, сними несколько действительно важных целей с осмысленной дистанции и смени место до того, как позиция станет очевидной. После этого начнётся настоящая работа на точность."
+      },
+      "objectiveIntent": {
+        "en": "Complete one bounded stand-off engagement with the approved marksman/precision pool and survive; Observation Window remains the later authored application.",
+        "ru": "Провести один короткий дистанционный бой с оружием из итогового набора марксманских/точных систем и выжить; поздняя операция «Окно наблюдения» остаётся отдельным применением навыка."
+      },
+      "success": {
+        "en": "You created distance, used it, and left before it disappeared. That is enough qualification. I do not need the same proof at ten more distances.",
+        "ru": "Ты создал дистанцию, использовал её и ушёл до того, как преимущество исчезло. Для квалификации достаточно. Повторять то же самое ещё на десяти дальностях мне не нужно."
+      }
+    },
+    {
+      "key": "specialist-platform",
+      "title": {"en": "Special Case", "ru": "Особый случай"},
+      "briefing": {
+        "en": "Unusual weapons attract people who want an excuse to use them. I need the opposite. If a specialist platform enters the plan, it must solve a problem ordinary equipment handles badly. I will give you one such problem if the available platforms justify it. If they do not, we skip the test. Novelty is not a capability.",
+        "ru": "Необычное оружие притягивает людей, которым нужен повод его применить. Мне нужно обратное. Специальная система должна появляться в плане только тогда, когда обычное оружие решает задачу хуже. Если имеющийся набор платформ действительно даёт такую задачу — получишь её. Если нет, проверку пропустим. Новизна сама по себе не является способностью."
+      },
+      "objectiveIntent": {
+        "en": "Optional specialist-platform qualification only if the final SPT 4.1.5 weapon pool supports one coherent tactical problem.",
+        "ru": "Необязательная квалификация со специальной платформой только в том случае, если итоговый набор оружия SPT 4.1.5 позволяет создать одну цельную тактическую задачу."
+      },
+      "success": {
+        "en": "The platform had a reason to be there and you used it for that reason. That is the only kind of specialist equipment worth supporting.",
+        "ru": "У этой системы была причина оказаться в операции, и ты использовал её именно по этой причине. Только такое специальное снаряжение имеет смысл поддерживать."
+      }
+    }
+  ],
+  "editorialBoundary": {
+    "currentRuntimeLocalesChanged": false,
+    "borrowedAccessCopyDuplicated": false,
+    "finalMechanicSpecificNumbersPublishedBeforeProof": false,
+    "enRuAreIndependentAuthoredVersions": true
+  }
+}

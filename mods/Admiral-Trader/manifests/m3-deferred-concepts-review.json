@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-deferred-concepts-review-only",
+  "runtimeMaterialize": false,
+  "purpose": "Prevent attractive legacy themes from re-entering M3 as weak shopping lists or cosmetic kill quests. A deferred concept may return only when both its player decision and exact SPT 4.1.5 observability are stronger than the admitted campaign alternative.",
+  "referenceBoundary": {
+    "publicQuestDocumentation": "sp-tarkov/wiki quest-values.md is useful design evidence but is not exact SPT 4.1.5 runtime authority",
+    "exactSpt415ProofRequiredForAdmission": true
+  },
+  "concepts": [
+    {
+      "key": "field-medicine",
+      "legacyTheme": "Meds Proficiency",
+      "historicalIntent": "Trauma basics -> sustained field treatment -> advanced medical readiness.",
+      "decision": "HOLD",
+      "reason": "The product fantasy is treating injuries under operational pressure. A FindItem/HandoverItem substitute proves shopping, not treatment skill, and would overlap Forward Reserve's logistics language. Current public quest-condition references do not establish a player-treatment event condition that can honestly observe bleeding control, surgery or pain treatment as the defining task.",
+      "admissionRequirements": [
+        "Exact SPT 4.1.5 proves a native, reliable player medical-state/treatment condition or equivalent observable event.",
+        "The operation can be completed through actual treatment behavior rather than by handing over a list of medical items.",
+        "The objective is semantically distinct from current vanilla medical quests and approved external content.",
+        "Any medical sample reward passes Economy Admiral review and remains one-time or tightly finite."
+      ],
+      "forbiddenFallback": "Do not create AI-2/AFAK/CMS/etc. collection ladders and label them medical proficiency."
+    },
+    {
+      "key": "chemical-support",
+      "legacyTheme": "Stims Proficiency",
+      "historicalIntent": "Controlled stimulant familiarization -> high-risk chemical support.",
+      "decision": "HOLD",
+      "reason": "The interesting decision is using a stimulant for a specific operational need. A stim handover is only procurement, while a generic kill quest with a story about stimulants is dishonest unless the condition can prove the relevant player state. Renewable high-value stimulant rewards also create disproportionate economy risk.",
+      "admissionRequirements": [
+        "Exact SPT 4.1.5 proves the required player-state/effect condition for the intended operation.",
+        "The chosen effect changes a real tactical decision rather than merely being consumed before an ordinary kill counter.",
+        "Economy Admiral approves any one-time sample and explicitly rejects renewable faucet behavior.",
+        "No vanilla or approved external quest already expresses the same stimulant-use problem."
+      ],
+      "forbiddenFallback": "Do not convert Stims Proficiency into per-stim handovers or a stimulant storefront ladder."
+    },
+    {
+      "key": "endurance-circuit",
+      "legacyTheme": "Survivalist",
+      "historicalIntent": "Cross-map extraction/endurance milestone.",
+      "decision": "HOLD-FOR-REWRITE",
+      "reason": "Survive once on several maps is still a checklist whose only meaningful variable is location. It reduces the old x2/x5/x10 ladder but does not yet create a new decision.",
+      "rewriteDirections": [
+        "Prefer one distinctive withdrawal/exfil problem using a meaningful native ExitName/ExitStatus combination if exact SPT 4.1.5 data and overlap support it.",
+        "A route/transit operation may be stronger than independent map counters if native transit semantics are exact and reliable.",
+        "Do not require three maps merely to make the quest feel longer."
+      ],
+      "forbiddenFallback": "No survive-N-raids or one-extract-per-map checklist without a distinct operational constraint."
+    },
+    {
+      "key": "boss-command-strike",
+      "legacyThemes": ["Boss Hunt", "Boss Follower Hunt"],
+      "historicalIntent": "One deliberate high-value-target operation instead of escalating boss counters.",
+      "decision": "DEFER-TO-M4-CURATION",
+      "reason": "A named boss kill is mechanically straightforward but easily becomes a cosmetic duplicate of existing vanilla boss objectives. It should enter Admiral only if external-content absorption supplies a stronger operational setup or a target-specific consequence that survives semantic-overlap review.",
+      "admissionRequirements": [
+        "Target-specific Why/Context/Payoff that cannot be removed without changing the quest's player decision.",
+        "Exact SPT 4.1.5 role alias and map availability proof.",
+        "No semantic duplicate in current vanilla, Admiral or approved external content.",
+        "No boss-equipment faucet or guaranteed high-tier gear reward."
+      ],
+      "forbiddenFallback": "Do not publish kill Glukhar/Killa/etc. once simply because the old bundle existed."
+    },
+    {
+      "key": "cultist-night-operation",
+      "legacyTheme": "Cultists Hunt",
+      "historicalIntent": "Night special operation rather than a 1-to-75 cultist elimination ladder.",
+      "decision": "DEFER-TO-M4-CURATION",
+      "reason": "A cultist role plus night-time kill condition is mechanically plausible in current public documentation, but that alone can still duplicate vanilla night/cultist content. Exact SPT 4.1.5 role/time semantics and current overlap must be proven before the theme earns an Admiral slot.",
+      "admissionRequirements": [
+        "Exact SPT 4.1.5 proves the intended sectant role alias and Kills daytime semantics.",
+        "The operation has a target-specific purpose beyond 'cultists are dangerous at night'.",
+        "Current vanilla and approved external overlap review finds a genuinely distinct operation.",
+        "Target count remains small and non-escalating."
+      ],
+      "forbiddenFallback": "No cultist body-count ladder and no rare night-gear faucet."
+    }
+  ],
+  "qualityDecision": {
+    "deferredConceptsDoNotReserveQuestSlots": true,
+    "deferredConceptsDoNotReserveRewardBudget": true,
+    "fillerReplacementRequired": false,
+    "strongConceptMayBeAdmittedLater": true,
+    "admissionMustRevalidateCampaignUniqueness": true
+  }
+}

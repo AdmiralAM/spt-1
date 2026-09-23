@@ -56,7 +56,7 @@ foreach ($candidate in @($plan.Candidates)) {
 if ($previewCount -ne [int]$plan.PlannedMutationCount) { Fail "planned mutation count does not match preview records" }
 
 $build = $manifest.BuildIdentity
-if ($null -eq $build -or [string]$build.Product -ne 'Economy Admiral' -or [string]$build.TargetRuntime -ne 'SPT 4.1.3') { Fail "packaged build identity invalid" }
+if ($null -eq $build -or [string]$build.Product -ne 'Economy Admiral' -or [string]$build.TargetRuntime -ne 'SPT 4.1.4') { Fail "packaged build identity invalid" }
 if ([string]$build.HeadSha -notmatch '^[0-9a-fA-F]{40}$') { Fail "BuildIdentity.HeadSha is not a full SHA" }
 
 Pass "read-only fingerprint + concrete policy preview + pristine protection proven; planned=$previewCount, applied=0"

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-M2-graph-bridge-plan-only",
+  "runtimeMaterialize": false,
+  "currentGraphAuthority": "m3-campaign-progression.json",
+  "consolidationAuthority": "m3-baseline-consolidation-plan.json",
+  "purpose": "Prevent M3 from retaining dead prerequisite edges when repetitive baseline Access/Arsenal quests are eventually retired. This is a future bridge plan only; the current 31-quest IDs remain authoritative until M1/M2 pass and a migration-safe consolidation slice is materialized.",
+  "edgeDisposition": [
+    {
+      "m3Operation": "borrowed-access",
+      "currentExternalPrerequisite": "cba3374f11375c4e7eea9efe",
+      "currentName": "Access Protocol: Customs",
+      "postConsolidationDecision": "REMOVE-EDGE",
+      "reason": "Borrowed Access is the intended authored successor to the generic Customs possession milestone. A successor must not require the quest it replaces for new profiles.",
+      "migrationRule": "Existing profiles that completed Access Protocol: Customs keep history; completion is not replayed or converted into an automatic Borrowed Access success."
+    },
+    {
+      "m3Operation": "contractor-intercept",
+      "currentExternalPrerequisite": "9c438fa48f645044ddc75e8d",
+      "currentName": "Access Protocol: Reserve",
+      "postConsolidationDecision": "REMOVE-EDGE-UNLESS-REAL-ACCESS-OPERATION-RETURNS",
+      "reason": "Reserve PMC interception does not inherently require a representative key set. The old edge exists only while the frozen baseline is the accepted capability surface.",
+      "migrationRule": "If a future distinct Reserve access operation is admitted, gate on that authored operation only when it represents a real capability needed by the intercept."
+    },
+    {
+      "m3Operation": "observation-window",
+      "currentExternalPrerequisite": "153839f368b80b6fbc36d29e",
+      "currentName": "Arsenal Protocol: Precision - Fieldwork",
+      "postConsolidationDecision": "REPOINT-TO-STAND-OFF-CONTROL-IF-MATERIALIZED",
+      "reason": "The historical Precision Fieldwork counter is expected to collapse into the authored stand-off qualification. Observation Window should depend on the surviving precision capability, not a retired counter stage.",
+      "fallback": "If stand-off-control is not admitted, Observation Window may become the single precision qualification and the external edge disappears."
+    },
+    {
+      "m3Operation": "internal-security",
+      "currentExternalPrerequisite": "68a6527a3c73b2e85977d7a1",
+      "currentName": "Access Protocol: Clearance",
+      "postConsolidationDecision": "REPOINT-TO-RESTRICTED-SITE-CLEARANCE",
+      "reason": "The Labs capstone must still require actual access capability, but the two historical Labs access quests are intended to merge into one authored clearance milestone."
+    }
+  ],
+  "newProfileGraphAfterConsolidation": {
+    "access-fundamentals": [],
+    "borrowed-access": ["access-fundamentals"],
+    "restricted-site-clearance": ["borrowed-access"],
+    "sidearm-contingency": [],
+    "close-quarter-control": [],
+    "general-purpose-rifle": [],
+    "stand-off-control": [],
+    "acoustic-discipline": [],
+    "forward-reserve": [],
+    "low-profile": [],
+    "mobility-doctrine": ["low-profile"],
+    "acoustic-contact": ["acoustic-discipline"],
+    "route-security": ["forward-reserve", "borrowed-access"],
+    "contractor-intercept": ["route-security"],
+    "observation-window": ["acoustic-contact", "stand-off-control"],
+    "heavy-assault": ["mobility-doctrine"],
+    "break-the-perimeter": ["contractor-intercept", "observation-window"],
+    "internal-security": ["heavy-assault", "restricted-site-clearance"]
+  },
+  "optionalCapabilities": [
+    {
+      "key": "specialist-platform",
+      "mainCampaignGate": false,
+      "reason": "Special weapons remain optional and must not block the core Admiral campaign."
+    }
+  ],
+  "graphRules": {
+    "retiredQuestIdsMayRemainHistoricalProfileRecords": true,
+    "retiredQuestIdsMayRemainNewProfilePrerequisites": false,
+    "successorMustRequireRetiredPredecessor": false,
+    "maximumDirectPrerequisites": 2,
+    "allNewProfileOperationsMustRemainReachable": true,
+    "noSalesVolumeGate": true,
+    "noStandingGateForQuestGraph": true
+  },
+  "materializationGate": {
+    "requiresM1LifecyclePass": true,
+    "requiresM2ExistingCampaignPass": true,
+    "requiresMigrationSafeRetirement": true,
+    "requiresFinalBaselineConsolidationDecisions": true,
+    "requiresGraphCycleAndReachabilityValidation": true,
+    "requiresQuestassortUnlockMigrationReview": true
+  }
+}

@@ -15,6 +15,7 @@ public sealed record AdmiralTraderRuntimeAdapterReport
     public int OfferCount { get; init; }
     public int BaselineOfferCount { get; init; }
     public int RelationshipOfferCount { get; init; }
+    public int CoreOfferCount { get; init; }
     public int MilestoneOfferCount { get; init; }
     public int BoundedRenewableOfferCount { get; init; }
     public bool RelationshipStockAllowed { get; init; }

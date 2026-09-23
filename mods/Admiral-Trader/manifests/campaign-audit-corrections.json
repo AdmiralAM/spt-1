@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "sourceAudit": "docs/campaign-audit-43.md",
+  "implementationParent": "ac9cf7f0d7a95d3aadf2de0d6eea78c5980387bc",
+  "targetSptVersion": "4.1.5",
+  "scope": {
+    "questCount": 43,
+    "accessQuests": 10,
+    "arsenalQuests": 21,
+    "operationQuests": 12,
+    "selectedWeaponTemplates": 49,
+    "relationshipOffers": 3,
+    "totalOffers": 37
+  },
+  "weaponRotation": {
+    "authority": "weapon-family-runtime-pools.json#/stagePools",
+    "rule": "Each family has nonempty Qualification, Fieldwork and Munitions pools; the three pools are pairwise disjoint and their union equals the curated family pool.",
+    "questIdsAndPrerequisitesChanged": true,
+    "prerequisiteCorrection": {
+      "reason": "Seven independent weapon-family roots overloaded high-level and migrated profiles. The same 21 quests now advance through two parallel family tracks.",
+      "trackA": ["sidearms", "shotguns", "marksman-battle", "special-weapons"],
+      "trackB": ["smg-pdw", "assault-rifles", "precision-rifles"],
+      "questIdsChanged": false,
+      "objectiveOrRewardBalanceChanged": false
+    },
+    "killThresholdsChanged": false
+  },
+  "rewardCorrections": {
+    "authority": "m3-campaign-reward-plan.json",
+    "changedOperations": [
+      "acoustic-discipline",
+      "mobility-doctrine",
+      "acoustic-contact",
+      "contractor-intercept",
+      "heavy-assault",
+      "break-the-perimeter",
+      "internal-security"
+    ],
+    "unchangedOperations": [
+      "forward-reserve",
+      "low-profile",
+      "borrowed-access",
+      "route-security",
+      "observation-window"
+    ],
+    "delta": {
+      "xp": 26500,
+      "rub": 91000,
+      "standing": 0.022
+    },
+    "correctedOperationTotals": {
+      "xp": 133000,
+      "rub": 752000,
+      "standing": 0.179
+    }
+  },
+  "canonical338": {
+    "tpl": "5fc382c1016cce60e8341b20",
+    "name": ".338 Lapua Magnum UCW",
+    "appliesTo": [
+      "capability manifest",
+      "SPT evidence",
+      "quest reward copy",
+      "purchase unlock copy"
+    ]
+  },
+  "specialWeaponsMunitions": {
+    "questId": "f1368cb3b69c3a4917c4f206",
+    "ammoTpl": "5ede475339ee016e8c534742",
+    "ammoName": "40x46mm M576 (MP-APERS) grenade",
+    "sampleUnits": 1,
+    "offerId": "3500e7b76f097a98ced5d61b",
+    "stockPerReset": 2,
+    "buyRestriction": 2,
+    "priceRub": 12450,
+    "referencePriceRub": 9967,
+    "heOrHedpSelected": false
+  },
+  "artifactProvenance": {
+    "builder": "tools/Build-Spt415Rc.ps1",
+    "sourceHeadBinding": "The builder rejects a SourceHeadSha that differs from git HEAD.",
+    "runtimeBinding": "Exact SPT 4.1.5 DLL and item-database hashes are recorded in admiral-trader-provenance.json inside every RC.",
+    "expectedRuntimeShape": {
+      "quests": 43,
+      "baselineOffers": 4,
+      "milestoneOffers": 8,
+      "relationshipOffers": 3,
+      "totalOffers": 37
+    }
+  }
+}

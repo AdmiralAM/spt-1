@@ -21,7 +21,15 @@ public sealed class AdmiralQuestRegistration(
 {
     private const int ExpectedAccessQuestCount = 10;
     private const int ExpectedArsenalQuestCount = 21;
-    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
+    private const int ExpectedOperationQuestCount = 12;
+    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount + ExpectedOperationQuestCount;
+    private static readonly HashSet<string> OperationQuestIds =
+    [
+        "8dad0d354ac000b7bbf05b9a", "56813681ae0690016376f163", "208db81b5ce195bf0c176852",
+        "6574a072f763d0b09a553401", "8b6f2b25ab2e91e0540761e3", "41a41cb262ea084c1e110513",
+        "133aa723b4695a3d93de92f1", "db220288bc8d5559a45feeb1", "4c2cc3f85d60170907642d9e",
+        "b1b3d9e3a930a3eae47b2353", "f62d8e1285027e336767513c", "4072a5e458946a243b886ad8"
+    ];
 
     private static readonly string[] RequiredLocaleFields =
     [
@@ -53,10 +61,23 @@ public sealed class AdmiralQuestRegistration(
         ValidateQuests(quests);
         PreflightQuestIds(quests);
 
-        foreach (var (questId, quest) in quests)
-            templateTable.Quests.Add(questId, quest);
+        List<MongoId> addedQuestIds = [];
+        try
+        {
+            foreach (var (questId, quest) in quests)
+            {
+                templateTable.Quests.Add(questId, quest);
+                addedQuestIds.Add(questId);
+            }
 
-        RegisterQuestLocales(modPath, quests);
+            RegisterQuestLocales(modPath, quests);
+        }
+        catch
+        {
+            foreach (MongoId questId in addedQuestIds)
+                templateTable.Quests.Remove(questId);
+            throw;
+        }
         logger.Success($"Registered {quests.Count} authored Admiral quests");
         return Task.CompletedTask;
     }
@@ -89,6 +110,7 @@ public sealed class AdmiralQuestRegistration(
 
         int accessCount = 0;
         int arsenalCount = 0;
+        int operationCount = 0;
 
         foreach (var (questId, quest) in quests)
         {
@@ -98,8 +120,22 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest {questId} has unexpected trader id {quest.TraderId}");
             if (string.IsNullOrWhiteSpace(quest.QuestName))
                 throw new InvalidDataException($"Quest {questId} has no authored QuestName fallback");
-            if (quest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
-                throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
+
+            ValidateNativeLifecycleBoundary(questId, quest);
+
+            if (quest.Conditions.AvailableForFinish is not { Count: > 0 } finishConditions)
+                throw new InvalidDataException($"Quest {questId} must have at least one finish condition");
+
+            if (OperationQuestIds.Contains(questId.ToString()))
+            {
+                if (finishConditions.Any(finish => finish.ConditionType is not ("CounterCreator" or "HandoverItem")))
+                    throw new InvalidDataException($"M3 operation {questId} has an unsupported finish condition");
+                operationCount++;
+                continue;
+            }
+
+            if (finishConditions.Count != 1)
+                throw new InvalidDataException($"Frozen baseline quest {questId} must keep exactly one finish condition");
 
             QuestCondition finish = finishConditions[0];
             if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
@@ -121,9 +157,36 @@ public sealed class AdmiralQuestRegistration(
                 $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
         }
 
-        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
+        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount || operationCount != ExpectedOperationQuestCount)
             throw new InvalidDataException(
-                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}");
+                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}, Operations={operationCount}/{ExpectedOperationQuestCount}");
+    }
+
+    private static void ValidateNativeLifecycleBoundary(MongoId questId, Quest quest)
+    {
+        if (quest.InstantComplete is not false)
+            throw new InvalidDataException($"Quest {questId} must keep instantComplete=false for explicit native Complete flow");
+        if (!string.Equals(quest.AcceptanceAndFinishingSource, "eft", StringComparison.Ordinal))
+            throw new InvalidDataException($"Quest {questId} must keep acceptanceAndFinishingSource=eft");
+        if (quest.SptStatus is not null)
+            throw new InvalidDataException($"Quest {questId} must not pre-seed a per-profile SPT quest status");
+        if (quest.Restartable)
+            throw new InvalidDataException($"Quest {questId} must remain non-restartable in the current M1 lifecycle contract");
+
+        if (quest.Status != 0)
+            throw new InvalidDataException($"Quest {questId} must publish native EFT appear status 0");
+        if (!string.Equals(quest.ProgressSource, "eft", StringComparison.Ordinal))
+            throw new InvalidDataException($"Quest {questId} must publish native EFT progressSource");
+        if (quest.GameModes is null || quest.RankingModes is null || quest.ArenaLocations is null)
+            throw new InvalidDataException($"Quest {questId} must publish native EFT mode metadata");
+
+        if (quest.Conditions.Started is not null || quest.Conditions.Success is not null)
+            throw new InvalidDataException($"Quest {questId} must omit non-native Started/Success condition collections");
+        if (quest.Conditions.Fail is { Count: > 0 })
+            throw new InvalidDataException($"Quest {questId} must not attach authored automatic Fail conditions during M1");
+
+        if (quest.Rewards is not null && quest.Rewards.TryGetValue("Started", out List<Reward>? startedRewards) && startedRewards.Count != 0)
+            throw new InvalidDataException($"Quest {questId} must not issue rewards on Started during M1");
     }
 
     private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)
@@ -148,8 +211,8 @@ public sealed class AdmiralQuestRegistration(
 
     private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json");
-        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json");
 
         EnsureLocaleCoverage("en", english, quests);
         EnsureLocaleCoverage("ru", russian, quests);

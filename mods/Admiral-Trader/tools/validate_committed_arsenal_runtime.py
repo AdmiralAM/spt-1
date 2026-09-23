@@ -59,8 +59,8 @@ def validate(committed: dict[str, dict[str, Any]], generated: dict[str, Any]) ->
             raise ValueError(f"Arsenal quest {qid} leaked item grind")
 
     deferred = generated.get("deferredRuntimeItems") or []
-    if len(deferred) != 1 or deferred[0].get("questId") != "f1368cb3b69c3a4917c4f206":
-        raise ValueError("Special Weapons sample must be the only deferred Arsenal runtime item")
+    if deferred:
+        raise ValueError(f"all Arsenal runtime items must be resolved, got {deferred}")
 
 
 def main() -> int:

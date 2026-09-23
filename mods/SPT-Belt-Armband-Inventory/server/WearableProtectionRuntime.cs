@@ -41,11 +41,20 @@ internal static class WearableProtectionRuntime
     private static bool armBandProtected = true;
     private static bool beltProtected = true;
     private static bool headBandProtected = true;
+    private static ProtectedWearableRoot[] variantArmBandRoots = [];
     private static ProtectedWearableRoot[] activeRoots = BuildRoots(true, true, true);
 
-    // Root arrays are immutable after publication. Death/insurance readers take one
-    // atomic snapshot so a concurrent F12 update cannot expose a stale/torn policy.
-    internal static ProtectedWearableRoot[] ActiveRoots => Volatile.Read(ref activeRoots);
+    // Never expose the mutable shared publication array. Death/insurance callers get
+    // a point-in-time detached snapshot, so consumer-side mutation cannot rewrite
+    // protection authority for later lifecycle operations.
+    internal static ProtectedWearableRoot[] ActiveRoots
+    {
+        get
+        {
+            ProtectedWearableRoot[] published = Volatile.Read(ref activeRoots);
+            return (ProtectedWearableRoot[])published.Clone();
+        }
+    }
 
     internal static WearableProtectionSnapshot Snapshot()
     {
@@ -66,9 +75,18 @@ internal static class WearableProtectionRuntime
         }
     }
 
+    internal static void ConfigureVariantRoots(IEnumerable<string> templateIds)
+    {
+        lock (Sync)
+        {
+            variantArmBandRoots = templateIds.Select(id => new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, id)).ToArray();
+            Volatile.Write(ref activeRoots, BuildRoots(armBandProtected, beltProtected, headBandProtected));
+        }
+    }
+
     private static ProtectedWearableRoot[] BuildRoots(bool armBand, bool belt, bool headBand)
     {
-        int count = (armBand ? ArmBandRoots.Length : 0)
+        int count = (armBand ? ArmBandRoots.Length + variantArmBandRoots.Length : 0)
             + (belt ? BeltRoots.Length : 0)
             + (headBand ? HeadBandRoots.Length : 0);
         var result = new ProtectedWearableRoot[count];
@@ -77,6 +95,8 @@ internal static class WearableProtectionRuntime
         {
             Array.Copy(ArmBandRoots, 0, result, offset, ArmBandRoots.Length);
             offset += ArmBandRoots.Length;
+            Array.Copy(variantArmBandRoots, 0, result, offset, variantArmBandRoots.Length);
+            offset += variantArmBandRoots.Length;
         }
         if (belt)
         {
@@ -103,8 +123,10 @@ public sealed class WearableProtectionRouter(
                     cancellationToken.ThrowIfCancellationRequested();
                     WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(info);
                     logger.Info($"B&A&HB protection policy updated: ArmBand={(snapshot.ArmBandProtected ? "Protected" : "Lost")}, Belt={(snapshot.BeltProtected ? "Protected" : "Lost")}, HeadBand={(snapshot.HeadBandProtected ? "Protected" : "Lost")}.");
-                    string response = jsonUtil.Serialize(snapshot)
-                        ?? throw new InvalidOperationException("B&A&HB protection snapshot serialization failed.");
+                    string response = WearableProtectionContract.Encode(
+                        snapshot.ArmBandProtected,
+                        snapshot.BeltProtected,
+                        snapshot.HeadBandProtected);
                     return ValueTask.FromResult(response);
                 })
         ])

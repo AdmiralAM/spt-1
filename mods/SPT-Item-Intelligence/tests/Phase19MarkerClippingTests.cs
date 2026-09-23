@@ -8,8 +8,8 @@ static class Phase19MarkerClippingTests
         int assertions = 0;
         string root = FindRepositoryRoot();
         string source = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "ItemHoverOverlaySink.cs"));
-        Expect(source.Contains("horizontalOverflow\", Enum.Parse(PropertyType(text, \"horizontalOverflow\"), \"Overflow\")"), "marker text enables horizontal overflow", ref assertions);
-        Expect(source.Contains("verticalOverflow\", Enum.Parse(PropertyType(text, \"verticalOverflow\"), \"Overflow\")"), "marker text enables vertical overflow", ref assertions);
+        Expect(source.Contains("CheckmarkSprite()") && !source.Contains("UnityEngine.UI.Text"), "marker uses shared sprite rather than clipped font glyph", ref assertions);
+        Expect(source.Contains("rect.sizeDelta = new Vector2(size, size)"), "sprite preserves square sizing on multi-cell items", ref assertions);
         return assertions;
     }
 

@@ -16,7 +16,7 @@ static class Phase21TooltipPolishContractTests
         Expect(fir.GetLineCount(ItemTooltipMode.Normal) >= 2, "normal contract still exposes requirement progress", ref assertions);
 
         ItemHoverText partial = new ItemHoverText("1 ₽", "", "", "partial", 2, 0, 4, 0, 4);
-        Expect(partial.QuestLaterLine == "Quest Later: 2/4", "partial requirement preserves compact owned/required form", ref assertions);
+        Expect(partial.QuestLaterLine == "Future quest: 2/4", "partial requirement preserves compact owned/required form", ref assertions);
 
         ItemHoverText complete = new ItemHoverText("1 ₽", "", "", "complete", 4, 0, 4, 0, 4);
         Expect(complete.QuestLaterLine.EndsWith("✓", StringComparison.Ordinal), "completed requirement keeps semantic completion marker", ref assertions);
