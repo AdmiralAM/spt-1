@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
@@ -17,6 +19,18 @@ namespace SPTPopCounter
 
         ConfigEntry<bool> compassEnabled, compassRequireItem, compassShowDegrees, compassRussianDirections;
         ConfigEntry<float> compassScale, compassOpacity, compassTopOffset;
+        ConfigEntry<bool> compassShowExtracts, compassShowTransits;
+        readonly List<CompassMarker> compassMarkers = new List<CompassMarker>(24);
+        object compassMarkerWorld;
+        float compassNextMarkerCapture;
+        Transform compassPlayerTransform;
+
+        sealed class CompassMarker
+        {
+            public Component Source;
+            public Vector3 Position;
+            public bool IsTransit;
+        }
         Type compassEquipmentType;
         MethodInfo compassGetSlot;
         object[] compassSlotArguments;
@@ -48,6 +62,92 @@ namespace SPTPopCounter
                 new ConfigDescription("Прозрачность шкалы", new AcceptableValueRange<float>(.2f, 1f)));
             compassTopOffset = Config.Bind("Compass", "Top offset", 16f,
                 new ConfigDescription("Отступ от верхнего края экрана", new AcceptableValueRange<float>(0f, 300f)));
+            compassShowExtracts = Config.Bind("Compass", "Show eligible extracts", true,
+                "Показывать доступные персонажу выходы; закрытые выходы скрыты");
+            compassShowTransits = Config.Bind("Compass", "Show transits", true,
+                "Показывать переходы между локациями");
+        }
+
+        void RefreshCompassMarkers(object world, object localPlayer)
+        {
+            if (!compassEnabled.Value || (compassRequireItem.Value && !compassHasItem))
+            {
+                compassMarkers.Clear();
+                compassNextMarkerCapture = 0f;
+                return;
+            }
+            Component player = localPlayer as Component;
+            compassPlayerTransform = player != null ? player.transform : null;
+            if (!ReferenceEquals(compassMarkerWorld, world))
+            {
+                compassMarkerWorld = world;
+                compassMarkers.Clear();
+                compassNextMarkerCapture = 0f;
+            }
+            if (Time.unscaledTime < compassNextMarkerCapture) return;
+            compassNextMarkerCapture = Time.unscaledTime + (compassMarkers.Count == 0 ? 2f : 10f);
+            compassMarkers.Clear();
+            try
+            {
+                if (compassShowExtracts.Value)
+                {
+                    object controller = ReadMember(world, "ExfiltrationController");
+                    object profile = ReadMember(localPlayer, "Profile");
+                    bool scav = string.Equals(ReadMember(profile, "Side")?.ToString(), "Savage", StringComparison.OrdinalIgnoreCase);
+                    object points = ReadMember(controller, scav ? "ScavExfiltrationPoints" : "ExfiltrationPoints");
+                    CaptureCompassPoints(points as IEnumerable, false, localPlayer);
+                }
+                if (compassShowTransits.Value)
+                {
+                    object controller = ReadMember(world, "TransitController");
+                    object points = ReadMember(controller, "pointsById");
+                    CaptureCompassPoints((ReadMember(points, "Values") ?? points) as IEnumerable, true, localPlayer);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug("Compass marker capture unavailable: " + ex.Message);
+            }
+        }
+
+        void CaptureCompassPoints(IEnumerable points, bool transit, object localPlayer)
+        {
+            if (points == null) return;
+            foreach (object point in points)
+            {
+                if (compassMarkers.Count >= 24) break;
+                Component component = point as Component;
+                if (component == null || !component.gameObject.activeInHierarchy) continue;
+                Behaviour behaviour = component as Behaviour;
+                if (behaviour != null && !behaviour.isActiveAndEnabled) continue;
+                if (!transit)
+                {
+                    string status = ReadMember(point, "Status")?.ToString();
+                    if (status == "NotPresent" || status == "Unknown") continue;
+                    MethodInfo match = null;
+                    foreach (MethodInfo candidate in point.GetType().GetMethods(InstanceFlags))
+                        if (candidate.Name == "InfiltrationMatch" &&
+                            candidate.GetParameters().Length == 1 &&
+                            candidate.GetParameters()[0].ParameterType.IsInstanceOfType(localPlayer))
+                        { match = candidate; break; }
+                    if (match != null)
+                    {
+                        ParameterInfo[] parameters = match.GetParameters();
+                        if (parameters.Length == 1 && parameters[0].ParameterType.IsInstanceOfType(localPlayer))
+                        {
+                            if (!IsTrue(match.Invoke(point, new[] { localPlayer }))) continue;
+                        }
+                        else continue; // Eligibility cannot be proven: never reveal the point.
+                    }
+                    else continue;
+                }
+                compassMarkers.Add(new CompassMarker
+                {
+                    Source = component,
+                    Position = component.transform.position,
+                    IsTransit = transit
+                });
+            }
         }
 
         void RefreshCompass(object localPlayer)
@@ -130,6 +230,10 @@ namespace SPTPopCounter
             compassHasItem = false;
             compassCamera = null;
             compassRoundedHeading = -1;
+            compassMarkers.Clear();
+            compassMarkerWorld = null;
+            compassNextMarkerCapture = 0f;
+            compassPlayerTransform = null;
         }
 
         void DisposeCompass()
@@ -185,6 +289,25 @@ namespace SPTPopCounter
 
             GUI.color = new Color(1f, .72f, .36f, opacity);
             GUI.DrawTexture(new Rect(center - 1f, top, 2f, 16f * scale), Texture2D.whiteTexture);
+            if (compassPlayerTransform != null)
+            {
+                Vector3 origin = compassPlayerTransform.position;
+                for (int i = 0; i < compassMarkers.Count; i++)
+                {
+                    CompassMarker marker = compassMarkers[i];
+                    if (marker.Source == null) continue;
+                    Vector3 direction = marker.Position - origin;
+                    if (direction.sqrMagnitude < 1f) continue;
+                    float bearing = Mathf.Repeat(Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + 180f, 360f);
+                    float delta = Mathf.DeltaAngle(compassYaw, bearing);
+                    float x = center + Mathf.Clamp(delta, -39f, 39f) * pixelsPerDegree;
+                    GUI.color = marker.IsTransit
+                        ? new Color(1f, .56f, .43f, opacity)
+                        : new Color(.70f, .91f, .58f, opacity);
+                    GUI.Label(new Rect(x - 9f * scale, top + 43f * scale, 18f * scale, 17f * scale),
+                        marker.IsTransit ? "П" : "В", compassCenterStyle);
+                }
+            }
             if (compassShowDegrees.Value)
                 GUI.Label(new Rect(center - 35f * scale, top + 27f * scale, 70f * scale, 15f * scale), compassHeadingLabel, compassCenterStyle);
             GUI.color = previous;

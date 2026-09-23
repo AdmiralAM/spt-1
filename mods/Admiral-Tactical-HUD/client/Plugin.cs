@@ -226,6 +226,7 @@ namespace SPTPopCounter
 
                 SetRaidState(true);
                 RefreshCompass(local);
+                RefreshCompassMarkers(world, local);
 
                 bool needPopulation = PopulationActive;
                 bool needStatus = StatusActive;
