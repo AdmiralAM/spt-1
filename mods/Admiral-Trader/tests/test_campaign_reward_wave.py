@@ -112,7 +112,8 @@ class CampaignRewardWaveTests(unittest.TestCase):
         kills = next(row for row in elimination["counter"]["conditions"] if row["conditionType"] == "Kills")
         self.assertTrue(kills["resetOnSessionEnd"])
         headset = next(row for row in elimination["counter"]["conditions"] if row["conditionType"] == "Equipment")
-        self.assertEqual(headset["equipmentInclusive"], [["5b432b965acfc47a8774094e", "5e4d34ca86f774264f758330"]])
+        # Each inner list is one required equipment group; the outer list is alternatives.
+        self.assertEqual(headset["equipmentInclusive"], [["5b432b965acfc47a8774094e"], ["5e4d34ca86f774264f758330"]])
         self.assertNotIn("4ab0b49478adb233ae900b33", self.belt)
         self.assertEqual(quest["rewards"]["Success"][-1]["items"][0]["_tpl"], "5aa2ba71e5b5b000137b758f")
 
