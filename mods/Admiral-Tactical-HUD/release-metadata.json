@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Tactical HUD",
+  "version": "1.13.3",
+  "releaseLabel": "Stable Beta",
+  "releaseChannel": "stable-beta",
+  "finalStable": false,
+  "runtimeCodeBaselineHead": "d7d63c0196af12141aedfc8f4896f0a9a84376ed",
+  "physicalAcceptance": {
+    "status": "user-confirmed-playable",
+    "date": "2026-09-20"
+  },
+  "killFeed": {
+    "included": false,
+    "failedImplementationRetired": true,
+    "restoreFailedImplementation": false,
+    "nextMandatoryProductStage": true
+  },
+  "notes": "Stable Beta freezes the current playable HUD baseline. Further polish and expansion continue later; final stable is not declared."
+}
