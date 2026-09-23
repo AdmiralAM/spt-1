@@ -17,6 +17,7 @@ PLUGIN = ROOT / "client" / "Plugin.cs"
 VISUAL = ROOT / "client" / "VisualLayer.cs"
 FULL = ROOT / "client" / "FullCensusPlugin.cs"
 ICONS = ROOT / "client" / "HudIcons.cs"
+COMPASS_KILLS = ROOT / "client" / "CompassKillLayer.cs"
 
 
 def method_body(source: str, name: str) -> str:
@@ -50,12 +51,19 @@ def method_body(source: str, name: str) -> str:
 
 
 def main() -> int:
-    if not PLUGIN.exists() or not VISUAL.exists() or not FULL.exists() or not ICONS.exists():
+    if not all(path.exists() for path in (PLUGIN, VISUAL, FULL, ICONS, COMPASS_KILLS)):
         raise SystemExit("missing Admiral Tactical HUD source files")
     plugin = PLUGIN.read_text(encoding="utf-8")
     visual = VISUAL.read_text(encoding="utf-8")
     full = FULL.read_text(encoding="utf-8")
     icons = ICONS.read_text(encoding="utf-8")
+    compass_kills = COMPASS_KILLS.read_text(encoding="utf-8")
+    if "OnPlayerDeadOrUnspawn" not in compass_kills or "KillerId" not in compass_kills:
+        raise SystemExit("compass death markers lost the player-qualified event source")
+    if "AllPlayersEverExisted" not in compass_kills or '"Corpse"' not in compass_kills:
+        raise SystemExit("nearby corpse markers lost the bounded world source")
+    if "FindObjectsOfType" in compass_kills or "Resources.FindObjectsOfTypeAll" in compass_kills:
+        raise SystemExit("compass death/body markers introduced a scene-wide scan")
     if "if (!TryLoadSheet(bytes)) TryLoadSheet(ReadEmbeddedReserve());" not in icons:
         raise SystemExit("external atlas decode failure does not fall back to the embedded reserve")
     forbidden_kill_feed = ("Kill Feed", "KillLine", "DrawKillFeed", "CaptureDeath", "OnTrackedDied")

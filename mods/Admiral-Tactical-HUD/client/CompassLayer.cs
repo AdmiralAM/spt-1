@@ -329,7 +329,7 @@ namespace SPTPopCounter
             float width = Mathf.Min(Screen.width - 24f, 520f * scale);
             if (width <= 0f) return;
             float center = Screen.width * .5f;
-            float top = Mathf.Clamp(compassTopOffset.Value, 0f, Mathf.Max(0f, Screen.height - 56f * scale));
+            float top = Mathf.Clamp(compassTopOffset.Value, 0f, Mathf.Max(0f, Screen.height - 84f * scale));
             float half = width * .5f;
             float pixelsPerDegree = width / 80f;
             float opacity = compassOpacity.Value;
@@ -383,6 +383,7 @@ namespace SPTPopCounter
             }
             if (compassShowDegrees.Value)
                 GUI.Label(new Rect(center - 35f * scale, top + 27f * scale, 70f * scale, 15f * scale), compassHeadingLabel, compassCenterStyle);
+            RenderCompassKills(center, top, scale, pixelsPerDegree, opacity);
             GUI.color = previous;
         }
     }

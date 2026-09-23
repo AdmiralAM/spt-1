@@ -89,6 +89,7 @@ namespace SPTPopCounter
             weightCritical = C("Player Status Colors", "Weight Critical", .75f, .42f, .39f);
 
             BindCompass();
+            BindCompassKills();
 
             Logger.LogInfo("Admiral Tactical HUD v1.13.3 loaded (optimized runtime, HUD state " + mode + ")");
         }
@@ -116,6 +117,7 @@ namespace SPTPopCounter
 
             float now = Time.unscaledTime;
             UpdateCompass();
+            UpdateCompassKills();
             if (now >= nextRefresh)
             {
                 Refresh();
@@ -160,6 +162,7 @@ namespace SPTPopCounter
             SceneManager.sceneLoaded -= OnSceneLoaded;
             if (visualRenderer != null) visualRenderer.Dispose();
             DisposeCompass();
+            DisposeCompassKills();
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode loadMode)
@@ -170,6 +173,7 @@ namespace SPTPopCounter
             globalConfiguration = null;
             nextRefresh = 0f;
             ResetCompass();
+            ResetCompassKills();
             ArmVersionSearch(.25f);
         }
 
@@ -227,6 +231,7 @@ namespace SPTPopCounter
                 SetRaidState(true);
                 RefreshCompass(local);
                 RefreshCompassMarkers(world, local);
+                RefreshCompassKillTracking(world, local, refreshPlayers);
 
                 bool needPopulation = PopulationActive;
                 bool needStatus = StatusActive;
@@ -278,7 +283,11 @@ namespace SPTPopCounter
         {
             if (inRaid == value) return;
             inRaid = value;
-            if (!inRaid) ResetCompass();
+            if (!inRaid)
+            {
+                ResetCompass();
+                ResetCompassKills();
+            }
             pmc = scav = boss = reinforced = 0;
             if (!inRaid && !statusOutside.Value)
                 hydration = energy = weight = overweightLimit = walkDrainLimit = 0f;

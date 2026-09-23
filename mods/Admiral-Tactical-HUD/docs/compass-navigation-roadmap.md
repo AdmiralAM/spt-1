@@ -8,7 +8,8 @@ Status: implementation started by explicit user request on 2026-09-23. The accep
 - Immersive Compass (EN|RU) `1.0.0`, SPT `3.8.3`, MIT: the older donor demonstrates item-driven visibility and quest/extraction navigation. Its published source URL currently returns HTTP 410, so no code or assets from it have been incorporated.
 - C1 in source: the compact heading strip is gated by the vanilla EYE MK.2 compass template in `SpecialSlot1`–`SpecialSlot3` by default. F12 settings control visibility, language, degrees, scale, opacity and top offset. The physical raid behavior still requires an in-game acceptance check.
 - C2 source work in progress: eligible exfiltration points and transit points are read from the same raid controllers used by Dynamic Maps. The optional Dynamic Maps quest adapter reuses its active/incomplete quest qualification and map-position data; it performs the donor's one-time quest trigger/item capture after raid startup, then refreshes only the selected objectives. Missing or incompatible Dynamic Maps disables quest markers alone. This is not yet physical C2 acceptance.
-- C3–C4 adapters remain separate: no sound or kill information is inferred from hidden world entities in this slice.
+- C3 source work in progress: death callbacks on already-registered players create a 15-second skull only when the local player caused the kill or the death happened within 25 m. Nearby corpses are read from `AllPlayersEverExisted` using the same `Corpse` field as Dynamic Maps and shown only within a configurable 25 m radius; no scene-wide search or remote-death notification is added. Physical acceptance remains open.
+- C4 audio integration remains separate: no sound information is inferred from hidden world entities.
 
 ## Product intent
 
@@ -23,7 +24,7 @@ The audio direction layer is an accessibility aid for players using mono speaker
 - Dynamic Maps is optional. When present, selected player markers can appear on the heading strip; when absent, the compass continues to work.
 - Accessibility Indicators is optional and independently configurable. When present, its already-qualified sound events may be represented as approximate directional sectors.
 - Sound sectors communicate direction, broad distance and event class, never exact world position or exact distance.
-- Kill markers are short-lived and limited to player-caused, observed or already-audible events. They never reveal arbitrary deaths elsewhere on the map.
+- Kill markers are short-lived and limited to player-caused or immediately nearby deaths (25 m by default). They never reveal arbitrary remote deaths elsewhere on the map.
 - Every integration fails closed and leaves the base HUD usable when its donor mod is absent or incompatible.
 
 ## Proposed settings
@@ -35,7 +36,8 @@ The audio direction layer is an accessibility aid for players using mono speaker
 - `Dynamic Maps > Marker bridge`
 - `Dynamic Maps > Marker categories`
 - `Events > Kill direction marker`
-- `Events > Kill marker lifetime` (default `30 s`)
+- `Compass Events > Kill marker lifetime` (default `15 s`)
+- `Compass Events > Nearby bodies` and `Body detection radius` (default `25 m`)
 - `Accessibility > Audio direction sectors`
 - `Accessibility > Gunshots / explosions / running / walking`
 - `Accessibility > Sector opacity, persistence and angular uncertainty`
@@ -75,7 +77,7 @@ Estimated effort: **5–9 hours**.
 
 ### C3 — bounded event markers
 
-Add short-lived directional markers for qualifying kill events, starting with a red skull and a default lifetime of 30 seconds. Restrict eligibility to information the player legitimately generated, observed or heard.
+Add short-lived directional markers for player-caused kills and deaths in immediate proximity, starting with a red skull and a default lifetime of 15 seconds. Show nearby bodies only inside the configured 25 m radius; do not reveal remote deaths.
 
 Acceptance: no remote or hidden death disclosure, expiration is deterministic, repeated events are bounded, and the feed/compass remain readable during busy fights.
 
