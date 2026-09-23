@@ -105,6 +105,7 @@ jobs:
           Write-Host "COMPASS_C1_SHA256=$hash"
 
       - name: Upload Admiral Tactical HUD Compass C1 preview
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: Admiral-Tactical-HUD-1.13.3-Compass-C1
