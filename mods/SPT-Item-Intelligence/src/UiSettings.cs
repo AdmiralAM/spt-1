@@ -55,9 +55,11 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> enoughColor;
         readonly ConfigEntry<Color> partialColor;
         readonly ConfigEntry<Color> missingColor;
-        readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseSecondaryOutline, senseRemainingText;
+        readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseCategories, senseContainerValues, senseSecondaryOutline, senseRemainingText;
         readonly ConfigEntry<float> senseContainerNameScale;
         readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor, senseFoodColor;
+        readonly ConfigEntry<Color> senseWaterColor, senseKeyColor, senseGrenadeColor, senseCurrencyColor;
+        readonly ConfigEntry<Color> senseContainerWhiteColor, senseContainerBlueColor, senseContainerLightYellowColor, senseContainerBrightYellowColor;
         readonly ConfigEntry<Color> senseMissingColor, sensePartialColor, senseNextColor, senseCompleteColor;
         readonly ConfigEntry<Color> senseCountOneColor, senseCountFewColor, senseCountManyColor;
         int revision;
@@ -124,7 +126,11 @@ namespace SPTItemIntelligence
             senseIntegration = config.Bind("Amands Sense", "Integration", true,
                 "Use Item Intelligence requirement decisions for loose-loot Sense markers when Amands Sense is installed.");
             senseRequiredItems = config.Bind("Amands Sense", "Required Items", true,
-                "Override Sense only for items that still have an unmet active quest, hideout or future quest requirement.");
+                "Apply Item Intelligence active quest, hideout, future quest and completed-item decisions to Sense.");
+            senseCategories = config.Bind("Amands Sense", "Category Markers", true,
+                "Show key, grenade, currency, food and water markers after requirement and protected native-value priority.");
+            senseContainerValues = config.Bind("Amands Sense", "Container Value Colors", true,
+                "Color containers by the selected-source total price of their contents, excluding the container itself. Requires the Value module.");
             senseSecondaryOutline = config.Bind("Amands Sense", "Secondary Reason Outline", true,
                 "Use the outline for a second simultaneous requirement reason.");
             senseRemainingText = config.Bind("Amands Sense", "Remaining Count Text", true,
@@ -135,6 +141,14 @@ namespace SPTItemIntelligence
             senseHideoutColor = ColorEntry(config, "Amands Sense Colors", "Hideout", new Color(0.20f, 0.78f, 1.00f), "Unmet hideout requirement.");
             senseFutureColor = ColorEntry(config, "Amands Sense Colors", "Future Quest", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
             senseFoodColor = ColorEntry(config, "Amands Sense Colors", "Food", new Color(0.84f, 0.93f, 0.70f), "Food and drink category when no stronger Item Intelligence requirement is present.");
+            senseWaterColor = ColorEntry(config, "Amands Sense Colors", "Water", new Color(33f / 255f, 168f / 255f, 1.00f), "Water and drinks category when no stronger Item Intelligence requirement is present; matches the installed Sense Drinks color.");
+            senseKeyColor = ColorEntry(config, "Amands Sense Colors", "Keys", new Color(0.18f, 0.90f, 0.70f), "Key category when no stronger Item Intelligence requirement is present.");
+            senseGrenadeColor = ColorEntry(config, "Amands Sense Colors", "Grenades", new Color(1.00f, 0.52f, 0.16f), "Grenade category when no stronger Item Intelligence requirement is present.");
+            senseCurrencyColor = ColorEntry(config, "Amands Sense Colors", "Currency", new Color(0.82f, 0.78f, 0.45f), "Money category when no stronger Item Intelligence requirement is present.");
+            senseContainerWhiteColor = ColorEntry(config, "Amands Sense Container Value Colors", "Up to 50k", Color.white, "Container total value up to and including 50,000.");
+            senseContainerBlueColor = ColorEntry(config, "Amands Sense Container Value Colors", "50k to 100k", new Color(0.25f, 0.62f, 1.00f), "Container total value above 50,000 and below 100,000.");
+            senseContainerLightYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "100k to 200k", new Color(1.00f, 0.91f, 0.48f), "Container total value from 100,000 through 199,999.");
+            senseContainerBrightYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "200k Plus", new Color(1.00f, 1.00f, 3f / 255f), "Container total value of 200,000 or more; exactly matches the installed Sense KappaItemsColor (FFFF03).");
             senseMissingColor = ColorEntry(config, "Amands Sense Stock Colors", "Missing", new Color(1.00f, 0.16f, 0.12f), "Not enough for the nearest requirement.");
             sensePartialColor = ColorEntry(config, "Amands Sense Stock Colors", "Partial", new Color(1.00f, 0.58f, 0.12f), "Some useful stock, but the nearest requirement is not covered.");
             senseNextColor = ColorEntry(config, "Amands Sense Stock Colors", "Next Covered", new Color(0.62f, 1.00f, 0.38f), "Nearest requirement covered, later requirements remain.");
@@ -170,6 +184,8 @@ namespace SPTItemIntelligence
             missingColor.SettingChanged += delegate { Touch(); };
             senseIntegration.SettingChanged += delegate { Touch(); };
             senseRequiredItems.SettingChanged += delegate { Touch(); };
+            senseCategories.SettingChanged += delegate { Touch(); };
+            senseContainerValues.SettingChanged += delegate { Touch(); };
             senseSecondaryOutline.SettingChanged += delegate { Touch(); };
             senseRemainingText.SettingChanged += delegate { Touch(); };
             senseContainerNameScale.SettingChanged += delegate { Touch(); };
@@ -177,6 +193,14 @@ namespace SPTItemIntelligence
             senseHideoutColor.SettingChanged += delegate { Touch(); };
             senseFutureColor.SettingChanged += delegate { Touch(); };
             senseFoodColor.SettingChanged += delegate { Touch(); };
+            senseWaterColor.SettingChanged += delegate { Touch(); };
+            senseKeyColor.SettingChanged += delegate { Touch(); };
+            senseGrenadeColor.SettingChanged += delegate { Touch(); };
+            senseCurrencyColor.SettingChanged += delegate { Touch(); };
+            senseContainerWhiteColor.SettingChanged += delegate { Touch(); };
+            senseContainerBlueColor.SettingChanged += delegate { Touch(); };
+            senseContainerLightYellowColor.SettingChanged += delegate { Touch(); };
+            senseContainerBrightYellowColor.SettingChanged += delegate { Touch(); };
             senseMissingColor.SettingChanged += delegate { Touch(); };
             sensePartialColor.SettingChanged += delegate { Touch(); };
             senseNextColor.SettingChanged += delegate { Touch(); };
@@ -212,6 +236,8 @@ namespace SPTItemIntelligence
         public Color MissingColor => missingColor.Value;
         public bool SenseIntegration => senseIntegration.Value;
         public bool SenseRequiredItems => senseRequiredItems.Value;
+        public bool SenseCategories => senseCategories.Value;
+        public bool SenseContainerValues => senseContainerValues.Value && modules.Value;
         public bool SenseSecondaryOutline => senseSecondaryOutline.Value;
         public bool SenseRemainingText => senseRemainingText.Value;
         public float SenseContainerNameScale => Mathf.Clamp(senseContainerNameScale.Value, 0.50f, 1.00f);
@@ -221,7 +247,18 @@ namespace SPTItemIntelligence
             if (reason == ItemNeedReason.Hideout) return senseHideoutColor.Value;
             if (reason == ItemNeedReason.FutureQuest) return senseFutureColor.Value;
             if (reason == ItemNeedReason.Food) return senseFoodColor.Value;
+            if (reason == ItemNeedReason.Water) return senseWaterColor.Value;
+            if (reason == ItemNeedReason.Key) return senseKeyColor.Value;
+            if (reason == ItemNeedReason.Grenade) return senseGrenadeColor.Value;
+            if (reason == ItemNeedReason.Currency) return senseCurrencyColor.Value;
             return defaultColor.Value;
+        }
+        public Color GetSenseContainerValueColor(SenseContainerValueTier tier)
+        {
+            if (tier == SenseContainerValueTier.Blue) return senseContainerBlueColor.Value;
+            if (tier == SenseContainerValueTier.LightYellow) return senseContainerLightYellowColor.Value;
+            if (tier == SenseContainerValueTier.BrightYellow) return senseContainerBrightYellowColor.Value;
+            return senseContainerWhiteColor.Value;
         }
         public Color GetSenseCountColor(int count)
         {

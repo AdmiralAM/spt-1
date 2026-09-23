@@ -51,6 +51,7 @@ namespace SPTItemIntelligence
             raidInventoryScanner = new RaidInventoryRuntimeScanner(message => Logger.LogInfo(message));
             hoverSink.RaidInventoryRefreshRequested += RefreshRaidInventory;
             uiSettings.Changed += hoverSink.Invalidate;
+            uiSettings.Changed += RequestSensePresentationRefresh;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
@@ -195,6 +196,11 @@ namespace SPTItemIntelligence
         {
             raidPresentationRefreshPending = true;
             if (hoverSink != null) hoverSink.Invalidate();
+        }
+
+        void RequestSensePresentationRefresh()
+        {
+            raidPresentationRefreshPending = true;
         }
 
         void Update()

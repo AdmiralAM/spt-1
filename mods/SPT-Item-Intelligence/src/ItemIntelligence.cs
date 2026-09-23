@@ -19,6 +19,8 @@ namespace SPTItemIntelligence
         Backpack,
         Container,
         Key,
+        Grenade,
+        Currency,
         Quest,
         Barter
     }
@@ -155,7 +157,9 @@ namespace SPTItemIntelligence
             else if (HasSignal(item, "WeaponClass", "WeapClass", "FireRate") || Has(text, "weaponitem", "firearm", "meleeweapon", "knifecomponent")) category = ItemCategory.Weapon;
             else if (HasSignal(item, "ArmorClass", "ArmorType") || Has(text, "armorcomponent", "armoredequipment", "bodyarmor")) category = ItemCategory.Armor;
             else if (Has(text, "backpack", "bagcomponent")) category = ItemCategory.Backpack;
-            else if (Has(text, "keycomponent", "keyitem", "mechanicalkey") || HasSignal(item, "MaximumNumberOfUsage", "MaxNumberOfUsage")) category = ItemCategory.Key;
+            else if (IsTrue(item, "IsRagfairCurrency") || Has(text, "currency", "moneyitem", "cashitem")) category = ItemCategory.Currency;
+            else if (Has(text, "grenade", "explosiveitem", "throwableitem")) category = ItemCategory.Grenade;
+            else if (Has(text, "keycomponent", "keyitem", "mechanicalkey", "electronicdevice") || HasSignal(item, "MaximumNumberOfUsage", "MaxNumberOfUsage")) category = ItemCategory.Key;
             else if (Has(text, "medicalitem", "meditem", "medscomponent", "drugitem", "stimulant") || HasSignal(item, "HpResource", "MaxHpResource", "MedUseTime")) category = ItemCategory.Meds;
             else if (Has(text, "fooditem", "drinkitem", "foodcomponent") || HasSignal(item, "Hydration", "Energy", "FoodUseTime")) category = ItemCategory.Food;
             else if (Has(text, "barteritem", "bartercomponent")) category = ItemCategory.Barter;
@@ -299,7 +303,14 @@ namespace SPTItemIntelligence
             this.matcher = matcher ?? new SemanticItemMatcher();
         }
 
-        public static ItemRegistry CreateDefault() => new ItemRegistry(new SemanticItemMatcher());
+        public static ItemRegistry CreateDefault()
+        {
+            ItemRegistry registry = new ItemRegistry(new SemanticItemMatcher());
+            registry.RegisterParent("543be5e94bdc2df1348b4568", ItemCategory.Key);
+            registry.RegisterParent("543be6564bdc2df4348b4568", ItemCategory.Grenade);
+            registry.RegisterParent("543be5dd4bdc2deb348b4569", ItemCategory.Currency);
+            return registry;
+        }
 
         public void Register(ItemDefinition definition)
         {
@@ -397,7 +408,8 @@ namespace SPTItemIntelligence
             "Category", "QuestItem", "Caliber", "AmmoType", "AmmoClass", "WeaponClass", "WeapClass", "FireRate",
             "ArmorClass", "ArmorType", "Grids", "Slots", "MaximumNumberOfUsage", "MaxNumberOfUsage",
             "HpResource", "MaxHpResource", "MedUseTime", "Hydration", "Energy", "FoodUseTime",
-            "HealthEffects", "Effects", "Buffs", "StimulatorBuffs", "Damage", "ExplosionStrength"
+            "HealthEffects", "Effects", "Buffs", "StimulatorBuffs", "Damage", "ExplosionStrength",
+            "IsRagfairCurrency", "type"
         };
 
         public static bool TryReadTemplateId(object source, out string templateId)

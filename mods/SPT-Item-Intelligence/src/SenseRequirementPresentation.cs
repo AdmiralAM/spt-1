@@ -9,7 +9,11 @@ namespace SPTItemIntelligence
         ActiveQuest,
         Hideout,
         FutureQuest,
-        Food
+        Food,
+        Water,
+        Key,
+        Grenade,
+        Currency
     }
 
     public enum ItemNeedIcon
@@ -19,6 +23,10 @@ namespace SPTItemIntelligence
         Hideout,
         FutureQuest,
         Food,
+        Water,
+        Key,
+        Grenade,
+        Currency,
         Complete
     }
 
@@ -42,11 +50,44 @@ namespace SPTItemIntelligence
         public SenseStockState Stock { get; }
         public int Remaining { get; }
         public int ItemCount { get; }
+        public string CurrencyCode { get; }
         public bool HasItemIntelligence => Category != ItemNeedReason.None;
         public bool ShouldReplaceIcon(bool senseAlreadyHasMeaningfulIcon) => HasItemIntelligence && !senseAlreadyHasMeaningfulIcon;
 
         internal static SenseVisualPolicy Food(int count) => new SenseVisualPolicy(
             ItemNeedIcon.Food, ItemNeedReason.Food, ItemNeedReason.None, SenseStockState.None, 0, count);
+
+        internal SenseVisualPolicy(ItemNeedIcon icon, ItemNeedReason category, int itemCount, string currencyCode = "")
+            : this(icon, category, ItemNeedReason.None, SenseStockState.None, 0, itemCount)
+        { CurrencyCode = currencyCode ?? string.Empty; }
+
+        internal static SenseVisualPolicy CategoryOnly(ItemNeedReason category, int count, string currencyCode = "")
+        {
+            ItemNeedIcon icon = category == ItemNeedReason.Water ? ItemNeedIcon.Water :
+                category == ItemNeedReason.Key ? ItemNeedIcon.Key :
+                category == ItemNeedReason.Grenade ? ItemNeedIcon.Grenade :
+                category == ItemNeedReason.Currency ? ItemNeedIcon.Currency : ItemNeedIcon.Food;
+            return new SenseVisualPolicy(icon, category, count, currencyCode);
+        }
+    }
+
+    public enum SenseContainerValueTier
+    {
+        White,
+        Blue,
+        LightYellow,
+        BrightYellow
+    }
+
+    public static class SenseContainerValuePolicy
+    {
+        public static SenseContainerValueTier Resolve(long totalValue)
+        {
+            if (totalValue >= 200000) return SenseContainerValueTier.BrightYellow;
+            if (totalValue >= 100000) return SenseContainerValueTier.LightYellow;
+            if (totalValue > 50000) return SenseContainerValueTier.Blue;
+            return SenseContainerValueTier.White;
+        }
     }
 
     public static class SenseVisualPolicyEngine
@@ -72,6 +113,23 @@ namespace SPTItemIntelligence
 
     public static class SenseContainerPolicyEngine
     {
+        public static SenseVisualPolicy Select(
+            IEnumerable<SenseVisualPolicy> requirementCandidates,
+            SenseVisualPolicy fallbackCategory,
+            bool nativeValueMarker,
+            long aggregateContainerValue)
+        {
+            SenseVisualPolicy requirements = Combine(requirementCandidates);
+            if (requirements.HasItemIntelligence && requirements.Stock != SenseStockState.Complete) return requirements;
+            if (nativeValueMarker) return Empty();
+            if (aggregateContainerValue > 50000) return fallbackCategory ?? Empty();
+            if (fallbackCategory != null && fallbackCategory.HasItemIntelligence) return fallbackCategory;
+            return requirements;
+        }
+
+        static SenseVisualPolicy Empty() =>
+            new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0);
+
         public static SenseVisualPolicy Combine(IEnumerable<SenseVisualPolicy> candidates)
         {
             SenseVisualPolicy bestUnmet = null;
@@ -94,8 +152,7 @@ namespace SPTItemIntelligence
             }
             if (bestUnmet != null) return new SenseVisualPolicy(bestUnmet.Icon, bestUnmet.Category,
                 bestUnmet.SecondaryCategory, bestUnmet.Stock, bestUnmet.Remaining, usefulCount);
-            return bestComplete ??
-                new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0);
+            return bestComplete ?? Empty();
         }
 
         static bool IsStronger(SenseVisualPolicy candidate, SenseVisualPolicy current)
