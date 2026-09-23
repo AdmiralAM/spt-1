@@ -262,10 +262,9 @@
           "name": "Цеховой контроль",
           "level": 8,
           "locations": [
-            "Sandbox",
-            "Sandbox_high"
+            "factory4_night"
           ],
-          "brief": "На Заводе осталась точка ретрансляции. Проверь назначенный участок, установи маркер и выйди живым, чтобы подтвердить рабочий маршрут.",
+          "brief": "Ночная версия Завода. Пройди через пролом в стене в кабинет секретаря, осмотри эту точку и установи там MS2000. После выполнения рейдовой задачи эвакуируйся живым.",
           "objectives": [
             {
               "kind": "visit",
@@ -295,9 +294,14 @@
           "successMessageIntent": "Advance Эпицентр storyline: Контрольный пакет",
           "mapOverride": "Завод",
           "runtimeLocationsOverride": [
-            "factory4_day",
             "factory4_night"
-          ]
+          ],
+          "visitZoneOverride": "ter_017_area_1",
+          "placeZoneOverride": "ter_017_area_1",
+          "visitDescriptionOverride": "Inspect the Factory secretary office beyond the breached wall; the marker site is shown on the map",
+          "visitDescriptionOverrideRu": "Проверить кабинет секретаря за проломом в стене; место установки MS2000 отмечено на карте",
+          "placeDescriptionOverride": "Place an MS2000 marker in the secretary office beyond the breached wall; the marker is consumed",
+          "placeDescriptionOverrideRu": "Закрепить MS2000 в кабинете секретаря за проломом стены; маркер расходуется"
         },
         {
           "id": "05c97b5823b0c42b7c25ccf9",

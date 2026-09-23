@@ -186,19 +186,19 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
         item_tpl = objective.get("itemTpl", RECOVERY_ITEMS[map_name][(q["order"] - 1) % 3])
         if kind == "visit":
             for n in range(quantity):
-                zone = visits[(q["order"] + objective_index + n - 1) % len(visits)]
+                zone = q.get("visitZoneOverride", visits[(q["order"] + objective_index + n - 1) % len(visits)])
                 suffix = f"visit-{objective_index}-{n}"
                 rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index))
-                en.append(f"Inspect operational point {n + 1}/{quantity} on {MAP_NAMES_EN[map_name]}")
-                ru.append(f"Осмотреть оперативную точку {n + 1}/{quantity} на карте «{map_name}»")
+                en.append(q.get("visitDescriptionOverride", f"Inspect operational point {n + 1}/{quantity} on {MAP_NAMES_EN[map_name]}"))
+                ru.append(q.get("visitDescriptionOverrideRu", f"Осмотреть оперативную точку {n + 1}/{quantity} на карте «{map_name}»"))
                 index += 1
         elif kind == "placeOrMark":
             for n in range(quantity):
                 if n < len(places):
-                    zone = places[(q["order"] + objective_index + n - 1) % len(places)]
+                    zone = q.get("placeZoneOverride", places[(q["order"] + objective_index + n - 1) % len(places)])
                     rows.append({"conditionType": "PlaceBeacon", "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:place:{objective_index}:{n}"), "index": index, "parentId": "", "plantTime": 10, "target": [MARKER], "value": 1, "visibilityConditions": [], "zoneId": zone})
-                    en.append(f"Place an MS2000 marker at objective {n + 1}/{quantity}; the marker is consumed")
-                    ru.append(f"Установить маркер MS2000 в точке {n + 1}/{quantity}; маркер расходуется")
+                    en.append(q.get("placeDescriptionOverride", f"Place an MS2000 marker at objective {n + 1}/{quantity}; the marker is consumed"))
+                    ru.append(q.get("placeDescriptionOverrideRu", f"Установить маркер MS2000 в точке {n + 1}/{quantity}; маркер расходуется"))
                 else:
                     zone = visits[(q["order"] + objective_index + n - 1) % len(visits)]
                     suffix = f"place-fallback-visit-{objective_index}-{n}"

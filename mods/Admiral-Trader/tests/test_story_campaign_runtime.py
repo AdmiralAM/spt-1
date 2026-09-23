@@ -234,7 +234,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             "4876c8bf7bb9677e3970b01c": ("Эпицентр", ["Sandbox", "Sandbox_high"]),
             "59230813b9f9e11ceed08033": ("Таможня", ["bigmap"]),
             "bb49cbdbae242ffef21f95b7": ("Лес", ["Woods"]),
-            "ac7bd06524b05c40da6f56ef": ("Завод", ["factory4_day", "factory4_night"]),
+            "ac7bd06524b05c40da6f56ef": ("Завод", ["factory4_night"]),
             "05c97b5823b0c42b7c25ccf9": ("Развязка", ["Interchange"]),
             "6d9fda8875aed2082b4da528": ("Таможня", ["bigmap"]),
         }
@@ -252,6 +252,27 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             }
             self.assertTrue(nested_locations <= set(runtime_locations), quest_id)
         self.assertEqual(sum(q.get("mapOverride", "Эпицентр") == "Эпицентр" for q in authored.values()), 5)
+
+    def test_factory_control_marker_site_is_explicit_and_mapped_to_its_beacon_zone(self):
+        quest_id = "ac7bd06524b05c40da6f56ef"
+        quest = self.by_id[quest_id]
+        finish = quest["conditions"]["AvailableForFinish"]
+        visit_conditions = [
+            condition
+            for row in finish
+            if row["conditionType"] == "CounterCreator"
+            for condition in row["counter"]["conditions"]
+            if condition["conditionType"] == "VisitPlace"
+        ]
+        beacon = next(row for row in finish if row["conditionType"] == "PlaceBeacon")
+        self.assertEqual([row["target"] for row in visit_conditions], ["ter_017_area_1"])
+        self.assertEqual(beacon["zoneId"], "ter_017_area_1")
+        ru = self.ru
+        description = ru[quest_id + " description"]
+        self.assertIn("ночн", description.lower())
+        self.assertIn("кабинет секретаря", description.lower())
+        self.assertIn("пролом", description.lower())
+        self.assertIn("MS2000", ru[beacon["id"]])
 
     def test_promised_field_actions_are_materialized(self):
         expected = {
