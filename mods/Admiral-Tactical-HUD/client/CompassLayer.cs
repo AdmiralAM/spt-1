@@ -19,17 +19,22 @@ namespace SPTPopCounter
 
         ConfigEntry<bool> compassEnabled, compassRequireItem, compassShowDegrees, compassRussianDirections;
         ConfigEntry<float> compassScale, compassOpacity, compassTopOffset;
-        ConfigEntry<bool> compassShowExtracts, compassShowTransits;
-        readonly List<CompassMarker> compassMarkers = new List<CompassMarker>(24);
+        ConfigEntry<bool> compassShowExtracts, compassShowTransits, compassShowQuests;
+        readonly List<CompassMarker> compassMarkers = new List<CompassMarker>(32);
         object compassMarkerWorld;
         float compassNextMarkerCapture;
         Transform compassPlayerTransform;
+        Type compassQuestUtilsType;
+        MethodInfo compassQuestCapture, compassQuestMarkers, compassQuestDiscard;
+        readonly object[] compassQuestArguments = new object[1];
+        bool compassQuestBridgeAttempted, compassQuestDataCaptured;
 
         sealed class CompassMarker
         {
             public Component Source;
             public Vector3 Position;
             public bool IsTransit;
+            public bool IsQuest;
         }
         Type compassEquipmentType;
         MethodInfo compassGetSlot;
@@ -66,6 +71,8 @@ namespace SPTPopCounter
                 "Показывать доступные персонажу выходы; закрытые выходы скрыты");
             compassShowTransits = Config.Bind("Compass", "Show transits", true,
                 "Показывать переходы между локациями");
+            compassShowQuests = Config.Bind("Compass", "Show active quest objectives (Dynamic Maps)", true,
+                "Цели активных незавершённых заданий; требуется Dynamic Maps");
         }
 
         void RefreshCompassMarkers(object world, object localPlayer)
@@ -103,6 +110,8 @@ namespace SPTPopCounter
                     object points = ReadMember(controller, "pointsById");
                     CaptureCompassPoints((ReadMember(points, "Values") ?? points) as IEnumerable, true, localPlayer);
                 }
+                if (compassShowQuests.Value && Time.timeSinceLevelLoad >= 8f)
+                    CaptureCompassQuestMarkers(localPlayer);
             }
             catch (Exception ex)
             {
@@ -110,12 +119,67 @@ namespace SPTPopCounter
             }
         }
 
+        void CaptureCompassQuestMarkers(object localPlayer)
+        {
+            object profile = ReadMember(localPlayer, "Profile");
+            if (string.Equals(ReadMember(profile, "Side")?.ToString(), "Savage", StringComparison.OrdinalIgnoreCase))
+                return; // Match Dynamic Maps: no player-quest markers in scav raids.
+            // Dynamic Maps owns quest qualification. Resolve its internal, version-sensitive
+            // interface only once and fail closed if the optional mod is unavailable.
+            if (!compassQuestBridgeAttempted)
+            {
+                compassQuestBridgeAttempted = true;
+                compassQuestUtilsType = Type.GetType("DynamicMaps.Utils.QuestUtils, DynamicMaps", false);
+                if (compassQuestUtilsType != null)
+                {
+                    BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+                    compassQuestCapture = compassQuestUtilsType.GetMethod("TryCaptureQuestData", flags);
+                    compassQuestMarkers = compassQuestUtilsType.GetMethod("GetMarkerDefsForPlayer", flags);
+                    compassQuestDiscard = compassQuestUtilsType.GetMethod("DiscardQuestData", flags);
+                }
+            }
+            if (compassQuestCapture == null || compassQuestMarkers == null) return;
+            ParameterInfo[] parameters = compassQuestMarkers.GetParameters();
+            if (parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(localPlayer)) return;
+            try
+            {
+                if (!compassQuestDataCaptured)
+                {
+                    compassQuestDataCaptured = true;
+                    // Donor performs one bounded capture of quest triggers/items per raid.
+                    compassQuestCapture.Invoke(null, null);
+                }
+                compassQuestArguments[0] = localPlayer;
+                IEnumerable definitions = compassQuestMarkers.Invoke(null, compassQuestArguments) as IEnumerable;
+                if (definitions == null) return;
+                foreach (object definition in definitions)
+                {
+                    if (compassMarkers.Count >= 32) break;
+                    if (!(ReadMember(definition, "Position") is Vector3 mapPosition)) continue;
+                    // Dynamic Maps converts Unity (x,y,z) to map (x,z,y).
+                    Vector3 worldPosition = new Vector3(mapPosition.x, mapPosition.z, mapPosition.y);
+                    bool duplicate = false;
+                    for (int i = 0; i < compassMarkers.Count; i++)
+                        if (compassMarkers[i].IsQuest &&
+                            (compassMarkers[i].Position - worldPosition).sqrMagnitude < 1f)
+                        { duplicate = true; break; }
+                    if (!duplicate) compassMarkers.Add(new CompassMarker { Position = worldPosition, IsQuest = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                compassQuestMarkers = null;
+                Logger.LogDebug("Optional Dynamic Maps quest bridge disabled: " + ex.Message);
+            }
+            finally { compassQuestArguments[0] = null; }
+        }
+
         void CaptureCompassPoints(IEnumerable points, bool transit, object localPlayer)
         {
             if (points == null) return;
             foreach (object point in points)
             {
-                if (compassMarkers.Count >= 24) break;
+                if (compassMarkers.Count >= 20) break;
                 Component component = point as Component;
                 if (component == null || !component.gameObject.activeInHierarchy) continue;
                 Behaviour behaviour = component as Behaviour;
@@ -223,6 +287,13 @@ namespace SPTPopCounter
 
         void ResetCompass()
         {
+            if (compassQuestDataCaptured && compassQuestDiscard != null)
+                try { compassQuestDiscard.Invoke(null, null); } catch { }
+            compassQuestDataCaptured = false;
+            compassQuestBridgeAttempted = false;
+            compassQuestUtilsType = null;
+            compassQuestCapture = compassQuestMarkers = compassQuestDiscard = null;
+            compassQuestArguments[0] = null;
             compassEquipmentType = null;
             compassGetSlot = null;
             compassSlotArguments = null;
@@ -295,17 +366,19 @@ namespace SPTPopCounter
                 for (int i = 0; i < compassMarkers.Count; i++)
                 {
                     CompassMarker marker = compassMarkers[i];
-                    if (marker.Source == null) continue;
+                    if (!marker.IsQuest && marker.Source == null) continue;
                     Vector3 direction = marker.Position - origin;
                     if (direction.sqrMagnitude < 1f) continue;
                     float bearing = Mathf.Repeat(Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + 180f, 360f);
                     float delta = Mathf.DeltaAngle(compassYaw, bearing);
                     float x = center + Mathf.Clamp(delta, -39f, 39f) * pixelsPerDegree;
-                    GUI.color = marker.IsTransit
-                        ? new Color(1f, .56f, .43f, opacity)
-                        : new Color(.70f, .91f, .58f, opacity);
+                    GUI.color = marker.IsQuest ? new Color(.60f, .84f, 1f, opacity) :
+                        marker.IsTransit ? new Color(1f, .56f, .43f, opacity) :
+                        new Color(.70f, .91f, .58f, opacity);
                     GUI.Label(new Rect(x - 9f * scale, top + 43f * scale, 18f * scale, 17f * scale),
-                        marker.IsTransit ? "П" : "В", compassCenterStyle);
+                        compassRussianDirections.Value
+                            ? marker.IsQuest ? "З" : marker.IsTransit ? "П" : "В"
+                            : marker.IsQuest ? "Q" : marker.IsTransit ? "T" : "E", compassCenterStyle);
                 }
             }
             if (compassShowDegrees.Value)

@@ -70,10 +70,10 @@ jobs:
             -Compact 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD.dll' `
             -FullCensus 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD Full Census.dll'
 
-      - name: Stage Admiral Tactical HUD Compass C1 preview
+      - name: Stage Admiral Tactical HUD Compass C2 preview
         shell: pwsh
         run: |
-          $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C1'
+          $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C2'
           $client = Join-Path $root 'BepInEx/plugins/Admiral Tactical HUD'
           $clientAssets = Join-Path $client 'assets'
           $server = Join-Path $root 'SPT_Runtime/user/mods/Admiral Tactical HUD'
@@ -87,30 +87,30 @@ jobs:
           Copy-Item 'mods/Admiral-Tactical-HUD/cleanup-manifest.json' (Join-Path $server 'cleanup-manifest.json')
           Copy-Item 'mods/Admiral-Tactical-HUD/THIRD-PARTY-LICENSES' (Join-Path $server 'THIRD-PARTY-LICENSES') -Recurse
 
-      - name: Validate Compass C1 package contract
+      - name: Validate Compass C2 package contract
         shell: pwsh
         run: |
-          $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C1'
+          $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C2'
           ./mods/Admiral-Tactical-HUD/tools/check_hud_package.ps1 `
             -PackageRoot $root `
             -Manifest 'mods/Admiral-Tactical-HUD/cleanup-manifest.json'
 
-      - name: Create Compass C1 preview archive and checksum
+      - name: Create Compass C2 preview archive and checksum
         shell: pwsh
         run: |
-          $name = 'Admiral-Tactical-HUD-1.13.3-Compass-C1'
+          $name = 'Admiral-Tactical-HUD-1.13.3-Compass-C2'
           Compress-Archive -Path "artifacts/$name/*" -DestinationPath "artifacts/$name.zip" -CompressionLevel Optimal
           $hash = (Get-FileHash "artifacts/$name.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $name.zip" | Set-Content "artifacts/$name.sha256" -Encoding ascii
-          Write-Host "COMPASS_C1_SHA256=$hash"
+          Write-Host "COMPASS_C2_SHA256=$hash"
 
-      - name: Upload Admiral Tactical HUD Compass C1 preview
+      - name: Upload Admiral Tactical HUD Compass C2 preview
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: Admiral-Tactical-HUD-1.13.3-Compass-C1
+          name: Admiral-Tactical-HUD-1.13.3-Compass-C2
           path: |
-            artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C1.zip
-            artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C1.sha256
+            artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C2.zip
+            artifacts/Admiral-Tactical-HUD-1.13.3-Compass-C2.sha256
           if-no-files-found: error
           retention-days: 90
