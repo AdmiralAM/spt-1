@@ -110,7 +110,7 @@
       [4,"sks-hunter","9-15",["Customs","Woods","Shoreline"],"Scav eliminations at 40 metres or farther"],
       [5,"classic-ak-545","11-17",["Customs","Woods","Shoreline"],"eliminations followed by a survived extraction"],
       [6,"classic-ak-762","13-19",["any"],"eligible-weapon eliminations against any target"],
-      [7,"nato-service-rifles","15-21",["Woods","Shoreline","Interchange"],"eligible-weapon eliminations against any target"],
+      [7,"nato-service-rifles","15-21",["any"],"eligible-weapon eliminations against any target"],
       [8,"nato-alternatives","17-23",["Interchange","Reserve","Streets"],"PMC eliminations across raids"],
       [9,"battle-rifles","19-25",["Shoreline","Reserve","Lighthouse"],"full-power battle-rifle eliminations"],
       [10,"nine-by-thirty-nine","21-27",["Reserve","Lighthouse","Streets"],"eligible-weapon eliminations against any target"],

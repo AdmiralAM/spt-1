@@ -404,9 +404,7 @@
       "pool": "nato-service-rifles",
       "levelBand": "15-21",
       "locations": [
-        "Woods",
-        "Shoreline",
-        "Interchange"
+        "any"
       ],
       "semantics": "eligible-weapon eliminations against any target",
       "nativeWeaponCount": 5,
