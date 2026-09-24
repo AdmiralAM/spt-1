@@ -87,7 +87,13 @@ namespace SPTItemIntelligence
         }
 
         static void SetSensePostfix(object __instance) { AmandsSenseIntegration value = active; if (value != null) value.Apply(__instance); }
-        static void ContainerUpdatePostfix(object __instance) { AmandsSenseIntegration value = active; if (value != null) value.ApplyContainerNameScale(__instance); }
+        static void ContainerUpdatePostfix(object __instance)
+        {
+            AmandsSenseIntegration value = active;
+            if (value == null || __instance == null) return;
+            value.evaluationCache.Remove(__instance);
+            value.Apply(__instance);
+        }
         static void RemovePrefix(object __instance, object __0) { AmandsSenseIntegration value = active; if (value != null) value.RecordPickup(__instance, __0); }
         static void ClearPostfix() { AmandsSenseIntegration value = active; if (value != null) value.ResetRaid(); }
 
@@ -187,7 +193,7 @@ namespace SPTItemIntelligence
             Color stock = settings.GetSenseStockColor(policy.Stock);
             bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
             bool preserveIcon = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy;
-            Color valueColor = hasContainerValue ? settings.GetSenseContainerValueColor(SenseContainerValuePolicy.Resolve(containerTotalValue)) : primary;
+            Color valueColor = hasContainerValue ? ApplyContainerValueBrightness(primary, settings.GetSenseContainerValueBrightness(containerTotalValue)) : primary;
             Color renderColor = completedContainer ? stock : hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary;
             if (!preserveIcon && (policy.HasItemIntelligence || hasContainerValue)) SetField(senseItem, "color", renderColor);
             Color secondary = policy.HasItemIntelligence && policy.Stock == SenseStockState.None && hasContainerValue
@@ -456,6 +462,12 @@ namespace SPTItemIntelligence
         static long SaturatingAdd(long left, long right)
         {
             return right > 0 && left > long.MaxValue - right ? long.MaxValue : left + right;
+        }
+
+        static Color ApplyContainerValueBrightness(Color categoryColor, float brightness)
+        {
+            float value = Mathf.Clamp(brightness, 0.10f, 1.00f);
+            return new Color(categoryColor.r * value, categoryColor.g * value, categoryColor.b * value, categoryColor.a);
         }
 
         static bool HasProtectedSenseVisual(object senseItem)

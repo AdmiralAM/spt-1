@@ -61,9 +61,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                settings.Contains("config.Bind(\"Amands Sense\", \"Remaining Count Text\", true"),
             "the required Sense layers are independently configurable in Item Intelligence F12", ref assertions);
         Expect(settings.Contains("new Color(33f / 255f, 168f / 255f, 1.00f)") &&
-               settings.Contains("new Color(1.00f, 1.00f, 3f / 255f)") &&
-               settings.Contains("Sense KappaItemsColor (FFFF03)"),
-            "water uses the installed Sense drink blue and the top value tier matches the live super-rare Kappa yellow", ref assertions);
+               settings.Contains("BrightnessEntry(config, \"50k\", 0.70f") &&
+               settings.Contains("BrightnessEntry(config, \"100k\", 0.85f") &&
+               settings.Contains("BrightnessEntry(config, \"200k\", 0.95f") &&
+               settings.Contains("BrightnessEntry(config, \"500k Plus\", 1.00f"),
+            "water keeps the installed Sense drink blue while container value settings control brightness, not category hue", ref assertions);
         Expect(settings.Contains("\"Amands Sense Colors\", \"Active Quest\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Hideout\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Future Quest\"") &&
@@ -72,23 +74,31 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                settings.Contains("\"Amands Sense Colors\", \"Keys\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Grenades\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Currency\"") &&
-               settings.Contains("\"Amands Sense Container Value Colors\", \"200k Plus\"") &&
+               settings.Contains("\"Amands Sense Container Value Brightness\"") &&
+               settings.Contains("\"500k Plus\"") &&
                settings.Contains("\"Amands Sense Count Colors\", \"One Item\"") &&
                settings.Contains("\"Amands Sense Count Colors\", \"Two to Three\"") &&
                settings.Contains("\"Amands Sense Count Colors\", \"Four Plus\""),
             "Sense categories and container count ranges remain independently configurable", ref assertions);
         Expect(adapter.Contains("icon_provisions_food.png") && adapter.Contains("icon_provisions_drinks.png") &&
                adapter.Contains("icon_keys_mechanic.png") && adapter.Contains("icon_weapons_throw.png") &&
-               adapter.Contains("icon_money.png") && adapter.Contains("SenseContainerValuePolicy.Resolve(containerTotalValue)") &&
+               adapter.Contains("icon_money.png") && adapter.Contains("settings.GetSenseContainerValueBrightness(containerTotalValue)") &&
                adapter.Contains("if (icon == ItemNeedIcon.Food) return \"icon_provisions_food.png\"") &&
                adapter.Contains("if (icon == ItemNeedIcon.Water) return \"icon_provisions_drinks.png\""),
             "Sense uses its owned category icons and applies the aggregate container-value color tier", ref assertions);
         Expect(adapter.Contains("IsContainerRoot(senseItem, item, contained)") &&
                adapter.Contains("state.Price.FleaUnitValue") && !adapter.Contains("settings.ValueMode == ItemValueMode.Flea") &&
-               adapter.Contains("SenseContainerValuePolicy.Resolve(containerTotalValue)") &&
+               adapter.Contains("ApplyContainerValueBrightness(primary, settings.GetSenseContainerValueBrightness(containerTotalValue))") &&
                adapter.Contains("hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary") &&
                !adapter.Contains("AppendNativeContainerValue") && !adapter.Contains(" ₽</color>"),
-            "container color always uses flea totals independently of Tooltip Value Source and never adds a price label", ref assertions);
+            "container brightness uses flea totals over the category hue independently of Tooltip Value Source and never adds a price label", ref assertions);
+        Expect(adapter.Contains("value.evaluationCache.Remove(__instance)") && adapter.Contains("value.Apply(__instance)") &&
+               adapter.Contains("Color ApplyContainerValueBrightness(Color categoryColor, float brightness)"),
+            "each Sense container rescan invalidates its old contents and reapplies category color plus value brightness", ref assertions);
+        Expect(adapter.Contains("GameUiText.T(\"CURRENCY\", \"ВАЛЮТА\")") &&
+               adapter.Contains("currencyCode == \"USD\" ? \"$\" : currencyCode == \"EUR\" ? \"€\" : currencyCode == \"RUB\" ? \"₽\"") &&
+               adapter.Contains("if (icon == ItemNeedIcon.Currency) return \"icon_money.png\""),
+            "money-only containers retain a dedicated localized currency label, denomination and money sprite", ref assertions);
         int protectedVisualMethod = adapter.IndexOf("static bool HasProtectedSenseVisual(object senseItem)", StringComparison.Ordinal);
         int containerProtection = adapter.IndexOf("if (IsContainer(senseItem)) return false;", protectedVisualMethod, StringComparison.Ordinal);
         int nativeProtection = adapter.IndexOf("if (type == \"Valuables\"", protectedVisualMethod, StringComparison.Ordinal);
@@ -98,7 +108,8 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                adapter.Contains("type == \"KappaItems\" || type == \"RareItems\" || type == \"WishList\"") &&
                adapter.Contains("if (IsContainer(senseItem)) return false") &&
                adapter.Contains("if (type == \"QuestItems\") return !IsContainer(senseItem)") &&
-               adapter.Contains("ItemNeedReason[] order = { ItemNeedReason.Food, ItemNeedReason.Water, ItemNeedReason.Grenade, ItemNeedReason.Key, ItemNeedReason.Currency }"),
+               adapter.Contains("ItemNeedReason[] order = { ItemNeedReason.Food, ItemNeedReason.Water, ItemNeedReason.Grenade, ItemNeedReason.Key, ItemNeedReason.Currency }") &&
+               adapter.Contains("if (icon == ItemNeedIcon.Currency) return \"icon_money.png\""),
             "II key markers can replace the native electronic/mechanical key category while rare/favorite visuals and text restore safely", ref assertions);
         Expect(adapter.Contains("Text(Member(senseItem, \"senseItemType\")) == \"ElectronicKeys\"") &&
                adapter.Contains("icon_keys_electronic.png") && adapter.Contains("icon_keys_mechanic.png"),

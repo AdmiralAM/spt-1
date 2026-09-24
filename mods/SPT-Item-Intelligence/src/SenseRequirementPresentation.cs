@@ -71,23 +71,24 @@ namespace SPTItemIntelligence
         }
     }
 
-    public enum SenseContainerValueTier
-    {
-        White,
-        Blue,
-        LightYellow,
-        BrightYellow
-    }
-
     public static class SenseContainerValuePolicy
     {
-        public static SenseContainerValueTier Resolve(long totalValue)
+        public static float ResolveBrightness(long totalValue, float at50k, float at100k, float at200k, float at500k)
         {
-            if (totalValue >= 200000) return SenseContainerValueTier.BrightYellow;
-            if (totalValue >= 100000) return SenseContainerValueTier.LightYellow;
-            if (totalValue > 50000) return SenseContainerValueTier.Blue;
-            return SenseContainerValueTier.White;
+            float first = ClampBrightness(at50k);
+            float second = Math.Max(first, ClampBrightness(at100k));
+            float third = Math.Max(second, ClampBrightness(at200k));
+            float fourth = Math.Max(third, ClampBrightness(at500k));
+            if (totalValue <= 0) return 0.50f;
+            if (totalValue <= 50000) return Lerp(0.50f, first, totalValue / 50000f);
+            if (totalValue <= 100000) return Lerp(first, second, (totalValue - 50000f) / 50000f);
+            if (totalValue <= 200000) return Lerp(second, third, (totalValue - 100000f) / 100000f);
+            if (totalValue <= 500000) return Lerp(third, fourth, (totalValue - 200000f) / 300000f);
+            return fourth;
         }
+
+        static float ClampBrightness(float value) => Math.Max(0.10f, Math.Min(1f, value));
+        static float Lerp(float from, float to, float amount) => from + (to - from) * Math.Max(0f, Math.Min(1f, amount));
     }
 
     public static class SenseVisualPolicyEngine

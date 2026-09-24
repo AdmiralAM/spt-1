@@ -59,7 +59,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> senseContainerNameScale;
         readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor, senseFoodColor;
         readonly ConfigEntry<Color> senseWaterColor, senseKeyColor, senseGrenadeColor, senseCurrencyColor;
-        readonly ConfigEntry<Color> senseContainerWhiteColor, senseContainerBlueColor, senseContainerLightYellowColor, senseContainerBrightYellowColor;
+        readonly ConfigEntry<float> senseContainerBrightness50k, senseContainerBrightness100k, senseContainerBrightness200k, senseContainerBrightness500k;
         readonly ConfigEntry<Color> senseMissingColor, sensePartialColor, senseNextColor, senseCompleteColor;
         readonly ConfigEntry<Color> senseCountOneColor, senseCountFewColor, senseCountManyColor;
         int revision;
@@ -145,10 +145,10 @@ namespace SPTItemIntelligence
             senseKeyColor = ColorEntry(config, "Amands Sense Colors", "Keys", new Color(0.18f, 0.90f, 0.70f), "Key category when no stronger Item Intelligence requirement is present.");
             senseGrenadeColor = ColorEntry(config, "Amands Sense Colors", "Grenades", new Color(1.00f, 0.52f, 0.16f), "Grenade category when no stronger Item Intelligence requirement is present.");
             senseCurrencyColor = ColorEntry(config, "Amands Sense Colors", "Currency", new Color(0.82f, 0.78f, 0.45f), "Money category when no stronger Item Intelligence requirement is present.");
-            senseContainerWhiteColor = ColorEntry(config, "Amands Sense Container Value Colors", "Up to 50k", Color.white, "Container total value up to and including 50,000.");
-            senseContainerBlueColor = ColorEntry(config, "Amands Sense Container Value Colors", "50k to 100k", new Color(0.25f, 0.62f, 1.00f), "Container total value above 50,000 and below 100,000.");
-            senseContainerLightYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "100k to 200k", new Color(1.00f, 0.91f, 0.48f), "Container total value from 100,000 through 199,999.");
-            senseContainerBrightYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "200k Plus", new Color(1.00f, 1.00f, 3f / 255f), "Container total value of 200,000 or more; exactly matches the installed Sense KappaItemsColor (FFFF03).");
+            senseContainerBrightness50k = BrightnessEntry(config, "50k", 0.70f, "Marker brightness at a 50,000 total flea value.");
+            senseContainerBrightness100k = BrightnessEntry(config, "100k", 0.85f, "Marker brightness at a 100,000 total flea value.");
+            senseContainerBrightness200k = BrightnessEntry(config, "200k", 0.95f, "Marker brightness at a 200,000 total flea value.");
+            senseContainerBrightness500k = BrightnessEntry(config, "500k Plus", 1.00f, "Maximum marker brightness at 500,000 or more total flea value.");
             senseMissingColor = ColorEntry(config, "Amands Sense Stock Colors", "Missing", new Color(1.00f, 0.16f, 0.12f), "Not enough for the nearest requirement.");
             sensePartialColor = ColorEntry(config, "Amands Sense Stock Colors", "Partial", new Color(1.00f, 0.58f, 0.12f), "Some useful stock, but the nearest requirement is not covered.");
             senseNextColor = ColorEntry(config, "Amands Sense Stock Colors", "Next Covered", new Color(0.62f, 1.00f, 0.38f), "Nearest requirement covered, later requirements remain.");
@@ -197,10 +197,10 @@ namespace SPTItemIntelligence
             senseKeyColor.SettingChanged += delegate { Touch(); };
             senseGrenadeColor.SettingChanged += delegate { Touch(); };
             senseCurrencyColor.SettingChanged += delegate { Touch(); };
-            senseContainerWhiteColor.SettingChanged += delegate { Touch(); };
-            senseContainerBlueColor.SettingChanged += delegate { Touch(); };
-            senseContainerLightYellowColor.SettingChanged += delegate { Touch(); };
-            senseContainerBrightYellowColor.SettingChanged += delegate { Touch(); };
+            senseContainerBrightness50k.SettingChanged += delegate { Touch(); };
+            senseContainerBrightness100k.SettingChanged += delegate { Touch(); };
+            senseContainerBrightness200k.SettingChanged += delegate { Touch(); };
+            senseContainerBrightness500k.SettingChanged += delegate { Touch(); };
             senseMissingColor.SettingChanged += delegate { Touch(); };
             sensePartialColor.SettingChanged += delegate { Touch(); };
             senseNextColor.SettingChanged += delegate { Touch(); };
@@ -253,13 +253,9 @@ namespace SPTItemIntelligence
             if (reason == ItemNeedReason.Currency) return senseCurrencyColor.Value;
             return defaultColor.Value;
         }
-        public Color GetSenseContainerValueColor(SenseContainerValueTier tier)
-        {
-            if (tier == SenseContainerValueTier.Blue) return senseContainerBlueColor.Value;
-            if (tier == SenseContainerValueTier.LightYellow) return senseContainerLightYellowColor.Value;
-            if (tier == SenseContainerValueTier.BrightYellow) return senseContainerBrightYellowColor.Value;
-            return senseContainerWhiteColor.Value;
-        }
+        public float GetSenseContainerValueBrightness(long totalValue) =>
+            SenseContainerValuePolicy.ResolveBrightness(totalValue, senseContainerBrightness50k.Value,
+                senseContainerBrightness100k.Value, senseContainerBrightness200k.Value, senseContainerBrightness500k.Value);
         public Color GetSenseCountColor(int count)
         {
             if (count >= 4) return senseCountManyColor.Value;
@@ -304,6 +300,12 @@ namespace SPTItemIntelligence
         static ConfigEntry<Color> ColorEntry(ConfigFile config, string section, string name, Color value, string description)
         {
             return config.Bind(section, name, value, description + " Uses the native color selector.");
+        }
+
+        static ConfigEntry<float> BrightnessEntry(ConfigFile config, string key, float value, string description)
+        {
+            return config.Bind("Amands Sense Container Value Brightness", key, value,
+                new ConfigDescription(description, new AcceptableValueRange<float>(0.10f, 1.00f)));
         }
     }
 }

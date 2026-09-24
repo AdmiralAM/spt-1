@@ -34,20 +34,26 @@ static class Phase38SenseVisualPolicyTests
         SenseVisualPolicy food = SenseVisualPolicy.Food(4);
         Expect(food.Category == ItemNeedReason.Food && food.Icon == ItemNeedIcon.Food && food.ItemCount == 4,
             "food uses the native lightning icon as its independent Sense category", ref assertions);
+        SenseVisualPolicy currencyOnly = SenseVisualPolicy.CategoryOnly(ItemNeedReason.Currency, 4, "EUR");
         Expect(SenseVisualPolicy.CategoryOnly(ItemNeedReason.Water, 2).Icon == ItemNeedIcon.Water &&
                SenseVisualPolicy.CategoryOnly(ItemNeedReason.Key, 1).Icon == ItemNeedIcon.Key &&
                SenseVisualPolicy.CategoryOnly(ItemNeedReason.Grenade, 3).Icon == ItemNeedIcon.Grenade &&
-               SenseVisualPolicy.CategoryOnly(ItemNeedReason.Currency, 4, "EUR").CurrencyCode == "EUR",
-            "water, keys, grenades and denomination-aware money map to separate native Sense icons", ref assertions);
-        Expect(SenseContainerValuePolicy.Resolve(0) == SenseContainerValueTier.White &&
-               SenseContainerValuePolicy.Resolve(50000) == SenseContainerValueTier.White &&
-               SenseContainerValuePolicy.Resolve(50001) == SenseContainerValueTier.Blue &&
-               SenseContainerValuePolicy.Resolve(99999) == SenseContainerValueTier.Blue &&
-               SenseContainerValuePolicy.Resolve(100000) == SenseContainerValueTier.LightYellow &&
-               SenseContainerValuePolicy.Resolve(150000) == SenseContainerValueTier.LightYellow &&
-               SenseContainerValuePolicy.Resolve(199999) == SenseContainerValueTier.LightYellow &&
-               SenseContainerValuePolicy.Resolve(200000) == SenseContainerValueTier.BrightYellow,
-            "container total value color tiers honor every threshold boundary", ref assertions);
+               currencyOnly.Category == ItemNeedReason.Currency && currencyOnly.Icon == ItemNeedIcon.Currency &&
+               currencyOnly.ItemCount == 4 && currencyOnly.CurrencyCode == "EUR",
+            "a currency-only container resolves to its own money icon, denomination and total count", ref assertions);
+        float at50k = SenseContainerValuePolicy.ResolveBrightness(50000, 0.70f, 0.85f, 0.95f, 1f);
+        float at100k = SenseContainerValuePolicy.ResolveBrightness(100000, 0.70f, 0.85f, 0.95f, 1f);
+        float at200k = SenseContainerValuePolicy.ResolveBrightness(200000, 0.70f, 0.85f, 0.95f, 1f);
+        float at500k = SenseContainerValuePolicy.ResolveBrightness(500000, 0.70f, 0.85f, 0.95f, 1f);
+        Expect(at50k < at100k && at100k < at200k && at200k < at500k &&
+               Math.Abs(at50k - 0.70f) < 0.001f && Math.Abs(at100k - 0.85f) < 0.001f &&
+               Math.Abs(at200k - 0.95f) < 0.001f && Math.Abs(at500k - 1f) < 0.001f,
+            "container marker brightness rises monotonically at the configured value breakpoints", ref assertions);
+        Expect(SenseContainerValuePolicy.ResolveBrightness(50000, 0.70f, 0.85f, 0.95f, 1f) <
+               SenseContainerValuePolicy.ResolveBrightness(100000, 0.70f, 0.85f, 0.95f, 1f) &&
+               SenseContainerValuePolicy.ResolveBrightness(250000, 0.70f, 0.85f, 0.95f, 1f) <
+               SenseContainerValuePolicy.ResolveBrightness(500000, 0.70f, 0.85f, 0.95f, 1f),
+            "category hue keeps brightening smoothly between value breakpoints", ref assertions);
         SenseVisualPolicy categoryFallback = SenseVisualPolicy.CategoryOnly(ItemNeedReason.Water, 1);
         SenseVisualPolicy afterValue = SenseContainerPolicyEngine.Select(new[] { complete }, categoryFallback, false, 0);
         Expect(afterValue.Category == ItemNeedReason.Water && afterValue.Stock == SenseStockState.None,
