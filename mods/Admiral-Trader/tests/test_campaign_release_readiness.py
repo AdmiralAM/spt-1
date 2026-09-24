@@ -81,6 +81,12 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
         self.assertEqual({}, quest_assort["started"])
         self.assertEqual({}, quest_assort["fail"])
 
+    def test_embedded_artem_clothing_is_visible_through_admiral(self):
+        self.assertTrue(load("db/base.json")["customization_seller"])
+        clothing = load("db/CustomClothing/Artem Clothes.json")
+        self.assertEqual(64, len(clothing))
+        self.assertEqual({"66bf757f27d0b097db0acea5"}, {row["traderId"] for row in clothing})
+
     def test_every_equipment_objective_has_explicit_runtime_copy(self):
         contract = load("manifests/quest-quality-runtime.json")
         rows = contract["equipmentObjectives"]

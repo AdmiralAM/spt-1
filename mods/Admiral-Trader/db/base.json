@@ -8,7 +8,7 @@
   "balance_rub": 0,
   "buyer_up": true,
   "currency": "RUB",
-  "customization_seller": false,
+  "customization_seller": true,
   "discount": 0,
   "discount_end": 0,
   "gridHeight": 120,
