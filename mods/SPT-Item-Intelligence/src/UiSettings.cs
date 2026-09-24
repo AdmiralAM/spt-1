@@ -59,6 +59,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> senseContainerNameScale;
         readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor, senseFoodColor;
         readonly ConfigEntry<Color> senseWaterColor, senseKeyColor, senseGrenadeColor, senseCurrencyColor;
+        readonly ConfigEntry<Color> senseContainerNeutralColor, senseContainerBlueColor, senseContainerPaleYellowColor, senseContainerBrightYellowColor;
         readonly ConfigEntry<float> senseContainerBrightness50k, senseContainerBrightness100k, senseContainerBrightness200k, senseContainerBrightness500k;
         readonly ConfigEntry<Color> senseMissingColor, sensePartialColor, senseNextColor, senseCompleteColor;
         readonly ConfigEntry<Color> senseCountOneColor, senseCountFewColor, senseCountManyColor;
@@ -130,7 +131,7 @@ namespace SPTItemIntelligence
             senseCategories = config.Bind("Amands Sense", "Category Markers", true,
                 "Show key, grenade, currency, food and water markers after requirement and protected native-value priority.");
             senseContainerValues = config.Bind("Amands Sense", "Container Value Colors", true,
-                "Color the marker by flea-market total value of the contents, excluding the container itself. This remains independent of Tooltip Value Source; the amount is never added to Sense text. Requires the Value module.");
+                "Use a value-band tint when container contents have no stronger semantic category; otherwise keep the category hue and scale its brightness. The total uses flea prices, excludes the container itself, and never adds a price to Sense text. Requires the Value module.");
             senseSecondaryOutline = config.Bind("Amands Sense", "Secondary Reason Outline", true,
                 "Use the outline for a second simultaneous requirement reason.");
             senseRemainingText = config.Bind("Amands Sense", "Remaining Count Text", true,
@@ -145,6 +146,10 @@ namespace SPTItemIntelligence
             senseKeyColor = ColorEntry(config, "Amands Sense Colors", "Keys", new Color(0.18f, 0.90f, 0.70f), "Key category when no stronger Item Intelligence requirement is present.");
             senseGrenadeColor = ColorEntry(config, "Amands Sense Colors", "Grenades", new Color(1.00f, 0.52f, 0.16f), "Grenade category when no stronger Item Intelligence requirement is present.");
             senseCurrencyColor = ColorEntry(config, "Amands Sense Colors", "Currency", new Color(0.82f, 0.78f, 0.45f), "Money category when no stronger Item Intelligence requirement is present.");
+            senseContainerNeutralColor = ColorEntry(config, "Amands Sense Container Value Colors", "Below 50k", Color.white, "Neutral marker tint for container contents below 50,000 total flea value.");
+            senseContainerBlueColor = ColorEntry(config, "Amands Sense Container Value Colors", "50k to 100k", new Color(0.20f, 0.52f, 1.00f), "Blue marker tint for container contents from 50,000 to 99,999 total flea value.");
+            senseContainerPaleYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "100k to 200k", new Color(1.00f, 0.91f, 0.45f), "Pale yellow marker tint for container contents from 100,000 to 199,999 total flea value.");
+            senseContainerBrightYellowColor = ColorEntry(config, "Amands Sense Container Value Colors", "200k Plus", new Color(1.00f, 0.86f, 0.12f), "Bright yellow marker tint for container contents worth 200,000 or more on the flea market.");
             senseContainerBrightness50k = BrightnessEntry(config, "50k", 0.70f, "Marker brightness at a 50,000 total flea value.");
             senseContainerBrightness100k = BrightnessEntry(config, "100k", 0.85f, "Marker brightness at a 100,000 total flea value.");
             senseContainerBrightness200k = BrightnessEntry(config, "200k", 0.95f, "Marker brightness at a 200,000 total flea value.");
@@ -197,6 +202,10 @@ namespace SPTItemIntelligence
             senseKeyColor.SettingChanged += delegate { Touch(); };
             senseGrenadeColor.SettingChanged += delegate { Touch(); };
             senseCurrencyColor.SettingChanged += delegate { Touch(); };
+            senseContainerNeutralColor.SettingChanged += delegate { Touch(); };
+            senseContainerBlueColor.SettingChanged += delegate { Touch(); };
+            senseContainerPaleYellowColor.SettingChanged += delegate { Touch(); };
+            senseContainerBrightYellowColor.SettingChanged += delegate { Touch(); };
             senseContainerBrightness50k.SettingChanged += delegate { Touch(); };
             senseContainerBrightness100k.SettingChanged += delegate { Touch(); };
             senseContainerBrightness200k.SettingChanged += delegate { Touch(); };
@@ -256,6 +265,14 @@ namespace SPTItemIntelligence
         public float GetSenseContainerValueBrightness(long totalValue) =>
             SenseContainerValuePolicy.ResolveBrightness(totalValue, senseContainerBrightness50k.Value,
                 senseContainerBrightness100k.Value, senseContainerBrightness200k.Value, senseContainerBrightness500k.Value);
+        public Color GetSenseContainerValueColor(long totalValue)
+        {
+            SenseContainerValueBand band = SenseContainerValuePolicy.ResolveBand(totalValue);
+            if (band == SenseContainerValueBand.Blue) return senseContainerBlueColor.Value;
+            if (band == SenseContainerValueBand.PaleYellow) return senseContainerPaleYellowColor.Value;
+            if (band == SenseContainerValueBand.BrightYellow) return senseContainerBrightYellowColor.Value;
+            return senseContainerNeutralColor.Value;
+        }
         public Color GetSenseCountColor(int count)
         {
             if (count >= 4) return senseCountManyColor.Value;

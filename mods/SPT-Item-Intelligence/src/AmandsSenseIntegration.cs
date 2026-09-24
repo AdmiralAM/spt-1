@@ -193,7 +193,8 @@ namespace SPTItemIntelligence
             Color stock = settings.GetSenseStockColor(policy.Stock);
             bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
             bool preserveIcon = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy;
-            Color valueColor = hasContainerValue ? ApplyContainerValueBrightness(primary, settings.GetSenseContainerValueBrightness(containerTotalValue)) : primary;
+            Color valueBase = policy.HasItemIntelligence ? primary : settings.GetSenseContainerValueColor(containerTotalValue);
+            Color valueColor = hasContainerValue ? ApplyContainerValueBrightness(valueBase, settings.GetSenseContainerValueBrightness(containerTotalValue)) : primary;
             Color renderColor = completedContainer ? stock : hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary;
             if (!preserveIcon && (policy.HasItemIntelligence || hasContainerValue)) SetField(senseItem, "color", renderColor);
             Color secondary = policy.HasItemIntelligence && policy.Stock == SenseStockState.None && hasContainerValue

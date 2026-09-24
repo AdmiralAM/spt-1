@@ -39,6 +39,14 @@ namespace SPTItemIntelligence
         Complete
     }
 
+    public enum SenseContainerValueBand
+    {
+        Neutral,
+        Blue,
+        PaleYellow,
+        BrightYellow
+    }
+
     public sealed class SenseVisualPolicy
     {
         internal SenseVisualPolicy(ItemNeedIcon icon, ItemNeedReason category, ItemNeedReason secondary,
@@ -73,6 +81,14 @@ namespace SPTItemIntelligence
 
     public static class SenseContainerValuePolicy
     {
+        public static SenseContainerValueBand ResolveBand(long totalValue)
+        {
+            if (totalValue >= 200000) return SenseContainerValueBand.BrightYellow;
+            if (totalValue >= 100000) return SenseContainerValueBand.PaleYellow;
+            if (totalValue >= 50000) return SenseContainerValueBand.Blue;
+            return SenseContainerValueBand.Neutral;
+        }
+
         public static float ResolveBrightness(long totalValue, float at50k, float at100k, float at200k, float at500k)
         {
             float first = ClampBrightness(at50k);

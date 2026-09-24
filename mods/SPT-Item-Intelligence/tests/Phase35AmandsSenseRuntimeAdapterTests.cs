@@ -75,6 +75,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                settings.Contains("\"Amands Sense Colors\", \"Grenades\"") &&
                settings.Contains("\"Amands Sense Colors\", \"Currency\"") &&
                settings.Contains("\"Amands Sense Container Value Brightness\"") &&
+               settings.Contains("\"Amands Sense Container Value Colors\"") &&
+               settings.Contains("\"50k to 100k\"") && settings.Contains("\"100k to 200k\"") && settings.Contains("\"200k Plus\"") &&
+               settings.Contains("new Color(0.20f, 0.52f, 1.00f)") &&
+               settings.Contains("new Color(1.00f, 0.91f, 0.45f)") &&
+               settings.Contains("new Color(1.00f, 0.86f, 0.12f)") &&
                settings.Contains("\"500k Plus\"") &&
                settings.Contains("\"Amands Sense Count Colors\", \"One Item\"") &&
                settings.Contains("\"Amands Sense Count Colors\", \"Two to Three\"") &&
@@ -88,10 +93,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Sense uses its owned category icons and applies the aggregate container-value color tier", ref assertions);
         Expect(adapter.Contains("IsContainerRoot(senseItem, item, contained)") &&
                adapter.Contains("state.Price.FleaUnitValue") && !adapter.Contains("settings.ValueMode == ItemValueMode.Flea") &&
-               adapter.Contains("ApplyContainerValueBrightness(primary, settings.GetSenseContainerValueBrightness(containerTotalValue))") &&
+               adapter.Contains("Color valueBase = policy.HasItemIntelligence ? primary : settings.GetSenseContainerValueColor(containerTotalValue)") &&
+               adapter.Contains("ApplyContainerValueBrightness(valueBase, settings.GetSenseContainerValueBrightness(containerTotalValue))") &&
                adapter.Contains("hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary") &&
                !adapter.Contains("AppendNativeContainerValue") && !adapter.Contains(" ₽</color>"),
-            "container brightness uses flea totals over the category hue independently of Tooltip Value Source and never adds a price label", ref assertions);
+            "containers without a requirement/category receive value-band tint while semantic categories keep their hue and no price label is added", ref assertions);
         Expect(adapter.Contains("value.evaluationCache.Remove(__instance)") && adapter.Contains("value.Apply(__instance)") &&
                adapter.Contains("Color ApplyContainerValueBrightness(Color categoryColor, float brightness)"),
             "each Sense container rescan invalidates its old contents and reapplies category color plus value brightness", ref assertions);

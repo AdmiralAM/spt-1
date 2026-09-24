@@ -109,7 +109,8 @@ All current entries are listed exactly as `section / key`:
 - `Tooltip Colors / Complete Color`, `Tooltip Colors / Partial Color`, `Tooltip Colors / Missing Color`.
 - `Amands Sense / Integration`, `Amands Sense / Required Items`, `Amands Sense / Category Markers`, `Amands Sense / Container Value Colors`, `Amands Sense / Secondary Reason Outline`, `Amands Sense / Remaining Count Text`, `Amands Sense / Container Name Scale`.
 - `Amands Sense Colors / Active Quest`, `Amands Sense Colors / Hideout`, `Amands Sense Colors / Future Quest`, `Amands Sense Colors / Food`, `Amands Sense Colors / Water`, `Amands Sense Colors / Keys`, `Amands Sense Colors / Grenades`, `Amands Sense Colors / Currency`.
-- `Amands Sense Container Value Brightness / 50k`, `/ 100k`, `/ 200k`, `/ 500k Plus` set the brightness of each category's own marker tint as the flea-market total rises.
+- `Amands Sense Container Value Colors / Below 50k`, `Amands Sense Container Value Colors / 50k to 100k`, `Amands Sense Container Value Colors / 100k to 200k`, `Amands Sense Container Value Colors / 200k Plus` provide neutral, blue, pale-yellow and bright-yellow fallback tints for containers without a stronger semantic marker.
+- `Amands Sense Container Value Brightness / 50k`, `/ 100k`, `/ 200k`, `/ 500k Plus` set how strongly the selected value tint (or a semantic category's own hue) is shown as the flea-market total rises.
 - `Amands Sense Stock Colors / Missing`, `Amands Sense Stock Colors / Partial`, `Amands Sense Stock Colors / Next Covered`, `Amands Sense Stock Colors / Complete`.
 - `Amands Sense Count Colors / One Item`, `Amands Sense Count Colors / Two to Three`, `Amands Sense Count Colors / Four Plus`.
 

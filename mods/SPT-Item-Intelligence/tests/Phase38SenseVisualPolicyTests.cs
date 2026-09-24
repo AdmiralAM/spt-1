@@ -45,6 +45,14 @@ static class Phase38SenseVisualPolicyTests
         float at100k = SenseContainerValuePolicy.ResolveBrightness(100000, 0.70f, 0.85f, 0.95f, 1f);
         float at200k = SenseContainerValuePolicy.ResolveBrightness(200000, 0.70f, 0.85f, 0.95f, 1f);
         float at500k = SenseContainerValuePolicy.ResolveBrightness(500000, 0.70f, 0.85f, 0.95f, 1f);
+        Expect(SenseContainerValuePolicy.ResolveBand(0) == SenseContainerValueBand.Neutral &&
+               SenseContainerValuePolicy.ResolveBand(49999) == SenseContainerValueBand.Neutral &&
+               SenseContainerValuePolicy.ResolveBand(50000) == SenseContainerValueBand.Blue &&
+               SenseContainerValuePolicy.ResolveBand(99999) == SenseContainerValueBand.Blue &&
+               SenseContainerValuePolicy.ResolveBand(100000) == SenseContainerValueBand.PaleYellow &&
+               SenseContainerValuePolicy.ResolveBand(199999) == SenseContainerValueBand.PaleYellow &&
+               SenseContainerValuePolicy.ResolveBand(200000) == SenseContainerValueBand.BrightYellow,
+            "aggregate container values select neutral, blue, pale-yellow and bright-yellow tint bands at exact boundaries", ref assertions);
         Expect(at50k < at100k && at100k < at200k && at200k < at500k &&
                Math.Abs(at50k - 0.70f) < 0.001f && Math.Abs(at100k - 0.85f) < 0.001f &&
                Math.Abs(at200k - 0.95f) < 0.001f && Math.Abs(at500k - 1f) < 0.001f,
