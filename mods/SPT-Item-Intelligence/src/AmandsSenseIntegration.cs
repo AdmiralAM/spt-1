@@ -143,13 +143,7 @@ namespace SPTItemIntelligence
                     ItemPresentationState state = index.Get(templateId);
                     if (settings.SenseContainerValues && observedContainer && !IsContainerRoot(senseItem, item, contained))
                     {
-                        long unitValue = 0;
-                        if (state.Price != null)
-                        {
-                            unitValue = settings.ValueMode == ItemValueMode.Flea ? state.Price.FleaUnitValue : state.Price.TraderUnitValue;
-                            if (unitValue == 0) unitValue = settings.ValueMode == ItemValueMode.Flea ? state.Price.TraderUnitValue : state.Price.FleaUnitValue;
-                        }
-                        if (unitValue == 0 && state.Price != null) unitValue = state.Price.FallbackUnitValue;
+                        long unitValue = state.Price == null ? 0 : state.Price.FleaUnitValue;
                         if (unitValue > 0) containerTotalValue = SaturatingAdd(containerTotalValue, SaturatingMultiply(unitValue, stackCount));
                     }
                     ItemNeedReason itemCategory = settings.SenseCategories ? SenseCategory(contained) : ItemNeedReason.None;
@@ -194,10 +188,10 @@ namespace SPTItemIntelligence
             bool completedContainer = isContainer && policy.Stock == SenseStockState.Complete;
             bool preserveIcon = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy;
             Color valueColor = hasContainerValue ? settings.GetSenseContainerValueColor(SenseContainerValuePolicy.Resolve(containerTotalValue)) : primary;
-            Color renderColor = completedContainer ? stock : hasRequirementPolicy || policy.HasItemIntelligence ? primary : hasContainerValue ? valueColor : primary;
+            Color renderColor = completedContainer ? stock : hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary;
             if (!preserveIcon && (policy.HasItemIntelligence || hasContainerValue)) SetField(senseItem, "color", renderColor);
             Color secondary = policy.HasItemIntelligence && policy.Stock == SenseStockState.None && hasContainerValue
-                ? valueColor
+                ? primary
                 : !policy.HasItemIntelligence || policy.SecondaryCategory == ItemNeedReason.None || !settings.SenseSecondaryOutline
                     ? primary : settings.GetSenseColor(policy.SecondaryCategory);
             if (policy.HasItemIntelligence && !preserveIcon) SetField(senseItem, "outlineColor", secondary);
@@ -466,12 +460,12 @@ namespace SPTItemIntelligence
 
         static bool HasProtectedSenseVisual(object senseItem)
         {
+            if (IsContainer(senseItem)) return false;
             string type = Text(Member(senseItem, "senseItemType"));
             if (type == "Valuables" || type == "KappaItems" || type == "RareItems" || type == "WishList") return true;
             if (type == "QuestItems") return !IsContainer(senseItem);
             if (type == "QuestItems") return !IsContainer(senseItem);
             if (type == "ElectronicKeys" || type == "MechanicalKeys") return false;
-            if (IsContainer(senseItem)) return false;
             object raw = Member(senseItem, "color");
             if (!(raw is Color)) return false;
             Color color = (Color)raw;
@@ -484,8 +478,8 @@ namespace SPTItemIntelligence
         {
             if (icon == ItemNeedIcon.Quest) return "icon_quest.png";
             if (icon == ItemNeedIcon.Hideout) return "icon_barter_building.png";
-            if (icon == ItemNeedIcon.Food) return "icon_provisions_drinks.png";
-            if (icon == ItemNeedIcon.Water) return "icon_provisions_food.png";
+            if (icon == ItemNeedIcon.Food) return "icon_provisions_food.png";
+            if (icon == ItemNeedIcon.Water) return "icon_provisions_drinks.png";
             if (icon == ItemNeedIcon.Key)
                 return Text(Member(senseItem, "senseItemType")) == "ElectronicKeys" ? "icon_keys_electronic.png" : "icon_keys_mechanic.png";
             if (icon == ItemNeedIcon.Grenade) return "icon_weapons_throw.png";

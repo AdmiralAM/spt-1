@@ -44,6 +44,7 @@ static class Phase38SenseVisualPolicyTests
                SenseContainerValuePolicy.Resolve(50001) == SenseContainerValueTier.Blue &&
                SenseContainerValuePolicy.Resolve(99999) == SenseContainerValueTier.Blue &&
                SenseContainerValuePolicy.Resolve(100000) == SenseContainerValueTier.LightYellow &&
+               SenseContainerValuePolicy.Resolve(150000) == SenseContainerValueTier.LightYellow &&
                SenseContainerValuePolicy.Resolve(199999) == SenseContainerValueTier.LightYellow &&
                SenseContainerValuePolicy.Resolve(200000) == SenseContainerValueTier.BrightYellow,
             "container total value color tiers honor every threshold boundary", ref assertions);

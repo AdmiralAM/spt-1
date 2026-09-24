@@ -80,14 +80,20 @@ static class Phase35AmandsSenseRuntimeAdapterTests
         Expect(adapter.Contains("icon_provisions_food.png") && adapter.Contains("icon_provisions_drinks.png") &&
                adapter.Contains("icon_keys_mechanic.png") && adapter.Contains("icon_weapons_throw.png") &&
                adapter.Contains("icon_money.png") && adapter.Contains("SenseContainerValuePolicy.Resolve(containerTotalValue)") &&
-               adapter.Contains("if (icon == ItemNeedIcon.Food) return \"icon_provisions_drinks.png\"") &&
-               adapter.Contains("if (icon == ItemNeedIcon.Water) return \"icon_provisions_food.png\""),
+               adapter.Contains("if (icon == ItemNeedIcon.Food) return \"icon_provisions_food.png\"") &&
+               adapter.Contains("if (icon == ItemNeedIcon.Water) return \"icon_provisions_drinks.png\""),
             "Sense uses its owned category icons and applies the aggregate container-value color tier", ref assertions);
         Expect(adapter.Contains("IsContainerRoot(senseItem, item, contained)") &&
-               adapter.Contains("state.Price.TraderUnitValue") && adapter.Contains("state.Price.FleaUnitValue") &&
+               adapter.Contains("state.Price.FleaUnitValue") && !adapter.Contains("settings.ValueMode == ItemValueMode.Flea") &&
                adapter.Contains("SenseContainerValuePolicy.Resolve(containerTotalValue)") &&
+               adapter.Contains("hasRequirementPolicy ? primary : hasContainerValue ? valueColor : primary") &&
                !adapter.Contains("AppendNativeContainerValue") && !adapter.Contains(" ₽</color>"),
-            "container value only chooses a marker color from contained stack values and never adds a price label", ref assertions);
+            "container color always uses flea totals independently of Tooltip Value Source and never adds a price label", ref assertions);
+        int protectedVisualMethod = adapter.IndexOf("static bool HasProtectedSenseVisual(object senseItem)", StringComparison.Ordinal);
+        int containerProtection = adapter.IndexOf("if (IsContainer(senseItem)) return false;", protectedVisualMethod, StringComparison.Ordinal);
+        int nativeProtection = adapter.IndexOf("if (type == \"Valuables\"", protectedVisualMethod, StringComparison.Ordinal);
+        Expect(protectedVisualMethod >= 0 && containerProtection > protectedVisualMethod && containerProtection < nativeProtection,
+            "container aggregation can show its category and flea value tint without inheriting a child QuestItems marker", ref assertions);
         Expect(adapter.Contains("type == \"ElectronicKeys\" || type == \"MechanicalKeys\"") &&
                adapter.Contains("type == \"KappaItems\" || type == \"RareItems\" || type == \"WishList\"") &&
                adapter.Contains("if (IsContainer(senseItem)) return false") &&

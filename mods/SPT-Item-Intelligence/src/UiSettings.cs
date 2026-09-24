@@ -130,7 +130,7 @@ namespace SPTItemIntelligence
             senseCategories = config.Bind("Amands Sense", "Category Markers", true,
                 "Show key, grenade, currency, food and water markers after requirement and protected native-value priority.");
             senseContainerValues = config.Bind("Amands Sense", "Container Value Colors", true,
-                "Color containers by the selected-source total price of their contents, excluding the container itself. The amount is never added to Sense text. Requires the Value module.");
+                "Color the marker by flea-market total value of the contents, excluding the container itself. This remains independent of Tooltip Value Source; the amount is never added to Sense text. Requires the Value module.");
             senseSecondaryOutline = config.Bind("Amands Sense", "Secondary Reason Outline", true,
                 "Use the outline for a second simultaneous requirement reason.");
             senseRemainingText = config.Bind("Amands Sense", "Remaining Count Text", true,
