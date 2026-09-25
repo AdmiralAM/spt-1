@@ -78,7 +78,7 @@ namespace SPTItemIntelligence
             value = Module(config, "Value", true, "Show value, buyer, flea and per-slot information.");
             relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
             backgrounds = Module(config, "Background Coloring (Valuation)", true, "Restore the accepted Item Valuation palette for ordinary items and ammunition. Keys remain owned by BetterKeys and compatibility outlines remain owned by CompatibilityHighlighter/EFT.");
-            ammoPenetrationMarker = Module(config, "Ammo Penetration Class", true, "Show a compact I–VI badge on ammunition cards using EFT's own six armor penetration ratings.");
+            ammoPenetrationMarker = Module(config, "Ammo Penetration Class", true, "Show a compact I–VI shield on ammunition cards; the muted shield color shows that round's penetration chance at the displayed class.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
                 "Minimal: summary and selected value. Normal: regular-play card with owned/FIR, the F12-selected value source, craft/barter relevance and active quest, hideout and future quest progress. Detailed: Normal plus one nearest concrete target. Full: both price sources, per-slot value, all concrete targets and craft/barter relevance. Internal ids and sell recommendations are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,

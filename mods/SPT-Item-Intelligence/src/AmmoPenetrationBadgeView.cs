@@ -1,212 +1,149 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
 namespace SPTItemIntelligence
 {
+    // A small native UI label, sized like EFT's armor-class tab. No generated raster glyphs.
     public sealed class AmmoPenetrationBadgeView : IDisposable
     {
         static readonly Type ImageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
-        static readonly object SpriteSync = new object();
-        static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        static readonly Type TextType = Type.GetType("UnityEngine.UI.Text, UnityEngine.UI", false);
+        static readonly Type OutlineType = Type.GetType("UnityEngine.UI.Outline, UnityEngine.UI", false);
+        static Sprite shieldSprite;
         readonly GameObject badgeObject;
         readonly RectTransform rect;
-        readonly Component image;
+        readonly Component background;
+        readonly Component label;
 
-        AmmoPenetrationBadgeView(GameObject badgeObject, RectTransform rect, Component image)
-        { this.badgeObject = badgeObject; this.rect = rect; this.image = image; }
+        AmmoPenetrationBadgeView(GameObject badgeObject, RectTransform rect, Component background, Component label)
+        { this.badgeObject = badgeObject; this.rect = rect; this.background = background; this.label = label; }
 
         public static AmmoPenetrationBadgeView TryCreate(RectTransform anchor)
         {
-            if (anchor == null || ImageType == null) return null;
+            if (anchor == null || ImageType == null || TextType == null) return null;
+            GameObject badge = null;
             try
             {
-                GameObject badgeObject = new GameObject("SPTItemIntelligenceAmmoPenetration", typeof(RectTransform));
-                badgeObject.layer = anchor.gameObject.layer;
-                RectTransform rect = badgeObject.transform as RectTransform;
+                Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                Sprite sprite = GetShieldSprite();
+                if (font == null || sprite == null) return null;
+                badge = new GameObject("SPTItemIntelligenceAmmoPenetration", typeof(RectTransform));
+                badge.layer = anchor.gameObject.layer;
+                RectTransform rect = badge.transform as RectTransform;
                 rect.SetParent(anchor, false);
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.zero;
                 rect.pivot = Vector2.zero;
                 rect.localScale = Vector3.one;
                 rect.localRotation = Quaternion.identity;
-                rect.anchoredPosition = new Vector2(3f, 3f);
-                Component image = badgeObject.AddComponent(ImageType) as Component;
-                Set(image, "raycastTarget", false);
-                Set(image, "preserveAspect", true);
-                badgeObject.SetActive(false);
+                rect.sizeDelta = new Vector2(18f, 16f);
+                rect.anchoredPosition = new Vector2(2f, 2f);
+
+                Component background = badge.AddComponent(ImageType) as Component;
+                Set(background, "sprite", sprite);
+                Set(background, "preserveAspect", true);
+                Set(background, "color", new Color(0.72f, 0.75f, 0.77f, 0.98f));
+                Set(background, "raycastTarget", false);
+                if (OutlineType != null)
+                {
+                    Component outline = badge.AddComponent(OutlineType) as Component;
+                    Set(outline, "effectColor", new Color(0.02f, 0.03f, 0.04f, 0.75f));
+                    Set(outline, "effectDistance", new Vector2(0.7f, -0.7f));
+                }
+
+                GameObject textObject = new GameObject("Class", typeof(RectTransform));
+                textObject.layer = badge.layer;
+                RectTransform textRect = textObject.transform as RectTransform;
+                textRect.SetParent(rect, false);
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = new Vector2(0f, 2f);
+                textRect.offsetMax = new Vector2(0f, 0f);
+                Component label = textObject.AddComponent(TextType) as Component;
+                Set(label, "font", font);
+                Set(label, "fontSize", 11);
+                Set(label, "fontStyle", FontStyle.Bold);
+                Set(label, "alignment", TextAnchor.MiddleCenter);
+                Set(label, "color", new Color(0.045f, 0.055f, 0.065f, 1f));
+                Set(label, "raycastTarget", false);
+                badge.SetActive(false);
                 rect.SetAsLastSibling();
-                return new AmmoPenetrationBadgeView(badgeObject, rect, image);
+                return new AmmoPenetrationBadgeView(badge, rect, background, label);
             }
-            catch { return null; }
+            catch
+            {
+                if (badge != null) UnityEngine.Object.Destroy(badge);
+                return null;
+            }
         }
 
-        public void Apply(string romanClass, RectTransform anchor)
+        public void Apply(string romanClass, float chance, RectTransform anchor)
         {
-            Sprite sprite = GetSprite(romanClass);
-            bool visible = sprite != null && anchor != null && anchor.gameObject.activeInHierarchy;
             if (badgeObject == null) return;
+            bool visible = IsValidClass(romanClass) && anchor != null && anchor.gameObject.activeInHierarchy;
             if (visible)
             {
-                Set(image, "sprite", sprite);
-                float side = Mathf.Clamp(Mathf.Min(anchor.rect.width, anchor.rect.height) * 0.34f, 16f, 23f);
-                rect.sizeDelta = new Vector2(side * 1.25f, side);
-                rect.anchoredPosition = new Vector2(3f, 3f);
+                Set(label, "text", romanClass);
+                Set(background, "color", ShieldColor(chance));
+                rect.sizeDelta = new Vector2(romanClass.Length >= 3 ? 21f : 18f, 16f);
+                rect.anchoredPosition = new Vector2(2f, 2f);
                 rect.SetAsLastSibling();
             }
             if (badgeObject.activeSelf != visible) badgeObject.SetActive(visible);
         }
 
-        static Sprite GetSprite(string romanClass)
+        static bool IsValidClass(string value) =>
+            value == "I" || value == "II" || value == "III" || value == "IV" || value == "V" || value == "VI";
+
+        public static Color ShieldColor(float chance)
         {
-            if (string.IsNullOrEmpty(romanClass)) return null;
-            lock (SpriteSync)
+            if (chance < 20f) return new Color(0.55f, 0.36f, 0.35f, 0.92f); // very low
+            if (chance < 40f) return new Color(0.66f, 0.40f, 0.37f, 0.94f); // low
+            if (chance < 60f) return new Color(0.68f, 0.61f, 0.41f, 0.94f); // medium
+            if (chance < 80f) return new Color(0.57f, 0.68f, 0.43f, 0.94f); // high
+            return new Color(0.45f, 0.66f, 0.48f, 0.96f); // very high
+        }
+
+        static Sprite GetShieldSprite()
+        {
+            if (shieldSprite != null) return shieldSprite;
+            const int width = 72, height = 64;
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.name = "SPTItemIntelligenceAmmoShield";
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            Color32[] pixels = new Color32[width * height];
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
-                Sprite cached;
-                if (Sprites.TryGetValue(romanClass, out cached)) return cached;
-                int value;
-                switch (romanClass)
+                int covered = 0;
+                for (int sy = 0; sy < 4; sy++)
+                for (int sx = 0; sx < 4; sx++)
                 {
-                    case "I": value = 1; break;
-                    case "II": value = 2; break;
-                    case "III": value = 3; break;
-                    case "IV": value = 4; break;
-                    case "V": value = 5; break;
-                    case "VI": value = 6; break;
-                    default: return null;
+                    float px = x + (sx + 0.5f) * 0.25f;
+                    float py = y + (sy + 0.5f) * 0.25f;
+                    float limit = py < 18f ? 5f : 5f + (py - 18f) * 0.67f;
+                    if (py >= 5f && py <= 59f && px >= limit && px <= width - limit) covered++;
                 }
-                try
-                {
-                    const int width = 96, height = 72;
-                    Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-                    texture.name = "SPTItemIntelligenceAmmoPenetration_" + romanClass;
-                    texture.hideFlags = HideFlags.HideAndDontSave;
-                    texture.filterMode = FilterMode.Bilinear;
-                    texture.wrapMode = TextureWrapMode.Clamp;
-                    Color32[] pixels = new Color32[width * height];
-                    DrawRoundedRect(pixels, width, height, 3f, 3f, 93f, 69f, 13f, new Color(0.02f, 0.025f, 0.03f, 0.97f));
-                    DrawRoundedRect(pixels, width, height, 5f, 5f, 91f, 67f, 11f, new Color(0.12f, 0.16f, 0.19f, 0.96f));
-                    DrawNumeral(pixels, width, height, value);
-                    texture.SetPixels32(pixels);
-                    texture.Apply(false, true);
-                    cached = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 96f);
-                    cached.name = texture.name + "Sprite";
-                    cached.hideFlags = HideFlags.HideAndDontSave;
-                    Sprites[romanClass] = cached;
-                    return cached;
-                }
-                catch { return null; }
+                pixels[y * width + x] = new Color32(255, 255, 255, (byte)(covered * 255 / 16));
             }
-        }
-
-        static void DrawNumeral(Color32[] pixels, int width, int height, int value)
-        {
-            List<Segment> strokes = new List<Segment>();
-            if (value <= 3)
-            {
-                float unit = 8f, gap = 5f;
-                float total = (value * unit) + ((value - 1) * gap);
-                float start = (width - total) * 0.5f;
-                for (int i = 0; i < value; i++) AddI(strokes, start + i * (unit + gap) + unit * 0.5f);
-            }
-            else if (value == 4)
-            {
-                AddI(strokes, 33f);
-                AddV(strokes, 61f);
-            }
-            else if (value == 5) AddV(strokes, 48f);
-            else
-            {
-                AddV(strokes, 36f);
-                AddI(strokes, 69f);
-            }
-            for (int i = 0; i < strokes.Count; i++) DrawSegment(pixels, width, height, strokes[i], 8f, new Color(0.005f, 0.008f, 0.01f, 1f));
-            for (int i = 0; i < strokes.Count; i++) DrawSegment(pixels, width, height, strokes[i], 4.8f, new Color(0.94f, 0.96f, 0.97f, 1f));
-        }
-
-        static void AddI(List<Segment> strokes, float x)
-        {
-            strokes.Add(new Segment(x, 20f, x, 51f));
-            strokes.Add(new Segment(x - 5f, 50f, x + 5f, 50f));
-            strokes.Add(new Segment(x - 5f, 21f, x + 5f, 21f));
-        }
-
-        static void AddV(List<Segment> strokes, float center)
-        {
-            strokes.Add(new Segment(center - 12f, 50f, center, 20f));
-            strokes.Add(new Segment(center + 12f, 50f, center, 20f));
-        }
-
-        static void DrawSegment(Color32[] pixels, int width, int height, Segment segment, float strokeWidth, Color color)
-        {
-            float radius = strokeWidth * 0.5f;
-            int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(segment.X1, segment.X2) - radius - 1f));
-            int maxX = Mathf.Min(width - 1, Mathf.CeilToInt(Mathf.Max(segment.X1, segment.X2) + radius + 1f));
-            int minY = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(segment.Y1, segment.Y2) - radius - 1f));
-            int maxY = Mathf.Min(height - 1, Mathf.CeilToInt(Mathf.Max(segment.Y1, segment.Y2) + radius + 1f));
-            float dx = segment.X2 - segment.X1, dy = segment.Y2 - segment.Y1;
-            float lengthSquared = (dx * dx) + (dy * dy);
-            for (int y = minY; y <= maxY; y++)
-            for (int x = minX; x <= maxX; x++)
-            {
-                float t = lengthSquared <= 0f ? 0f : Mathf.Clamp01((((x + 0.5f - segment.X1) * dx) + ((y + 0.5f - segment.Y1) * dy)) / lengthSquared);
-                float px = segment.X1 + t * dx, py = segment.Y1 + t * dy;
-                float distance = Mathf.Sqrt(((x + 0.5f - px) * (x + 0.5f - px)) + ((y + 0.5f - py) * (y + 0.5f - py)));
-                float alpha = 1f - Mathf.SmoothStep(radius - 0.6f, radius + 0.6f, distance);
-                if (alpha > 0f) Blend(pixels, y * width + x, color, alpha);
-            }
-        }
-
-        static void DrawRoundedRect(Color32[] pixels, int width, int height, float xMin, float yMin, float xMax, float yMax, float radius, Color color)
-        {
-            for (int y = Mathf.Max(0, Mathf.FloorToInt(yMin - 1)); y <= Mathf.Min(height - 1, Mathf.CeilToInt(yMax + 1)); y++)
-            for (int x = Mathf.Max(0, Mathf.FloorToInt(xMin - 1)); x <= Mathf.Min(width - 1, Mathf.CeilToInt(xMax + 1)); x++)
-            {
-                float qx = Mathf.Abs(x + 0.5f - ((xMin + xMax) * 0.5f)) - (((xMax - xMin) * 0.5f) - radius);
-                float qy = Mathf.Abs(y + 0.5f - ((yMin + yMax) * 0.5f)) - (((yMax - yMin) * 0.5f) - radius);
-                float outside = Mathf.Sqrt(Mathf.Max(qx, 0f) * Mathf.Max(qx, 0f) + Mathf.Max(qy, 0f) * Mathf.Max(qy, 0f));
-                float signed = outside + Mathf.Min(Mathf.Max(qx, qy), 0f) - radius;
-                float alpha = 1f - Mathf.SmoothStep(-0.7f, 0.7f, signed);
-                if (alpha > 0f) Blend(pixels, y * width + x, color, alpha);
-            }
-        }
-
-        static void Blend(Color32[] pixels, int index, Color color, float coverage)
-        {
-            float sourceAlpha = Mathf.Clamp01(color.a * coverage);
-            Color32 destination = pixels[index];
-            float destinationAlpha = destination.a / 255f;
-            float resultAlpha = sourceAlpha + destinationAlpha * (1f - sourceAlpha);
-            if (resultAlpha <= 0f) return;
-            float inverse = destinationAlpha * (1f - sourceAlpha);
-            pixels[index] = new Color32(
-                (byte)Mathf.RoundToInt(((color.r * sourceAlpha + destination.r / 255f * inverse) / resultAlpha) * 255f),
-                (byte)Mathf.RoundToInt(((color.g * sourceAlpha + destination.g / 255f * inverse) / resultAlpha) * 255f),
-                (byte)Mathf.RoundToInt(((color.b * sourceAlpha + destination.b / 255f * inverse) / resultAlpha) * 255f),
-                (byte)Mathf.RoundToInt(resultAlpha * 255f));
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            shieldSprite = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 72f);
+            return shieldSprite;
         }
 
         static void Set(object target, string propertyName, object value)
         {
             if (target == null) return;
-            try
-            {
-                PropertyInfo property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (property != null && property.CanWrite) property.SetValue(target, value, null);
-            }
-            catch { }
+            PropertyInfo property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property != null && property.CanWrite) property.SetValue(target, value, null);
         }
 
         public void Dispose()
         {
             if (badgeObject != null) UnityEngine.Object.Destroy(badgeObject);
-        }
-
-        struct Segment
-        {
-            internal Segment(float x1, float y1, float x2, float y2) { X1 = x1; Y1 = y1; X2 = x2; Y2 = y2; }
-            internal float X1, Y1, X2, Y2;
         }
     }
 }

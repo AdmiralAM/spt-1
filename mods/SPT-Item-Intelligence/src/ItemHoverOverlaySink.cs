@@ -317,6 +317,7 @@ namespace SPTItemIntelligence
             public int StackCount { get; set; }
             public object Item { get; private set; }
             public string AmmoPenetrationClass { get; private set; }
+            public float AmmoPenetrationChance { get; private set; }
             bool ammoPenetrationClassResolved;
             public ItemHoverText Text { get; set; }
             public string BackgroundColor { get; set; }
@@ -338,6 +339,7 @@ namespace SPTItemIntelligence
                 if (object.ReferenceEquals(Item, item)) return;
                 Item = item;
                 AmmoPenetrationClass = null;
+                AmmoPenetrationChance = float.NaN;
                 ammoPenetrationClassResolved = false;
             }
 
@@ -354,13 +356,15 @@ namespace SPTItemIntelligence
                     if (!ammoPenetrationClassResolved)
                     {
                         string romanClass;
-                        ammoPenetrationClassResolved = AmmoPenetrationClassResolver.TryResolve(Item, out romanClass);
+                        float chance;
+                        ammoPenetrationClassResolved = AmmoPenetrationClassResolver.TryResolve(Item, out romanClass, out chance);
                         AmmoPenetrationClass = romanClass;
+                        AmmoPenetrationChance = chance;
                     }
                     if (!string.IsNullOrEmpty(AmmoPenetrationClass))
                     {
                         if (ammoPenetrationBadge == null) ammoPenetrationBadge = AmmoPenetrationBadgeView.TryCreate(Anchor);
-                        if (ammoPenetrationBadge != null) ammoPenetrationBadge.Apply(AmmoPenetrationClass, Anchor);
+                        if (ammoPenetrationBadge != null) ammoPenetrationBadge.Apply(AmmoPenetrationClass, AmmoPenetrationChance, Anchor);
                     }
                     else if (ammoPenetrationBadge != null) { ammoPenetrationBadge.Dispose(); ammoPenetrationBadge = null; }
                 }

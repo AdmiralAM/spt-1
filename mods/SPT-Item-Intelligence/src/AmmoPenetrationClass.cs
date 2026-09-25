@@ -8,16 +8,28 @@ namespace SPTItemIntelligence
     {
         public static string Resolve(Func<int, float> penetrationChance)
         {
+            float chance;
+            return Resolve(penetrationChance, out chance);
+        }
+
+        public static string Resolve(Func<int, float> penetrationChance, out float selectedChance)
+        {
+            selectedChance = float.NaN;
             if (penetrationChance == null) return string.Empty;
             int highest = 0;
+            float weakestChance = float.NaN;
             for (int armorClass = 1; armorClass <= 6; armorClass++)
             {
                 float chance;
                 try { chance = penetrationChance(armorClass); }
                 catch { continue; }
-                // EFT's MultiLineInfo labels 60-79.99% High and 80%+ Very High.
-                if (!float.IsNaN(chance) && !float.IsInfinity(chance) && chance >= 60f) highest = armorClass;
+                if (float.IsNaN(chance) || float.IsInfinity(chance)) continue;
+                // A 20%+ chance makes this armor class a useful tier to display.
+                // For weaker ammunition, show class I only when it has a real chance.
+                if (chance >= 20f) { highest = armorClass; selectedChance = chance; }
+                if (armorClass == 1) weakestChance = chance;
             }
+            if (highest == 0 && weakestChance > 0f) { highest = 1; selectedChance = weakestChance; }
             switch (highest)
             {
                 case 1: return "I";
@@ -33,7 +45,8 @@ namespace SPTItemIntelligence
 
     public static class AmmoPenetrationClassResolver
     {
-        static readonly Dictionary<int, string> cache = new Dictionary<int, string>();
+        struct Rating { internal string Class; internal float Chance; }
+        static readonly Dictionary<int, Rating> cache = new Dictionary<int, Rating>();
         static readonly BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         static Type ammoTemplateType;
         static MethodInfo realResistance;
@@ -42,7 +55,14 @@ namespace SPTItemIntelligence
 
         public static bool TryResolve(object itemViewOrItem, out string romanClass)
         {
+            float chance;
+            return TryResolve(itemViewOrItem, out romanClass, out chance);
+        }
+
+        public static bool TryResolve(object itemViewOrItem, out string romanClass, out float selectedChance)
+        {
             romanClass = string.Empty;
+            selectedChance = float.NaN;
             object item = EftItemTemplateIdResolver.ResolveItem(itemViewOrItem);
             object template = ReadMember(item, "Template");
             if (template == null) return false;
@@ -52,12 +72,13 @@ namespace SPTItemIntelligence
             try { penetrationPower = Convert.ToInt32(rawPower, System.Globalization.CultureInfo.InvariantCulture); }
             catch { return true; }
             if (penetrationPower <= 0) return true;
-            string result;
-            if (cache.TryGetValue(penetrationPower, out result)) { romanClass = result; return true; }
+            Rating cached;
+            if (cache.TryGetValue(penetrationPower, out cached))
+            { romanClass = cached.Class; selectedChance = cached.Chance; return true; }
             if (!BindNativeMethods(template.GetType().Assembly)) return false;
 
             bool failed = false;
-            result = AmmoPenetrationClassPolicy.Resolve(armorClass =>
+            string result = AmmoPenetrationClassPolicy.Resolve(armorClass =>
             {
                 try
                 {
@@ -66,10 +87,10 @@ namespace SPTItemIntelligence
                     return Convert.ToSingle(chance, System.Globalization.CultureInfo.InvariantCulture);
                 }
                 catch { failed = true; return float.NaN; }
-            });
+            }, out selectedChance);
             if (failed) return false;
             if (cache.Count >= 512) cache.Clear();
-            cache[penetrationPower] = result;
+            cache[penetrationPower] = new Rating { Class = result, Chance = selectedChance };
             romanClass = result;
             return true;
         }
