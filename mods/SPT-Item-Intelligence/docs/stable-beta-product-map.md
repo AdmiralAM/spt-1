@@ -21,6 +21,7 @@ The client and server are both required for the complete product. No external qu
 | Information card | Minimal, Normal, Detailed and Full cards; RU for Russian game UI and EN otherwise; owned/FIR/required/remaining, target hierarchy, selected value and craft/barter relevance. | Consolidates the useful AQC-style compact hierarchy with Item Intelligence data. | No transaction, QuickSell button or automatic item action. |
 | Value and relevance | Cached best trader value, flea value, handbook fallback, per-slot value, craft-input count and barter-input count. Default presets are valued with their included parts. | Absorbs the useful information side of Item Valuation and pricing references. | No flea tax, price age/freshness, manual refresh, ignored-trader list or sale execution. |
 | Background coloring | Writes the accepted value-tier backgrounds to authoritative templates; ammunition uses penetration tiers; keys are deliberately skipped. Can be enabled without markers/tooltips. | Supersedes standalone Item Valuation for normal operation. Complements ammo/armor/key specialists without taking their visual ownership. | BetterKeys keeps key colors. Dedicated ammo and armor mods keep their own indicators. |
+| Ammo penetration class badge | Shows a compact I–VI badge on ammo ItemViews at the highest armor class EFT rates High or Very High at 100% armor durability. The badge is a cached original Unity sprite at the lower-left of the card. | Adds an optional class cue without changing ammo background colors or the existing information marker. | No ammo-table catalog, external ammo-mod dependency or ballistic rule replacement. |
 | Raid refresh and ledger | During an active raid, reads the main player's real inventory every `0.2 s`, caches reflected accessors by item type, tracks stack/FIR state by item instance, removes dropped items and resets outside raids. UI/Sense refresh only when the ledger changes. | Fixes stale pre-raid owned counts and complements Sense pickup events. | No scene-wide scan and no server snapshot request every `0.2 s`; hideout inventory never starts the raid ledger. |
 | Container logic | Traverses loose items and nested container trees, preserves distinct template identities, aggregates only useful unfinished contents and shows completed tracked containers as a compact green state. | Extends Sense container awareness with II requirement semantics. | Native container opening/searching and Sense's base rendering remain external. |
 | Amands Sense adapter | Optional soft adapter for requirement-first loot, key/grenade/currency/food/water categories, stock/count colors, category-hued marker brightness based on total container value, pickup/drop/reset/rescan events and a smaller native container-name line. Reuses Sense-loaded sprites. | Unmet quest/hideout requirements stay first; a category in the container outranks a completed requirement; native rare/favorite/value marks stay protected. Container value changes marker brightness only and never adds a price label. | Complements Amands Sense and leaves its body, exfil, sound and base world rendering intact. Item Intelligence ships no Sense assets or config rewrite. |
@@ -46,6 +47,8 @@ Every client source unit compiled into the DLL is listed here. The product-map g
 | `AqcQuestRequirementProjector.cs` | Compatibility projection of the independent requirement model; no AQC dependency or copied implementation. |
 | `Pricing.cs` | Price tiers, evaluation and immutable price indexes. |
 | `BackgroundPalette.cs` | Value and penetration background palettes plus dedicated-owner exclusions. |
+| `AmmoPenetrationClass.cs` | Native EFT armor-penetration chance bridge, High/Very High class selection and template-power cache. |
+| `AmmoPenetrationBadgeView.cs` | Original compact I–VI Unity image badge with a black outlined numeral, anchored clear of stack counts. |
 | `ItemRelevanceRegistry.cs` | Cached craft/barter counts. |
 | `PresentationState.cs` | Combined immutable requirement/value presentation index. |
 | `MarkerPresentation.cs` | Requirement-priority marker classification. |
@@ -102,7 +105,7 @@ No SPT `ModulePatch` class is compiled. Three bounded Harmony owners are install
 
 All current entries are listed exactly as `section / key`:
 
-- `Modules / Markers`, `Modules / Tooltips`, `Modules / Quests`, `Modules / Future Quests`, `Modules / Hideout`, `Modules / Value`, `Modules / Craft and Barter`, `Modules / Background Coloring (Valuation)`.
+- `Modules / Markers`, `Modules / Tooltips`, `Modules / Quests`, `Modules / Future Quests`, `Modules / Hideout`, `Modules / Value`, `Modules / Craft and Barter`, `Modules / Background Coloring (Valuation)`, `Modules / Ammo Penetration Class`.
 - `Tooltip / Mode`, `Tooltip / Value Source`, `Tooltip / Scale`, `Tooltip / Opacity`, `Tooltip / Font Size`, `Tooltip / Maximum Width`, `Tooltip / Inner Padding`.
 - `Marker / Side`, `Marker / Symbol`, `Marker / Frame`, `Marker / Size`, `Marker / Opacity`, `Marker / Circle Background Color`, `Marker / Circle Background Opacity (%)`, `Marker / Offset X`, `Marker / Offset Y`, `Marker / Halo`, `Marker / Halo Strength`.
 - `Marker Colors / Default Color`, `Marker Colors / Quest Now Color`, `Marker Colors / Hideout Color`, `Marker Colors / Quest Later Color`.
@@ -129,4 +132,4 @@ All current entries are listed exactly as `section / key`:
 
 ## Explicitly outside Stable Beta
 
-Final-stable promotion, further physical acceptance, deeper performance profiling, visual polish, semantic world outlines, flea rarity/class indicators, instance-aware valuation beyond the current default-preset logic, price freshness, manual price refresh, flea tax, ignored traders, ammo summaries and transaction execution are not part of this Stable Beta package.
+Final-stable promotion, further physical acceptance, deeper performance profiling, visual polish, semantic world outlines, other flea rarity/class indicators, instance-aware valuation beyond the current default-preset logic, price freshness, manual price refresh, flea tax, ignored traders, ammo summaries and transaction execution are not part of this Stable Beta package.

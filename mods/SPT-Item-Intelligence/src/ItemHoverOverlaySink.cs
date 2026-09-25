@@ -29,8 +29,8 @@ namespace SPTItemIntelligence
         public event Action RaidInventoryRefreshRequested;
         public void OnViewInitialized()
         {
-            if (settings.Modules.TrackViews && trackedViews.Count == 0) InventoryOpened?.Invoke();
-            if (settings.Modules.TrackViews) RaidInventoryRefreshRequested?.Invoke();
+            if (settings.Modules.DataKey != 0 && trackedViews.Count == 0) InventoryOpened?.Invoke();
+            if (settings.Modules.DataKey != 0) RaidInventoryRefreshRequested?.Invoke();
         }
 
         public ItemHoverOverlaySink(
@@ -77,24 +77,28 @@ namespace SPTItemIntelligence
             int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
+            object eftItem = EftItemTemplateIdResolver.ResolveItem(itemView);
             CompatibilityHighlighterIntegration.Track(itemView);
-            GameLanguageDetector.ObserveNativeUi(target);
+            if (settings.Modules.DataKey != 0) GameLanguageDetector.ObserveNativeUi(target);
 
             TrackedItemView tracked;
             if (!trackedViews.TryGetValue(itemView, out tracked))
             {
-                tracked = new TrackedItemView(target, normalized, stackCount, null);
+                tracked = new TrackedItemView(target, normalized, stackCount, eftItem, null);
                 trackedViews[itemView] = tracked;
             }
             else
             {
                 tracked.TemplateId = normalized;
                 tracked.StackCount = Math.Max(1, stackCount);
+                tracked.SetItem(eftItem);
                 if (!object.ReferenceEquals(tracked.Anchor, target)) tracked.ReplaceAnchor(target);
             }
 
-            tracked.Text = ResolveText(normalized, tracked.StackCount, store.Current);
-            tracked.BackgroundColor = store.Current.Get(normalized).Price?.BackgroundColor;
+            tracked.Text = settings.Modules.DataKey != 0
+                ? ResolveText(normalized, tracked.StackCount, store.Current) : ItemHoverText.Empty;
+            tracked.BackgroundColor = settings.Modules.Backgrounds
+                ? store.Current.Get(normalized).Price?.BackgroundColor : null;
             tracked.Apply(settings);
         }
 
@@ -142,8 +146,9 @@ namespace SPTItemIntelligence
                 // ItemView initialization only tells us that an inventory window opened. A pickup can
                 // change the player's inventory while that same window stays open, so refresh lazily
                 // while an Item Intelligence marker/card is actually being inspected.
-                if (pinnedView != null || Volatile.Read(ref hoveredView) != null)
-                    RaidInventoryRefreshRequested?.Invoke();
+                if (settings.Modules.DataKey != 0)
+                    if (pinnedView != null || Volatile.Read(ref hoveredView) != null)
+                        RaidInventoryRefreshRequested?.Invoke();
                 RefreshTrackedViewsIfNeeded();
             }
             if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
@@ -224,8 +229,10 @@ namespace SPTItemIntelligence
                     staleViews.Add(pair.Key);
                     continue;
                 }
-                tracked.Text = ResolveText(tracked.TemplateId, tracked.StackCount, index);
-                tracked.BackgroundColor = index.Get(tracked.TemplateId).Price?.BackgroundColor;
+                tracked.Text = settings.Modules.DataKey != 0
+                    ? ResolveText(tracked.TemplateId, tracked.StackCount, index) : ItemHoverText.Empty;
+                tracked.BackgroundColor = settings.Modules.Backgrounds
+                    ? index.Get(tracked.TemplateId).Price?.BackgroundColor : null;
                 tracked.Apply(settings);
             }
             RemoveStaleViews();
@@ -294,11 +301,13 @@ namespace SPTItemIntelligence
         {
             readonly Vector3[] corners = new Vector3[4];
             BackgroundView background;
-            public TrackedItemView(RectTransform anchor, string templateId, int stackCount, AttachedMarkerView marker)
+            AmmoPenetrationBadgeView ammoPenetrationBadge;
+            public TrackedItemView(RectTransform anchor, string templateId, int stackCount, object item, AttachedMarkerView marker)
             {
                 Anchor = anchor;
                 TemplateId = templateId;
                 StackCount = Math.Max(1, stackCount);
+                Item = item;
                 Marker = marker;
                 Text = ItemHoverText.Empty;
             }
@@ -306,6 +315,9 @@ namespace SPTItemIntelligence
             public RectTransform Anchor { get; private set; }
             public string TemplateId { get; set; }
             public int StackCount { get; set; }
+            public object Item { get; private set; }
+            public string AmmoPenetrationClass { get; private set; }
+            bool ammoPenetrationClassResolved;
             public ItemHoverText Text { get; set; }
             public string BackgroundColor { get; set; }
             public AttachedMarkerView Marker { get; private set; }
@@ -315,8 +327,18 @@ namespace SPTItemIntelligence
                 if (Marker != null) Marker.Dispose();
                 if (background != null) background.Dispose();
                 background = null;
+                if (ammoPenetrationBadge != null) ammoPenetrationBadge.Dispose();
+                ammoPenetrationBadge = null;
                 Anchor = anchor;
                 Marker = null;
+            }
+
+            public void SetItem(object item)
+            {
+                if (object.ReferenceEquals(Item, item)) return;
+                Item = item;
+                AmmoPenetrationClass = null;
+                ammoPenetrationClassResolved = false;
             }
 
             public void Apply(ItemIntelligenceUiSettings settings)
@@ -327,6 +349,22 @@ namespace SPTItemIntelligence
                     if (background != null) background.Apply(BackgroundColor);
                 }
                 else { if (background != null) background.Dispose(); background = null; }
+                if (settings.Modules.AmmoPenetrationMarker)
+                {
+                    if (!ammoPenetrationClassResolved)
+                    {
+                        string romanClass;
+                        ammoPenetrationClassResolved = AmmoPenetrationClassResolver.TryResolve(Item, out romanClass);
+                        AmmoPenetrationClass = romanClass;
+                    }
+                    if (!string.IsNullOrEmpty(AmmoPenetrationClass))
+                    {
+                        if (ammoPenetrationBadge == null) ammoPenetrationBadge = AmmoPenetrationBadgeView.TryCreate(Anchor);
+                        if (ammoPenetrationBadge != null) ammoPenetrationBadge.Apply(AmmoPenetrationClass, Anchor);
+                    }
+                    else if (ammoPenetrationBadge != null) { ammoPenetrationBadge.Dispose(); ammoPenetrationBadge = null; }
+                }
+                else if (ammoPenetrationBadge != null) { ammoPenetrationBadge.Dispose(); ammoPenetrationBadge = null; }
                 ItemMarkerPresentation state = ItemMarkerPresentation.From(Text, contextual: true);
                 if (!settings.Modules.Markers || !state.IsVisible)
                 {
@@ -369,6 +407,8 @@ namespace SPTItemIntelligence
             {
                 if (background != null) background.Dispose();
                 background = null;
+                if (ammoPenetrationBadge != null) ammoPenetrationBadge.Dispose();
+                ammoPenetrationBadge = null;
                 if (Marker != null) Marker.Dispose();
                 Marker = null;
             }

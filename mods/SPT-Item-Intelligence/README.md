@@ -69,6 +69,8 @@ Normal shows the selected F12 value source without per-slot value, plus compact 
 
 Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette through the same authoritative template `BackgroundColor` path that EFT renders natively. Ordinary items use value tiers and ammunition uses penetration tiers; values below the first threshold retain their original background. Keys remain under BetterKeys ownership and CompatibilityHighlighter/EFT keeps ownership of temporary compatibility outlines.
 
+The optional `Modules / Ammo Penetration Class` badge adds a compact Roman I–VI to ammunition cells. It uses EFT's own six armor-penetration ratings: the highest class graded High or Very High is shown, and ammunition without such a class has no badge. The badge works for modded ammo templates and does not alter their background colors.
+
 ## Version and naming
 
 The official product name is **Item Intelligence Admiral**. The current development release is **v1.2.1**.

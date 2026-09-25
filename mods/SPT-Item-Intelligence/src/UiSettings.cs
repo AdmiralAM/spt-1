@@ -29,7 +29,7 @@ namespace SPTItemIntelligence
 
     public sealed class ItemIntelligenceUiSettings
     {
-        readonly ConfigEntry<bool> markers, tooltips, quests, futureQuests, hideout, value, relevance, backgrounds;
+        readonly ConfigEntry<bool> markers, tooltips, quests, futureQuests, hideout, value, relevance, backgrounds, ammoPenetrationMarker;
         readonly ConfigEntry<ItemTooltipMode> tooltipMode;
         readonly ConfigEntry<ItemValueMode> valueMode;
         readonly ConfigEntry<float> tooltipScale;
@@ -78,6 +78,7 @@ namespace SPTItemIntelligence
             value = Module(config, "Value", true, "Show value, buyer, flea and per-slot information.");
             relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
             backgrounds = Module(config, "Background Coloring (Valuation)", true, "Restore the accepted Item Valuation palette for ordinary items and ammunition. Keys remain owned by BetterKeys and compatibility outlines remain owned by CompatibilityHighlighter/EFT.");
+            ammoPenetrationMarker = Module(config, "Ammo Penetration Class", true, "Show a compact I–VI badge on ammunition cards using EFT's own six armor penetration ratings.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
                 "Minimal: summary and selected value. Normal: regular-play card with owned/FIR, the F12-selected value source, craft/barter relevance and active quest, hideout and future quest progress. Detailed: Normal plus one nearest concrete target. Full: both price sources, per-slot value, all concrete targets and craft/barter relevance. Internal ids and sell recommendations are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,
@@ -222,7 +223,7 @@ namespace SPTItemIntelligence
 
         public ItemTooltipMode TooltipMode => tooltipMode.Value;
         public ModuleSelection Modules => modules;
-        ModuleSelection ReadModules() => new ModuleSelection(markers.Value, tooltips.Value, quests.Value, futureQuests.Value, hideout.Value, value.Value, relevance.Value, backgrounds.Value);
+        ModuleSelection ReadModules() => new ModuleSelection(markers.Value, tooltips.Value, quests.Value, futureQuests.Value, hideout.Value, value.Value, relevance.Value, backgrounds.Value, ammoPenetrationMarker.Value);
         public ItemValueMode ValueMode => valueMode.Value;
         public float TooltipScale => Mathf.Clamp(tooltipScale.Value, 0.10f, 5.00f);
         public float TooltipOpacity => Mathf.Clamp01(tooltipOpacity.Value);

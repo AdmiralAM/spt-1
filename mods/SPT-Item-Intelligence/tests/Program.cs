@@ -103,9 +103,10 @@ static class Program
         int phase37Assertions = Phase37AlternativeQuestPoolTests.Run();
         int phase38Assertions = Phase38SenseVisualPolicyTests.Run();
         int phase39Assertions = Phase39ProductMapCoverageTests.Run();
+        int phase40Assertions = Phase40AmmoPenetrationTests.Run();
         Expect(RaidInventoryRuntimeScanner.IsHideoutPlayerTypeName("EFT.HideoutPlayer"), "hideout player never starts the raid inventory ledger");
         Expect(!RaidInventoryRuntimeScanner.IsHideoutPlayerTypeName("EFT.Player"), "normal raid player remains eligible for the raid inventory ledger");
-        Console.WriteLine("Item Intelligence regression passed through Phase 39: " + phase39Assertions + " product-map coverage assertions; Phase 38=" + phase38Assertions + "; Phase 37=" + phase37Assertions + "; prior phases remain green if execution reaches this line.");
+        Console.WriteLine("Item Intelligence regression passed through Phase 40: " + phase40Assertions + " ammo penetration assertions; Phase 39=" + phase39Assertions + "; Phase 38=" + phase38Assertions + "; Phase 37=" + phase37Assertions + "; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));
