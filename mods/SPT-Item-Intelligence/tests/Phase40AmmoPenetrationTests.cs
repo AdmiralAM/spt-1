@@ -35,6 +35,11 @@ static class Phase40AmmoPenetrationTests
         Expect(ResolveAmmo(44) == "VI", "class VI can carry a medium-chance color", ref assertions);
         Expect(ResolveAmmo(62) == "VI", "high-penetration ammo reaches class VI", ref assertions);
         Expect(ResolveAmmo(44, modded: true) == "VI", "subclassed modded ammo uses the same native rating path", ref assertions);
+        Expect(ResolveAmmoPack(44) == "VI", "an ammo box inherits the penetration badge from its contained cartridges", ref assertions);
+        string emptyPackClass;
+        Expect(AmmoPenetrationClassResolver.TryResolve(new EFT.InventoryLogic.AmmoBox { Template = new object() }, out emptyPackClass) &&
+               emptyPackClass == string.Empty,
+            "an empty ammo box remains unmarked", ref assertions);
         string nonAmmoClass;
         Expect(AmmoPenetrationClassResolver.TryResolve(new TestItem { Template = new object() }, out nonAmmoClass) && nonAmmoClass == string.Empty,
             "unknown non-ammo template remains unmarked", ref assertions);
@@ -46,8 +51,9 @@ static class Phase40AmmoPenetrationTests
         string resolver = File.ReadAllText(Path.Combine(module, "src", "EftHoverIntegration.cs"));
         string map = File.ReadAllText(Path.Combine(module, "docs", "stable-beta-product-map.md"));
         Expect(runtime.Contains("ShotSharedMethods") && runtime.Contains("RealResistance") && runtime.Contains("GetPenetrationChance") &&
-               runtime.Contains("EFT.InventoryLogic.AmmoTemplate") && runtime.Contains("PenetrationPower"),
-            "the runtime reads the native EFT AmmoTemplate and BSG armor penetration calculation", ref assertions);
+               runtime.Contains("EFT.InventoryLogic.AmmoTemplate") && runtime.Contains("EFT.InventoryLogic.AmmoBox") &&
+               runtime.Contains("Cartridges") && runtime.Contains("ContainedItem") && runtime.Contains("PenetrationPower"),
+            "the runtime reads loose rounds and ammo-box cartridges through native EFT types and penetration calculation", ref assertions);
         Expect(view.Contains("SPTItemIntelligenceAmmoPenetration") &&
                view.Contains("EFT.Utilities.ResourcesCache") &&
                view.Contains("Mod Types/icon_type_mod_armor_plate_") &&
@@ -71,6 +77,19 @@ static class Phase40AmmoPenetrationTests
         template.PenetrationPower = power;
         if (!AmmoPenetrationClassResolver.TryResolve(new TestItem { Template = template }, out string result))
             throw new InvalidOperationException("Native ammo bridge failed to resolve in test runtime.");
+        return result;
+    }
+
+    static string ResolveAmmoPack(int power)
+    {
+        var ammo = new TestItem { Template = new EFT.InventoryLogic.AmmoTemplate { PenetrationPower = power } };
+        var box = new EFT.InventoryLogic.AmmoBox
+        {
+            Template = new object(),
+            Cartridges = new EFT.InventoryLogic.StackSlot { ContainedItem = ammo }
+        };
+        if (!AmmoPenetrationClassResolver.TryResolve(box, out string result))
+            throw new InvalidOperationException("Native ammo-box bridge failed to resolve in test runtime.");
         return result;
     }
 
@@ -98,6 +117,8 @@ static class Phase40AmmoPenetrationTests
 namespace EFT.InventoryLogic
 {
     public class AmmoTemplate { public int PenetrationPower { get; set; } }
+    public class AmmoBox { public object Template { get; set; } public StackSlot Cartridges { get; set; } }
+    public class StackSlot { public object ContainedItem { get; set; } }
 }
 
 public static class ShotSharedMethods

@@ -49,6 +49,7 @@ namespace SPTItemIntelligence
         static readonly Dictionary<int, Rating> cache = new Dictionary<int, Rating>();
         static readonly BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         static Type ammoTemplateType;
+        static Type ammoBoxType;
         static MethodInfo realResistance;
         static MethodInfo getPenetrationChance;
         static bool discoveryAttempted;
@@ -66,7 +67,15 @@ namespace SPTItemIntelligence
             object item = EftItemTemplateIdResolver.ResolveItem(itemViewOrItem);
             object template = ReadMember(item, "Template");
             if (template == null) return false;
-            if (!IsAmmoTemplate(template.GetType())) return true;
+            if (!IsAmmoTemplate(template.GetType()))
+            {
+                if (!IsAmmoBox(item == null ? null : item.GetType())) return true;
+                object cartridges = ReadMember(item, "Cartridges");
+                object containedAmmo = ReadMember(cartridges, "ContainedItem") ?? ReadMember(cartridges, "Item");
+                object ammoItem = EftItemTemplateIdResolver.ResolveItem(containedAmmo);
+                template = ReadMember(ammoItem, "Template");
+                if (template == null || !IsAmmoTemplate(template.GetType())) return true;
+            }
             object rawPower = ReadMember(template, "PenetrationPower");
             int penetrationPower;
             try { penetrationPower = Convert.ToInt32(rawPower, System.Globalization.CultureInfo.InvariantCulture); }
@@ -106,6 +115,16 @@ namespace SPTItemIntelligence
             return false;
         }
 
+        static bool IsAmmoBox(Type type)
+        {
+            if (type == null) return false;
+            if (ammoBoxType == null) FindAmmoBoxType(type.Assembly);
+            if (ammoBoxType != null) return ammoBoxType.IsAssignableFrom(type);
+            for (Type current = type; current != null; current = current.BaseType)
+                if (string.Equals(current.Name, "AmmoBox", StringComparison.Ordinal)) return true;
+            return false;
+        }
+
         static void FindAmmoTemplateType(Assembly preferred)
         {
             if (ammoTemplateType != null) return;
@@ -114,6 +133,16 @@ namespace SPTItemIntelligence
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length && ammoTemplateType == null; i++)
                 ammoTemplateType = assemblies[i].GetType("EFT.InventoryLogic.AmmoTemplate", false);
+        }
+
+        static void FindAmmoBoxType(Assembly preferred)
+        {
+            if (ammoBoxType != null) return;
+            if (preferred != null) ammoBoxType = preferred.GetType("EFT.InventoryLogic.AmmoBox", false);
+            if (ammoBoxType != null) return;
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length && ammoBoxType == null; i++)
+                ammoBoxType = assemblies[i].GetType("EFT.InventoryLogic.AmmoBox", false);
         }
 
         static bool BindNativeMethods(Assembly preferred)
