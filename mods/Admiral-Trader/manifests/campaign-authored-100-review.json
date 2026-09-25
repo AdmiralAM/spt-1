@@ -33,7 +33,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Осмотреть разбитую гражданскую радиостанцию в стартовом секторе и вынести пригодный элемент питания.",
+          "brief": "Осмотри административный офис на Эпицентре, восстанови питание передатчика и вынеси найденный элемент питания.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -51,9 +51,18 @@
             "roubles": 11000,
             "standing": 0.005,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56d59948d2720bb7418b4582",
+              "quantity": 1,
+              "valueRub": 2250,
+              "maxStack": 1,
+              "role": "magazine",
+              "tier": "common"
+            }
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Чужая частота"
+          "successMessageIntent": "Advance Эпицентр storyline: Чужая частота",
+          "retrieveZoneOverride": "Sandbox_5_Office_exploration"
         },
         {
           "id": "e472a13c1478f7b9258522d3",
@@ -64,7 +73,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Осмотреть три наблюдательные точки и отметить безопасный проход.",
+          "brief": "Сверь медицинский сектор, место гибели группы и лабораторный проход, затем установи один MS2000 на указанном наблюдательном маршруте.",
           "objectives": [
             {
               "kind": "visit",
@@ -72,7 +81,7 @@
             },
             {
               "kind": "placeOrMark",
-              "quantity": 3,
+              "quantity": 1,
               "oneRaid": false
             }
           ],
@@ -86,7 +95,12 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Нулевая отметка"
+          "successMessageIntent": "Advance Эпицентр storyline: Нулевая отметка",
+          "visitZoneOverrides": [
+            "Sandbox_1_MedicalArea_exploration",
+            "Sandbox_5_DeadGroup_exploration",
+            "Sandbox_5_Laborant_exploration"
+          ]
         },
         {
           "id": "4f3828ef74a66f154f6ac397",
@@ -97,7 +111,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Найти у старого терминала USB-переходник с фрагментом записи о последних сменах.",
+          "brief": "Проверь позицию КОРД на Эпицентре, найди USB-переходник с журналом последней смены и вынеси его из рейда.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -117,7 +131,8 @@
             "itemRewardTheme": "field supplies",
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Последний экипаж"
+          "successMessageIntent": "Advance Эпицентр storyline: Последний экипаж",
+          "retrieveZoneOverride": "Sandbox_2_Kord_exploration"
         },
         {
           "id": "52cbb69039f63f3cfbad321a",
@@ -128,7 +143,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Проверить офис в винном магазине и вынести повреждённый накопитель с журналом внутренней связи.",
+          "brief": "Найди закрытый служебный канал у лабораторного сектора Эпицентра, изыми накопитель и эвакуируйся с ним.",
           "objectives": [
             {
               "kind": "visit",
@@ -150,9 +165,19 @@
             "roubles": 21000,
             "standing": 0.007,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "55d480c04bdc2d1d4e8b456a",
+              "quantity": 2,
+              "valueRub": 10752,
+              "maxStack": 1,
+              "role": "magazine",
+              "tier": "common"
+            }
           },
-          "successMessageIntent": "Advance Эпицентр storyline: Запертый эфир"
+          "successMessageIntent": "Advance Эпицентр storyline: Запертый эфир",
+          "visitZoneOverride": "Sandbox_5_Office_exploration",
+          "retrieveZoneOverride": "Sandbox_5_Laborant_exploration"
         },
         {
           "id": "4876c8bf7bb9677e3970b01c",
@@ -163,7 +188,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Установить два датчика на противоположных подходах, затем выжить.",
+          "brief": "Установи один MS2000 у передатчика, осмотри второй подход к сектору без второго маркера и эвакуируйся живым.",
           "objectives": [
             {
               "kind": "placeOrMark",
@@ -397,7 +422,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Осмотреть три точки предполагаемого маршрута грузовиков.",
+          "brief": "Восстанови маршрут передачи по трём следам: тайнику диспетчера, временному лагерю и району запасного выхода.",
           "objectives": [
             {
               "kind": "visit",
@@ -417,9 +442,22 @@
             "roubles": 20000,
             "standing": 0.007,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56dff3afd2720bba668b4567",
+              "quantity": 30,
+              "valueRub": 7170,
+              "maxStack": 60,
+              "role": "ammunition",
+              "tier": "common"
+            }
           },
-          "successMessageIntent": "Advance Таможня storyline: Следы колонны"
+          "successMessageIntent": "Advance Таможня storyline: Следы колонны",
+          "visitZoneOverrides": [
+            "vremyan_case",
+            "bomj_place",
+            "exit777"
+          ]
         },
         {
           "id": "5fd9397fbc40a37c1abf3790",
@@ -429,7 +467,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Найти нужный грузовик и вынести путевой лист из кабины.",
+          "brief": "Осмотри оставленный грузовик на Таможне, вынеси из кабины путевой лист и эвакуируйся с ним.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -449,7 +487,8 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Таможня storyline: Машина без водителя"
+          "successMessageIntent": "Advance Таможня storyline: Машина без водителя",
+          "retrieveZoneOverride": "gazel"
         },
         {
           "id": "ed21744058dec7587de1081f",
@@ -488,7 +527,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Проникнуть в закрытый офис и вынести накладную.",
+          "brief": "Проверь служебную точку приёмки у Садовода и забери спрятанную ночную накладную из кейса диспетчера.",
           "objectives": [
             {
               "kind": "visit",
@@ -512,7 +551,9 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Таможня storyline: Ночная ведомость"
+          "successMessageIntent": "Advance Таможня storyline: Ночная ведомость",
+          "visitZoneOverride": "place_SADOVOD_03",
+          "retrieveZoneOverride": "vremyan_case"
         },
         {
           "id": "70a745d426d2ba09157eb734",
@@ -522,7 +563,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Установить метки на двух партиях контрабанды.",
+          "brief": "Пометь MS2000 две партии груза — у первой АЗС и у контейнера TerraGroup № 4; так Адмирал сверит подменённые маркировки.",
           "objectives": [
             {
               "kind": "placeOrMark",
@@ -540,7 +581,11 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Таможня storyline: Подмена маркировки"
+          "successMessageIntent": "Advance Таможня storyline: Подмена маркировки",
+          "placeZoneOverrides": [
+            "fuel1",
+            "TerragroupBOX_4"
+          ]
         },
         {
           "id": "743532fcd12b4a88ff7cd83f",
@@ -550,7 +595,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Найти тело курьера и забрать закодированную записку.",
+          "brief": "Найди тело курьера на Таможне и вынеси его закодированную записку, не оставляя её следующему посреднику.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -570,7 +615,8 @@
             "itemRewardTheme": "weapon maintenance parts",
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Таможня storyline: Лишний посредник"
+          "successMessageIntent": "Advance Таможня storyline: Лишний посредник",
+          "retrieveZoneOverride": "dead_posylni"
         },
         {
           "id": "e9de043a8379c87027f762b3",
@@ -580,7 +626,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Открыть багажник сюжетной машины и вынести скрытый контейнер.",
+          "brief": "Проверь багажник оставленного автомобиля на Таможне и вынеси спрятанный контейнер.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -600,7 +646,8 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Таможня storyline: Двойное дно"
+          "successMessageIntent": "Advance Таможня storyline: Двойное дно",
+          "retrieveZoneOverride": "vaz_feld"
         },
         {
           "id": "837bdd0ab80a2a1382caeedd",
@@ -610,7 +657,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Устранить четырёх охранников в районе сорванной передачи, забрать носитель курьера и выжить.",
+          "brief": "После срыва передачи забери носитель из служебного помещения общежития, устрани четырёх охранников и эвакуируйся.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -638,9 +685,18 @@
             "roubles": 47000,
             "standing": 0.01,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56d59856d2720bd8418b456a",
+              "quantity": 1,
+              "valueRub": 35600,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "common"
+            }
           },
-          "successMessageIntent": "Advance Таможня storyline: Сорванная передача"
+          "successMessageIntent": "Advance Таможня storyline: Сорванная передача",
+          "retrieveZoneOverride": "room206_water"
         },
         {
           "id": "94dfbf0ec29ab7391528f217",
@@ -650,7 +706,7 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Найти доказательство связи склада с конечным покупателем.",
+          "brief": "Сверь данные в комнате 114 общежития Таможни и установи конечного получателя груза.",
           "objectives": [
             {
               "kind": "visit",
@@ -665,9 +721,18 @@
             "roubles": 52000,
             "standing": 0.011,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8e4ed86f7742d8e50c7fa",
+              "quantity": 1,
+              "valueRub": 42000,
+              "maxStack": 1,
+              "role": "armor",
+              "tier": "rare"
+            }
           },
-          "successMessageIntent": "Advance Таможня storyline: Получатель"
+          "successMessageIntent": "Advance Таможня storyline: Получатель",
+          "visitZoneOverride": "room114"
         },
         {
           "id": "bcf61611e9723c765e07a740",
@@ -701,7 +766,8 @@
             "itemRewardTheme": "logistics assortment",
             "assortmentUnlock": "logistics assortment"
           },
-          "successMessageIntent": "Advance Таможня storyline: Закрыть маршрут"
+          "successMessageIntent": "Advance Таможня storyline: Закрыть маршрут",
+          "placeZoneOverride": "fuel3"
         }
       ]
     },
@@ -724,7 +790,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Посетить два заброшенных наблюдательных поста.",
+          "brief": "Сверь охотничий пост и следы пропавшей колонны, чтобы восстановить старый маршрут наблюдения в Лесу.",
           "objectives": [
             {
               "kind": "visit",
@@ -744,9 +810,21 @@
             "roubles": 24000,
             "standing": 0.007,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56dff3afd2720bba668b4567",
+              "quantity": 30,
+              "valueRub": 7170,
+              "maxStack": 60,
+              "role": "ammunition",
+              "tier": "common"
+            }
           },
-          "successMessageIntent": "Advance Лес storyline: Старые ориентиры"
+          "successMessageIntent": "Advance Лес storyline: Старые ориентиры",
+          "visitZoneOverrides": [
+            "huntsman_001",
+            "Lost_caravan"
+          ]
         },
         {
           "id": "1ca43f65c714ea7f9eec6e2a",
@@ -756,7 +834,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Найти повреждённый наблюдательный прибор у одного из постов и вынести его.",
+          "brief": "У входа в лесной бункер найди повреждённый наблюдательный прибор и вынеси его из рейда.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -776,7 +854,8 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Лес storyline: Оптика в траве"
+          "successMessageIntent": "Advance Лес storyline: Оптика в траве",
+          "retrieveZoneOverride": "Bunker_enter"
         },
         {
           "id": "b61a1cd8d6a7a82e81033dbc",
@@ -786,7 +865,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Разместить камеру у маршрута патруля, не требуя убийств.",
+          "brief": "Установи камеру на лесном радиомаршруте, чтобы проверить тихую передачу без перестрелки.",
           "objectives": [
             {
               "kind": "placeOrMark",
@@ -804,7 +883,8 @@
             "itemRewardTheme": "optics",
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Лес storyline: Тихая установка"
+          "successMessageIntent": "Advance Лес storyline: Тихая установка",
+          "placeZoneOverride": "meh_45_radio_area_mark_1"
         },
         {
           "id": "dcae6b2142ca93b7dd77df3e",
@@ -814,7 +894,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Забрать карту патрулей из запертого служебного помещения.",
+          "brief": "Забери карту обходов в первой зоне железнодорожного депо и вынеси её из Леса.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -834,7 +914,8 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Лес storyline: Карта обходов"
+          "successMessageIntent": "Advance Лес storyline: Карта обходов",
+          "retrieveZoneOverride": "Depo_Zone_1"
         },
         {
           "id": "37475cbab1174e5619c16939",
@@ -844,7 +925,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Найти разведчика и вынести его кодовую пластину.",
+          "brief": "Найди тайник пропавшего наблюдателя у следов колонны и вынеси его кодовую пластину.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -864,7 +945,8 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Лес storyline: Пропавший наблюдатель"
+          "successMessageIntent": "Advance Лес storyline: Пропавший наблюдатель",
+          "retrieveZoneOverride": "Lost_caravan"
         },
         {
           "id": "c5f5947263134fcda2387af8",
@@ -902,7 +984,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Оставить приманку в лагере и проверить точку наблюдения.",
+          "brief": "Проверь вход в бункер, оставь ложный сигнал на радиомаршруте и не выдавай настоящий лагерь.",
           "objectives": [
             {
               "kind": "visit",
@@ -924,7 +1006,9 @@
             "itemRewardTheme": null,
             "assortmentUnlock": null
           },
-          "successMessageIntent": "Advance Лес storyline: Ложный костёр"
+          "successMessageIntent": "Advance Лес storyline: Ложный костёр",
+          "visitZoneOverride": "Bunker_enter",
+          "placeZoneOverride": "meh_45_radio_area_mark_2"
         },
         {
           "id": "f0874dd26a7b1f76d86aad88",
@@ -934,7 +1018,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Установить передатчик и забрать ответный носитель из ответного тайника.",
+          "brief": "Забери запись у охотничьего лагеря, установи радиомаркер и выведи сеть на новую частоту.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
@@ -957,9 +1041,19 @@
             "roubles": 52000,
             "standing": 0.011,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "62e7c98b550c8218d602cbb4",
+              "quantity": 2,
+              "valueRub": 35678,
+              "maxStack": 1,
+              "role": "magazine",
+              "tier": "rare"
+            }
           },
-          "successMessageIntent": "Advance Лес storyline: Смена частоты"
+          "successMessageIntent": "Advance Лес storyline: Смена частоты",
+          "retrieveZoneOverride": "huntsman_001",
+          "placeZoneOverride": "meh_45_radio_area_mark_3"
         },
         {
           "id": "9b41c75e4d147894f087e2b2",
@@ -985,7 +1079,15 @@
             "roubles": 58000,
             "standing": 0.011,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "64b7bbb74b75259c590fa897",
+              "quantity": 80,
+              "valueRub": 18400,
+              "maxStack": 50,
+              "role": "ammunition",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Лес storyline: Чистый отход"
         },
@@ -997,7 +1099,7 @@
           "locations": [
             "Woods"
           ],
-          "brief": "Передать полный комплект разведданных; открыть уникальную оптику или готовый наблюдательный пресет.",
+          "brief": "Проверь наблюдательный маршрут у разведывательного поста, чтобы закрыть дальний сектор Леса.",
           "objectives": [
             {
               "kind": "visit",
@@ -1014,7 +1116,8 @@
             "itemRewardTheme": "observation preset",
             "assortmentUnlock": "observation preset"
           },
-          "successMessageIntent": "Advance Лес storyline: Видеть дальше"
+          "successMessageIntent": "Advance Лес storyline: Видеть дальше",
+          "visitZoneOverride": "pr_scout_col"
         }
       ]
     },
@@ -1057,7 +1160,15 @@
             "roubles": 31000,
             "standing": 0.009,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5a7ae0c351dfba0017554310",
+              "quantity": 1,
+              "valueRub": 16134,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "common"
+            }
           },
           "successMessageIntent": "Advance Развязка storyline: Закрытые витрины"
         },
@@ -1288,7 +1399,15 @@
             "roubles": 60000,
             "standing": 0.012,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56e335e4d2720b6c058b456d",
+              "quantity": 1,
+              "valueRub": 24599,
+              "maxStack": 1,
+              "role": "backpack",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Развязка storyline: Чужая инвентаризация"
         },
@@ -1318,7 +1437,15 @@
             "roubles": 65000,
             "standing": 0.013,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5926bb2186f7744b1c6c6e60",
+              "quantity": 1,
+              "valueRub": 43283,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Развязка storyline: Образец со стены"
         },
@@ -1392,7 +1519,15 @@
             "roubles": 36000,
             "standing": 0.01,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "590c678286f77426c9660122",
+              "quantity": 1,
+              "valueRub": 20394,
+              "maxStack": 1,
+              "role": "medical",
+              "tier": "common"
+            }
           },
           "successMessageIntent": "Advance Берег storyline: Неотвеченный вызов"
         },
@@ -1621,7 +1756,15 @@
             "roubles": 67000,
             "standing": 0.013,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8e4ed86f7742d8e50c7fa",
+              "quantity": 1,
+              "valueRub": 42000,
+              "maxStack": 1,
+              "role": "armor",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Берег storyline: Чистая палата"
         },
@@ -1651,7 +1794,15 @@
             "roubles": 70000,
             "standing": 0.014,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5926bb2186f7744b1c6c6e60",
+              "quantity": 1,
+              "valueRub": 43283,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Берег storyline: Последний образец"
         },
@@ -1730,7 +1881,15 @@
             "roubles": 49000,
             "standing": 0.011,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "590c678286f77426c9660122",
+              "quantity": 1,
+              "valueRub": 20394,
+              "maxStack": 1,
+              "role": "medical",
+              "tier": "common"
+            }
           },
           "successMessageIntent": "Advance Резерв storyline: Сигнал тревоги"
         },
@@ -1855,7 +2014,15 @@
             "roubles": 66000,
             "standing": 0.013,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8e4ed86f7742d8e50c7fa",
+              "quantity": 1,
+              "valueRub": 42000,
+              "maxStack": 1,
+              "role": "armor",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Резерв storyline: Мобилизационная папка"
         },
@@ -1948,7 +2115,15 @@
             "roubles": 78000,
             "standing": 0.014,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5887431f2459777e1612938f",
+              "quantity": 20,
+              "valueRub": 18720,
+              "maxStack": 40,
+              "role": "ammunition",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Резерв storyline: Закрытый ящик"
         },
@@ -1983,7 +2158,15 @@
             "roubles": 83000,
             "standing": 0.015,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "590c657e86f77412b013051d",
+              "quantity": 1,
+              "valueRub": 72046,
+              "maxStack": 1,
+              "role": "medical",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Резерв storyline: Тяжёлый выход"
         },
@@ -2057,7 +2240,15 @@
             "roubles": 60000,
             "standing": 0.011,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "6033fa48ffd42c541047f728",
+              "quantity": 1,
+              "valueRub": 28216,
+              "maxStack": 1,
+              "role": "headset",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Маяк storyline: Дальний берег"
         },
@@ -2187,7 +2378,15 @@
             "roubles": 75000,
             "standing": 0.013,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5887431f2459777e1612938f",
+              "quantity": 20,
+              "valueRub": 18720,
+              "maxStack": 40,
+              "role": "ammunition",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Маяк storyline: За линией"
         },
@@ -2273,7 +2472,15 @@
             "roubles": 87000,
             "standing": 0.015,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "55801eed4bdc2d89578b4588",
+              "quantity": 1,
+              "valueRub": 71592,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Маяк storyline: Контроль блокады"
         },
@@ -2308,7 +2515,15 @@
             "roubles": 92000,
             "standing": 0.015,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "6033fa48ffd42c541047f728",
+              "quantity": 1,
+              "valueRub": 28216,
+              "maxStack": 1,
+              "role": "headset",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Маяк storyline: Последняя лодка"
         },
@@ -2387,7 +2602,15 @@
             "roubles": 53000,
             "standing": 0.013,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "62e7c98b550c8218d602cbb4",
+              "quantity": 2,
+              "valueRub": 35678,
+              "maxStack": 1,
+              "role": "magazine",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Улицы storyline: Старый адрес"
         },
@@ -2508,7 +2731,15 @@
             "roubles": 70000,
             "standing": 0.015,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5926bb2186f7744b1c6c6e60",
+              "quantity": 1,
+              "valueRub": 43283,
+              "maxStack": 1,
+              "role": "weapon",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Улицы storyline: Три свидетеля"
         },
@@ -2599,7 +2830,15 @@
             "roubles": 83000,
             "standing": 0.016,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5e997f0b86f7741ac73993e2",
+              "quantity": 1,
+              "valueRub": 36984,
+              "maxStack": 1,
+              "role": "medical-bag",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Улицы storyline: Стереть адрес"
         },
@@ -2634,7 +2873,15 @@
             "roubles": 86000,
             "standing": 0.017,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "62e7c98b550c8218d602cbb4",
+              "quantity": 2,
+              "valueRub": 35678,
+              "maxStack": 1,
+              "role": "magazine",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Улицы storyline: Живой список"
         },
@@ -2710,7 +2957,15 @@
             "roubles": 35000,
             "standing": 0.014,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8f04f86f774585f4237d8",
+              "quantity": 1,
+              "valueRub": 17524,
+              "maxStack": 1,
+              "role": "backpack",
+              "tier": "common"
+            }
           },
           "successMessageIntent": "Advance Завод storyline: После гудка"
         },
@@ -2926,7 +3181,15 @@
             "roubles": 67000,
             "standing": 0.017,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "544fb45d4bdc2dee738b4568",
+              "quantity": 1,
+              "valueRub": 39049,
+              "maxStack": 1,
+              "role": "medical",
+              "tier": "common"
+            }
           },
           "successMessageIntent": "Advance Завод storyline: Остановить линию"
         },
@@ -2957,7 +3220,15 @@
             "roubles": 72000,
             "standing": 0.018,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "56e335e4d2720b6c058b456d",
+              "quantity": 1,
+              "valueRub": 24599,
+              "maxStack": 1,
+              "role": "backpack",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Завод storyline: Эталон"
         },
@@ -3037,7 +3308,15 @@
             "roubles": 72000,
             "standing": 0.015,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8e4ed86f7742d8e50c7fa",
+              "quantity": 1,
+              "valueRub": 42000,
+              "maxStack": 1,
+              "role": "armor",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Лаборатория storyline: Ограниченный допуск"
         },
@@ -3140,7 +3419,7 @@
           "locations": [
             "laboratory"
           ],
-          "brief": "Установить датчики в двух лабораторных зонах.",
+          "brief": "Установи MS2000 у центрального узла Лаборатории и осмотри вторую отмеченную секцию, чтобы определить направление утечки.",
           "objectives": [
             {
               "kind": "placeOrMark",
@@ -3156,7 +3435,15 @@
             "roubles": 88000,
             "standing": 0.017,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "590c657e86f77412b013051d",
+              "quantity": 1,
+              "valueRub": 72046,
+              "maxStack": 1,
+              "role": "medical",
+              "tier": "epic"
+            }
           },
           "successMessageIntent": "Advance Лаборатория storyline: Контроль утечки"
         },
@@ -3247,7 +3534,15 @@
             "roubles": 99000,
             "standing": 0.018,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "6033fa48ffd42c541047f728",
+              "quantity": 1,
+              "valueRub": 28216,
+              "maxStack": 1,
+              "role": "headset",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Лаборатория storyline: Подмена"
         },
@@ -3282,7 +3577,15 @@
             "roubles": 104000,
             "standing": 0.019,
             "itemRewardTheme": null,
-            "assortmentUnlock": null
+            "assortmentUnlock": null,
+            "fieldItem": {
+              "templateId": "5ab8e4ed86f7742d8e50c7fa",
+              "quantity": 1,
+              "valueRub": 42000,
+              "maxStack": 1,
+              "role": "armor",
+              "tier": "rare"
+            }
           },
           "successMessageIntent": "Advance Лаборатория storyline: Последний контейнер"
         },
