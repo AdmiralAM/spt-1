@@ -75,6 +75,15 @@ class WeaponRotationRuntimeContractTests(unittest.TestCase):
             status = next(node for node in completion[0]["counter"]["conditions"] if node["conditionType"] == "ExitStatus")
             self.assertEqual(["Survived"], status["status"], quest_id)
 
+    def test_runtime_registration_allows_kill_then_extraction_rotation_shape(self):
+        source = (ROOT / "server/QuestRegistration.cs").read_text(encoding="utf-8")
+        self.assertNotIn("must keep exactly one finish condition", source)
+        self.assertIn("finishConditions.Count > 2", source)
+        for quest_id in SURVIVE_AFTER:
+            finishes = self.quests[quest_id]["conditions"]["AvailableForFinish"]
+            self.assertEqual(2, len(finishes), quest_id)
+            self.assertEqual({"Elimination", "Completion"}, {row["type"] for row in finishes}, quest_id)
+
     def test_one_raid_and_night_suppression_requirements_are_enforced(self):
         for quest_id in ONE_RAID:
             quest = self.quests[quest_id]

@@ -226,22 +226,25 @@ public sealed class AdmiralQuestRegistration(
                 continue;
             }
 
+            if (finishConditions.All(finish => string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal)))
+            {
+                if (quest.Type != QuestTypeEnum.Elimination)
+                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
+                if (finishConditions.Count > 2)
+                    throw new InvalidDataException($"Arsenal quest {questId} may define only its kill stage and one gated extraction stage");
+
+                arsenalCount++;
+                continue;
+            }
+
             if (finishConditions.Count != 1)
-                throw new InvalidDataException($"Frozen baseline quest {questId} must keep exactly one finish condition");
+                throw new InvalidDataException($"Non-Arsenal quest {questId} has unsupported mixed finish conditions");
 
             QuestCondition finish = finishConditions[0];
             if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
             {
                 ValidateAccessQuest(questId, finish);
                 accessCount++;
-                continue;
-            }
-
-            if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
-            {
-                if (quest.Type != QuestTypeEnum.Elimination)
-                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
-                arsenalCount++;
                 continue;
             }
 
