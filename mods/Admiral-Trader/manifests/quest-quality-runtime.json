@@ -356,56 +356,64 @@
       "conditionId": "a571722285bad3e786626d46",
       "equipmentInclusive": [
         [
-          "5c06c6a80db834001b735491",
+          "5c06c6a80db834001b735491"
+        ],
+        [
           "5aa7cfc0e5b5b00015693143"
         ]
       ],
-      "en": "Woods, Shoreline or Interchange: eliminate 5 targets in one raid while wearing one listed loadout.",
-      "ru": "Лес, Берег или Развязка: за один рейд устранить 5 целей в одном из указанных комплектов.",
-      "detailsEn": "In one raid, wear one of [SSh-68 steel helmet (Olive Drab), 6B47 Ratnik-BSh helmet (EMR cover)]; eliminate 5 targets; on Woods/Shoreline/Interchange; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Шлем стальной СШ-68 (Олива), Общевойсковой шлем 6Б47 Ратник-БШ (чехол Флора Цифра)]; устранить 5 целей; на локации Лес/Берег/Развязка; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
+      "en": "Woods, Shoreline or Interchange: eliminate 5 targets in one raid while wearing either listed helmet.",
+      "ru": "Лес, Берег или Развязка: за один рейд устранить 5 целей в одном из двух шлемов на выбор.",
+      "detailsEn": "In one raid, wear either the SSh-68 steel helmet (Olive Drab) or 6B47 Ratnik-BSh helmet (EMR cover); eliminate 5 targets on Woods/Shoreline/Interchange. Extraction is separate and may be completed on another allowed map without the helmet.",
+      "detailsRu": "За один рейд надеть либо шлем СШ-68 (Олива), либо шлем 6Б47 Ратник-БШ (чехол Флора Цифра) и устранить 5 целей на Лесу/Берегу/Развязке. Эвакуация — отдельная цель; её можно выполнить на другой разрешённой карте без шлема."
     },
     {
       "questId": "9c35b3ac22ede1a5a79118bc",
       "conditionId": "333dfb6d5b587650d29e8fd8",
       "equipmentInclusive": [
         [
-          "5c0e655586f774045612eeb2",
+          "5c0e655586f774045612eeb2"
+        ],
+        [
           "5c0e625a86f7742d77340f62"
         ]
       ],
-      "en": "Shoreline, Interchange or Streets of Tarkov: eliminate 2 PMCs in one raid while wearing one listed loadout.",
-      "ru": "Берег, Развязка или Улицы Таркова: за один рейд устранить 2 ЧВК в одном из указанных комплектов.",
-      "detailsEn": "In one raid, wear one of [HighCom Trooper TFO body armor (MultiCam), BNTI Zhuk body armor (EMR)]; eliminate 2 PMCs; on Shoreline/Interchange/Streets of Tarkov; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Бронежилет HighCom Trooper TFO (MultiCam), Бронежилет БНТИ Жук (Флора Цифра)]; устранить 2 бойцов ЧВК; на локации Берег/Развязка/Улицы Таркова; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
+      "en": "Shoreline, Interchange or Streets of Tarkov: eliminate 2 PMCs in one raid while wearing either listed body armor.",
+      "ru": "Берег, Развязка или Улицы Таркова: за один рейд устранить 2 ЧВК в одном из двух бронежилетов на выбор.",
+      "detailsEn": "In one raid, wear either HighCom Trooper TFO body armor (MultiCam) or BNTI Zhuk body armor (EMR); eliminate 2 PMCs on Shoreline/Interchange/Streets of Tarkov. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо бронежилет HighCom Trooper TFO (MultiCam), либо БНТИ Жук (Флора Цифра) и устранить 2 ЧВК на Берегу/Развязке/Улицах Таркова. Эвакуация — отдельная цель."
     },
     {
       "questId": "ee813142de655daf2dedfebc",
       "conditionId": "c27c39f2695ffb7ff59edb89",
       "equipmentInclusive": [
         [
-          "5df8a42886f77412640e2e75",
+          "5df8a42886f77412640e2e75"
+        ],
+        [
           "5c0e9f2c86f77432297fe0a3"
         ]
       ],
-      "en": "Reserve, Lighthouse or Streets of Tarkov: eliminate 7 targets in one raid while wearing one listed loadout.",
-      "ru": "Резерв, Маяк или Улицы Таркова: за один рейд устранить 7 целей в одном из указанных комплектов.",
-      "detailsEn": "In one raid, wear one of [Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), BlackHawk! Commando chest harness (Black)]; eliminate 7 targets; on Reserve/Lighthouse/Streets of Tarkov; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Разгрузочный жилет Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), Разгрузочная нагрудная система BlackHawk! Commando (Черная)]; устранить 7 целей; на локации Резерв/Маяк/Улицы Таркова; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
+      "en": "Reserve, Lighthouse or Streets of Tarkov: eliminate 7 targets in one raid while wearing either listed rig.",
+      "ru": "Резерв, Маяк или Улицы Таркова: за один рейд устранить 7 целей в одной из двух разгрузок на выбор.",
+      "detailsEn": "In one raid, wear either the Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey) or BlackHawk! Commando chest harness (Black); eliminate 7 targets on Reserve/Lighthouse/Streets of Tarkov. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо разгрузочный жилет Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), либо систему BlackHawk! Commando (Черная) и устранить 7 целей на Резерве/Маяке/Улицах Таркова. Эвакуация — отдельная цель."
     },
     {
       "questId": "47480d824cea0b80917cafa5",
       "conditionId": "6e0ad34d0d8a35ef24a765f2",
       "equipmentInclusive": [
         [
-          "5ca2151486f774244a3b8d30",
+          "5ca2151486f774244a3b8d30"
+        ],
+        [
           "5ca21c6986f77479963115a7"
         ]
       ],
-      "en": "Factory, Reserve or The Lab: eliminate 3 PMCs in one raid while wearing one listed loadout.",
-      "ru": "Завод, Резерв или Лаборатория: за один рейд устранить 3 ЧВК в одном из указанных комплектов.",
-      "detailsEn": "In one raid, wear one of [FORT Redut-M body armor, FORT Redut-T5 body armor (Smog)]; eliminate 3 PMCs; on Factory (day)/Factory (night)/Reserve/The Lab; survive and extract. Found-in-raid status does not apply.",
-      "detailsRu": "За один рейд: использовать один предмет из списка [Бронежилет ФОРТ Редут-М, Бронежилет ФОРТ Редут-Т5 (Смог)]; устранить 3 бойцов ЧВК; на локации Завод (день)/Завод (ночь)/Резерв/Лаборатория; выжить и выйти из рейда. Статус «Найдено в рейде» не применяется."
+      "en": "Factory, Reserve or The Lab: eliminate 3 PMCs in one raid while wearing either listed body armor.",
+      "ru": "Завод, Резерв или Лаборатория: за один рейд устранить 3 ЧВК в одном из двух бронежилетов на выбор.",
+      "detailsEn": "In one raid, wear either FORT Redut-M body armor or FORT Redut-T5 body armor (Smog); eliminate 3 PMCs on Factory (day/night), Reserve, or The Lab. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо бронежилет ФОРТ Редут-М, либо ФОРТ Редут-Т5 (Смог) и устранить 3 ЧВК на Заводе (день/ночь), Резерве или в Лаборатории. Эвакуация — отдельная цель."
     }
   ]
 }

@@ -166,11 +166,10 @@ def main():
         en.update(locale(qid,name,"",level,f"Eliminate {count} targets on Ground Zero"));ru.update(locale(qid,name,"",level,f"Устранить {count} целей на Эпицентре",True))
     # A staged non-weapon equipment chain.
     gear=[
-        # The opening assignment is logistics training, not a combat exam. Two
-        # groups require one common rig and one common backpack simultaneously.
-        ("light-rig","Loadout: First Field Kit",6,["Ground Zero","Customs","Woods"],[["572b7adb24597762ae139821","5e4abc1f86f774069619fbaa","6034d0230ca681766b6a0fb5"],["544a5cde4bdc2d39388b456b","56e33680d2720be2748b4576","56e335e4d2720b6c058b456d"]],1,None,None,"Equip one allowed rig and one allowed backpack, then survive and extract from Ground Zero, Customs, or Woods in the same raid; no kills or received damage are required","Надеть одну разрешённую разгрузку и один разрешённый рюкзак, затем выжить и эвакуироваться с Эпицентра, Таможни или Леса в том же рейде; убийства и получение урона не требуются"),
+        # The opening assignment is logistics training, not an equipment exam.
+        ("light-rig","Loadout: First Field Kit",6,["Ground Zero","Customs","Woods"],[],1,None,None,"Survive and extract from Ground Zero, Customs, or Woods; no specific rig or backpack model is checked","Выжить и эвакуироваться с Эпицентра, Таможни или Леса; конкретные модели разгрузки и рюкзака не проверяются"),
         ("field-headset","Loadout: Acoustic Cover",11,["Customs","Woods","Shoreline"],[["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]],4,"Any","f2b78c3ab062acd976bbe35c","Wear the GSSh-01 or Walker’s Razor Digital headset and eliminate 4 targets in one raid on Customs, Woods, or Shoreline; separately survive and extract from one of those maps","Надеть гарнитуру ГСШ-01 или Walker’s Razor Digital и устранить 4 цели за один рейд на Таможне, Лесу или Берегу; отдельно выжить и эвакуироваться с одной из этих карт"),
-        ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],[["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]],5,"Any","9d78917164400742a5e2511d","Test the helmet under fire: eliminate 5 targets and survive the same raid","Проверить защиту головы в бою: устранить 5 противников и выжить в том же рейде"),
+        ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],[["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]],5,"Any","9d78917164400742a5e2511d","Wear either listed helmet and eliminate 5 targets in one raid on Woods, Shoreline, or Interchange; extraction is a separate objective","Надеть один из указанных шлемов и устранить 5 целей за один рейд на Лесу, Берегу или Развязке; эвакуация засчитывается отдельно"),
         ("medium-armor","Loadout: Mobile Armor",21,["Shoreline","Interchange","Streets"],[["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]],2,"AnyPmc","3ac29a7f402bea66538246bc","Test the mobile armor: eliminate 2 PMCs and survive the same raid","Проверить подвижную броню: устранить 2 бойцов ЧВК и выжить в том же рейде"),
         ("cargo-rig","Loadout: Sustainment",26,["Reserve","Lighthouse","Streets"],[["5df8a42886f77412640e2e75","5c0e9f2c86f77432297fe0a3"]],7,"Any","2a064ed77cf937cc6d423718","Complete a sustained combat patrol: eliminate 7 targets and survive the same raid","Провести длительный боевой выход: устранить 7 противников и выжить в том же рейде"),
         ("heavy-kit","Loadout: Breach Weight",31,["Factory","Reserve","The Lab"],[["5ca2151486f774244a3b8d30","5ca21c6986f77479963115a7"]],3,"AnyPmc","81c019d78a77aa67046c0c16","Test the heavy assault load: eliminate 3 PMCs and survive the same raid","Проверить тяжёлый штурмовой комплект: устранить 3 бойцов ЧВК и выжить в том же рейде"),
@@ -178,18 +177,25 @@ def main():
     prev=None
     for slug,name,level,locations,equipment_groups,count,target,kill_condition_id,task_en,task_ru in gear:
         runtime_locations=[runtime_id for location_name in locations for runtime_id in LOCATION_IDS[location_name]]
+        if slug == "light-rig":
+            equipment_groups = []
         qtype="Elimination" if target else "Exploration"
         qid,q=quest(slug,name,level,prev,lambda qid,l=runtime_locations,g=equipment_groups,c=count,t=target,k=kill_condition_id,qt=qtype:counter(qid,c,loc_condition(qid,l,g,t,k),qt,True),qtype)
+        if slug in {"field-headset", "service-helmet", "medium-armor", "cargo-rig", "heavy-kit"}:
+            # These authored pools are alternatives in a single equipment slot,
+            # so each item must be a separate complete-loadout alternative.
+            equipment_groups = [[item] for item in equipment_groups[0]]
+            q["conditions"]["AvailableForFinish"][0]["counter"]["conditions"][0]["equipmentInclusive"] = equipment_groups
         if slug == "light-rig":
             reward_id=hid(qid+":starter-pack")
             q["rewards"]["Success"].append({"value":1,"id":reward_id,"type":"Item","target":reward_id,"index":3,"items":[{"_id":reward_id,"_tpl":"5e9dcf5986f7746c417435b3","upd":{"StackObjectsCount":1}}]})
         prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","locations":locations})
-        rendered_en=[item_list(group,'en') for group in equipment_groups]
-        rendered_ru=[item_list(group,'ru') for group in equipment_groups]
-        en_detail=("Eligible equipment:\n" + "\n".join(f"- choose one from: {group}." for group in rendered_en) + f"\nTask: {task_en}.") if rendered_en else f"Task: {task_en}."
-        ru_detail=("Допуск по снаряжению:\n" + "\n".join(f"- выбрать один предмет: {group}." for group in rendered_ru) + f"\nЗадача: {task_ru}.") if rendered_ru else f"Задача: {task_ru}."
-        objective_en = "Equip one allowed rig and one allowed backpack, then survive and extract" if slug == "light-rig" else task_en
-        objective_ru = "Надеть разрешённую разгрузку и рюкзак, затем выжить и эвакуироваться" if slug == "light-rig" else task_ru
+        rendered_en = item_list([item for group in equipment_groups for item in group], 'en')
+        rendered_ru = item_list([item for group in equipment_groups for item in group], 'ru')
+        en_detail = f"Eligible equipment: wear one item from [{rendered_en}].\nTask: {task_en}." if rendered_en else f"Task: {task_en}."
+        ru_detail = f"Допуск по снаряжению: надеть один предмет из списка [{rendered_ru}].\nЗадача: {task_ru}." if rendered_ru else f"Задача: {task_ru}."
+        objective_en = task_en
+        objective_ru = task_ru
         en.update(locale(qid,name,en_detail,level,objective_en));ru.update(locale(qid,name,ru_detail,level,objective_ru,True))
     qdir=ROOT/"db/quests"
     lane_lengths={}

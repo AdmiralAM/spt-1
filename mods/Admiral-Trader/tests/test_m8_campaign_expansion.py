@@ -77,6 +77,46 @@ class M8CampaignExpansionTests(unittest.TestCase):
             self.assertGreaterEqual(len(location["target"]), 2, row["id"])
             self.assertLessEqual(len(location["target"]), 4, row["id"])
 
+    def test_equipment_alternatives_are_native_complete_loadouts(self):
+        expected_alternatives = {
+            "ca33fab8b9cc5f5f5ad322c0": [
+                ["5c06c6a80db834001b735491"],
+                ["5aa7cfc0e5b5b00015693143"],
+            ],
+            "9c35b3ac22ede1a5a79118bc": [
+                ["5c0e655586f774045612eeb2"],
+                ["5c0e625a86f7742d77340f62"],
+            ],
+            "ee813142de655daf2dedfebc": [
+                ["5df8a42886f77412640e2e75"],
+                ["5c0e9f2c86f77432297fe0a3"],
+            ],
+            "47480d824cea0b80917cafa5": [
+                ["5ca2151486f774244a3b8d30"],
+                ["5ca21c6986f77479963115a7"],
+            ],
+        }
+        for quest_id, expected in expected_alternatives.items():
+            with self.subTest(quest=quest_id):
+                quest = self.by_id[quest_id]
+                counter = quest["conditions"]["AvailableForFinish"][0]
+                equipment = next(
+                    row for row in counter["counter"]["conditions"]
+                    if row["conditionType"] == "Equipment"
+                )
+                self.assertEqual(equipment["equipmentInclusive"], expected)
+                self.assertTrue(counter["oneSessionOnly"])
+
+        light_rig = self.by_id["4a8f533e1ed458e83b41c01f"]
+        opening_conditions = light_rig["conditions"]["AvailableForFinish"][0]["counter"]["conditions"]
+        self.assertEqual({row["conditionType"] for row in opening_conditions}, {"Location", "ExitStatus"})
+        acoustic = self.by_id["4ab0b49478adb233ae900b33"]
+        acoustic_equipment = next(
+            row for row in acoustic["conditions"]["AvailableForFinish"][0]["counter"]["conditions"]
+            if row["conditionType"] == "Equipment"
+        )
+        self.assertEqual(acoustic_equipment["equipmentInclusive"], [["5b432b965acfc47a8774094e"], ["5e4d34ca86f774264f758330"]])
+
     def test_icebreaker_is_optional_and_isolated_from_core_quests(self):
         self.assertFalse(self.runtime["icebreaker"]["reserved"])
         self.assertTrue(self.runtime["icebreaker"]["runtimePublished"])

@@ -146,27 +146,6 @@
       ]
     }
   },
-  "ca33fab8b9cc5f5f5ad322c0": {
-    "cashReductionRub": 12000,
-    "name": "Подсумок для магазинов B&A&HB",
-    "reward": {
-      "value": 1,
-      "id": "1a615d25d012a775e014ab68",
-      "type": "Item",
-      "target": "e59a1d8c16fd8ef2c10d3534",
-      "index": 3,
-      "items": [
-        {
-          "_id": "e59a1d8c16fd8ef2c10d3534",
-          "_tpl": "68ac00000000000000000001",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
   "9c35b3ac22ede1a5a79118bc": {
     "cashReductionRub": 15000,
     "name": "Пояс для магазинов B&A&HB",

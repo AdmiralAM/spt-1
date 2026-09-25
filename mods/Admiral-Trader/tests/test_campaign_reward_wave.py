@@ -30,15 +30,16 @@ class CampaignRewardWaveTests(unittest.TestCase):
         self.assertEqual(self.manifest["earlyCompleteWeaponRewardTrades"], 4)
         self.assertEqual(self.manifest["nativeFieldSupportRewardTrades"], 20)
         self.assertEqual(self.manifest["nativeTacticalRewardTrades"], 11)
-        self.assertEqual(self.manifest["optionalBeltEquipmentRewardTrades"], 30)
-        self.assertEqual(self.manifest["directBeltProductRewardTrades"], 14)
+        self.assertEqual(self.manifest["optionalBeltEquipmentRewardTrades"], 29)
+        self.assertEqual(self.manifest["directBeltProductRewardTrades"], 13)
         self.assertEqual(self.manifest["additionalBeltPackCandidateRewardTrades"], 16)
         self.assertFalse(self.manifest["requiredDependencies"])
         self.assertEqual(len(self.signature), 10)
         self.assertEqual(len(self.early), 4)
         self.assertEqual(len(self.field_support), 20)
         self.assertEqual(len(self.tactical), 11)
-        self.assertEqual(len(self.belt), 30)
+        self.assertEqual(len(self.belt), 29)
+        self.assertNotIn("ca33fab8b9cc5f5f5ad322c0", self.belt)
         self.assertNotIn("208db81b5ce195bf0c176852", self.belt)
         self.assertEqual(self.quests["208db81b5ce195bf0c176852"]["rewards"]["Success"][-1]["items"][0]["_tpl"], "5c0e655586f774045612eeb2")
         core_rewards = self.quests["208db81b5ce195bf0c176852"]["rewards"]["Success"]
@@ -61,7 +62,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
             level = next(row["value"] for row in self.quests[quest_id]["conditions"]["AvailableForStart"] if row["conditionType"] == "Level")
             early_levels.append(int(level))
         self.assertGreaterEqual(sum(level <= 10 for level in early_levels), 9)
-        self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 22)
+        self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 21)
 
         weapon_levels = []
         for quest_id in self.early:
@@ -102,7 +103,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
             "68ac00000000000000000013",
         }
         direct = [trade for trade in self.belt.values() if trade["reward"]["items"][0]["_tpl"] in stable_belt_ids]
-        self.assertEqual(len(direct), 14)
+        self.assertEqual(len(direct), 13)
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac00000000000000000006" for trade in direct))
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac0000000000000000000c" for trade in direct))
         self.assertTrue(any(trade["reward"]["items"][0]["_tpl"] == "68ac0000000000000000000f" for trade in direct))
