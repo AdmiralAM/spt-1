@@ -107,6 +107,16 @@ namespace SPTItemIntelligence
         static float Lerp(float from, float to, float amount) => from + (to - from) * Math.Max(0f, Math.Min(1f, amount));
     }
 
+    public static class SenseWaterClassifier
+    {
+        public static bool IsWater(string itemType, int hydration, int energy)
+        {
+            // Names are localized and may describe non-drink items such as a water filter.
+            return (itemType ?? string.Empty).IndexOf("drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                (hydration != 0 && energy == 0);
+        }
+    }
+
     public static class SenseVisualPolicyEngine
     {
         public static SenseVisualPolicy Evaluate(ItemRequirementAllocation allocation)
@@ -267,9 +277,18 @@ namespace SPTItemIntelligence
                 baseline.HideoutRequired,
                 baseline.NowFirRequired,
                 baseline.LaterFirRequired,
-                baseline.ExactOwned,
-                baseline.ExactOwnedFir,
-                baseline.HideoutFirRequired);
+                checked(baseline.ExactOwned + addedOwned),
+                checked(baseline.ExactOwnedFir + addedFir),
+                baseline.HideoutFirRequired,
+                baseline.HideoutInstalled,
+                baseline.HideoutCurrentRequired,
+                baseline.HasSharedAlternativePool,
+                baseline.FixedNowRequired,
+                baseline.FixedLaterRequired,
+                baseline.FixedHideoutRequired,
+                baseline.FixedNowFirRequired,
+                baseline.FixedLaterFirRequired,
+                baseline.FixedHideoutFirRequired);
 
             ItemNeedReason primary = ItemNeedReason.None;
             ItemNeedReason secondary = ItemNeedReason.None;

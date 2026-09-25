@@ -132,7 +132,13 @@ namespace SPTItemIntelligence
                 source.HideoutFirRequired,
                 source.HideoutInstalled,
                 source.HideoutCurrentRequired,
-                source.HasSharedAlternativePool);
+                source.HasSharedAlternativePool,
+                source.FixedNowRequired,
+                source.FixedLaterRequired,
+                source.FixedHideoutRequired,
+                source.FixedNowFirRequired,
+                source.FixedLaterFirRequired,
+                source.FixedHideoutFirRequired);
             ItemRequirementDecision decision = combined.Keep > 0
                 ? ItemRequirementDecision.Keep
                 : combined.Surplus > 0 ? ItemRequirementDecision.SafeToSell : ItemRequirementDecision.None;

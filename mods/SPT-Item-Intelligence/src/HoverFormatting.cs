@@ -93,7 +93,10 @@ namespace SPTItemIntelligence
             ItemRelevanceState relevance = modules.CraftBarter ? ItemRelevanceRegistry.Get(TemplateId) : ItemRelevanceState.Empty;
             SummaryLine = allocation == null ? string.Empty :
                 (allocation.Coverage == RequirementCoverage.NotNeeded ? GameUiText.T("Not Needed", "Не нужен") : allocation.Coverage == RequirementCoverage.Enough ? GameUiText.T("Enough", "Достаточно") : GameUiText.T("Need More ×", "Нужно ещё ×") + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
-                (allocation.MustKeep ? GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
+                (allocation.MustKeep ? allocation.FixedKeep > 0 && allocation.AlternativeKeep > 0
+                    ? GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.FixedKeep.ToString(CultureInfo.InvariantCulture) +
+                      GameUiText.T(" this type · choice ×", " этого вида · выбор ×") + allocation.AlternativeKeep.ToString(CultureInfo.InvariantCulture)
+                    : GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
             SummaryOwnedLine = RaidSessionActive
                 ? GameUiText.T("In raid ×", "В наличии в рейде ×") + RaidOwnedCount.ToString(CultureInfo.InvariantCulture)
                 : GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);

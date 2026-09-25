@@ -7,6 +7,13 @@ static class Phase38SenseVisualPolicyTests
     public static int Run()
     {
         int assertions = 0;
+        Expect(!SenseWaterClassifier.IsWater("GenericItem", 0, 0) &&
+               !SenseWaterClassifier.IsWater("GenericItem Water filter", 0, 0),
+            "a water filter is not classified as a drink by its name", ref assertions);
+        Expect(SenseWaterClassifier.IsWater("DrinkItem", 0, 0) &&
+               SenseWaterClassifier.IsWater("GenericItem", 40, 0) &&
+               !SenseWaterClassifier.IsWater("FoodItem", 10, 20),
+            "drinks and hydration-only consumables are water; nourishing food is not", ref assertions);
         SenseVisualPolicy missing = SenseVisualPolicyEngine.Evaluate(new ItemRequirementAllocation(0, 0, 2, 0, 0, 0, 0));
         Expect(missing.Icon == ItemNeedIcon.Quest && missing.Stock == SenseStockState.Missing && missing.Remaining == 2,
             "category icon and red-state contract are independent", ref assertions);

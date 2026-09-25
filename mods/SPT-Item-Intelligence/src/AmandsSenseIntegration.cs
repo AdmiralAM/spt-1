@@ -212,7 +212,18 @@ namespace SPTItemIntelligence
             if (settings.SenseRemainingText)
             {
                 SenseVisualPolicy textPolicy = preserveIcon ? new SenseVisualPolicy(ItemNeedIcon.None, ItemNeedReason.None, ItemNeedReason.None, SenseStockState.None, 0) : policy;
-                ApplyText(typeText, CompactText(textPolicy, primary, stock, isContainer, settings.GetSenseCountColor(policy.ItemCount)), Color.white, secondary);
+                ApplyText(typeText, CompactText(textPolicy, primary, stock, isContainer), Color.white, secondary);
+            }
+            if (isContainer)
+            {
+                object nativeCount = Member(senseItem, "descriptionText");
+                if (nativeCount != null)
+                {
+                    Color countColor = settings.GetSenseCountColor(Number(Member(senseItem, "itemCount"), 0));
+                    object existingCountColor = Member(nativeCount, "color");
+                    if (existingCountColor is Color) countColor.a = ((Color)existingCountColor).a;
+                    SetMember(nativeCount, "color", countColor);
+                }
             }
         }
 
@@ -381,16 +392,14 @@ namespace SPTItemIntelligence
             return GameUiText.T("FUTURE", "ПОТОМ");
         }
 
-        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer, Color countColor)
+        static string CompactText(SenseVisualPolicy policy, Color category, Color stock, bool isContainer)
         {
             if (isContainer && policy.Stock == SenseStockState.Complete) return string.Empty;
             if (!policy.HasItemIntelligence) return string.Empty;
             if (policy.Stock == SenseStockState.None)
-                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>" +
-                       (isContainer ? " <color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>" : string.Empty);
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>";
             if (isContainer)
-                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color> " +
-                       "<color=#" + ColorUtility.ToHtmlStringRGB(countColor) + ">" + policy.ItemCount + "</color>";
+                return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>";
             if (policy.Stock == SenseStockState.Complete)
                 return "<color=#" + ColorUtility.ToHtmlStringRGB(stock) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color>";
             return "<color=#" + ColorUtility.ToHtmlStringRGB(category) + ">" + Label(policy.Category, policy.CurrencyCode) + "</color> " +
@@ -424,18 +433,14 @@ namespace SPTItemIntelligence
         {
             if (item == null) return false;
             ItemDescriptor descriptor = ItemDescriptor.FromObject(item);
-            string type = descriptor.TypeName + " " + descriptor.Name + " " + descriptor.ShortName + " " + item.GetType().Name;
+            string type = descriptor.TypeName + " " + item.GetType().Name;
             object template = Member(item, "Template");
             if (template != null) type += " " + template.GetType().Name;
-            if (type.IndexOf("drink", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                type.IndexOf("water", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                descriptor.Name.IndexOf("water", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                descriptor.ShortName.IndexOf("water", StringComparison.OrdinalIgnoreCase) >= 0) return true;
             object hydration;
             object energy;
             bool hydrates = descriptor.TryGet("Hydration", out hydration) && Number(hydration, 0) != 0;
             bool energizes = descriptor.TryGet("Energy", out energy) && Number(energy, 0) != 0;
-            return hydrates && !energizes;
+            return SenseWaterClassifier.IsWater(type, hydrates ? 1 : 0, energizes ? 1 : 0);
         }
 
         static string CurrencyCode(object item)

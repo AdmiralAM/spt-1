@@ -144,6 +144,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                !adapter.Contains("ALL ✓") && !adapter.Contains("ВСЁ ✓") &&
                !adapter.Contains(">\\n<"),
             "completed containers collapse to a green check while other Sense status stays on one compact line", ref assertions);
+        Expect(adapter.Contains("Member(senseItem, \"descriptionText\")") &&
+               adapter.Contains("Member(senseItem, \"itemCount\")") &&
+               adapter.Contains("SetMember(nativeCount, \"color\", countColor)") &&
+               !adapter.Contains("policy.ItemCount + \"</color>\""),
+            "count bands color Sense's native container counter without duplicating a category count", ref assertions);
 
         return assertions;
     }

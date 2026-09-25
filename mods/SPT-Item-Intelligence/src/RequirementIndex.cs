@@ -164,6 +164,7 @@ namespace SPTItemIntelligence
                 selected.AddRange(alternatives.Values);
                 selected.Sort((a, b) => { int source = a.Source.CompareTo(b.Source); return source != 0 ? source : StringComparer.Ordinal.Compare(a.Label, b.Label); });
                 int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0, hideoutFir = 0, hideoutInstalled = 0, hideoutCurrentRequired = 0;
+                int fixedNow = 0, fixedLater = 0, fixedHideout = 0, fixedNowFir = 0, fixedLaterFir = 0, fixedHideoutFir = 0;
                 RequirementReasonFlags reasons = RequirementReasonFlags.None;
                 List<RequirementDetail> details = new List<RequirementDetail>();
                 checked
@@ -176,11 +177,18 @@ namespace SPTItemIntelligence
                         else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
                         if (c.IsCurrentHideoutStage) { hideoutInstalled += c.SatisfiedCount; hideoutCurrentRequired += c.RequiredCount; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
+                        if (c.AlternativeItemCount <= 1)
+                        {
+                            if (c.Source == RequirementSource.CurrentQuest) { fixedNow += n; if (c.FoundInRaidRequired) fixedNowFir += n; }
+                            else if (c.Source == RequirementSource.FutureQuest) { fixedLater += n; if (c.FoundInRaidRequired) fixedLaterFir += n; }
+                            else { fixedHideout += n; if (c.FoundInRaidRequired) fixedHideoutFir += n; }
+                        }
                         details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired, c.RequiredCount, c.SatisfiedCount,
                             c.AlternativeItemCount > 1, c.AlternativeItemCount));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired, HasAlternativePool);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired, HasAlternativePool,
+                    fixedNow, fixedLater, fixedHideout, fixedNowFir, fixedLaterFir, fixedHideoutFir);
                 int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
                 return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }

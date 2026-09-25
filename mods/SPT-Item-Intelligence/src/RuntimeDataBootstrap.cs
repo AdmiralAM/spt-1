@@ -187,9 +187,9 @@ namespace SPTItemIntelligence
             List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
             List<RequirementContribution> contributions = new List<RequirementContribution>();
             Dictionary<string, PoolCount> alternativePools = new Dictionary<string, PoolCount>(StringComparer.Ordinal);
-            ProjectQuests(snapshot.profile, snapshot.quests, snapshot.locales, contributions, owned, alternativePools);
-            owned = ApplyAlternativePools(owned, alternativePools);
+            ProjectQuests(snapshot.profile, snapshot.quests, snapshot.locales, contributions, alternativePools);
             ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, snapshot.locales, contributions);
+            owned = ApplyAlternativePools(owned, alternativePools, contributions);
             int ownedBulbex = 0;
             for (int i = 0; i < owned.Count; i++)
                 if (owned[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) ownedBulbex += owned[i].Count;
@@ -224,7 +224,7 @@ namespace SPTItemIntelligence
             return result;
         }
 
-        static void ProjectQuests(object profile, object questTable, object locales, List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
+        static void ProjectQuests(object profile, object questTable, object locales, List<RequirementContribution> output, Dictionary<string, PoolCount> alternativePools)
         {
             Dictionary<string, QuestProgress> progress = new Dictionary<string, QuestProgress>(StringComparer.OrdinalIgnoreCase);
             foreach (object quest in JsonNode.Values(JsonNode.Get(profile, "Quests", "quests")))
@@ -249,7 +249,7 @@ namespace SPTItemIntelligence
                 if (string.IsNullOrWhiteSpace(questId)) continue;
                 QuestProgress state;
                 progress.TryGetValue(questId, out state);
-                ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
+                ProjectQuest(profile, quest, questId, state, locales, output, alternativePools);
                 projectedQuestIds.Add(questId);
             }
 
@@ -265,13 +265,13 @@ namespace SPTItemIntelligence
                     QuestProgress state = new QuestProgress(JsonNode.ReadString(JsonNode.Get(status, "status", "Status")),
                         JsonNode.Values(JsonNode.Get(status, "completedConditions", "CompletedConditions")).Select(JsonNode.ReadString),
                         forceCurrent: true);
-                    ProjectQuest(profile, quest, questId, state, locales, output, owned, alternativePools);
+                    ProjectQuest(profile, quest, questId, state, locales, output, alternativePools);
                 }
             }
         }
 
         static void ProjectQuest(object profile, object quest, string questId, QuestProgress state, object locales,
-            List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
+            List<RequirementContribution> output, Dictionary<string, PoolCount> alternativePools)
         {
             if (state != null && state.IsComplete) return;
             string rawLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
@@ -288,7 +288,7 @@ namespace SPTItemIntelligence
                 if (state != null && state.IsConditionComplete(condition.Id)) continue;
                 if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
                     condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
-                RegisterAlternativePool(condition, owned, alternativePools);
+                RegisterAlternativePool(condition, alternativePools);
                 HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
                 for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
                 {
@@ -302,43 +302,69 @@ namespace SPTItemIntelligence
             }
         }
 
-        static void RegisterAlternativePool(QuestCondition condition, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        static void RegisterAlternativePool(QuestCondition condition, Dictionary<string, PoolCount> pools)
         {
             HashSet<string> targets = new HashSet<string>(condition.Targets, StringComparer.Ordinal);
             if (targets.Count < 2) return;
-            int total = 0, fir = 0;
-            for (int i = 0; i < owned.Count; i++)
-            {
-                if (!targets.Contains(owned[i].TemplateId)) continue;
-                total = checked(total + owned[i].Count);
-                fir = checked(fir + owned[i].FoundInRaidCount);
-            }
             foreach (string target in targets)
             {
                 PoolCount prior;
                 pools.TryGetValue(target, out prior);
-                pools[target] = new PoolCount(Math.Max(total, prior == null ? 0 : prior.Total), Math.Max(fir, prior == null ? 0 : prior.Fir));
+                pools[target] = new PoolCount(prior == null ? targets : prior.Targets.Union(targets));
             }
         }
 
-        static List<OwnedTemplateCount> ApplyAlternativePools(List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        static List<OwnedTemplateCount> ApplyAlternativePools(List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools,
+            List<RequirementContribution> contributions)
         {
             Dictionary<string, OwnedTemplateCount> byTemplate = new Dictionary<string, OwnedTemplateCount>(StringComparer.Ordinal);
             for (int i = 0; i < owned.Count; i++) byTemplate[owned[i].TemplateId] = owned[i];
+            Dictionary<string, int> fixedDemand = new Dictionary<string, int>(StringComparer.Ordinal);
+            Dictionary<string, int> fixedFirDemand = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < contributions.Count; i++)
+            {
+                RequirementContribution c = contributions[i];
+                if (c.AlternativeItemCount > 1 || c.RemainingCount <= 0) continue;
+                int previous;
+                fixedDemand.TryGetValue(c.TemplateId, out previous);
+                fixedDemand[c.TemplateId] = checked(previous + c.RemainingCount);
+                if (!c.FoundInRaidRequired) continue;
+                fixedFirDemand.TryGetValue(c.TemplateId, out previous);
+                fixedFirDemand[c.TemplateId] = checked(previous + c.RemainingCount);
+            }
             foreach (KeyValuePair<string, PoolCount> pair in pools)
             {
                 OwnedTemplateCount exact;
                 byTemplate.TryGetValue(pair.Key, out exact);
-                byTemplate[pair.Key] = new OwnedTemplateCount(pair.Key, exact == null ? 0 : exact.Count, exact == null ? 0 : exact.FoundInRaidCount, pair.Value.Total, pair.Value.Fir);
+                int ownCount = exact == null ? 0 : exact.Count;
+                int ownFir = exact == null ? 0 : exact.FoundInRaidCount;
+                int eligible = ownCount, eligibleFir = ownFir;
+                foreach (string otherId in pair.Value.Targets)
+                {
+                    if (otherId == pair.Key) continue;
+                    OwnedTemplateCount other;
+                    if (!byTemplate.TryGetValue(otherId, out other)) continue;
+                    int demand, firDemand;
+                    fixedDemand.TryGetValue(otherId, out demand);
+                    fixedFirDemand.TryGetValue(otherId, out firDemand);
+                    int reserved = Math.Min(other.Count, demand);
+                    int nonFir = other.Count - other.FoundInRaidCount;
+                    int reservedFir = Math.Min(other.FoundInRaidCount,
+                        firDemand + Math.Max(0, demand - firDemand - nonFir));
+                    eligible = checked(eligible + Math.Max(0, other.Count - reserved));
+                    eligibleFir = checked(eligibleFir + Math.Max(0, other.FoundInRaidCount - reservedFir));
+                }
+                byTemplate[pair.Key] = new OwnedTemplateCount(pair.Key, ownCount, ownFir,
+                    eligible, Math.Min(eligible, eligibleFir));
             }
             return new List<OwnedTemplateCount>(byTemplate.Values);
         }
 
         sealed class PoolCount
         {
-            public PoolCount(int total, int fir) { Total = total; Fir = fir; }
-            public int Total { get; }
-            public int Fir { get; }
+            public PoolCount(IEnumerable<string> targets)
+            { Targets = new HashSet<string>(targets, StringComparer.Ordinal); }
+            public HashSet<string> Targets { get; }
         }
 
         static List<QuestCondition> ParseQuestConditions(object conditions)
