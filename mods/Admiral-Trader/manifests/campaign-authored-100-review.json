@@ -3009,12 +3009,12 @@
             "factory4_day",
             "factory4_night"
           ],
-          "brief": "Получить или иметь подходящий ключ; предмет остаётся у игрока.",
+          "brief": "Найти в рейде и оставить у себя ключ от передней двери насосной станции или ключ от задней двери насосной станции.",
           "objectives": [
             {
               "kind": "possessAccessKey",
               "quantity": 1,
-              "foundInRaid": false,
+              "foundInRaid": true,
               "handover": false
             }
           ],

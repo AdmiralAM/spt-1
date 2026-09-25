@@ -1803,7 +1803,7 @@
     "image": "/files/quest/icon/painter_12_thumbnail.png",
     "instantComplete": false,
     "isKey": false,
-    "location": "any",
+    "location": "56f40101d2720b2a4d8b45d6",
     "name": "painter_12 name",
     "note": "painter_12 note",
     "progressSource": "eft",

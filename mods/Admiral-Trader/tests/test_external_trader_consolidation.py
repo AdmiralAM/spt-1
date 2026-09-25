@@ -68,6 +68,22 @@ def test_external_quest_rewards_remap_both_unlock_and_standing_trader_fields() -
     assert all(reward["type"] == "TraderStanding" for reward in legacy_targets)
 
 
+def test_painter_moscovium_is_tagged_for_customs_in_quest_list() -> None:
+    painter_quests = json.loads(
+        next((ROOT / "external/painter/db/CustomQuests/668aaff35fd574b6dcc4a686/Quests").glob("*.json")).read_text(
+            encoding="utf-8-sig"
+        )
+    )
+    quest = painter_quests["685862c625c24fd649b370c6"]
+    assert quest["location"] == "56f40101d2720b2a4d8b45d6"
+    finish = quest["conditions"]["AvailableForFinish"]
+    placement = next(row for row in finish if row["conditionType"] == "PlaceBeacon")
+    survival = next(row for row in finish if row["conditionType"] == "CounterCreator")
+    assert placement["zoneId"] == "gazel"
+    location = next(row for row in survival["counter"]["conditions"] if row["conditionType"] == "Location")
+    assert location["target"] == ["bigmap"]
+
+
 def test_failed_painter_reward_has_bounded_idempotent_recovery() -> None:
     assert 'PainterTapedUpQuestId = "668aacd1dee3de3ce276fdef"' in CONSOLIDATION
     assert 'PainterTapedUpRepairKey = "admiral-trader-painter-taped-up-reward-repair-v1"' in CONSOLIDATION

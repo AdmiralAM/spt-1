@@ -305,7 +305,7 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
             elif map_name == "Берег":
                 en_pool, ru_pool = "Health Resort office 104, 112, 107 or utility key", "ключ Санатория: офис 104, 112, 107 или подсобка"
             else:
-                en_pool, ru_pool = "Pumping station front or back door key", "ключ от передней или задней двери насосной станции"
+                en_pool, ru_pool = "Pumping station front door key or pumping station back door key", "ключ от передней двери насосной станции или ключ от задней двери насосной станции"
             en.append(f"Find any 1 allowed key in raid: {en_pool}; the key is not handed over")
             ru.append(f"Найти в рейде любой 1 допустимый ключ: {ru_pool}; ключ не сдаётся")
         elif kind == "eliminate":
@@ -369,8 +369,8 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
     ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}"
     has_access_key = any(row.get("conditionType") == "FindItem" and len(row.get("target", [])) > 1 for row in q["runtimeFinish"])
     if has_access_key:
-        en_body += "\n\nOperational detail:\n- Find one allowed key in raid; the key is not handed over."
-        ru_body += "\n\nУточнение:\n- Найти один допустимый ключ в рейде; ключ не сдаётся."
+        en_body += "\n\nOperational detail:\n- " + (key_details_en[0] if key_details_en else "Find one allowed key in raid; the key is not handed over.")
+        ru_body += "\n\nУточнение:\n- " + (key_details_ru[0] if key_details_ru else "Найти один допустимый ключ в рейде; ключ не сдаётся.")
     continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
     continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
     done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")
@@ -381,7 +381,13 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
             if i >= len(objective_lines):
                 continue
             if row["conditionType"] == "FindItem" and len(row.get("target", [])) > 1:
-                labels[row["id"]] = "Иметь 1 допустимый ключ из списка в описании; ключ не сдаётся" if ru else "Have 1 allowed key from the list in the description; the key is not handed over"
+                labels[row["id"]] = (
+                    "Найти в рейде ключ от передней или задней двери насосной станции; ключ не сдаётся"
+                    if ru and qid == "30d087339ef8063ccd818036"
+                    else "Find a pumping station front or back door key in raid; keep it"
+                    if not ru and qid == "30d087339ef8063ccd818036"
+                    else objective_lines[i]
+                )
             else:
                 labels[row["id"]] = objective_lines[i]
         return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **labels}

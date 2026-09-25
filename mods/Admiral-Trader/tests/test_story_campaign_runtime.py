@@ -99,6 +99,18 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             self.assertFalse(any(row["conditionType"] == "HandoverItem" and set(row["target"]) == targets for row in finish), quest_id)
             self.assertIn("ключ не сдаётся", self.ru[quest_id + " description"], quest_id)
 
+    def test_factory_master_key_names_both_exact_allowed_keys_in_the_objective(self):
+        quest_id = "30d087339ef8063ccd818036"
+        required_names = ("ключ от передней двери насосной станции", "ключ от задней двери насосной станции")
+        objective = self.ru["40c83192f54d44de08c3171f"].lower()
+        for name in required_names:
+            self.assertIn(name, self.ru[quest_id + " description"].lower())
+        self.assertIn("передней или задней двери насосной станции", objective)
+        self.assertIn("в рейде", objective)
+        authored = next(q for chain in self.authored["chains"] for q in chain["quests"] if q["id"] == quest_id)
+        self.assertIn("найти в рейде", authored["brief"].lower())
+        self.assertTrue(authored["objectives"][0]["foundInRaid"])
+
     def test_dispatcher_key_uses_a_distinct_common_dorm_pool_and_explains_it(self):
         quest_id = "ed21744058dec7587de1081f"
         description = self.ru[quest_id + " description"]
