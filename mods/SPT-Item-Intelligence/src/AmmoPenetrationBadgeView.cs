@@ -124,8 +124,8 @@ namespace SPTItemIntelligence
             if (chance < 20f) return new Color(0.73f, 0.51f, 0.49f, 1f);
             if (chance < 40f) return new Color(0.79f, 0.57f, 0.52f, 1f);
             if (chance < 60f) return new Color(0.80f, 0.74f, 0.55f, 1f);
-            if (chance < 80f) return new Color(0.68f, 0.79f, 0.58f, 1f);
-            return new Color(0.56f, 0.77f, 0.63f, 1f);
+            if (chance < 80f) return new Color(0.72f, 0.79f, 0.50f, 1f);
+            return new Color(0.43f, 0.78f, 0.62f, 1f);
         }
 
         static void Set(object target, string propertyName, object value)

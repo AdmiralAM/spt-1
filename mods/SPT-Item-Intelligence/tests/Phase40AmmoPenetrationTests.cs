@@ -54,6 +54,9 @@ static class Phase40AmmoPenetrationTests
                view.Contains("ShieldColor(chance)") && !view.Contains("GetShieldSprite") &&
                view.Contains("sprite != null") && view.Contains("badgeObject.activeSelf != visible"),
             "the compact badge uses EFT's native class sprite and hides cleanly if it is unavailable", ref assertions);
+        Expect(view.Contains("new Color(0.72f, 0.79f, 0.50f, 1f)") &&
+               view.Contains("new Color(0.43f, 0.78f, 0.62f, 1f)"),
+            "high penetration stays yellow-green while very high penetration is visibly more emerald", ref assertions);
         Expect(resolver.Contains("public static object ResolveItem(object itemViewOrItem)") &&
                map.Contains("`AmmoPenetrationClass.cs`") && map.Contains("`AmmoPenetrationBadgeView.cs`"),
             "visible pooled ItemViews can resolve their EFT item and the product map records both runtime units", ref assertions);
