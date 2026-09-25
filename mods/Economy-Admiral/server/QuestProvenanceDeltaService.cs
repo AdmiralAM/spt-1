@@ -17,7 +17,8 @@ public sealed class QuestProvenanceDeltaService(
     public async Task<QuestProvenanceDeltaReport> RunAsync(
         VanillaBaselineSnapshot baseline,
         QuestAnalysisReport analysis,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        bool writeReport = true
     )
     {
         var pristine = baseline.Quests.ToDictionary(row => row.QuestId, StringComparer.Ordinal);
@@ -94,13 +95,12 @@ public sealed class QuestProvenanceDeltaService(
 
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestProvenanceDeltaService).Assembly);
         var reportPath = SafePath(modPath, "reports/economy-admiral-provenance-delta.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        if (writeReport)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
+            await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
 
-        logger.Info(
-            $"[Economy Admiral] provenance delta complete: pristine={report.PristineQuestCount}, final={report.FinalQuestCount}, " +
-            $"added={report.ModAddedQuestCount}, modified={report.PristineModifiedQuestCount}, unchanged={report.PristineUnchangedQuestCount}, removed={report.RemovedPristineQuestCount}; report={reportPath}"
-        );
         return report;
     }
 

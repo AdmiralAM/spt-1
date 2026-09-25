@@ -37,6 +37,7 @@ public sealed record EconomyConfig
     public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
+    public bool EnableRuntimeDiagnostics { get; init; } = false;
 
     [JsonInclude]
     public bool RepeatedRaidLootDecay { get => false; private init { } }

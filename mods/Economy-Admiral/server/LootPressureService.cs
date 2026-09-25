@@ -63,11 +63,12 @@ public sealed class LootPressureService(
                 }
             }
 
-            logger.Info(
-                $"[Economy Admiral] loot pressure applied: preset={config.Preset}, " +
-                $"looseEnabled={config.EnableLooseLootPressure}, staticEnabled={config.EnableStaticLootPressure}, " +
-                $"looseScale={targets.LooseLootScale:0.###}, staticScale={targets.StaticLootScale:0.###}, " +
-                $"looseMaps={looseChanged}, staticMaps={staticChanged}");
+            if (config.EnableRuntimeDiagnostics)
+                logger.Info(
+                    $"[Economy Admiral] loot pressure applied: preset={config.Preset}, " +
+                    $"looseEnabled={config.EnableLooseLootPressure}, staticEnabled={config.EnableStaticLootPressure}, " +
+                    $"looseScale={targets.LooseLootScale:0.###}, staticScale={targets.StaticLootScale:0.###}, " +
+                    $"looseMaps={looseChanged}, staticMaps={staticChanged}");
             return new(true, looseChanged, staticChanged);
         }
         catch

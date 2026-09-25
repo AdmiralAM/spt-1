@@ -23,7 +23,6 @@ public sealed class NativeRepeatableQuestBaselineService(
             .Select((repeatable, index) => Capture(repeatable, index))
             .ToDictionary(row => row.Key, StringComparer.Ordinal);
 
-        logger.Info($"[Economy Admiral] pristine native repeatable reward scaling captured: groups={snapshot.Count}, priority={OnLoadOrder.Watermark + 2}");
     }
 
     public IReadOnlyDictionary<string, NativeRepeatableRewardBaseline> GetSnapshot() => snapshot

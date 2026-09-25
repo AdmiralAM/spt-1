@@ -17,7 +17,7 @@ public sealed class QuestProgressionGraphService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task<QuestProgressionSnapshot> RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken)
+    public async Task<QuestProgressionSnapshot> RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken, bool writeReport = true)
     {
         if (baselineSnapshot.QuestCount <= 0)
             throw new InvalidOperationException("Economy Admiral progression graph requires a non-empty pristine startup snapshot.");
@@ -44,9 +44,11 @@ public sealed class QuestProgressionGraphService(
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Economy Admiral progression graph report path must stay inside the mod directory.");
 
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] quest progression graph complete from pristine baseline: finalQuests={report.QuestCount}, pristineQuests={baselineSnapshot.QuestCount}, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
+        if (writeReport)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
+            await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        }
         return current;
     }
 

@@ -101,9 +101,9 @@ public sealed class NativeRepeatableQuestPressureService(
             Mutations = proposals,
         };
 
-        if (config.Mode == EconomyMode.Enforce)
-            logger.Warning($"[Economy Admiral] native repeatable pressure applied: planned={result.PlannedMutationCount}, mutations={result.MutationCount}, blockedDimensions={result.BlockedDimensionCount}");
-        else
+        if (config.Mode == EconomyMode.Enforce && config.EnableRuntimeDiagnostics)
+            logger.Info($"[Economy Admiral] native repeatable pressure applied: planned={result.PlannedMutationCount}, mutations={result.MutationCount}, blockedDimensions={result.BlockedDimensionCount}");
+        else if (config.EnableRuntimeDiagnostics)
             logger.Info($"[Economy Admiral] native repeatable pressure preview: planned={result.PlannedMutationCount}, mutations=0, blockedDimensions={result.BlockedDimensionCount}");
 
         return result;

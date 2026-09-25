@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Compatibility Suite",
+  "components": [
+    {
+      "id": "foldables-extended",
+      "sourcePath": "mods/SPT-Foldables-Extended",
+      "target": "com.ozen.foldables",
+      "disposition": "suite-component",
+      "status": "implemented"
+    },
+    {
+      "id": "stackable-armor-plates",
+      "sourcePath": "mods/SPT-Stackable-Armor-Plates",
+      "target": "com.lacyway.mc",
+      "disposition": "suite-component",
+      "status": "implemented"
+    },
+    {
+      "id": "suppressor-balance",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/server/SuppressorBalance.cs",
+      "target": "SPT suppressor item templates",
+      "disposition": "suite-component",
+      "status": "implementation-awaiting-runtime-validation"
+    },
+    {
+      "id": "healing-interrupt",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/healing",
+      "target": "EFT medical hands controller",
+      "disposition": "suite-component",
+      "status": "implementation-awaiting-runtime-validation"
+    },
+    {
+      "id": "season-rotator-raid-cycle",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/season/SeasonRotatorRaidAdapter.cs",
+      "target": "com.turbodestroyer.seasonrotator",
+      "disposition": "suite-adapter",
+      "status": "implementation-awaiting-runtime-validation",
+      "ownershipRule": "Season Rotator 2.0.1 retains its DLL, initial season and config; the Suite counts completed raids and overrides only subsequent season selection."
+    },
+    {
+      "id": "belt-use-items-anywhere",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
+      "target": "com.cj.useFromAnywhere",
+      "disposition": "migrate-to-suite",
+      "status": "suite-adapter-implemented-belt-removal-pending",
+      "runtimeEvidence": {
+        "upstreamVersion": "2.1.5",
+        "installedDllSha256": "4F45D3577778F99A7FE4BEAFD89FA5EB1B8CD9E8B573448533F13BB30048B98B",
+        "note": "Installed upstream DLL is retained; Admiral behavior is an external Belt-side adapter."
+      }
+    },
+    {
+      "id": "belt-ui-fixes",
+      "sourcePath": "external-worktree:bahb-rc4/integrated-repair/Runtime/NativeBeltActions.cs",
+      "target": "com.tyfon.uifixes",
+      "disposition": "migrate-to-suite",
+      "status": "suite-adapter-implemented-awaiting-belt-api-integration",
+      "runtimeEvidence": {
+        "sourceSha256": "C11F8A976694FCD49916B336F854681719824E598294F6A7DC60C2BF99529225",
+        "note": "NativeBeltActions patches the optional UIFixes SlowLoadingPatch boundary."
+      }
+    },
+    {
+      "id": "belt-tgc",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory",
+      "target": "com.emilanderss0n.tgc",
+      "disposition": "migrate-to-suite",
+      "status": "belt-runtime-owner-api-extraction-in-progress",
+      "reviewedBeltHead": "6a4438025ec2dc9653fb447b321ccac630e98b17",
+      "runtimeSeams": [
+        "server/SecureContainerCompatibility.cs",
+        "server/TgcBeltProfileMigration.cs",
+        "src/TgcCompatibilityPolicy.cs",
+        "src/DedicatedWearablePickupPatches.cs",
+        "src/FastAccessSlotPatches.cs",
+        "src/WearableItemDescriptor.cs"
+      ],
+      "ownershipRule": "Belt retains slot15 hosting and persistent profile migration; Suite may own only cross-mod detection and policy handoff."
+    },
+    {
+      "id": "belt-packnstrap",
+      "sourcePath": "mods/SPT-Belt-Armband-Inventory",
+      "target": "com.wtt.packnstrap",
+      "disposition": "migrate-to-suite",
+      "status": "belt-runtime-owner-api-extraction-in-progress",
+      "reviewedBeltHead": "6a4438025ec2dc9653fb447b321ccac630e98b17",
+      "runtimeSeams": [
+        "src/PackNStrapCompatibility.cs",
+        "src/Plugin.cs",
+        "src/FastAccessSlotPatches.cs",
+        "server/SecureContainerCompatibility.cs",
+        "server/DedicatedEquipmentSlotRegistration.cs",
+        "server/LocalPackNStrapImport.cs"
+      ],
+      "ownershipRule": "Pack 'n' Strap keeps its content and assets; Belt keeps slot15 mechanics; Suite owns only optional compatibility orchestration after a versioned Belt handoff exists."
+    },
+    {
+      "id": "item-intelligence-sense",
+      "sourcePath": "mods/SPT-Item-Intelligence/src/AmandsSenseIntegration.cs",
+      "target": "xyz.drakia.Sense",
+      "disposition": "retain-owner",
+      "owner": "Item Intelligence"
+    },
+    {
+      "id": "trader-external-consolidation",
+      "sourcePath": "mods/Admiral-Trader",
+      "target": "Painter/Artem/TGC",
+      "disposition": "retain-owner",
+      "owner": "Admiral Trader"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Admiral.StackableArmorPlates</AssemblyName>
+    <RootNamespace>SPTStackableArmorPlates.Client</RootNamespace>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <SPTPath Condition="'$(SPTPath)' == ''">C:\Games\SPT\</SPTPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony"><HintPath>$(SPTPath)BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx"><HintPath>$(SPTPath)BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Comfort"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ItemComponent.Types"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ItemTemplate.Types"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\ItemTemplate.Types.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(SPTPath)EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\PlateStackPolicy.cs" Link="PlateStackPolicy.cs" />
+  </ItemGroup>
+</Project>

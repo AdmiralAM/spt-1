@@ -1,0 +1,31 @@
+name: Admiral Compatibility Suite Validate
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-Compatibility-Suite/**'
+      - 'mods/SPT-Foldables-Extended/**'
+      - 'mods/SPT-Stackable-Armor-Plates/**'
+      - '.github/workflows/admiral-compatibility-suite-validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate Suite ownership and audit contracts
+        run: python -m unittest discover -s mods/Admiral-Compatibility-Suite/tests -v
+      - name: Validate idempotent slot access adapter
+        run: dotnet run --project mods/Admiral-Compatibility-Suite/tests/SlotAccessSynchronizer.Tests.csproj -c Release
+      - name: Produce compatibility inventory
+        run: python mods/Admiral-Compatibility-Suite/tools/audit_compatibility.py --output build/admiral-compatibility-audit.json > /dev/null

@@ -17,13 +17,14 @@ public sealed class SourcePressureObservationPipelineService(
     public async Task<SourcePressureObservationPipelineResult> RunAsync(
         EconomyConfig config,
         VanillaBaselineSnapshot baseline,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool writeReports = true)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(baseline);
         var finalDb = finalDbSourceObservationService.Build(baseline, cancellationToken);
-        var admiralTraderEvidence = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
-        var sourcePressure = await sourcePressureRuntimeReportService.RunAsync(config, finalDb, admiralTraderEvidence, cancellationToken);
+        var admiralTraderEvidence = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken, writeReports);
+        var sourcePressure = await sourcePressureRuntimeReportService.RunAsync(config, finalDb, admiralTraderEvidence, cancellationToken, writeReports);
         return new SourcePressureObservationPipelineResult
         {
             SourcePressure = sourcePressure,

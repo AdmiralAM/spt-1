@@ -99,7 +99,8 @@ public sealed class TraderPurchasePressureService(
             }
 
             applied = true;
-            logger.Info($"[Economy Admiral] trader fiat purchase pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, traders={changedTraders.Count}, offers={changedOffers.Count}, fiatAlternatives={changedAlternatives}, aggregate={beforeTotal:0.##}->{afterTotal:0.##}");
+            if (config.EnableRuntimeDiagnostics)
+                logger.Info($"[Economy Admiral] trader fiat purchase pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, traders={changedTraders.Count}, offers={changedOffers.Count}, fiatAlternatives={changedAlternatives}, aggregate={beforeTotal:0.##}->{afterTotal:0.##}");
             return new TraderPurchasePressureResult(true, multiplier, changedTraders.Count, changedOffers.Count, beforeTotal, afterTotal, null);
         }
         catch (Exception applyException)
