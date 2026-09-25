@@ -118,7 +118,7 @@ Reward rules:
 
 The M3 graph is intentionally non-linear.
 
-- no sales-volume gate;
+- vanilla-style cumulative sales gates at LL2-LL4: ₽500,000, ₽1,200,000 and ₽2,200,000;
 - no repeatable-task gate;
 - no quest-count gate;
 - no standing or loyalty requirement used as a hidden quest prerequisite;

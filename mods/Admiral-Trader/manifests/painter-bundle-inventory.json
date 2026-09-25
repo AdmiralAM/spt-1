@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceRelease": "3.0.0",
+  "sourceAsset": "Painter_3.0.0.7z",
+  "sourceAssetSha256": "4f4735329821ce71aa0720e8fe90a4f8c76d572f33f6154f36e5cdc111d2d3be",
+  "bundleCount": 5,
+  "bundles": [
+    {
+      "path": "figurine_batman.bundle",
+      "size": 2808607,
+      "sha256": "aa20846d6d2e10ee053599ef866fe9caa2d36c4c667f03672387ee37bc807be3"
+    },
+    {
+      "path": "dodo338383899.bundle",
+      "size": 11143881,
+      "sha256": "0b8ef358510d1e3db7ae833bf18315ca3e82b7e5dd3d8a68c246573540d30f67"
+    },
+    {
+      "path": "mos115.bundle",
+      "size": 3082437,
+      "sha256": "76c8334fd8313b2f398a4873175f12accf5a7d710b9651f444fd3e603de8ab48"
+    },
+    {
+      "path": "mysterybox.bundle",
+      "size": 2667891,
+      "sha256": "fc7bf25285ac2e0abb167420f5e13e75d7413cee1781092859afd3a17651b1cc"
+    },
+    {
+      "path": "mysterybox_2.bundle",
+      "size": 5944735,
+      "sha256": "2d053d70a92325c0a6b6e11cfd5ff0a5434eb901539a9f3873a291867ad9de7e"
+    }
+  ]
+}

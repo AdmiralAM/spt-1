@@ -1,0 +1,2481 @@
+{
+  "7ec59fd018a4332dc9cc598e": {
+    "cashReductionRub": 3435,
+    "minimumCashRub": 10000,
+    "name": "Штурмовая винтовка Симонова АГ-042 5.45x39",
+    "reward": {
+      "value": 1,
+      "id": "0519cf473c66cd4ff42a0e73",
+      "type": "Item",
+      "target": "8d3e02b3fa11ff43fb172a5e",
+      "items": [
+        {
+          "_tpl": "68c23b960f579b9b5fe021e7",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 8
+          },
+          "slotId": "hideout",
+          "_id": "8d3e02b3fa11ff43fb172a5e"
+        },
+        {
+          "_tpl": "55d4837c4bdc2d1d4e8b456c",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "38fdbba88acee938234f7f17",
+          "parentId": "8d3e02b3fa11ff43fb172a5e"
+        },
+        {
+          "_tpl": "68c63ee6dcb5f65309eb4fcc",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "9b8fb77c53bccf023d88b890",
+          "parentId": "8d3e02b3fa11ff43fb172a5e"
+        },
+        {
+          "_tpl": "68c23b3d4a286357245eb641",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "85c2da92d25e952ae3aafc95",
+          "parentId": "8d3e02b3fa11ff43fb172a5e"
+        }
+      ]
+    }
+  },
+  "96ef708ef07d2b7bd8214653": {
+    "cashReductionRub": 3735,
+    "minimumCashRub": 10000,
+    "name": "Штурмовая винтовка Симонова АГ-043 5.45x39",
+    "reward": {
+      "value": 1,
+      "id": "784d68f5b027f2b466a2a825",
+      "type": "Item",
+      "target": "bdc0f8bcd710e394d6682842",
+      "items": [
+        {
+          "_tpl": "68cf56067ff6ceab0c2fd49e",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "Foldable": {
+              "Folded": false
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "bdc0f8bcd710e394d6682842"
+        },
+        {
+          "_tpl": "564ca99c4bdc2d16268b4589",
+          "slotId": "mod_magazine",
+          "_id": "fbfb5f472ada9f8cd85761ee",
+          "parentId": "bdc0f8bcd710e394d6682842"
+        },
+        {
+          "_tpl": "68c63ee6dcb5f65309eb4fcc",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "e23de54699272e141befd972",
+          "parentId": "bdc0f8bcd710e394d6682842"
+        },
+        {
+          "_tpl": "68c23b3d4a286357245eb641",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "2eaa2ef0a648fdfa7baab750",
+          "parentId": "bdc0f8bcd710e394d6682842"
+        },
+        {
+          "_tpl": "68cf53ddb8f10c637706563c",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "690c1ba595c3f9f0dacd00c4",
+          "parentId": "bdc0f8bcd710e394d6682842"
+        },
+        {
+          "_tpl": "56dff216d2720bbd668b4568",
+          "slotId": "cartridges",
+          "location": 0,
+          "upd": {
+            "StackObjectsCount": 30
+          },
+          "_id": "b6f1a46db9982117285772af",
+          "parentId": "fbfb5f472ada9f8cd85761ee"
+        }
+      ]
+    }
+  },
+  "9a2efe4c869cd41beb667e29": {
+    "cashReductionRub": 4176,
+    "minimumCashRub": 10000,
+    "name": "Пистолет-пулемет HK UMP-9 9x19",
+    "reward": {
+      "value": 1,
+      "id": "55ac7b7326b9cb6e135c1fd1",
+      "type": "Item",
+      "target": "fc327074948f32104e1915ac",
+      "items": [
+        {
+          "_tpl": "67b05e25d83f07b7b587c0b5",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 999999,
+            "UnlimitedCount": true,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 0,
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "67b05e48729b9634d308785b",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "a5c07e3265569a802cead42a",
+          "parentId": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "5fc3e4ee7283c4046c5814af",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ad494c052b273b73d658f8bb",
+          "parentId": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "67b177b22bb79fe63fea01d8",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "56877640f3133ad26e82b6e4",
+          "parentId": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "5fc53954f8b6a877a729eaeb",
+          "slotId": "mod_mount_000",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ca418249d575563749d19e6d",
+          "parentId": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "5fc5396e900b1d5091531e72",
+          "slotId": "mod_mount_001",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "538b8321dc31958a2f06cbc5",
+          "parentId": "fc327074948f32104e1915ac"
+        },
+        {
+          "_tpl": "5fc5396e900b1d5091531e72",
+          "slotId": "mod_mount_002",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "81450fd715805f38f9f04ffd",
+          "parentId": "fc327074948f32104e1915ac"
+        }
+      ]
+    }
+  },
+  "5c7e60f203900e75aba3edc0": {
+    "cashReductionRub": 4688,
+    "minimumCashRub": 10000,
+    "name": "Пистолет HK MK23 .45 ACP",
+    "reward": {
+      "value": 1,
+      "id": "82fe9a4766d3bb1b50fa220f",
+      "type": "Item",
+      "target": "bc298c81b453d16bb8c67fc3",
+      "items": [
+        {
+          "_tpl": "68b7f4060a4536984f82cf4b",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f582e203edda8374ddba",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "53916f8d8f9130dc859549c2",
+          "parentId": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f985dd6565e47eb9ee44",
+          "slotId": "mod_reciever",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "120333c4e52975a0de7efd63",
+          "parentId": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f9242936eb3c214e1dd9",
+          "slotId": "mod_hammer",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "836e55ba99082ef3686b2871",
+          "parentId": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f8d25cc65007af7be8de",
+          "slotId": "mod_trigger",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "0110e3147b0d53bbd516864b",
+          "parentId": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f613687ce0b4e6f3e64c",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "93da717cb22a7d6015c2dda5",
+          "parentId": "bc298c81b453d16bb8c67fc3"
+        },
+        {
+          "_tpl": "68b7f7317385935fb8a06488",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "94e563c4cb32d47f011c3337",
+          "parentId": "120333c4e52975a0de7efd63"
+        },
+        {
+          "_tpl": "68b7f7e1154441e5f4447192",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "2c6c1c993a7b888421141f34",
+          "parentId": "120333c4e52975a0de7efd63"
+        },
+        {
+          "_tpl": "68b7f87a17e0b4da91a230e6",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "48e879ffdc455d32f627b004",
+          "parentId": "93da717cb22a7d6015c2dda5"
+        }
+      ]
+    }
+  },
+  "9620e5a3c17b30599df67730": {
+    "cashReductionRub": 5925,
+    "minimumCashRub": 10000,
+    "name": "Пистолет-пулемет Minebea PM-9 9x19",
+    "reward": {
+      "value": 1,
+      "id": "b94ba50bb817fc22bc1c5dd8",
+      "type": "Item",
+      "target": "caec5141a2a28e883daffda1",
+      "items": [
+        {
+          "_tpl": "6761b213607f9a6f79017cd8",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "Foldable": {
+              "Folded": false
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 9999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "caec5141a2a28e883daffda1"
+        },
+        {
+          "_tpl": "6830ce1ecee1ea420a42506a",
+          "slotId": "mod_magazine",
+          "_id": "f7896740199f04d5e75ba438",
+          "parentId": "caec5141a2a28e883daffda1"
+        },
+        {
+          "_tpl": "6830ce7c5c89e078a29ac193",
+          "slotId": "mod_stock_000",
+          "_id": "04720c91c0fcaa03b0fbfd47",
+          "parentId": "caec5141a2a28e883daffda1"
+        },
+        {
+          "_tpl": "6830f15212b2c07a8f31a42a",
+          "slotId": "mod_barrel",
+          "_id": "5a9fa852e2f546da52200a25",
+          "parentId": "caec5141a2a28e883daffda1"
+        }
+      ]
+    }
+  },
+  "de92651782ad58fce6457af9": {
+    "cashReductionRub": 7050,
+    "minimumCashRub": 10000,
+    "name": "Пистолет HK UCP 4.6x30",
+    "reward": {
+      "value": 1,
+      "id": "5cebd04e71aeecb1cd3cfee1",
+      "type": "Item",
+      "target": "c43c9e5efe7a2e6523017f03",
+      "items": [
+        {
+          "_tpl": "68433b58a8f9a618b11082d4",
+          "slotId": "hideout",
+          "upd": {
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            }
+          },
+          "_id": "c43c9e5efe7a2e6523017f03"
+        },
+        {
+          "_tpl": "684374b008d0b9c0aa535a62",
+          "slotId": "mod_sight_rear",
+          "_id": "8e37958b85547598c04b79b6",
+          "parentId": "c43c9e5efe7a2e6523017f03"
+        },
+        {
+          "_tpl": "6843749a0fba658861377651",
+          "slotId": "mod_barrel",
+          "_id": "5c23fda1faf8f190fc149862",
+          "parentId": "c43c9e5efe7a2e6523017f03"
+        },
+        {
+          "_tpl": "68433b836de7d8ce99c642c6",
+          "slotId": "mod_magazine",
+          "_id": "2ea1cf08edef00d205a743fb",
+          "parentId": "c43c9e5efe7a2e6523017f03"
+        }
+      ]
+    }
+  },
+  "8722d67f966ff1605393222a": {
+    "cashReductionRub": 13500,
+    "minimumCashRub": 10000,
+    "name": "Пистолет-пулемет IWI Tavor X95 9x19",
+    "reward": {
+      "value": 1,
+      "id": "3544222750f3334191564c37",
+      "type": "Item",
+      "target": "cf377e4bb94bec6667f1c45a",
+      "items": [
+        {
+          "_tpl": "67f425638b8cbfdc0cd1b5f2",
+          "slotId": "hideout",
+          "upd": {
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            }
+          },
+          "_id": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "67f4468ed11366239967ae80",
+          "slotId": "mod_magazine",
+          "_id": "f14308ffe66104cff91bc9fe",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "58949dea86f77409483e16a8",
+          "slotId": "mod_muzzle",
+          "_id": "dd58fdc4ad7b4afcb39dd654",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "67f2dd6203d3b7ec166970ef",
+          "slotId": "mod_tactical_000",
+          "_id": "9a205a23dd46199bd943ed98",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "67f2ddcd74c13fb90c2d7f1b",
+          "slotId": "mod_tactical_001",
+          "_id": "b910f81332a71e6f0c5f4d22",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "67f2de04c3ee93d678d753fb",
+          "slotId": "mod_foregrip",
+          "_id": "71801c29249bf6c435e28798",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "66a47ed3f97061a20b99f188",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0
+            }
+          },
+          "_id": "407aaf62b789dda9f8df9789",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        },
+        {
+          "_tpl": "66a47ed0df2ffbca58ebe5ed",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0
+            }
+          },
+          "_id": "f23ce74bfcba298b14bdc28f",
+          "parentId": "cf377e4bb94bec6667f1c45a"
+        }
+      ]
+    }
+  },
+  "fc14500bbc2900a04647083d": {
+    "cashReductionRub": 7350,
+    "minimumCashRub": 10000,
+    "name": "Карабин Patriot M4A1 5.56x45",
+    "reward": {
+      "value": 1,
+      "id": "99ba9d335a5865c144edc781",
+      "type": "Item",
+      "target": "478578fe855af53190e39b9a",
+      "items": [
+        {
+          "_tpl": "66839591f4d0cba7b041b2af",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "478578fe855af53190e39b9a"
+        },
+        {
+          "_tpl": "55d4887d4bdc2d962f8b4570",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "848d2796187177920bbd9b95",
+          "parentId": "478578fe855af53190e39b9a"
+        },
+        {
+          "_tpl": "6683957f2e516f6146af483d",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "e8922c4a734ba6f51fffab94",
+          "parentId": "478578fe855af53190e39b9a"
+        },
+        {
+          "_tpl": "55d44fd14bdc2d962f8b456e",
+          "slotId": "mod_charge",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "43144e7223499894b327af39",
+          "parentId": "478578fe855af53190e39b9a"
+        }
+      ]
+    }
+  },
+  "3def8dacb60f04f15fc2271d": {
+    "cashReductionRub": 10521,
+    "minimumCashRub": 10000,
+    "name": "Рычажная винтовка Marlin MXLR .308 ME",
+    "reward": {
+      "value": 1,
+      "id": "daeaad13d5f99a323882be75",
+      "type": "Item",
+      "target": "1cea2a98f6a1b8a717736446",
+      "items": [
+        {
+          "_tpl": "67c6de3ce39861860909e8e5",
+          "slotId": "hideout",
+          "location": null,
+          "upd": {
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "UnlimitedCount": true,
+            "BuyRestrictionMax": 2,
+            "BuyRestrictionCurrent": 0,
+            "StackObjectsCount": 1570000
+          },
+          "_id": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c5424826265106dd0697a4",
+          "slotId": "mod_magazine",
+          "location": null,
+          "_id": "58c2bd7ca15231d7b39daa7f",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c541ba5b84f7f36c03e555",
+          "slotId": "mod_stock",
+          "location": null,
+          "_id": "4547b921b1269cfa5f8ece39",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c5425e26265106dd0697a7",
+          "slotId": "mod_barrel",
+          "location": null,
+          "_id": "79bc789201f658a6cfd5cff7",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c54114d0538d12ec036c0a",
+          "slotId": "mod_trigger",
+          "location": null,
+          "_id": "ef7f6beeef983cd1001611f0",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c5412bb032bbdb530201ba",
+          "slotId": "mod_hammer",
+          "location": null,
+          "_id": "2db93bc946075dd07749e688",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c54183b032bbdb530201bc",
+          "slotId": "mod_charge",
+          "location": null,
+          "_id": "169e945da58135cc44543ec3",
+          "parentId": "1cea2a98f6a1b8a717736446"
+        },
+        {
+          "_tpl": "67c542c126265106dd0697ab",
+          "slotId": "mod_handguard",
+          "location": null,
+          "_id": "46fc3a0ff813dd256e4d8116",
+          "parentId": "79bc789201f658a6cfd5cff7"
+        },
+        {
+          "_tpl": "67c54270b032bbdb530201c2",
+          "slotId": "mod_sight_front",
+          "location": null,
+          "_id": "1abbc0087ef9bc8259e12b5d",
+          "parentId": "79bc789201f658a6cfd5cff7"
+        },
+        {
+          "_tpl": "67c5428ab032bbdb530201c4",
+          "slotId": "mod_sight_rear",
+          "location": null,
+          "_id": "0b691aee7f34939b0764d252",
+          "parentId": "79bc789201f658a6cfd5cff7"
+        },
+        {
+          "_tpl": "67c5414ed0538d12ec036c0c",
+          "slotId": "mod_tactical",
+          "location": null,
+          "_id": "1b1dea040d1945475a0e6e0c",
+          "parentId": "2db93bc946075dd07749e688"
+        }
+      ]
+    }
+  },
+  "a006fa3e96a9c967eda0f716": {
+    "cashReductionRub": 20925,
+    "minimumCashRub": 10000,
+    "name": "Пистолет-пулемет CZ Scorpion EVO 3 A1 9x19",
+    "reward": {
+      "value": 1,
+      "id": "eb51b42a232774bf1d625408",
+      "type": "Item",
+      "target": "599987bffcd97d9cbf855b33",
+      "items": [
+        {
+          "_tpl": "687afda52dc9fd6c0e14c602",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "Foldable": {
+              "Folded": false
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "6886543e0db4a816ef78a062",
+          "slotId": "mod_magazine",
+          "_id": "cc366b2c20a00f6aa00dbae7",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "688444f512ee012a2d264c9f",
+          "slotId": "mod_handguard",
+          "_id": "5752bb61299d521b71b70b5a",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "687b12fbb0bffe0925ad34b2",
+          "slotId": "mod_stock",
+          "_id": "d215199c43d7a052603d1489",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "688445ff01082f16b3c42d50",
+          "slotId": "mod_barrel",
+          "_id": "0d44be98dec0d40d6a9c3357",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "687c437b2c398db525b8d0e8",
+          "slotId": "mod_pistol_grip",
+          "_id": "2cffb1e0ec50db9e5f0e1c7d",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "584924ec24597768f12ae244",
+          "slotId": "mod_scope",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "c4cb714a7c5c029d63f5aa4b",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "687fb5224b7bf5a5702898ee",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "653bd8f175741b29b042736c",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "6881bc0e9bbdcb7cd92236e0",
+          "slotId": "mod_charge",
+          "_id": "2b316a7790cd87df7167b573",
+          "parentId": "599987bffcd97d9cbf855b33"
+        },
+        {
+          "_tpl": "687fb51f2756d21d3145a094",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "b97885b2697f251ef97c9aa1",
+          "parentId": "5752bb61299d521b71b70b5a"
+        },
+        {
+          "_tpl": "6884465f8615db2a21955aa1",
+          "slotId": "mod_muzzle",
+          "_id": "e59d88c4f0d62dc7ccd513ac",
+          "parentId": "0d44be98dec0d40d6a9c3357"
+        }
+      ]
+    }
+  },
+  "7564e60e4c1c2f1b67a594a4": {
+    "cashReductionRub": 18689,
+    "minimumCashRub": 10000,
+    "name": "Автомат специальный АС \"Вал\" MOD.4 9x39 с интегрированным глушителем",
+    "reward": {
+      "value": 1,
+      "id": "0038895d2bf680f2e52dea05",
+      "type": "Item",
+      "target": "f2a1a0ce74083198101ca765",
+      "items": [
+        {
+          "_tpl": "6871284e9a353bb50606f3ed",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1,
+            "UnlimitedCount": false,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 1,
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "68712ce2251b8d4c6c04ec1f",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "fdc24b774c624c5b059155c2",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "57c44f4f2459772d2c627113",
+          "slotId": "mod_reciever",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "c1ee51b35bc8f3a032c22663",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "65118f531b90b4fc77015083",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "f7b95195f6f0014cc54c936b",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "6878cc5bd0c26d57bf0aa37a",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "40e88e9fa0167f205fa67da5",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "6878ccf4181ac8a5b5077236",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1a29e45e424897d6fa33b68f",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "687128c4505fed5f370b1625",
+          "slotId": "mod_handguard",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "f29107b6b63fed1774fe4b25",
+          "parentId": "f2a1a0ce74083198101ca765"
+        },
+        {
+          "_tpl": "6878c143254146e6fd043756",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "fe9ab8ca131c4baf55804e9d",
+          "parentId": "fdc24b774c624c5b059155c2"
+        },
+        {
+          "_tpl": "5d135e83d7ad1a21b83f42d8",
+          "slotId": "mod_stock_000",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "cce1565cf2c8e813f559f577",
+          "parentId": "1a29e45e424897d6fa33b68f"
+        },
+        {
+          "_tpl": "68712b57a1be89347f0d8179",
+          "slotId": "mod_mount_000",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "521873bc6af786478b4f41a8",
+          "parentId": "f29107b6b63fed1774fe4b25"
+        },
+        {
+          "_tpl": "68712b57a1be89347f0d8179",
+          "slotId": "mod_mount_001",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "68d59ce8cacdfb88564cd65e",
+          "parentId": "f29107b6b63fed1774fe4b25"
+        },
+        {
+          "_tpl": "68712bd4251b8d4c6c04ec19",
+          "slotId": "mod_mount_002",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "344ebc7811ea579440eadd03",
+          "parentId": "f29107b6b63fed1774fe4b25"
+        },
+        {
+          "_tpl": "6878c1c723c3173d7f06d926",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "e2bc4860d58a1c9c8a238cc1",
+          "parentId": "f29107b6b63fed1774fe4b25"
+        },
+        {
+          "_tpl": "5bc09a30d4351e00367fb7c8",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "b5dc9cea7eeb1a7087b902cd",
+          "parentId": "f29107b6b63fed1774fe4b25"
+        },
+        {
+          "_tpl": "5bc09a18d4351e003562b68e",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "18d91e0deba4ad2bac249bc6",
+          "parentId": "344ebc7811ea579440eadd03"
+        }
+      ]
+    }
+  },
+  "b016df9d2bea4269cc59d531": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "Пистолет Palmetto State Armory 5.7 Rock 5.7x28",
+    "reward": {
+      "value": 1,
+      "id": "248c13b6a5c413a84a3b043a",
+      "type": "Item",
+      "target": "9553e66b617f9fd963929280",
+      "items": [
+        {
+          "_tpl": "68bf41bbb786f6e9315a5cab",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 99999,
+            "UnlimitedCount": true,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "BuyRestrictionMax": 0
+          },
+          "_id": "9553e66b617f9fd963929280"
+        },
+        {
+          "_tpl": "68bf4357e9feedf30b88015b",
+          "slotId": "mod_magazine",
+          "_id": "f3a3f437072cb36d7f75b2d6",
+          "parentId": "9553e66b617f9fd963929280"
+        },
+        {
+          "_tpl": "68bf473184358e175b34bbd5",
+          "slotId": "mod_reciever",
+          "_id": "562980c64926bab1968f3b47",
+          "parentId": "9553e66b617f9fd963929280"
+        },
+        {
+          "_tpl": "68bf4443bddcae2d902b41cc",
+          "slotId": "mod_barrel",
+          "_id": "857725eba253fb5160389aac",
+          "parentId": "9553e66b617f9fd963929280"
+        },
+        {
+          "_tpl": "68bf450e899a7ddb21e01d0f",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "de34f2f002fef1131208f72f",
+          "parentId": "562980c64926bab1968f3b47"
+        },
+        {
+          "_tpl": "68bf453529c58e5188c0bcbe",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "3e795481c64c2ec3b49ac3e4",
+          "parentId": "562980c64926bab1968f3b47"
+        },
+        {
+          "_tpl": "68bf471013cd0729f735bdb3",
+          "slotId": "mod_scope",
+          "_id": "10d7fba07ba575fe7cce1811",
+          "parentId": "562980c64926bab1968f3b47"
+        },
+        {
+          "_tpl": "68bf458d6ef1526e6e02bd9e",
+          "slotId": "mod_muzzle",
+          "_id": "3e680ffb447499f7c55020f1",
+          "parentId": "857725eba253fb5160389aac"
+        }
+      ]
+    }
+  },
+  "2568ee0bfe2ee12f24d78f45": {
+    "cashReductionRub": 10000,
+    "minimumCashRub": 10000,
+    "name": "Снайперская винтовка Zastava М76 7.92x57",
+    "reward": {
+      "value": 1,
+      "id": "cae71dd08c956588cebe6ac8",
+      "type": "Item",
+      "target": "eb7544795c4cf496bf1c81f0",
+      "items": [
+        {
+          "_tpl": "66e88596febdcf9daade16a8",
+          "upd": {
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e887c36b0f8c1fc0684f18",
+          "slotId": "mod_pistol_grip",
+          "_id": "53a1b0099a01ebe0a4f8ac1c",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e887cf09ede6c7c42def11",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "c1b034817d378cb9b521f61d",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e887e85c11853b81a538f4",
+          "slotId": "mod_magazine",
+          "_id": "926b27520dd8f9d7f997c8a5",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e888aaa157baa64d8338d1",
+          "slotId": "mod_stock",
+          "_id": "a6b7cce53fdc838744ac4ce6",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e888e39ace35080ccb02bd",
+          "slotId": "mod_handguard",
+          "_id": "eda36cb51d7f6a93fbe79c2d",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e8891c2072d5483a2595e9",
+          "slotId": "mod_reciever",
+          "_id": "d1ca85a6a4f9339a46a364d8",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "66e8894237d122e047db9483",
+          "slotId": "mod_muzzle",
+          "_id": "30b235340b1b07bbf71a2a3b",
+          "parentId": "eb7544795c4cf496bf1c81f0"
+        },
+        {
+          "_tpl": "5c0517910db83400232ffee5",
+          "slotId": "mod_scope",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "7c56601de85157b0448254b4",
+          "parentId": "d1ca85a6a4f9339a46a364d8"
+        }
+      ]
+    }
+  },
+  "43d9544a09d068476a1a18df": {
+    "cashReductionRub": 2000,
+    "minimumCashRub": 10000,
+    "name": "Штурмовая винтовка Knight's Armament Company PDW .300 Blackout",
+    "reward": {
+      "value": 1,
+      "id": "e7923c24d435f2a5ab4eaf96",
+      "type": "Item",
+      "target": "2dbeb77770c233b37e39ed6e",
+      "items": [
+        {
+          "_tpl": "6761b213607f9a6f79017c7e",
+          "upd": {
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "Foldable": {
+              "Folded": false
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c84",
+          "slotId": "mod_charge",
+          "_id": "cbbe4dfd46f0f673a0bbe2ce",
+          "parentId": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c81",
+          "slotId": "mod_stock",
+          "_id": "e9d0cb7dbaeaae0b09cddedf",
+          "parentId": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c80",
+          "slotId": "mod_magazine",
+          "_id": "72796025c0e032652f4f6768",
+          "parentId": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c83",
+          "slotId": "mod_reciever",
+          "_id": "6d3690b4a58f502a09559773",
+          "parentId": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "55802f5d4bdc2dac148b458f",
+          "slotId": "mod_pistol_grip",
+          "_id": "4a98efccf780795ea761d139",
+          "parentId": "2dbeb77770c233b37e39ed6e"
+        },
+        {
+          "_tpl": "5c1780312e221602b66cc189",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "fae54d665877f0545036b4ac",
+          "parentId": "6d3690b4a58f502a09559773"
+        },
+        {
+          "_tpl": "5c17804b2e2216152006c02f",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "ac5780ccd59f9c2fb40b6ffd",
+          "parentId": "6d3690b4a58f502a09559773"
+        },
+        {
+          "_tpl": "5c87ca002e221600114cb150",
+          "slotId": "mod_foregrip",
+          "_id": "04aa9344dbd21cacea8074cd",
+          "parentId": "6d3690b4a58f502a09559773"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c7f",
+          "slotId": "mod_barrel",
+          "_id": "8cfe6076bd68c29cbf680178",
+          "parentId": "6d3690b4a58f502a09559773"
+        },
+        {
+          "_tpl": "6761b213607f9a6f79017c82",
+          "slotId": "mod_muzzle",
+          "_id": "71d0827e6c29076980198105",
+          "parentId": "8cfe6076bd68c29cbf680178"
+        }
+      ]
+    }
+  },
+  "33810921ad5c893b866b3951": {
+    "cashReductionRub": 12000,
+    "minimumCashRub": 10000,
+    "name": "Марксманская винтовка Knight's Armament Company SR-25 7.62x51 (серовато-коричневая)",
+    "reward": {
+      "value": 1,
+      "id": "aa5891bddf62d135eacd9950",
+      "type": "Item",
+      "target": "74435d7025115d79559f310a",
+      "items": [
+        {
+          "_tpl": "6932abeb5403890d0c09c926",
+          "slotId": "hideout",
+          "location": null,
+          "upd": {
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "UnlimitedCount": true,
+            "BuyRestrictionMax": 2,
+            "BuyRestrictionCurrent": 0,
+            "StackObjectsCount": 590000
+          },
+          "_id": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "571659bb2459771fb2755a12",
+          "slotId": "mod_pistol_grip",
+          "location": null,
+          "_id": "b3c813945bce4e3f1220186c",
+          "parentId": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "5df8f541c41b2312ea3335e3",
+          "slotId": "mod_magazine",
+          "location": null,
+          "_id": "7a8edf1f505ced523a83415a",
+          "parentId": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "68a63c5ce1fb670852024661",
+          "slotId": "mod_stock",
+          "location": null,
+          "_id": "c9bbf38229393d8a0d678056",
+          "parentId": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "6932ac58be542622170428aa",
+          "slotId": "mod_reciever",
+          "location": null,
+          "_id": "0000b263fe0db4dad5c51366",
+          "parentId": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "6932ac762e27c68c800bd836",
+          "slotId": "mod_charge",
+          "location": null,
+          "_id": "92c8050082201c30a9ddc02a",
+          "parentId": "74435d7025115d79559f310a"
+        },
+        {
+          "_tpl": "6932ac8fbccfa5c5a00b5a76",
+          "slotId": "mod_stock",
+          "location": null,
+          "_id": "aec3f75955d0b69f3992d11a",
+          "parentId": "c9bbf38229393d8a0d678056"
+        },
+        {
+          "_tpl": "5dfa397fb11454561e39246c",
+          "slotId": "mod_barrel",
+          "location": null,
+          "_id": "750f3853e65e3a3cb8489249",
+          "parentId": "0000b263fe0db4dad5c51366"
+        },
+        {
+          "_tpl": "6936bd64b2b5b688e50cde36",
+          "slotId": "mod_handguard",
+          "location": null,
+          "_id": "6b20b8ffbcdf93056b80380c",
+          "parentId": "0000b263fe0db4dad5c51366"
+        },
+        {
+          "_tpl": "5c1780312e221602b66cc189",
+          "slotId": "mod_sight_rear",
+          "location": null,
+          "_id": "f5ce60bf09a93d9f0e81046d",
+          "parentId": "0000b263fe0db4dad5c51366"
+        },
+        {
+          "_tpl": "6932af0bbe542622170428bd",
+          "slotId": "mod_muzzle",
+          "location": null,
+          "_id": "8ecc1a077cf434f1dd3c5aca",
+          "parentId": "750f3853e65e3a3cb8489249"
+        },
+        {
+          "_tpl": "6936bde84737190b66053bb1",
+          "slotId": "mod_gas_block",
+          "location": null,
+          "_id": "2d1843fcbdce271378d7e5ba",
+          "parentId": "750f3853e65e3a3cb8489249"
+        }
+      ]
+    }
+  },
+  "a0d05e28971f1ba57639b97d": {
+    "cashReductionRub": 9000,
+    "minimumCashRub": 10000,
+    "name": "Снайперская винтовка СВ-98М 7.62x54RR",
+    "reward": {
+      "value": 1,
+      "id": "0a8dde2180c3d619ad2e38bc",
+      "type": "Item",
+      "target": "819902dc684c42be3b0b15ac",
+      "items": [
+        {
+          "_tpl": "69236a0b2d1260dbca41ef92",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 99999,
+            "UnlimitedCount": true,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 0
+          },
+          "_id": "819902dc684c42be3b0b15ac"
+        },
+        {
+          "_tpl": "56083e1b4bdc2dc8488b4572",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "cd4af2339691b7d85f9938b5",
+          "parentId": "819902dc684c42be3b0b15ac"
+        },
+        {
+          "_tpl": "559ba5b34bdc2d1f1a8b4582",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "80782d0d58612d5eda5533ce",
+          "parentId": "819902dc684c42be3b0b15ac"
+        },
+        {
+          "_tpl": "560e620e4bdc2d724b8b456b",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "9b3d5258effcacfddc723e38",
+          "parentId": "819902dc684c42be3b0b15ac"
+        },
+        {
+          "_tpl": "56ea8222d2720b69698b4567",
+          "slotId": "mod_bipod",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "3ee8ccc0611cec83d87ce467",
+          "parentId": "819902dc684c42be3b0b15ac"
+        }
+      ]
+    }
+  },
+  "8cba3e2ec639a4aa2c26c4da": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "Пистолет LAR Grizzly 50 Mark V .50 AE",
+    "reward": {
+      "value": 1,
+      "id": "11fb91cf9bf0aaa3ff2c5236",
+      "type": "Item",
+      "target": "271f6e16ce6164c423268a98",
+      "items": [
+        {
+          "_tpl": "677c9a47baecf3c4b2453365",
+          "upd": {
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9c38e92069ca8c68b6e1",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "cd3ff450435d6cc79bcabc40",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677ca12f7599509c79311ade",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ac2c9b059900a692dc3a259a",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9c6fe5cf70ff4c9e1338",
+          "slotId": "mod_reciever",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "372d46ac593dbfe5c8be415a",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677ca700833bedda3926e5c4",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "cb792491f7f0084828176a95",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9eccdfcac18ddc7c6b5b",
+          "slotId": "mod_trigger",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "c1a9cda279b5158a0ca48121",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9e9d8949d89b64a3baa5",
+          "slotId": "mod_hammer",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "623afb76809db604d1224697",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9e6dc4018154af5b0599",
+          "slotId": "mod_catch",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "60d771b74fd8cd44b315ee87",
+          "parentId": "271f6e16ce6164c423268a98"
+        },
+        {
+          "_tpl": "677c9d4ee9edb9191668af01",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "e6c9dffdf80ec5d2644f975a",
+          "parentId": "372d46ac593dbfe5c8be415a"
+        },
+        {
+          "_tpl": "677c9e554dde113597355fad",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "e58f910a3e713dbb884c4bda",
+          "parentId": "372d46ac593dbfe5c8be415a"
+        }
+      ]
+    }
+  },
+  "153839f368b80b6fbc36d29e": {
+    "cashReductionRub": 14775,
+    "minimumCashRub": 10000,
+    "name": "Снайперская винтовка Remington MSR .300",
+    "reward": {
+      "value": 1,
+      "id": "f8932fcbfe4975085381fbc4",
+      "type": "Item",
+      "target": "b0658637eae0622d3d761191",
+      "items": [
+        {
+          "_tpl": "684e32eaec9f5eb3cacc7ca7",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "684e4c6792bdb7cd32ad3fb1",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "6ac5faf771bb28efb4f49d44",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "684e3e64b3bb65a5ffdfd7ea",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1e2d2382ea42859fe8cb926b",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "684e427881b3bec74bf97c28",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1cc20424a589082b7078edfd",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "5c0102b20db834001d23eebc",
+          "slotId": "mod_tactical_000",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "294484ef9d2ec5bdb38c296c",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "5c0102aa0db834001b734ba1",
+          "slotId": "mod_tactical_001",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "be314176e4b08a6472d9b68d",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "5c0102aa0db834001b734ba1",
+          "slotId": "mod_tactical_002",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "de35d516e34ba35e14bac46c",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "684e466f7b0ffe0ac7770bd7",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "3848bbe23d0caa90d433b739",
+          "parentId": "b0658637eae0622d3d761191"
+        },
+        {
+          "_tpl": "684e48393dabb9b1547f82f5",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "6bdd0009b14e4ce3c15d1c92",
+          "parentId": "3848bbe23d0caa90d433b739"
+        }
+      ]
+    }
+  },
+  "cd2641c70bede98dac3945d0": {
+    "cashReductionRub": 14775,
+    "minimumCashRub": 10000,
+    "name": "Снайперская винтовка Accuracy International AXMC .300 WM",
+    "reward": {
+      "value": 1,
+      "id": "50fe8a5c6a24f83e03980ca1",
+      "type": "Item",
+      "target": "b1966c304fdf1e969d0be8ae",
+      "items": [
+        {
+          "_tpl": "68a3836826dffa87b5767c04",
+          "upd": {
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "b1966c304fdf1e969d0be8ae"
+        },
+        {
+          "_tpl": "68a387672d70af2b1e359602",
+          "slotId": "mod_magazine",
+          "_id": "a2fbe5c210f4c6323d467a53",
+          "parentId": "b1966c304fdf1e969d0be8ae"
+        },
+        {
+          "_tpl": "68a389b483e34ba38a2b51ac",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "a3caf42c06894a3bbbdf604e",
+          "parentId": "b1966c304fdf1e969d0be8ae"
+        },
+        {
+          "_tpl": "68a388b9e802bd78f8d945c6",
+          "slotId": "mod_charge",
+          "_id": "957a9ffc689d8e1c40395d38",
+          "parentId": "b1966c304fdf1e969d0be8ae"
+        },
+        {
+          "_tpl": "68a38a4e1586e6d768c4730b",
+          "slotId": "mod_stock",
+          "_id": "90804ed21d57234e90221fc0",
+          "parentId": "a3caf42c06894a3bbbdf604e"
+        },
+        {
+          "_tpl": "68a395a145790fc8225720d3",
+          "slotId": "mod_reciever",
+          "_id": "8c940506d668b2f5d02d6f7a",
+          "parentId": "a3caf42c06894a3bbbdf604e"
+        },
+        {
+          "_tpl": "68a39f96b225dcbbc8387d2c",
+          "slotId": "mod_handguard",
+          "_id": "6b5212a2950470015b915a0b",
+          "parentId": "8c940506d668b2f5d02d6f7a"
+        },
+        {
+          "_tpl": "68a39ecf2120cea9dcf3f1df",
+          "slotId": "mod_foregrip",
+          "_id": "d6268a21e76d05e0649ae158",
+          "parentId": "8c940506d668b2f5d02d6f7a"
+        },
+        {
+          "_tpl": "68a397372b4bebb5474a0bb2",
+          "slotId": "mod_reciever",
+          "_id": "dcd02a5c6af7efc39ff7ad13",
+          "parentId": "8c940506d668b2f5d02d6f7a"
+        },
+        {
+          "_tpl": "68a73465322d08c3199b94ff",
+          "slotId": "mod_mount_000",
+          "_id": "87c86a9d3492a7d4cf9f521a",
+          "parentId": "6b5212a2950470015b915a0b"
+        },
+        {
+          "_tpl": "68a73560e0b8a9d684145f83",
+          "slotId": "mod_mount_001",
+          "_id": "83f7ed234fa50c6c96ca977f",
+          "parentId": "6b5212a2950470015b915a0b"
+        },
+        {
+          "_tpl": "68a73560e0b8a9d684145f83",
+          "slotId": "mod_mount_002",
+          "_id": "26b53985f249ae567b65bb71",
+          "parentId": "6b5212a2950470015b915a0b"
+        },
+        {
+          "_tpl": "68a73563a634aa2a969dc629",
+          "slotId": "mod_mount_003",
+          "_id": "8c16f9e5239e041f7c108536",
+          "parentId": "6b5212a2950470015b915a0b"
+        },
+        {
+          "_tpl": "68a3862e3a5eb2bd63235d07",
+          "slotId": "mod_barrel",
+          "_id": "464455671caab7136a830d03",
+          "parentId": "dcd02a5c6af7efc39ff7ad13"
+        },
+        {
+          "_tpl": "62812081d23f207deb0ab216",
+          "slotId": "mod_muzzle",
+          "_id": "391dc5e7409bbb53bb9dc513",
+          "parentId": "464455671caab7136a830d03"
+        },
+        {
+          "_tpl": "628120621d5df4475f46a335",
+          "slotId": "mod_muzzle",
+          "_id": "38873aee94a7cfa37a1ac6b3",
+          "parentId": "391dc5e7409bbb53bb9dc513"
+        }
+      ]
+    }
+  },
+  "f6e51dc4e50e47ee9af50a4d": {
+    "cashReductionRub": 11000,
+    "minimumCashRub": 10000,
+    "name": "Штурмовая винтовка HK XM8 5.56x45",
+    "reward": {
+      "value": 1,
+      "id": "defdeb2e7335acb019559ba2",
+      "type": "Item",
+      "target": "f2f973af12ae512591546be2",
+      "items": [
+        {
+          "_tpl": "6920b28eabc4f9d229cb7e49",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 999999,
+            "UnlimitedCount": true,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 0,
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "62307b7b10d2321fa8741921",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "a84d207eb893a2c73b097b01",
+          "parentId": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "6920ae3f880e33bc2a7f3696",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "34594225127bf460da0aca9e",
+          "parentId": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "6920b0749d500a4b9cc54d97",
+          "slotId": "mod_scope",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "a369f08ca7d5111c77500489",
+          "parentId": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "6920a93320601fc76c8de492",
+          "slotId": "mod_handguard",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "fb4f1722c540c812b767596a",
+          "parentId": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "6920a5935f7acaf6252fb6df",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ecbee585e5e75b7aa9d0b47e",
+          "parentId": "f2f973af12ae512591546be2"
+        },
+        {
+          "_tpl": "622f07cfae33bc505b2c4dd5",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "562b7113fb4e2ab17e1891b9",
+          "parentId": "ecbee585e5e75b7aa9d0b47e"
+        }
+      ]
+    }
+  },
+  "4ada822d634041a721b346d5": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "Карабин ТКПД 9.3x64",
+    "reward": {
+      "value": 1,
+      "id": "39f8bf4834c0c8c52f42f1f0",
+      "type": "Item",
+      "target": "e217c4e21a6c921fc286c05e",
+      "items": [
+        {
+          "_tpl": "68aee763130c00663d08aea8",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1,
+            "UnlimitedCount": false,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 1,
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "6516b129609aaf354b34b3a8",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "70bc0af9138cb5d8637b44ab",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "68aef9bf4efeccb5220d25c6",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "32b9601f4b8fc9aa60a537a2",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "6197b229af1f5202c57a9bea",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ee29bd1cee4fb4af339479c8",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "68be93d19bae3db9c5005b19",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "f3aca8d70d598ea9a5cb975a",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "68aee9731ef0d507780a61c9",
+          "slotId": "mod_mount_001",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1d31cb6099e7a8b5ac03387b",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "68aee8f8130c00663d08aeb3",
+          "slotId": "mod_reciever",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "a22135e646059a92f8d95295",
+          "parentId": "e217c4e21a6c921fc286c05e"
+        },
+        {
+          "_tpl": "5649ae4a4bdc2d1b2b8b4588",
+          "slotId": "mod_pistolgrip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "a8832379ec5378d566bca8de",
+          "parentId": "70bc0af9138cb5d8637b44ab"
+        },
+        {
+          "_tpl": "5649be884bdc2d79388b4577",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "adefb8e0517b8a8d9df1a7a9",
+          "parentId": "ee29bd1cee4fb4af339479c8"
+        },
+        {
+          "_tpl": "68aeeb3e9df2c1144f0aaa4b",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "78857144f7002867d5b04183",
+          "parentId": "f3aca8d70d598ea9a5cb975a"
+        },
+        {
+          "_tpl": "68aee9e31ef0d507780a61cd",
+          "slotId": "mod_gas_block",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ffa7f38420f5f934b72b66b5",
+          "parentId": "f3aca8d70d598ea9a5cb975a"
+        },
+        {
+          "_tpl": "68aee9fe130c00663d08aeb6",
+          "slotId": "mod_handguard",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1cc65291ce981df98f558aaa",
+          "parentId": "1d31cb6099e7a8b5ac03387b"
+        },
+        {
+          "_tpl": "5dfa3d7ac41b2312ea33362a",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "74532b68bc27038555a695ed",
+          "parentId": "a22135e646059a92f8d95295"
+        },
+        {
+          "_tpl": "68bb25270e48a3afd7071216",
+          "slotId": "mod_stock_000",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "d426ffa71d0f82ffd6ca333e",
+          "parentId": "adefb8e0517b8a8d9df1a7a9"
+        },
+        {
+          "_tpl": "5c1bc5612e221602b5429350",
+          "slotId": "mod_foregrip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "2c1231bdd0953fe741ee23f3",
+          "parentId": "1cc65291ce981df98f558aaa"
+        },
+        {
+          "_tpl": "58491f3324597764bc48fa02",
+          "slotId": "mod_mount_003",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "6d218769dac42e6f204ace11",
+          "parentId": "1cc65291ce981df98f558aaa"
+        },
+        {
+          "_tpl": "5dfa3d950dee1b22f862eae0",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "SpawnedInSession": true,
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "c10534b026607023188fa1b4",
+          "parentId": "1cc65291ce981df98f558aaa"
+        }
+      ]
+    }
+  },
+  "570d250679328757614dcbcb": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "Автомат Калашникова AK-107 5.45×39",
+    "reward": {
+      "value": 1,
+      "id": "12c25b8c6bedba314cc364ad",
+      "type": "Item",
+      "target": "561dd6626ee69f4bbf92cc32",
+      "items": [
+        {
+          "_tpl": "695ab544a219218449041700",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 99999,
+            "UnlimitedCount": true,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "SpawnedInSession": true,
+            "BuyRestrictionMax": 0,
+            "Foldable": {
+              "Folded": false
+            }
+          },
+          "_id": "561dd6626ee69f4bbf92cc32"
+        },
+        {
+          "_tpl": "5649aa744bdc2ded0b8b457e",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "4e8ef5fd727c03d0736ee7fc",
+          "parentId": "561dd6626ee69f4bbf92cc32"
+        },
+        {
+          "_tpl": "5649ade84bdc2d1b2b8b4587",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "7644f4fc0df63748044281c5",
+          "parentId": "561dd6626ee69f4bbf92cc32"
+        },
+        {
+          "_tpl": "5ac50c185acfc400163398d4",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "1db0ee88258c7202114b56b2",
+          "parentId": "561dd6626ee69f4bbf92cc32"
+        },
+        {
+          "_tpl": "55d480c04bdc2d1d4e8b456a",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "79c663963a2615c81ef01516",
+          "parentId": "561dd6626ee69f4bbf92cc32"
+        },
+        {
+          "_tpl": "5cbda392ae92155f3c17c39f",
+          "slotId": "mod_handguard",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "d5b414f872e20a97aa23bf98",
+          "parentId": "561dd6626ee69f4bbf92cc32"
+        }
+      ]
+    }
+  },
+  "ffb63228a333c8b0755741ea": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "FN F2000 5.56x45 assault rifle",
+    "reward": {
+      "value": 1,
+      "id": "9536afe01a34cbd6926595ef",
+      "type": "Item",
+      "target": "9bf6345322527633f7c4083a",
+      "items": [
+        {
+          "_tpl": "6962f22fddc6698c6309b620",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1,
+            "UnlimitedCount": false,
+            "Repairable": {
+              "Durability": 100,
+              "MaxDurability": 100
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "BuyRestrictionMax": 1
+          },
+          "_id": "9bf6345322527633f7c4083a"
+        },
+        {
+          "_tpl": "55d4887d4bdc2d962f8b4570",
+          "slotId": "mod_magazine",
+          "_id": "2c960b2e4652da217cfde453",
+          "parentId": "9bf6345322527633f7c4083a"
+        },
+        {
+          "_tpl": "696801005966cfdf3708c742",
+          "slotId": "mod_reciever",
+          "_id": "deb198243f1f383022f943b4",
+          "parentId": "9bf6345322527633f7c4083a"
+        },
+        {
+          "_tpl": "696801b85966cfdf3708c744",
+          "slotId": "mod_handguard",
+          "_id": "0f9b75f0b62f87c6296cbea0",
+          "parentId": "9bf6345322527633f7c4083a"
+        },
+        {
+          "_tpl": "696801b85966cfdf3708c746",
+          "slotId": "mod_sight_rear",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "577257cf5f88ab6f49351949",
+          "parentId": "9bf6345322527633f7c4083a"
+        },
+        {
+          "_tpl": "69680a1b5966cfdf3708c754",
+          "slotId": "mod_barrel",
+          "_id": "c4370f6356d6fabb3c3abdad",
+          "parentId": "deb198243f1f383022f943b4"
+        },
+        {
+          "_tpl": "696801005966cfdf3708c740",
+          "slotId": "mod_mount",
+          "_id": "698d30d91f7692ac4192dbff",
+          "parentId": "deb198243f1f383022f943b4"
+        },
+        {
+          "_tpl": "69694eed0d2309811a0fd1d1",
+          "slotId": "mod_muzzle",
+          "_id": "42634b3016d6f3db19bbd42a",
+          "parentId": "c4370f6356d6fabb3c3abdad"
+        },
+        {
+          "_tpl": "6968029b5966cfdf3708c748",
+          "slotId": "mod_sight_front",
+          "upd": {
+            "Sight": {
+              "ScopesCurrentCalibPointIndexes": [
+                0
+              ],
+              "ScopesSelectedModes": [
+                0
+              ],
+              "SelectedScope": 0,
+              "ScopeZoomValue": 0
+            }
+          },
+          "_id": "e1ecdb6a161e409de8634302",
+          "parentId": "698d30d91f7692ac4192dbff"
+        }
+      ]
+    }
+  },
+  "ad9233f54a7132d905d6f29d": {
+    "cashReductionRub": 0,
+    "minimumCashRub": 10000,
+    "name": "Снайперская винтовка CheyTac M200 Intervention .408 CT",
+    "reward": {
+      "value": 1,
+      "id": "d23bb9c76e634b0bfa1d9768",
+      "type": "Item",
+      "target": "746e19a7bb1b98c11a1e1211",
+      "items": [
+        {
+          "_tpl": "68fd4feab87d77a5aaf6bf64",
+          "upd": {
+            "SpawnedInSession": true,
+            "Repairable": {
+              "MaxDurability": 100,
+              "Durability": 100
+            },
+            "Foldable": {
+              "Folded": false
+            },
+            "FireMode": {
+              "FireMode": "single"
+            },
+            "UnlimitedCount": true,
+            "StackObjectsCount": 999999,
+            "BuyRestrictionMax": 0
+          },
+          "slotId": "hideout",
+          "_id": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "55d4b9964bdc2d1d4e8b456e",
+          "slotId": "mod_pistol_grip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "991c93a1e49a79d1d8d12811",
+          "parentId": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "68fd5afbf79eba961169cd92",
+          "slotId": "mod_magazine",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "d3a57cf61e7de57a6b90b934",
+          "parentId": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "68fd5646922a78a67473d3b4",
+          "slotId": "mod_stock",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "5076193c3f6d7390365bc5c9",
+          "parentId": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "68fd5f9247fb510030b67e9c",
+          "slotId": "mod_barrel",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "dafdcfbbf305d68e1177fc9d",
+          "parentId": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "68fd73dd4b2e7a40cca969b4",
+          "slotId": "mod_handguard",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "59bc5f0a01bbcbfb0eabeeb9",
+          "parentId": "746e19a7bb1b98c11a1e1211"
+        },
+        {
+          "_tpl": "68fd61c1fe2ac956b9c5ef92",
+          "slotId": "mod_muzzle",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "f06519de0a253c5f9ceb4e0c",
+          "parentId": "dafdcfbbf305d68e1177fc9d"
+        },
+        {
+          "_tpl": "68fd779336afbe413653f9a3",
+          "slotId": "mod_foregrip",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "ebe5f39d9568a4acc86cd337",
+          "parentId": "59bc5f0a01bbcbfb0eabeeb9"
+        },
+        {
+          "_tpl": "68fd727675ed7e422a8e89c2",
+          "slotId": "mod_bipod",
+          "upd": {
+            "SpawnedInSession": true
+          },
+          "_id": "f6656c85adb0d88fc13ee6fe",
+          "parentId": "59bc5f0a01bbcbfb0eabeeb9"
+        }
+      ]
+    }
+  }
+}

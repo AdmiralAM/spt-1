@@ -10,6 +10,26 @@ def load(relative):
 
 
 class CampaignAuditCorrectionTests(unittest.TestCase):
+    def test_b6_classic_762_ak_rotation_counts_any_location_and_ak104(self):
+        quest_id = "5d3a863ab1f890166c5d96ff"
+        quest = next(
+            load(path.relative_to(ROOT))
+            for path in (ROOT / "db/quests").glob("40-*.json")
+            if load(path.relative_to(ROOT))["_id"] == quest_id
+        )
+        runtime = load("manifests/weapon-rotation-runtime.json")
+        assignment = next(row for row in runtime["assignments"] if row["id"] == quest_id)
+        self.assertEqual(["any"], assignment["locations"])
+        group = next(row for row in quest["conditions"]["AvailableForFinish"] if row.get("counter"))
+        counter_conditions = group["counter"]["conditions"]
+        self.assertFalse(any(row.get("conditionType") == "Location" for row in counter_conditions))
+        kills = next(row for row in counter_conditions if row.get("conditionType") == "Kills")
+        self.assertEqual(12, group["value"])
+        self.assertIn("5ac66d725acfc43b321d4b60", kills["weapon"])  # AK-104
+        plan = load("manifests/weapon-rotation-expansion-plan.json")
+        self.assertEqual(["any"], plan["lanes"]["B-rifle-precision"][5][3])
+        self.assertIn("5ac66d725acfc43b321d4b60", plan["pools"]["classic-ak-762"])
+
     def test_stage_pools_are_disjoint_and_cover_all_49_weapons_once(self):
         pools = load("manifests/weapon-family-runtime-pools.json")
         total = 0
@@ -23,13 +43,23 @@ class CampaignAuditCorrectionTests(unittest.TestCase):
             total += len(flattened)
         self.assertEqual(total, 49)
 
-    def test_each_runtime_arsenal_quest_uses_only_its_authored_stage_pool(self):
-        pools = load("manifests/weapon-family-runtime-pools.json")["stagePools"]
-        plan = load("manifests/weapon-ammo-runtime-plan.json")["quests"]
-        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("20-*.json")}
-        for row in plan:
-            kill = quests[row["id"]]["conditions"]["AvailableForFinish"][0]["counter"]["conditions"][0]
-            self.assertEqual(kill["weapon"], pools[row["family"]][row["stage"]])
+    def test_every_runtime_arsenal_quest_uses_its_complete_authored_family(self):
+        plan = load("manifests/weapon-rotation-expansion-plan.json")
+        runtime = load("manifests/weapon-rotation-runtime.json")
+        optional = load("manifests/optional-weapon-runtime.json")
+        optional_by_pool = {}
+        for row in optional["acceptedWeapons"]:
+            optional_by_pool.setdefault(row["pool"], []).append(row["tpl"])
+        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("*.json")}
+        for row in runtime["assignments"]:
+            kill = next(
+                condition
+                for finish in quests[row["id"]]["conditions"]["AvailableForFinish"]
+                for condition in finish.get("counter", {}).get("conditions", [])
+                if condition.get("conditionType") == "Kills"
+            )
+            expected = plan["pools"][row["pool"]] + optional_by_pool.get(row["pool"], [])
+            self.assertEqual(kill["weapon"], expected)
 
     def test_special_munitions_has_one_m576_sample_and_finite_unlock(self):
         qid, offer, tpl = "f1368cb3b69c3a4917c4f206", "3500e7b76f097a98ced5d61b", "5ede475339ee016e8c534742"
@@ -45,6 +75,25 @@ class CampaignAuditCorrectionTests(unittest.TestCase):
             text = (ROOT / relative).read_text(encoding="utf-8-sig")
             self.assertIn("UCW", text)
             self.assertNotIn("UPZ", text)
+
+    def test_precision_track_uses_large_range_steps_and_meaningful_equipment_rewards(self):
+        expected = {
+            "a0d05e28971f1ba57639b97d": (3, 100, {"57ac965c24597706be5f975c"}),
+            "153839f368b80b6fbc36d29e": (2, 200, {"618b9643526131765025ab35", "5b3b99475acfc432ff4dcbee"}),
+            "cd2641c70bede98dac3945d0": (1, 300, {"673f0a9370a3ddcf0d0ee0b8"}),
+        }
+        quests = {load(path.relative_to(ROOT))["_id"]: load(path.relative_to(ROOT)) for path in (ROOT / "db/quests").glob("20-*.json")}
+        for qid, (count, distance, reward_tpls) in expected.items():
+            quest = quests[qid]
+            finish = quest["conditions"]["AvailableForFinish"][0]
+            kill = next(row for row in finish["counter"]["conditions"] if row["conditionType"] == "Kills")
+            location = next(row for row in finish["counter"]["conditions"] if row["conditionType"] == "Location")
+            self.assertEqual(finish["value"], count)
+            self.assertEqual(kill["target"], "Savage")
+            self.assertEqual(kill["distance"], {"value": distance, "compareMethod": ">="})
+            self.assertGreaterEqual(len(location["target"]), 2)
+            awarded = {item["_tpl"] for reward in quest["rewards"]["Success"] for item in reward.get("items", [])}
+            self.assertTrue(reward_tpls <= awarded)
 
     def test_only_audited_operations_use_the_normalized_reward_table(self):
         expected = {

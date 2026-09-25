@@ -9,6 +9,17 @@ from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
+QUEST_LOCATION_IDS = {
+    "any": "any",
+    "factory4_day": "55f2d3fd4bdc2d5f408b4567",
+    "bigmap": "56f40101d2720b2a4d8b45d6",
+    "woods": "5704e3c2d2720bac5b8b4567",
+    "interchange": "5714dbc024597771384a510d",
+    "shoreline": "5704e554d2720bac5b8b456e",
+    "rezervbase": "5704e5fad2720bc05b8b4567",
+    "lighthouse": "5704e4dad2720bb55b8b4567",
+    "laboratory": "5b0fc42d86f7744a585f9105",
+}
 QUEST_ICON = "/files/quest/icon/5a29222486f77456f50d09e7.jpg"
 
 
@@ -125,7 +136,7 @@ def start_conditions(quest: dict[str, Any]) -> list[dict[str, Any]]:
     return result
 
 
-def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[str, Any]]:
+def finish_conditions(quest: dict[str, Any], key_pool: list[str], found_in_raid: bool) -> list[dict[str, Any]]:
     slug = str(quest["slug"])
     objective = quest.get("objective") or {}
     count = int(objective.get("representativeCount", 1))
@@ -141,7 +152,7 @@ def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[s
             "isEncoded": False,
             "maxDurability": 100,
             "minDurability": 0,
-            "onlyFoundInRaid": False,
+            "onlyFoundInRaid": found_in_raid,
             "parentId": "",
             "target": targets,
             "value": count,
@@ -184,10 +195,24 @@ def success_rewards(quest: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
             "items": [{"_id": item_id, "_tpl": RUB_TPL, "upd": {"StackObjectsCount": rub}}],
         })
 
+    item_reward = budget.get("itemReward")
+    if item_reward:
+        qid = str(quest["id"])
+        quantity = int(item_reward.get("quantity", 1))
+        item_id = mongo_id(f"{qid}:campaign-polish-item")
+        rewards.append({
+            "value": quantity,
+            "id": mongo_id(f"{qid}:campaign-polish-reward"),
+            "type": "Item",
+            "target": item_id,
+            "index": 21,
+            "items": [{"_id": item_id, "_tpl": str(item_reward["tpl"]), "upd": {"StackObjectsCount": quantity}}],
+        })
+
     return rewards, int(budget.get("unlockSlots", 0))
 
 
-def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str, Any], int]:
+def build_template(quest: dict[str, Any], key_pool: list[str], found_in_raid: bool) -> tuple[dict[str, Any], int]:
     qid = str(quest["id"])
     rewards, deferred_unlocks = success_rewards(quest)
     template = {
@@ -199,7 +224,7 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "changeQuestMessageText": f"{qid} changeQuestMessageText",
         "completePlayerMessage": f"{qid} completePlayerMessage",
         "conditions": {
-            "AvailableForFinish": finish_conditions(quest, key_pool),
+            "AvailableForFinish": finish_conditions(quest, key_pool, found_in_raid),
             "AvailableForStart": start_conditions(quest),
             "Fail": [],
         },
@@ -209,7 +234,7 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "image": QUEST_ICON,
         "instantComplete": False,
         "isKey": False,
-        "location": str(quest["map"]),
+        "location": QUEST_LOCATION_IDS[str(quest["map"]).lower()],
         "name": f"{qid} name",
         "note": f"{qid} note",
         "restartable": False,
@@ -277,7 +302,11 @@ def build_payload(
 
         pool = bounded_key_pool(quest, source_pool)
         key_pools[slug] = pool
-        template, unlock_count = build_template(quest, pool)
+        template, unlock_count = build_template(
+            quest,
+            pool,
+            bool((spec.get("designRules") or {}).get("foundInRaidRequired", False)),
+        )
         templates[str(quest["id"])] = template
         if unlock_count:
             deferred_unlocks.append({"questId": str(quest["id"]), "slug": slug, "unlockSlots": unlock_count})

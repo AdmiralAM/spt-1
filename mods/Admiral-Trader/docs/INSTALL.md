@@ -1,4 +1,4 @@
-# Admiral Trader 0.3.0 release-candidate installation
+# Admiral Trader 0.3.0 stable beta installation
 
 ## Clean install or upgrade
 

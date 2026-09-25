@@ -1,0 +1,527 @@
+#!/usr/bin/env python3
+"""Materialize the approved 100-quest story campaign using native SPT conditions."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+TRADER = "d5c27bb3169f8dfbc13f6b69"
+ROUBLES = "5449016a4bdc2d6f028b456f"
+MARKER = "5991b51486f77447b112d44f"
+STORY_UNLOCKS = {
+    "Эпицентр": ("590a358486f77429692b2790", 18500, 4, 2),
+    "Таможня": ("619cbf7d23893217ec30b689", 420000, 1, 1),
+    "Лес": ("618ba27d9008e4636a67f61d", 68000, 2, 1),
+    "Развязка": ("5e2aee0a86f774755a234b62", 55000, 3, 1),
+    "Берег": ("60098ad7c2240c0fe85c570a", 72000, 2, 1),
+    "Резерв": ("5d03794386f77420415576f5", 330000, 1, 1),
+    "Маяк": ("62e910aaf957f2915e0a5e36", 78000, 2, 1),
+    "Улицы": ("660bbc47c38b837877075e47", 85000, 2, 1),
+    "Завод": ("5d1b5e94d7ad1a2b865a96b0", 600000, 1, 1),
+    "Лаборатория": ("5c94bbff86f7747ee735c08f", 125000, 1, 1),
+}
+
+QUEST_LOCATIONS = {
+    # Quest.location is a location-template Mongo ID. The nested Location
+    # conditions below deliberately keep EFT's runtime map names.
+    "Эпицентр": "653e6760052c01c1c805532f",
+    "Таможня": "56f40101d2720b2a4d8b45d6",
+    "Лес": "5704e3c2d2720bac5b8b4567",
+    "Развязка": "5714dbc024597771384a510d",
+    "Берег": "5704e554d2720bac5b8b456e",
+    "Резерв": "5704e5fad2720bc05b8b4567",
+    "Маяк": "5704e4dad2720bb55b8b4567",
+    "Улицы": "5714dc692459777137212e12",
+    "Завод": "55f2d3fd4bdc2d5f408b4567",
+    "Лаборатория": "5b0fc42d86f7744a585f9105",
+}
+
+
+def hid(value: str) -> str:
+    return hashlib.sha256(("admiral-story-runtime:" + value).encode()).hexdigest()[:24]
+
+
+VISIT_ZONES = {
+    "Эпицентр": ["Sandbox_1_MedicalArea_exploration", "Sandbox_2_Kord_exploration", "Sandbox_2_AGS_exploration", "Sandbox_3_Vino_exploration", "Sandbox_5_DeadGroup_exploration", "Sandbox_5_Laborant_exploration", "Sandbox_5_Office_exploration"],
+    "Таможня": ["room214", "room206_water", "vaz_feld", "room114", "dead_posylni", "vremyan_case", "bomj_place", "gazel", "place_SADOVOD_03", "exit777"],
+    "Лес": ["bunker2", "ter_015_area_1", "huntsman_001", "pr_scout_col", "pr_scout_base", "Depo_Zone_1", "Depo_Zone_2", "Depo_Zone_3", "Lost_caravan", "Bunker_enter"],
+    "Развязка": ["place_SALE_03_AVOKADO", "place_SALE_03_KOSTIN", "place_SALE_03_TREND", "place_SALE_03_DINO", "place_SALE_03_TOPBRAND", "place_WARBLOOD_04_1", "place_WARBLOOD_04_2", "place_WARBLOOD_04_3", "place_merch_21_1", "place_merch_21_2"],
+    "Берег": ["place_peacemaker_008_4_N1", "place_peacemaker_008_4_N2", "place_peacemaker_001", "place_peacemaker_004_N1", "place_peacemaker_004_N2", "place_peacemaker_005_N1", "place_peacemaker_005_N2", "place_peacemaker_007_1_N1", "place_peacemaker_009_2", "place_peacemaker_009_3_N1"],
+    "Резерв": ["huntsman_029", "prapor_024_area_2", "prapor_024_area_1", "prapor_025_area_1", "prapor_025_area_2", "prapor_025_area_3", "prapor_025_area_4", "tadeush_bmp2_area_check_2", "tadeush_bmp2_area_check_11", "tadeush_bmp2_area_check_12"],
+    "Маяк": ["qlight_pr1_heli1_find", "qlight_find_scav_group1", "qlight_find_crushed_heli", "qlight_hunt_fr_find", "meh_48_transponder_area_check_1", "meh_50_visit_area_check_1", "qlight_extension_medic1_exploration1", "qlight_extension_prapor1_exploration1", "qlight_extension_prapor1_exploration2", "qlight_extension_prapor1_exploration3"],
+    "Улицы": ["quest_zone_c5_mar", "quest_zone_c6_kpss", "quest_zone_c7_mel", "quest_zone_c8_dom1", "quest_zone_c8_dom2", "quest_zone_c11_gmed", "quest_zone_c16_koll_1", "quest_zone_c16_koll_2", "quest_zone_c21_look", "quest_zone_c25_cinem"],
+    "Завод": ["locked_office", "Check_mine_zone_factory", "ter_017_area_1"],
+    "Лаборатория": ["peace_027_area", "Halloween_lab_section1", "Halloween_lab_section2", "Halloween_closed_places"],
+}
+
+PLACE_ZONES = {
+    "Эпицентр": ["nt2024_5_throtil_epicentr"],
+    "Таможня": ["gazel", "fuel1", "fuel2", "fuel3", "fuel4", "TerragroupBOX_2", "TerragroupBOX_4"],
+    "Лес": ["bar_fuel3_1", "bar_fuel3_2", "bar_fuel3_3", "meh_45_radio_area_mark_1", "meh_45_radio_area_mark_2", "meh_45_radio_area_mark_3"],
+    "Развязка": ["place_WARBLOOD_04_1", "place_WARBLOOD_04_2", "place_WARBLOOD_04_3", "place_merch_21_1", "place_merch_21_2", "place_merch_21_3"],
+    "Берег": ["place_peacemaker_008_2_N1", "place_peacemaker_008_2_N2", "place_peacemaker_003_N1", "place_peacemaker_003_N2", "place_peacemaker_003_N3", "place_SIGNAL_03_1"],
+    "Резерв": ["tadeush_bmp2_area_mark_2", "tadeush_bmp2_area_mark_11", "tadeush_bmp2_area_mark_12", "tadeush_bmp2_area_mark_13", "tadeush_stryker_area_mark_3"],
+    "Маяк": ["qlight_pr1_heli1_mark", "qlight_mark_vech1", "qlight_mark_vech2", "qlight_mark_vech3", "meh_42_radio_area_mark_1", "meh_42_radio_area_mark_2"],
+    "Улицы": ["quest_zone_place_c14_revx_1", "quest_zone_place_c14_revx_2", "quest_zone_place_c14_revx_3", "quest_zone_keeper10_place", "Mark_BTR_1", "Mark_BTR_2"],
+    "Завод": ["ter_017_area_1", "Place_accurate_tools"],
+    "Лаборатория": ["quest_city_trotil2"],
+}
+
+VISIT_ZONE_LABELS = {
+    "Эпицентр": {
+        "Sandbox_1_MedicalArea_exploration": ("the medical station", "медицинский пункт"),
+        "Sandbox_2_Kord_exploration": ("the KORD position", "позиция пулемёта КОРД"),
+        "Sandbox_2_AGS_exploration": ("the AGS position", "позиция гранатомёта АГС"),
+        "Sandbox_3_Vino_exploration": ("the Vino shop", "магазин «Вино»"),
+        "Sandbox_5_DeadGroup_exploration": ("the fallen squad site", "место гибели группы"),
+        "Sandbox_5_Laborant_exploration": ("the lab-worker route", "маршрут лаборанта"),
+        "Sandbox_5_Office_exploration": ("the administrative office", "административный офис"),
+    },
+    "Таможня": {
+        "room214": ("Dorm room 214", "комната 214 общежития"),
+        "room206_water": ("the water room in Dorm 206", "комната с водой в общежитии, № 206"),
+        "vaz_feld": ("the abandoned VAZ", "оставленный автомобиль ВАЗ"),
+        "room114": ("Dorm room 114", "комната 114 общежития"),
+        "dead_posylni": ("the courier's body", "тело курьера"),
+        "vremyan_case": ("the dispatcher case", "кейс диспетчера"),
+        "bomj_place": ("the makeshift camp", "временный лагерь"),
+        "gazel": ("the cargo van", "грузовая «Газель»"),
+        "place_SADOVOD_03": ("the Sadovod storefront", "торговая точка «Садовод»"),
+        "exit777": ("the 777 exit area", "район выхода 777"),
+    },
+    "Лес": {
+        "bunker2": ("bunker ZB-016", "бункер ZB-016"),
+        "ter_015_area_1": ("the USEC camp", "лагерь USEC"),
+        "huntsman_001": ("the hunter's camp", "охотничий лагерь"),
+        "pr_scout_col": ("the scout post", "разведывательный пост"),
+        "pr_scout_base": ("the scout base", "база разведчиков"),
+        "Depo_Zone_1": ("rail depot sector 1", "сектор 1 железнодорожного депо"),
+        "Depo_Zone_2": ("rail depot sector 2", "сектор 2 железнодорожного депо"),
+        "Depo_Zone_3": ("rail depot sector 3", "сектор 3 железнодорожного депо"),
+        "Lost_caravan": ("the lost convoy site", "место пропавшей колонны"),
+        "Bunker_enter": ("the bunker entrance", "вход в бункер"),
+    },
+}
+
+PLACE_ZONE_LABELS = {
+    "Эпицентр": {"nt2024_5_throtil_epicentr": ("the marked observation point", "отмеченная точка наблюдения")},
+    "Таможня": {
+        "gazel": ("the cargo van", "грузовая «Газель»"),
+        **{f"fuel{i}": (f"fuel station {i}", f"АЗС № {i}") for i in range(1, 5)},
+        "TerragroupBOX_2": ("TerraGroup container 2", "контейнер TerraGroup № 2"),
+        "TerragroupBOX_4": ("TerraGroup container 4", "контейнер TerraGroup № 4"),
+    },
+    "Лес": {
+        **{f"bar_fuel3_{i}": (f"fuel route marker {i}", f"точка топливного маршрута № {i}") for i in range(1, 4)},
+        "meh_45_radio_area_mark_1": ("the radio route, point 1", "радиомаршрут, точка 1"),
+        "meh_45_radio_area_mark_2": ("the radio route, point 2", "радиомаршрут, точка 2"),
+        "meh_45_radio_area_mark_3": ("the radio route, point 3", "радиомаршрут, точка 3"),
+    },
+}
+
+
+def point_label(map_name: str, zone: str, english: bool) -> str | None:
+    labels = VISIT_ZONE_LABELS.get(map_name, {}).get(zone) or PLACE_ZONE_LABELS.get(map_name, {}).get(zone)
+    if labels:
+        return labels[0 if english else 1]
+    return None
+
+RECOVERY_ITEMS = {
+    "Эпицентр": ["63a0b2eabea67a6d93009e52", "590c392f86f77444754deb29", "590c621186f774138d11ea29"],
+    "Таможня": ["590c645c86f77412b01304d9", "590c621186f774138d11ea29", "5c12613b86f7743bbe2c3f76"],
+    "Лес": ["5c052f6886f7746b1e3db148", "590c651286f7741e566b6461", "5c12613b86f7743bbe2c3f76"],
+    "Развязка": ["590c392f86f77444754deb29", "590c621186f774138d11ea29", "5c12613b86f7743bbe2c3f76"],
+    "Берег": ["619cc01e0a7c3a1a2731940c", "590c621186f774138d11ea29", "61bf7c024770ee6f9c6b8b53"],
+    "Резерв": ["5d0376a486f7747d8050965c", "62a0a16d0b9d3c46de5b6e97", "5c12613b86f7743bbe2c3f76"],
+    "Маяк": ["62e910aaf957f2915e0a5e36", "5c052f6886f7746b1e3db148", "5ac78a9b86f7741cca0bbd8d"],
+    "Улицы": ["590c645c86f77412b01304d9", "660bbc47c38b837877075e47", "5c12613b86f7743bbe2c3f76"],
+    "Завод": ["5d0376a486f7747d8050965c", "590c392f86f77444754deb29", "590c621186f774138d11ea29"],
+    "Лаборатория": ["61bf7c024770ee6f9c6b8b53", "660bbc47c38b837877075e47", "68666887df54e1190902df57"],
+}
+
+REWARD_ITEMS = {
+    "Эпицентр": ["590a358486f77429692b2790", "5b4391a586f7745321235ab2", "63a0b2eabea67a6d93009e52"],
+    "Таможня": ["590c2e1186f77425357b6124", "5d1c819a86f774771b0acd6c", "5c1cdd512e22161b267d91ae"],
+    "Лес": ["5c1cdd512e22161b267d91ae", "5b4391a586f7745321235ab2", "618ba27d9008e4636a67f61d"],
+    "Развязка": ["5e2aee0a86f774755a234b62", "5d1b309586f77425227d1676", "5c12620d86f7743f8b198b72"],
+    "Берег": ["60098ad7c2240c0fe85c570a", "5c0e530286f7747fa1419862", "5ed51652f6c34d2cc26336a1"],
+    "Резерв": ["65702558cfc010a0f5006a25", "656fb21fa0dce000a2020f7c", "5d0376a486f7747d8050965c"],
+    "Маяк": ["5ac78a9b86f7741cca0bbd8d", "5d0375ff86f774186372f685", "62e910aaf957f2915e0a5e36"],
+    "Улицы": ["590c392f86f77444754deb29", "5c12613b86f7743bbe2c3f76", "660bbc47c38b837877075e47"],
+    "Завод": ["5d1c819a86f774771b0acd6c", "657024e3c5d7d4cb4d07856a", "590c2e1186f77425357b6124"],
+    "Лаборатория": ["5ed51652f6c34d2cc26336a1", "62a0a16d0b9d3c46de5b6e97", "5c94bbff86f7747ee735c08f"],
+}
+
+ACCESS_KEY_POOLS = {
+    "Таможня": [
+        "59387a4986f77401cc236e62",  # Dorm room 114
+        "59148c8a86f774197930e983",  # Dorm room 204
+        "5780cf942459777df90dcb72",  # Dorm room 214
+        "5780cfa52459777dfb276eb1",  # Dorm room 220
+    ],
+    "Завод": [
+        "57a349b2245977762b199ec7",  # Pumping station front door
+        "593858c486f774253a24cb52",  # Pumping station back door
+    ],
+    "Берег": [
+        "5a0dc45586f7742f6b0b73e3",  # Health Resort west office 104
+        "5a0dc95c86f77452440fc675",  # Health Resort west office 112
+        "5a0ea64786f7741707720468",  # Health Resort east office 107
+        "5a0ea79b86f7741d4a35298e",  # Health Resort utility room
+    ],
+}
+
+CHAIN_EN = ["First Circuit", "Missing Convoy", "Observation Net", "Dead Warehouse", "Sanitary Corridor", "Mobilization Protocol", "Coastal Blockade", "Archive of Collapse", "Black Shift", "Final Protocol"]
+MAP_NAMES_EN = {
+    "Эпицентр": "Ground Zero", "Таможня": "Customs", "Лес": "Woods",
+    "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "Reserve",
+    "Маяк": "Lighthouse", "Улицы": "Streets of Tarkov", "Завод": "Factory",
+    "Лаборатория": "The Lab",
+}
+CODENAMES_EN = [
+    ["Foreign Frequency", "Zero Mark", "Last Crew", "Locked Airwaves", "Blind Spot", "Uninvited Listeners", "Reserve Power", "Control Package", "Open Channel", "First Circuit"],
+    ["Convoy Tracks", "Driverless Truck", "Dispatcher Key", "Night Manifest", "False Labels", "Extra Middleman", "False Bottom", "Broken Transfer", "Recipient", "Close the Route"],
+    ["Old Bearings", "Optics in the Grass", "Quiet Installation", "Patrol Map", "Missing Observer", "Distance Check", "False Campfire", "Frequency Change", "Clean Withdrawal", "See Farther"],
+    ["Closed Displays", "Service Entrance", "No Power", "Warehouse Ledger", "Wrong Crates", "Security Archive", "After Closing", "Foreign Inventory", "Wall Sample", "Our Shelf"],
+    ["Unanswered Call", "Empty Stretcher", "Reserve Office", "Cold Chain", "Environmental Control", "Wrong Patient", "Debt Returned", "Clean Ward", "Last Sample", "Sanitary Corridor"],
+    ["Alarm Signal", "Duty Officer", "Lower Level", "Dead Terminal", "Mobilization File", "Accounted Hardware", "Signal Intercept", "Sealed Crate", "Heavy Exit", "Admiral Reserve"],
+    ["Far Shore", "Silent Observer", "Control the Height", "Tide Schedule", "Behind the Line", "Foreign Navigation", "False Coordinates", "Blockade Control", "Last Boat", "Coast Closed"],
+    ["Old Address", "Archive Card", "Official Seal", "Vacant Room", "Three Witnesses", "Quiet Mailboxes", "Intercepted Package", "Erase the Address", "Living List", "City Network"],
+    ["After the Whistle", "Shift Log", "Foreman Key", "Technical Floor", "Batch Number", "Unfinished Part", "Quality Control", "Stop the Line", "Reference Sample", "Black Shift Ends"],
+    ["Restricted Clearance", "Empty Team", "Backup Copy", "Cold Sector", "Leak Control", "Internal Security", "Clean Room", "Substitution", "Final Container", "Admiral's Decision"],
+]
+
+NATALYA_QUESTS = {(1, 3), (1, 7), (2, 6), (4, 2), (4, 4), (4, 9), (4, 10), (5, 2), (5, 6), (5, 9), (7, 2), (7, 6), (8, 4), (8, 6), (8, 9), (10, 2), (10, 7), (10, 10)}
+
+
+def level_condition(qid: str, level: int, index: int = 0) -> dict:
+    return {"id": hid(f"{qid}:level"), "index": index, "compareMethod": ">=", "dynamicLocale": False, "globalQuestCounterId": "", "visibilityConditions": [], "parentId": "", "value": level, "conditionType": "Level"}
+
+
+def prerequisite(qid: str, target: str, index: int) -> dict:
+    return {"id": hid(f"{qid}:pre:{target}"), "index": index, "dynamicLocale": False, "globalQuestCounterId": "", "visibilityConditions": [], "parentId": "", "target": target, "status": [4], "availableAfter": 0, "dispersion": 0, "conditionType": "Quest"}
+
+
+def counter(qid: str, suffix: str, value: int, conditions: list[dict], qtype: str, index: int, one: bool = False) -> dict:
+    return {"id": hid(f"{qid}:{suffix}:finish"), "index": index, "dynamicLocale": False, "globalQuestCounterId": "", "visibilityConditions": [], "parentId": "", "value": value, "type": qtype, "oneSessionOnly": one, "isResetOnConditionFailed": False, "isNecessary": False, "doNotResetIfCounterCompleted": False, "counter": {"id": hid(f"{qid}:{suffix}:counter"), "conditions": conditions}, "completeInSeconds": 0, "conditionType": "CounterCreator"}
+
+
+def location(qid: str, suffix: str, maps: list[str]) -> dict:
+    return {"id": hid(f"{qid}:{suffix}:location"), "dynamicLocale": False, "conditionType": "Location", "target": maps}
+
+
+def visit(qid: str, suffix: str, zone: str) -> dict:
+    return {"id": hid(f"{qid}:{suffix}:visit"), "dynamicLocale": False, "conditionType": "VisitPlace", "target": zone, "value": 1}
+
+
+def item_condition(qid: str, suffix: str, tpl: str, kind: str, index: int, fir: bool) -> dict:
+    return {"conditionType": kind, "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:{suffix}:{kind}"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": fir, "parentId": "", "target": [tpl], "value": 1, "visibilityConditions": []}
+
+
+def key_pool_condition(qid: str, targets: list[str], index: int) -> dict:
+    return {"conditionType": "FindItem", "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:access-key:FindItem"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": True, "parentId": "", "target": targets, "value": 1, "visibilityConditions": []}
+
+
+def operation_context(q: dict, chain: dict) -> dict:
+    """Allow an authored operation to move with the early vanilla map cadence."""
+    map_name = q.get("mapOverride", chain["map"])
+    return {
+        **chain,
+        "map": map_name,
+        "runtimeLocations": q.get("runtimeLocationsOverride", chain["runtimeLocations"]),
+    }
+
+
+def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[list[dict], list[str], list[str]]:
+    qid, map_name, maps = q["id"], chain["map"], chain["runtimeLocations"]
+    visits, places = VISIT_ZONES[map_name], PLACE_ZONES[map_name]
+    rows, en, ru = [], [], []
+    index = 0
+    visit_override_index = 0
+    for objective_index, objective in enumerate(q["objectives"]):
+        kind, quantity = objective["kind"], int(objective["quantity"])
+        item_tpl = objective.get("itemTpl", RECOVERY_ITEMS[map_name][(q["order"] - 1) % 3])
+        if kind == "visit":
+            for n in range(quantity):
+                overrides = q.get("visitZoneOverrides", [])
+                if visit_override_index < len(overrides):
+                    zone = overrides[visit_override_index]
+                else:
+                    zone = q.get("visitZoneOverride", visits[(q["order"] + objective_index + n - 1) % len(visits)])
+                suffix = f"visit-{objective_index}-{n}"
+                rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index))
+                label_en, label_ru = point_label(map_name, zone, True), point_label(map_name, zone, False)
+                en_default = f"Inspect {label_en} on {MAP_NAMES_EN[map_name]}" if label_en else f"Inspect operational point {n + 1}/{quantity} on {MAP_NAMES_EN[map_name]}"
+                ru_default = f"Осмотреть {label_ru} на карте «{map_name}»" if label_ru else f"Осмотреть оперативную точку {n + 1}/{quantity} на карте «{map_name}»"
+                en.append(q.get("visitDescriptionOverride", en_default))
+                ru.append(q.get("visitDescriptionOverrideRu", ru_default))
+                visit_override_index += 1
+                index += 1
+        elif kind == "placeOrMark":
+            for n in range(quantity):
+                if n < len(places):
+                    overrides = q.get("placeZoneOverrides", [])
+                    zone = overrides[n] if n < len(overrides) else q.get("placeZoneOverride", places[(q["order"] + objective_index + n - 1) % len(places)])
+                    rows.append({"conditionType": "PlaceBeacon", "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:place:{objective_index}:{n}"), "index": index, "parentId": "", "plantTime": 10, "target": [MARKER], "value": 1, "visibilityConditions": [], "zoneId": zone})
+                    label_en, label_ru = point_label(map_name, zone, True), point_label(map_name, zone, False)
+                    en_default = f"Place an MS2000 marker at {label_en}; the marker is consumed" if label_en else f"Place an MS2000 marker at objective {n + 1}/{quantity}; the marker is consumed"
+                    ru_default = f"Установить маркер MS2000 у цели «{label_ru}»; маркер расходуется" if label_ru else f"Установить маркер MS2000 в точке {n + 1}/{quantity}; маркер расходуется"
+                    en.append(q.get("placeDescriptionOverride", en_default))
+                    ru.append(q.get("placeDescriptionOverrideRu", ru_default))
+                else:
+                    fallback_overrides = q.get("placeFallbackVisitZoneOverrides", [])
+                    zone = fallback_overrides[n - len(places)] if n - len(places) < len(fallback_overrides) else visits[(q["order"] + objective_index + n - 1) % len(visits)]
+                    suffix = f"place-fallback-visit-{objective_index}-{n}"
+                    rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index))
+                    label_en, label_ru = point_label(map_name, zone, True), point_label(map_name, zone, False)
+                    en.append(f"Inspect {label_en}; no marker is required" if label_en else f"Inspect designated operation point {n + 1}/{quantity}; no marker is required")
+                    ru.append(f"Осмотреть {label_ru}; маркер не требуется" if label_ru else f"Осмотреть назначенную оперативную точку {n + 1}/{quantity}; маркер не требуется")
+                index += 1
+        elif kind == "retrieveQuestItem":
+            zone = q.get("retrieveZoneOverride", visits[(q["order"] + objective_index - 1) % len(visits)])
+            suffix = f"recover-site-{objective_index}"
+            rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index)); index += 1
+            rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "FindItem", index, True)); index += 1
+            rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "HandoverItem", index, True)); index += 1
+            label_en, label_ru = point_label(map_name, zone, True), point_label(map_name, zone, False)
+            en.append(f"Inspect {label_en} on {MAP_NAMES_EN[map_name]}" if label_en else f"Inspect the designated recovery point on {MAP_NAMES_EN[map_name]}")
+            ru.append(f"Осмотреть {label_ru} на карте «{map_name}»" if label_ru else f"Осмотреть назначенную точку изъятия на карте «{map_name}»")
+            en.append(f"Find 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: required")
+            ru.append(f"Найти 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: требуется")
+            en.append(f"Hand over 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: required")
+            ru.append(f"Передать 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: требуется")
+        elif kind == "handover":
+            rows.append(item_condition(qid, f"handover-{objective_index}", item_tpl, "HandoverItem", index, False)); index += 1
+            en.append(f"Hand over 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: not required")
+            ru.append(f"Передать 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: не требуется")
+        elif kind == "possessAccessKey":
+            targets = ACCESS_KEY_POOLS[map_name]
+            rows.append(key_pool_condition(qid, targets, index)); index += 1
+            if map_name == "Таможня":
+                en_pool, ru_pool = "Dorm room 114, 204, 214 or 220 key", "ключ от комнаты общежития 114, 204, 214 или 220"
+            elif map_name == "Берег":
+                en_pool, ru_pool = "Health Resort office 104, 112, 107 or utility key", "ключ Санатория: офис 104, 112, 107 или подсобка"
+            else:
+                en_pool, ru_pool = "Pumping station front door key or pumping station back door key", "ключ от передней двери насосной станции или ключ от задней двери насосной станции"
+            en.append(f"Find any 1 allowed key in raid: {en_pool}; the key is not handed over")
+            ru.append(f"Найти в рейде любой 1 допустимый ключ: {ru_pool}; ключ не сдаётся")
+        elif kind == "eliminate":
+            suffix = f"kill-{objective_index}"
+            kill = {"id": hid(f"{qid}:{suffix}:kill"), "dynamicLocale": False, "target": {"Scav": "Savage", "Rogue": "Any", "Raider": "Any"}.get(objective.get("target"), "Any"), "compareMethod": ">=", "value": 1, "weapon": [], "distance": {"value": 0, "compareMethod": ">="}, "weaponModsInclusive": [], "weaponModsExclusive": [], "enemyEquipmentInclusive": [], "enemyEquipmentExclusive": [], "weaponCaliber": [], "savageRole": ["exUsec"] if objective.get("target") == "Rogue" else (["pmcBot"] if objective.get("target") == "Raider" else []), "bodyPart": [], "daytime": {"from": 0, "to": 0}, "conditionType": "Kills", "enemyHealthEffects": [], "resetOnSessionEnd": False}
+            rows.append(counter(qid, suffix, quantity, [kill, location(qid, suffix, maps)], "Elimination", index)); index += 1
+            target = {"Scav": "Scavs", "Rogue": "Rogues", "Raider": "Raiders"}.get(objective.get("target"), "hostile targets")
+            target_ru = {"Scav": "Диких", "Rogue": "Отступников", "Raider": "Рейдеров"}.get(objective.get("target"), "противников")
+            en.append(f"Eliminate {quantity} {target} on {MAP_NAMES_EN[map_name]}; progress carries across raids")
+            ru.append(f"Устранить {quantity} {target_ru} на карте «{map_name}»; прогресс сохраняется между рейдами")
+        elif kind == "surviveExtract":
+            suffix = f"survive-{objective_index}"
+            exit_condition = {"id": hid(f"{qid}:{suffix}:exit"), "dynamicLocale": False, "conditionType": "ExitStatus", "status": ["Survived"]}
+            rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), exit_condition], "Completion", index, True)); index += 1
+            en.append(f"Survive and extract from {MAP_NAMES_EN[map_name]} in one raid")
+            ru.append(f"Выжить и эвакуироваться с карты «{map_name}» в одном рейде")
+    return rows, en, ru
+
+
+def rewards(q: dict, map_name: str) -> list[dict]:
+    field_item = q.get("rewards", {}).get("fieldItem")
+    item_value = int(field_item["valueRub"]) if field_item else 0
+    # Preserve the authored minimum cash award while moving part of the
+    # existing reward budget into a useful field item.
+    cash = max(10000, int(q["rewards"]["roubles"]) - item_value)
+    result = [
+        {"value": q["rewards"]["xp"], "id": hid(f"{q['id']}:xp"), "type": "Experience", "index": 0},
+        {"value": q["rewards"]["standing"], "id": hid(f"{q['id']}:standing"), "type": "TraderStanding", "target": TRADER, "index": 1},
+    ]
+    money_id = hid(f"{q['id']}:roubles:item")
+    result.append({"value": cash, "id": hid(f"{q['id']}:roubles"), "type": "Item", "target": money_id, "index": 2, "items": [{"_id": money_id, "_tpl": ROUBLES, "upd": {"StackObjectsCount": cash}}]})
+    if q["order"] in (3, 6, 10):
+        tpl = REWARD_ITEMS[map_name][{3: 0, 6: 1, 10: 2}[q["order"]]]
+        item_id = hid(f"{q['id']}:thematic:item")
+        result.append({"value": 1, "id": hid(f"{q['id']}:thematic"), "type": "Item", "target": item_id, "index": 3, "items": [{"_id": item_id, "_tpl": tpl, "upd": {"StackObjectsCount": 1}}]})
+    if field_item:
+        tpl, quantity = field_item["templateId"], int(field_item["quantity"])
+        item_rows = []
+        max_stack = int(field_item.get("maxStack", 1))
+        remaining = quantity
+        ordinal = 0
+        while remaining > 0:
+            stack = min(remaining, max_stack)
+            item_id = hid(f"{q['id']}:field-item:{ordinal}")
+            item_rows.append({"_id": item_id, "_tpl": tpl, "upd": {"StackObjectsCount": stack}})
+            remaining -= stack
+            ordinal += 1
+        result.append({"value": quantity, "id": hid(f"{q['id']}:field-item"), "type": "Item", "target": item_rows[0]["_id"], "index": len(result), "items": item_rows})
+    if q["rewards"].get("assortmentUnlock"):
+        result.append({"value": 1, "id": hid(f"{q['id']}:unlock"), "type": "AssortmentUnlock", "target": hid(f"story-unlock:{map_name}"), "index": len(result)})
+    return result
+
+
+def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], objective_ru: list[str], specialist: bool, names_en: dict[str, str], names_ru: dict[str, str], next_en: str | None, next_ru: str | None) -> tuple[dict, dict]:
+    qid = q["id"]
+    speaker_en = "Natalya has isolated a lead inside Admiral's network." if specialist else "Admiral has assigned the next operation."
+    speaker_ru = "Наталья выделила новую зацепку внутри сети Адмирала." if specialist else "Адмирал назначил следующую операцию."
+    key_details_en = [line for line in objective_en if "allowed key:" in line]
+    key_details_ru = [line for line in objective_ru if "допустимый ключ:" in line]
+    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {MAP_NAMES_EN[chain['map']]}. Complete the field work to move the investigation forward."
+    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}"
+    has_access_key = any(row.get("conditionType") == "FindItem" and len(row.get("target", [])) > 1 for row in q["runtimeFinish"])
+    if has_access_key:
+        en_body += "\n\nOperational detail:\n- " + (key_details_en[0] if key_details_en else "Find one allowed key in raid; the key is not handed over.")
+        ru_body += "\n\nУточнение:\n- " + (key_details_ru[0] if key_details_ru else "Найти один допустимый ключ в рейде; ключ не сдаётся.")
+    continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
+    continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
+    done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")
+    done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал.{continuation_ru}" + (" Наталья подтвердила канал специалиста." if specialist else "")
+    def make(name: str, body: str, done: str, objective_lines: list[str], ru: bool) -> dict:
+        labels = {}
+        for i, row in enumerate(q["runtimeFinish"]):
+            if i >= len(objective_lines):
+                continue
+            if row["conditionType"] == "FindItem" and len(row.get("target", [])) > 1:
+                labels[row["id"]] = (
+                    "Найти в рейде ключ от передней или задней двери насосной станции; ключ не сдаётся"
+                    if ru and qid == "30d087339ef8063ccd818036"
+                    else "Find a pumping station front or back door key in raid; keep it"
+                    if not ru and qid == "30d087339ef8063ccd818036"
+                    else objective_lines[i]
+                )
+            else:
+                labels[row["id"]] = objective_lines[i]
+        return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **labels}
+    return make(en_name, en_body, done_en, objective_en, False), make(q["name"], ru_body, done_ru, objective_ru, True)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--spt-root", type=Path, required=True)
+    args = parser.parse_args()
+    authored = json.loads((ROOT / "manifests/campaign-authored-100-review.json").read_text(encoding="utf-8"))
+    items = json.loads((args.spt_root / "SPT_Data/database/templates/items.json").read_text(encoding="utf-8-sig"))
+    global_en = json.loads((args.spt_root / "SPT_Data/database/locales/global/en.json").read_text(encoding="utf-8-sig"))
+    global_ru = json.loads((args.spt_root / "SPT_Data/database/locales/global/ru.json").read_text(encoding="utf-8-sig"))
+    names_en = {tpl: global_en.get(tpl + " Name", tpl) for tpl in items}
+    names_ru = {tpl: global_ru.get(tpl + " Name", names_en[tpl]) for tpl in items}
+    authored_item_tpls = {
+        objective["itemTpl"]
+        for chain in authored["chains"]
+        for quest in chain["quests"]
+        for objective in quest["objectives"]
+        if objective.get("itemTpl")
+    }
+    reward_policy = json.loads((ROOT / "manifests/reward-bundle-policy.json").read_text(encoding="utf-8"))
+    reward_catalog = {row["templateId"]: row for row in reward_policy["catalog"]}
+    authored_reward_tpls = {
+        quest["rewards"]["fieldItem"]["templateId"]
+        for chain in authored["chains"]
+        for quest in chain["quests"]
+        if quest.get("rewards", {}).get("fieldItem")
+    }
+    required_tpls = {MARKER, ROUBLES} | authored_item_tpls | authored_reward_tpls | {tpl for rows in RECOVERY_ITEMS.values() for tpl in rows} | {tpl for rows in REWARD_ITEMS.values() for tpl in rows} | {tpl for rows in ACCESS_KEY_POOLS.values() for tpl in rows}
+    missing = sorted(required_tpls - set(items))
+    if missing:
+        raise SystemExit(f"SPT 4.1.5 item IDs missing: {missing}")
+    for chain in authored["chains"]:
+        for quest in chain["quests"]:
+            field_item = quest.get("rewards", {}).get("fieldItem")
+            if not field_item:
+                continue
+            catalog_item = reward_catalog.get(field_item["templateId"])
+            if not catalog_item or catalog_item.get("source") != "spt":
+                raise SystemExit(f"{quest['id']}: field reward must use an item in the native SPT catalog")
+            if int(field_item["quantity"]) > int(catalog_item["quantity"]):
+                raise SystemExit(f"{quest['id']}: field reward quantity exceeds its curated catalog entry")
+            expected_value = round(int(catalog_item["valueRub"]) * int(field_item["quantity"]) / int(catalog_item["quantity"]))
+            if int(field_item["valueRub"]) != expected_value:
+                raise SystemExit(f"{quest['id']}: field reward value does not match its curated catalog quantity")
+            actual_max_stack = int(items[field_item["templateId"]]["_props"].get("StackMaxSize", 1))
+            if int(field_item["maxStack"]) != actual_max_stack:
+                raise SystemExit(f"{quest['id']}: field reward stack size drifted from SPT 4.1.5")
+
+    chains = authored["chains"]
+    quest_ids = {chain["chain"]: {q["order"]: q["id"] for q in chain["quests"]} for chain in chains}
+    runtime_rows, en, ru = [], {}, {}
+    for chain in chains:
+        for quest_index, q in enumerate(chain["quests"]):
+            quest_context = operation_context(q, chain)
+            start = [level_condition(q["id"], q["level"])]
+            prereqs = ([q["prerequisite"]] if q["prerequisite"] else []) + [quest_ids[row["chain"]][row["questOrder"]] for row in q["crossChainPrerequisites"]]
+            start.extend(prerequisite(q["id"], target, index + 1) for index, target in enumerate(prereqs))
+            finish, objective_en, objective_ru = build_finish(q, quest_context, names_en, names_ru)
+            q["runtimeFinish"] = finish
+            specialist = (chain["chain"], q["order"]) in NATALYA_QUESTS
+            template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": QUEST_LOCATIONS[quest_context["map"]], "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
+            runtime_rows.append((quest_context, q, template, specialist))
+            en_name = f"{CHAIN_EN[chain['chain'] - 1]} {q['order']}: {CODENAMES_EN[chain['chain'] - 1][q['order'] - 1]}"
+            next_q = chain["quests"][quest_index + 1] if quest_index + 1 < len(chain["quests"]) else None
+            next_en = f"{CHAIN_EN[chain['chain'] - 1]} {next_q['order']}: {CODENAMES_EN[chain['chain'] - 1][next_q['order'] - 1]}" if next_q else None
+            next_ru = next_q["name"] if next_q else None
+            en_set, ru_set = locale_set(q, quest_context, en_name, objective_en, objective_ru, specialist, names_en, names_ru, next_en, next_ru)
+            en.update(en_set); ru.update(ru_set)
+
+    quest_dir = ROOT / "db/quests"
+    for path in quest_dir.glob("60-*.json"):
+        path.unlink()
+    for chain, q, template, _ in runtime_rows:
+        path = quest_dir / f"60-{chain['chain']:02d}-{q['order']:02d}-{q['id']}.json"
+        path.write_text(json.dumps(template, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    (ROOT / "db/locales/story-en.json").write_text(json.dumps(en, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (ROOT / "db/locales/story-ru.json").write_text(json.dumps(ru, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    unlock_items, unlock_barter, unlock_loyalty, unlock_rows = [], {}, {}, []
+    assort_path = ROOT / "db/assort.json"
+    assort = json.loads(assort_path.read_text(encoding="utf-8"))
+    questassort_path = ROOT / "db/questassort.json"
+    questassort = json.loads(questassort_path.read_text(encoding="utf-8"))
+    old_manifest_path = ROOT / "manifests/story-campaign-runtime.json"
+    old = json.loads(old_manifest_path.read_text(encoding="utf-8")) if old_manifest_path.exists() else {}
+    old_unlocks = {row["offerId"]: row for row in old.get("assortmentUnlocks", [])}
+    current_items = {row["_id"]: row for row in assort["items"]}
+    for row in old_unlocks.values():
+        questassort["success"].pop(row["offerId"], None)
+    for chain in authored["chains"]:
+        final = chain["quests"][-1]
+        tpl, price, stock, buy = STORY_UNLOCKS[chain["map"]]
+        offer_id = hid(f"story-unlock:{chain['map']}")
+        old_row = old_unlocks.get(offer_id)
+        old_item = current_items.get(offer_id)
+        if old_row and old_item and old_item.get("_tpl") == tpl:
+            # Re-materializing quest text/objectives must not reset a stable
+            # storefront offer to the generator's legacy cash-price defaults.
+            unlock_items.append(old_item)
+            if offer_id in assort["barter_scheme"]:
+                unlock_barter[offer_id] = assort["barter_scheme"][offer_id]
+            if offer_id in assort["loyal_level_items"]:
+                unlock_loyalty[offer_id] = assort["loyal_level_items"][offer_id]
+            questassort["success"][offer_id] = final["id"]
+            unlock_rows.append({**old_row, "questId": final["id"]})
+            continue
+        level = min(4, 1 + (chain["chain"] - 1) // 3)
+        unlock_items.append({"_id": offer_id, "_tpl": tpl, "parentId": "hideout", "slotId": "hideout", "upd": {"UnlimitedCount": False, "StackObjectsCount": stock, "BuyRestrictionMax": buy, "BuyRestrictionCurrent": 0}})
+        unlock_barter[offer_id] = [[{"count": price, "_tpl": ROUBLES}]]
+        unlock_loyalty[offer_id] = level
+        questassort["success"][offer_id] = final["id"]
+        unlock_rows.append({"chain": chain["chain"], "map": chain["map"], "questId": final["id"], "offerId": offer_id, "tpl": tpl, "priceRub": price, "stockPerReset": stock, "buyRestriction": buy, "loyaltyLevel": level})
+    old_offer_ids = {row["offerId"] for row in old.get("assortmentUnlocks", [])}
+    current_offer_ids = {row["_id"] for row in unlock_items}
+    stale_offer_ids = old_offer_ids - current_offer_ids
+    assort["items"] = [row for row in assort["items"] if row["_id"] not in stale_offer_ids]
+    for offer_id in stale_offer_ids:
+        assort["barter_scheme"].pop(offer_id, None)
+        assort["loyal_level_items"].pop(offer_id, None)
+    current_offer_ids_in_assort = {row["_id"] for row in assort["items"]}
+    assort["items"].extend(row for row in unlock_items if row["_id"] not in current_offer_ids_in_assort)
+    for offer_id, scheme in unlock_barter.items():
+        assort["barter_scheme"].setdefault(offer_id, scheme)
+    for offer_id, level in unlock_loyalty.items():
+        assort["loyal_level_items"].setdefault(offer_id, level)
+    assort_path.write_text(json.dumps(assort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    questassort_path.write_text(json.dumps(questassort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    runtime_manifest = {"schemaVersion": 1, "status": "runtime-materialized", "storyQuestCount": 100, "totalQuestCount": 172, "natalyaIntegratedQuestCount": len(NATALYA_QUESTS), "natalyaMode": "specialist-inside-admiral-no-second-trader", "nativeZoneReuse": True, "customZoneDependency": False, "customItemDependency": False, "typicalEliminationMaximum": 12, "assortmentUnlockCount": len(unlock_rows), "totalFiniteOfferCount": 82, "assortmentUnlocks": unlock_rows, "quests": [{"id": q["id"], "chain": chain["chain"], "order": q["order"], "map": chain["map"], "natalya": specialist} for chain, q, _, specialist in runtime_rows]}
+    (ROOT / "manifests/story-campaign-runtime.json").write_text(json.dumps(runtime_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"generated": len(runtime_rows), "total": 172, "natalya": len(NATALYA_QUESTS), "storyUnlocks": len(unlock_rows), "finiteOffers": 82}))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,7 @@
 # Admiral Trader runtime boundary evidence
 
+> Historical architecture record. Current release evidence and runtime scope are maintained in `README.md`, `docs/campaign-audit-172.md` and the exact-head CI workflows.
+
 ## Target runtime
 
 - Canonical target is **SPT 4.1.5**.
@@ -9,7 +11,7 @@
 
 ## Single trader registration boundary — current-generation evidence
 
-The maintained Admiral Trader implementation uses the current repository registration pattern:
+The maintained `mods/Admiral-Artyom-Revival` module demonstrates the current repository registration pattern using:
 
 - `ModHelper` for module path resolution;
 - `ImageRouter` for trader avatar route registration;
@@ -23,7 +25,7 @@ This is the preferred Admiral Trader baseline. We do not need legacy six-directo
 
 ## Quest loading boundary — proven for the 4.1 generation, exact target still gated
 
-The SPT 4.1 Andrudis port and Scorpion C# reference prove current-generation quest insertion/loading patterns. Admiral Trader should retain an external framework only when the curated quest feature set actually requires it; native table insertion remains the default for ordinary quest records.
+Admiral Artyom Revival uses `WTT-ServerCommonLib` custom quest loading after trader registration. The SPT 4.1 Andrudis port and Scorpion C# reference also prove current-generation quest insertion/loading patterns. Admiral Trader should retain WTT only if the curated quest feature set actually requires it; native table insertion remains a viable alternative for ordinary quest records.
 
 These references establish architecture shape, not exact SPT 4.1.5 behavior. Exact target validation remains mandatory where the implementation depends on a concrete signature or lifecycle detail.
 
@@ -78,10 +80,11 @@ Required proof before any direct profile write:
 
 ## Runtime evidence status
 
-- SPT 4.1.3/4.1.4 logs and exact-runtime builds are historical evidence only.
-- The repository now has a verified SPT 4.1.5 runtime archive identity and combined server-start workflow, but the combined RC workflow intentionally builds the historical frozen Trader 0.1.0 worktree. It therefore does **not** by itself prove the current active Trader branch's 4.1.5 package/API contract.
-- The active Trader branch must compile its own `AdmiralTrader.Server.csproj` against the 4.1.5 published API and pass its deterministic workflows before any current-branch runtime claim is made.
+- SPT 4.1.3/4.1.4 logs and builds remain historical evidence only.
+- The stable `0.3.0` source compiles against the verified SPT 4.1.5 runtime input.
+- The manual combined workflow builds the exact Trader + Economy HEAD, runs deterministic suites and completes an isolated server-start smoke before publishing its install-ready artifact.
+- Runtime metadata remains `~4.1.0`; exact 4.1.5 validation is reproducibility evidence rather than a patch lock.
 
 ## Decision
 
-Proceed with one-trader registration, profile classification, and a template-suppression completion bridge only within the fail-closed design/validation boundary. Before any runtime package is published, every implementation dependency must be revalidated against the exact SPT 4.1.5 target, then covered by one coherent batched physical gate rather than micro-tests.
+The one-trader native registration and fail-closed migration boundary are implemented. Repository-side validation is complete; the remaining release boundary is one coherent fresh-profile acceptance after the complete mod set is ready.

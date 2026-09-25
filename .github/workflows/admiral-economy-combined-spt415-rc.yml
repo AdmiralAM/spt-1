@@ -1,4 +1,4 @@
-name: Admiral Trader 0.3.0 RC + Economy SPT 4.1.5
+name: "Admiral Suite: Trader 0.3.0 stable beta + Economy 0.1.0 preview"
 
 on:
   workflow_dispatch:
@@ -63,6 +63,8 @@ jobs:
       - name: Build combined exact-runtime candidate
         shell: pwsh
         run: |
+          dotnet restore mods/Admiral-Trader/server/AdmiralTrader.Server.csproj `
+            -p:SptRuntimeLibDir="$env:SPT_RUNTIME_ROOT"
           ./mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1 `
             -SptRoot $env:SPT_RUNTIME_ROOT `
             -SourceHeadSha '${{ github.event.pull_request.head.sha || github.sha }}' `
@@ -88,6 +90,15 @@ jobs:
             if (Test-Path $target) { Remove-Item $target -Recurse -Force }
             Copy-Item $mod.FullName $target -Recurse -Force
           }
+          # Admiral owns the consolidated content, while the installed WTT
+          # utility remains a shared runtime service. Provision the exact
+          # compile-time version as an isolated smoke fixture so its own mod
+          # metadata is not duplicated inside the Admiral folder.
+          $commonLib = Join-Path $env:USERPROFILE '.nuget/packages/wtt-servercommonlib/3.0.6/lib/net10.0/WTT-ServerCommonLib.dll'
+          if (-not (Test-Path $commonLib -PathType Leaf)) { throw 'WTT CommonLib 3.0.6 smoke fixture is missing.' }
+          $commonTarget = Join-Path $runtimeMods 'WTT-ServerCommonLib'
+          New-Item $commonTarget -ItemType Directory -Force | Out-Null
+          Copy-Item $commonLib $commonTarget
           $server = Get-ChildItem $env:SPT_RUNTIME_ROOT -File | Where-Object { $_.Name -in @('SPT.Server.exe','SPT.Server') } | Select-Object -First 1
           if (-not $server) { throw 'SPT server executable was not found in the verified runtime.' }
           $stdout = "$env:RUNNER_TEMP/spt-server.stdout.log"; $stderr = "$env:RUNNER_TEMP/spt-server.stderr.log"
@@ -110,7 +121,7 @@ jobs:
       - name: Upload combined install-ready ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Admiral-Trader-0.3.0-Economy-0.1.0-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          name: Admiral-Suite-Trader-0.3.0-STABLE-BETA-Economy-0.1.0-PREVIEW-SPT415-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/combined-rc/*.zip
             build/combined-rc/*.zip.sha256

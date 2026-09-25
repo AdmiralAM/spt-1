@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "active-intake",
+  "status": "runtime-materialized",
   "baseline": {
     "tag": "admiral-trader-v0.2.0",
     "commit": "7ecd3d8a6189c1c71d598115e68f41ee16d01fe0",
@@ -9,7 +9,13 @@
     "compatibility": "~4.1.0",
     "validatedRuntime": "4.1.5"
   },
-  "retainedRuntimeTraders": ["native", "Scorpion", "Ref", "Admiral"],
+  "retainedRuntimeTraders": [
+    "native",
+    "Artem",
+    "Scorpion",
+    "Ref",
+    "Admiral"
+  ],
   "retiredSources": {
     "Natalya": {
       "repository": "Colobos9mm/Natalya",
@@ -26,17 +32,314 @@
     }
   },
   "sourceFamilies": [
-    {"name": "Pay Back I-XIV", "records": 14, "decision": "re-author selected route beats"},
-    {"name": "Weapons Training", "records": 10, "decision": "feed staged Admiral rotation"},
-    {"name": "Exfil Part 1-11", "records": 12, "decision": "re-author native logistics operations"}
+    {
+      "name": "Pay Back I-XIV",
+      "records": 14,
+      "decision": "re-author selected route beats"
+    },
+    {
+      "name": "Weapons Training",
+      "records": 10,
+      "decision": "feed staged Admiral rotation"
+    },
+    {
+      "name": "Exfil Part 1-11",
+      "records": 12,
+      "decision": "re-author native logistics operations"
+    }
   ],
   "signatureOffers": [
-    {"offerId": "67e6bf6525c53becfdba880e", "tpl": "5bfea6e90db834001b7347f3", "name": "Remington Model 700", "loyaltyLevel": 4, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 210000},
-    {"offerId": "67e6bf650c1627bd671e784b", "tpl": "5df24cf80dee1b22f862e9bc", "name": "ORSIS T-5000M", "loyaltyLevel": 3, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 195000},
-    {"offerId": "67e6bf65f74c6d7fd2b6730a", "tpl": "65268d8ecb944ff1e90ea385", "name": "Degtyarev RPDN", "loyaltyLevel": 3, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 155000},
-    {"offerId": "67e6bf65c16dbddc52a3f240", "tpl": "6165ac306ef05c2ce828ef74", "name": "FN SCAR-H Mk17", "loyaltyLevel": 4, "stockPerReset": 1, "buyRestriction": 1, "priceRub": 265000}
+    {
+      "offerId": "67e6bf6525c53becfdba880e",
+      "tpl": "5bfea6e90db834001b7347f3",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 199999
+    },
+    {
+      "offerId": "dbdf8021334be73fd3f029a6",
+      "tpl": "55801eed4bdc2d89578b4588",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 175000
+    },
+    {
+      "offerId": "67e6bf650c1627bd671e784b",
+      "tpl": "5df24cf80dee1b22f862e9bc",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 165000
+    },
+    {
+      "offerId": "db5c8ba1f86a1fdae5e203ef",
+      "tpl": "5de652c31b7e3716273428be",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 67000
+    },
+    {
+      "offerId": "fb3046b4269bc5cbfbca5f8f",
+      "tpl": "5c46fbd72e2216398b5a8c9c",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 199999
+    },
+    {
+      "offerId": "7da1af9fa5589da3c47f6102",
+      "tpl": "5df8ce05b11454561e39243b",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 245000
+    },
+    {
+      "offerId": "db3193e6b38b6980a47b75c5",
+      "tpl": "6176aca650224f204c1da3fb",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 235000
+    },
+    {
+      "offerId": "3e7bae9d37ecc42173d49e01",
+      "tpl": "5aafa857e5b5b00018480968",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 165241
+    },
+    {
+      "offerId": "2a0ac94f7e6dc21d192e21de",
+      "tpl": "5beed0f50db834001c062b12",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 85000
+    },
+    {
+      "offerId": "67e6bf65f74c6d7fd2b6730a",
+      "tpl": "65268d8ecb944ff1e90ea385",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 98000
+    },
+    {
+      "offerId": "722832deba015a8e8f7ba7f5",
+      "tpl": "661cec09b2c6356b4d0c7a36",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 199000
+    },
+    {
+      "offerId": "69dbaf98fc561c6a4dae57ea",
+      "tpl": "64ca3d3954fc657e230529cc",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 245000
+    },
+    {
+      "offerId": "67e6bf65c16dbddc52a3f240",
+      "tpl": "6165ac306ef05c2ce828ef74",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 135000
+    },
+    {
+      "offerId": "f0fffea9c97960e9d6a6b333",
+      "tpl": "5b0bbe4e5acfc40dc528a72d",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 156000
+    },
+    {
+      "offerId": "3b107359294eb1a18b225939",
+      "tpl": "59d6088586f774275f37482f",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 98000
+    },
+    {
+      "offerId": "9f19498d2e119e2bb60a4099",
+      "tpl": "5447a9cd4bdc2dbd208b4567",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 240000
+    },
+    {
+      "offerId": "9ee07ed24f7dbd298de55e8c",
+      "tpl": "628b9c37a733087d0d7fe84b",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 97000
+    },
+    {
+      "offerId": "669d4467c12cb304d8d57818",
+      "tpl": "587e02ff24597743df3deaeb",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 89000
+    },
+    {
+      "offerId": "23573f379614f45b187b80c3",
+      "tpl": "59e6687d86f77411d949b251",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 87500
+    },
+    {
+      "offerId": "58af0acb16c5568ab8259e72",
+      "tpl": "5f2a9575926fd9352339381f",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 110000
+    },
+    {
+      "offerId": "c06efcb1b85ec0c44553e377",
+      "tpl": "5fc3f2d5900b1d5091531e57",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 110000
+    },
+    {
+      "offerId": "735a54437c43907dd8323841",
+      "tpl": "59984ab886f7743e98271174",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 55000
+    },
+    {
+      "offerId": "3ed4e323c9396cd617217e4f",
+      "tpl": "58948c8e86f77409493f7266",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 70000
+    },
+    {
+      "offerId": "e776c24c5006b7e04df98866",
+      "tpl": "5926bb2186f7744b1c6c6e60",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 48000
+    },
+    {
+      "offerId": "9afbcb5b425ceaaae7aad216",
+      "tpl": "576165642459773c7a400233",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 65000
+    },
+    {
+      "offerId": "2212ba9328dc787cf6b5d489",
+      "tpl": "606dae0ab0e443224b421bb7",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 55000
+    },
+    {
+      "offerId": "3f1bf37a92afb062119378bd",
+      "tpl": "5a7828548dc32e5a9c28b516",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 45000
+    },
+    {
+      "offerId": "0f89e40e7cd0bb8dcb126148",
+      "tpl": "54491c4f4bdc2db1078b4568",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 35000
+    },
+    {
+      "offerId": "38cf9bdfc67aed28b09c3687",
+      "tpl": "669fa3d876116c89840b1217",
+      "loyaltyLevel": 4,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 55000
+    },
+    {
+      "offerId": "c1b3bf60e15e6ab9e4169ebc",
+      "tpl": "5d67abc1a4b93614ec50137f",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 63000
+    },
+    {
+      "offerId": "c8654df2b68160ae358b9ea4",
+      "tpl": "6193a720f8ee7e52e42109ed",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 45000
+    },
+    {
+      "offerId": "deb070dfa5e34cb629108c10",
+      "tpl": "63088377b5cd696784087147",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 22000
+    },
+    {
+      "offerId": "29662a9be77c541f2a2f951e",
+      "tpl": "633ec7c2a6918cb895019c6c",
+      "loyaltyLevel": 3,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 50000
+    },
+    {
+      "offerId": "52a6180d4a07d44358eaa574",
+      "tpl": "61a4c8884f95bc3b2c5dc96f",
+      "loyaltyLevel": 2,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 14000
+    },
+    {
+      "offerId": "0c6ab890fea196a5fff798fb",
+      "tpl": "624c2e8614da335f1e034d8c",
+      "loyaltyLevel": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "priceRub": 8000
+    }
   ],
-  "activeHeadScope": {"questCount": 43, "baseOffers": 37, "signatureOffers": 4, "runtimeFiniteOffers": 41},
+  "activeHeadScope": {
+    "questCount": 72,
+    "foundationQuestCount": 43,
+    "weaponAssignments": 40,
+    "groundZeroOperations": 4,
+    "equipmentAssignments": 6,
+    "baseOffers": 37,
+    "signatureOffers": 35,
+    "runtimeFiniteOffers": 72
+  },
   "constraints": {
     "secondTrader": false,
     "externalRuntimeDependency": false,

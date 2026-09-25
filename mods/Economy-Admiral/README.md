@@ -1,8 +1,8 @@
 # Economy Admiral
 
-**Economy Admiral** is an SPT 4.1.4 economy difficulty layer. It makes money, loot and progression retain value longer by applying one coherent profile across quest rewards, traders, flea and world loot.
+**Economy Admiral** is the optional economy module of **Admiral Suite** for SPT 4.1.x. It makes money, loot and progression retain value longer across quest rewards, traders, flea and world loot.
 
-Version: **0.1.0** during final product acceptance.
+Version: **0.1.0 preview** during smart-economy completion and final product acceptance. Admiral Trader 0.3.0 is independently stable and works without this module. The planned replacement for broad pressure with evidence-based, per-item decisions is defined in [docs/smart-economy-roadmap.md](docs/smart-economy-roadmap.md).
 
 ## Player quick start
 
@@ -135,7 +135,7 @@ Admiral Trader is an **optional integration**, not a dependency.
 
 If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained Admiral Trader contract is installed, Economy Admiral validates its explicit identity/schema/offer classes and treats compatibility fail-closed on drift. Economy Admiral does not duplicate Admiral Trader's own progression/store logic.
 
-The frozen Admiral Trader 0.1.0 compatibility surface remains exactly 31 authored quests and 11 finite offers (4 Baseline + 7 Milestone, with no materialized Relationship offers) under the schema-v4 Gameplay Alpha contract. The canonical post-0.1.0 campaign uses 43 quests and 37 finite offers after storefront stabilization. Economy Admiral reads the active Trader contract without changing Trader-owned loyalty, stock identity or quest unlock semantics.
+The frozen Admiral Trader 0.1.0 historical compatibility surface remains immutable. The stable Admiral Trader 0.3.0 campaign contains 172 core quests and 82 finite offers, with an additional 10 Icebreaker quests only when its verified runtime is present. Economy Admiral reads the active Trader contract without changing Trader-owned loyalty, stock identity or quest unlock semantics.
 
 ## Development diagnostics
 
@@ -154,6 +154,6 @@ On the first server start, Economy Admiral validates `config.default.json` and c
 
 It does not bundle or replace the BepInEx runtime itself, and it does not install development validators/test harnesses into the game directory.
 
-The combined SPT 4.1.4 release-candidate workflow additionally publishes one ZIP with this complete Economy runtime and the immutable Admiral Trader `0.1.0` runtime from commit `053a62ff5f1cb545f13bc89a96bba3acd319a823`. Extract that ZIP into the SPT root. It contains only the two owned server mod directories, the Economy F12 plugin, and exact provenance; it never contains SPT/EFT or BepInEx runtime binaries.
+The manual SPT 4.1.5 Admiral Suite workflow publishes one ZIP containing stable Admiral Trader 0.3.0 and Economy Admiral 0.1.0 preview. Extract that ZIP into the SPT root. It contains only the two owned server mod directories, the Economy F12 plugin and exact component provenance; it never contains SPT/EFT or BepInEx runtime binaries.
 
-Compile boundary: `SPTushonka.Server.Core 4.1.4` / .NET 10. Physical target: **SPT 4.1.4**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.
+Compatibility metadata remains **SPT `~4.1.0`**. The exact current build and smoke baseline is **SPT 4.1.5** / .NET 10. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.

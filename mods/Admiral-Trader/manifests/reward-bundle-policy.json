@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "catalog": [
+    { "templateId": "56d59856d2720bd8418b456a", "source": "spt", "roles": ["weapon"], "tier": "common", "valueRub": 35600, "quantity": 1, "compatibilityFamily": "pistol-9x19" },
+    { "templateId": "5a7ae0c351dfba0017554310", "source": "spt", "roles": ["weapon"], "tier": "common", "valueRub": 16134, "quantity": 1, "compatibilityFamily": "pistol-9x19" },
+    { "templateId": "56d59948d2720bb7418b4582", "source": "spt", "roles": ["magazine"], "tier": "common", "valueRub": 4500, "quantity": 2, "compatibilityFamily": "pistol-9x19" },
+    { "templateId": "5a718b548dc32e000d46d262", "source": "spt", "roles": ["magazine"], "tier": "common", "valueRub": 4500, "quantity": 2, "compatibilityFamily": "pistol-9x19" },
+    { "templateId": "56d59d3ad2720bdb418b4577", "source": "spt", "roles": ["ammunition"], "tier": "common", "valueRub": 5820, "quantity": 60, "compatibilityFamily": "pistol-9x19" },
+    { "templateId": "590c678286f77426c9660122", "source": "spt", "roles": ["medical"], "tier": "common", "valueRub": 20394, "quantity": 1 },
+    { "templateId": "57dc2fa62459775949412633", "source": "spt", "roles": ["weapon"], "tier": "common", "valueRub": 42803, "quantity": 1, "compatibilityFamily": "ak-545" },
+    { "templateId": "55d480c04bdc2d1d4e8b456a", "source": "spt", "roles": ["magazine"], "tier": "common", "valueRub": 10752, "quantity": 2, "compatibilityFamily": "ak-545" },
+    { "templateId": "56dff3afd2720bba668b4567", "source": "spt", "roles": ["ammunition"], "tier": "common", "valueRub": 7170, "quantity": 30, "compatibilityFamily": "ak-545" },
+    { "templateId": "5ab8f04f86f774585f4237d8", "source": "spt", "roles": ["backpack"], "tier": "common", "valueRub": 17524, "quantity": 1 },
+    { "templateId": "544fb45d4bdc2dee738b4568", "source": "spt", "roles": ["medical"], "tier": "common", "valueRub": 39049, "quantity": 1 },
+    { "templateId": "62e7c4fba689e8c9c50dfc38", "source": "spt", "roles": ["weapon"], "tier": "rare", "valueRub": 42711, "quantity": 1, "compatibilityFamily": "aug-556" },
+    { "templateId": "62e7c98b550c8218d602cbb4", "source": "spt", "roles": ["magazine"], "tier": "rare", "valueRub": 35678, "quantity": 2, "compatibilityFamily": "aug-556" },
+    { "templateId": "54527a984bdc2d4e668b4567", "source": "spt", "roles": ["ammunition"], "tier": "rare", "valueRub": 12000, "quantity": 40, "compatibilityFamily": "aug-556" },
+    { "templateId": "6033fa48ffd42c541047f728", "source": "spt", "roles": ["headset"], "tier": "rare", "valueRub": 28216, "quantity": 1 },
+    { "templateId": "56e335e4d2720b6c058b456d", "source": "spt", "roles": ["backpack"], "tier": "rare", "valueRub": 24599, "quantity": 1 },
+    { "templateId": "5926bb2186f7744b1c6c6e60", "source": "spt", "roles": ["weapon"], "tier": "rare", "valueRub": 43283, "quantity": 1, "compatibilityFamily": "mp5-9x19" },
+    { "templateId": "5926c3b286f774640d189b6b", "source": "spt", "roles": ["magazine"], "tier": "rare", "valueRub": 35184, "quantity": 2, "compatibilityFamily": "mp5-9x19" },
+    { "templateId": "64b7bbb74b75259c590fa897", "source": "spt", "roles": ["ammunition"], "tier": "rare", "valueRub": 18400, "quantity": 80, "compatibilityFamily": "mp5-9x19" },
+    { "templateId": "5ab8e4ed86f7742d8e50c7fa", "source": "spt", "roles": ["armor"], "tier": "rare", "valueRub": 42000, "quantity": 1 },
+    { "templateId": "55801eed4bdc2d89578b4588", "source": "spt", "roles": ["weapon"], "tier": "epic", "valueRub": 71592, "quantity": 1, "compatibilityFamily": "sv98-762x54r" },
+    { "templateId": "559ba5b34bdc2d1f1a8b4582", "source": "spt", "roles": ["magazine"], "tier": "epic", "valueRub": 18798, "quantity": 2, "compatibilityFamily": "sv98-762x54r" },
+    { "templateId": "5887431f2459777e1612938f", "source": "spt", "roles": ["ammunition"], "tier": "epic", "valueRub": 18720, "quantity": 20, "compatibilityFamily": "sv98-762x54r" },
+    { "templateId": "590c657e86f77412b013051d", "source": "spt", "roles": ["medical"], "tier": "epic", "valueRub": 72046, "quantity": 1 },
+    { "templateId": "5ab8e79e86f7742d8b372e78", "source": "spt", "roles": ["armor"], "tier": "epic", "valueRub": 102697, "quantity": 1 },
+    { "templateId": "5a7828548dc32e5a9c28b516", "source": "spt", "roles": ["weapon"], "tier": "epic", "valueRub": 109190, "quantity": 1, "compatibilityFamily": "remington-12g" },
+    { "templateId": "560d5e524bdc2d25448b4571", "source": "spt", "roles": ["ammunition"], "tier": "epic", "valueRub": 4080, "quantity": 120, "compatibilityFamily": "remington-12g" },
+    { "templateId": "5e997f0b86f7741ac73993e2", "source": "spt", "roles": ["medical-bag"], "tier": "epic", "valueRub": 36984, "quantity": 1 },
+    { "templateId": "5ab8ee7786f7742d8f33f0b9", "source": "spt", "roles": ["backpack"], "tier": "epic", "valueRub": 19874, "quantity": 1 }
+  ],
+  "bundles": [
+    { "id": "field-sidearm-common", "theme": "field-sidearm", "tier": "common", "seed": "admiral-field-sidearm-v1", "minValueRub": 30000, "maxValueRub": 75000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "pistol-9x19" }, { "role": "magazine", "required": true }, { "role": "ammunition", "required": true }, { "role": "medical", "required": true }] },
+    { "id": "light-patrol-common", "theme": "light-patrol", "tier": "common", "seed": "admiral-light-patrol-v1", "minValueRub": 55000, "maxValueRub": 90000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "ak-545" }, { "role": "magazine", "required": true }, { "role": "ammunition", "required": true }, { "role": "backpack", "required": true }] },
+    { "id": "recon-556-rare", "theme": "recon-556", "tier": "rare", "seed": "admiral-recon-556-v1", "minValueRub": 110000, "maxValueRub": 155000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "aug-556" }, { "role": "magazine", "required": true }, { "role": "ammunition", "required": true }, { "role": "headset", "required": true }, { "role": "backpack", "required": false, "chancePercent": 100 }] },
+    { "id": "entry-9x19-rare", "theme": "entry-9x19", "tier": "rare", "seed": "admiral-entry-9x19-v1", "minValueRub": 110000, "maxValueRub": 145000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "mp5-9x19" }, { "role": "magazine", "required": true }, { "role": "ammunition", "required": true }, { "role": "armor", "required": true }] },
+    { "id": "precision-762x54r-epic", "theme": "precision-762x54r", "tier": "epic", "seed": "admiral-precision-762x54r-v1", "minValueRub": 180000, "maxValueRub": 230000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "sv98-762x54r" }, { "role": "magazine", "required": true }, { "role": "ammunition", "required": true }, { "role": "medical", "required": true }] },
+    { "id": "breach-12g-epic", "theme": "breach-12g", "tier": "epic", "seed": "admiral-breach-12g-v1", "minValueRub": 165000, "maxValueRub": 180000, "slots": [{ "role": "weapon", "required": true, "compatibilityFamily": "remington-12g" }, { "role": "ammunition", "required": true }, { "role": "medical-bag", "required": true }, { "role": "backpack", "required": true }] }
+  ]
+}

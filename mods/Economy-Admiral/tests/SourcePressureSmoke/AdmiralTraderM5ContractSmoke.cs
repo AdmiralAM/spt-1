@@ -32,9 +32,9 @@ internal static class AdmiralTraderM5ContractSmoke
         Require(contract.GameplayPolicySchemaVersion == 5, "M5 policy schema drift");
         Require(contract.BaselineOfferCount == 4, "M5 Baseline count drift");
         Require(contract.RelationshipOfferCount == 3, "M5 Relationship count drift");
-        Require(contract.MilestoneOfferCount == 8, "M5 Milestone count drift");
+        Require(contract.MilestoneOfferCount == 18, "active quest-gated offer count drift");
         Require(contract.CoreOfferCount == 22, "stabilized Core count drift");
-        Require(contract.Offers.Count == 37, "stabilized total offer count drift");
+        Require(contract.Offers.Count == 47, "stabilized base-assort offer count drift");
         Require(contract.Offers.Where(x => x.StockClass == "Relationship").All(x =>
             x.GateKind == "Loyalty" && x.QuestGateId is null && x.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
             "M5 Relationship gating/capacity drift");

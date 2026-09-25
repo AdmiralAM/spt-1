@@ -1,25 +1,22 @@
-# Post-0.2.0 campaign polishing
+# Admiral Trader 0.3.0 RC playtest guide
 
-Admiral Trader 0.2.0 is the stable fresh-profile baseline. Polishing work is collected during normal play and delivered in coherent milestones rather than one-fix releases.
+The repository-side content, editorial, technical and balance passes are complete. Remaining observations must come from the final coherent fresh-profile playthrough after the complete mod set is ready. Fixes are collected into meaningful batches rather than one-fix releases.
 
 ## Accepted baseline
 
-- 43 quests and 37 finite offers;
+- 172 core quests and 82 finite core offers;
+- 10 optional Icebreaker quests and 62 optional WTT offers when their owners are installed;
 - one Admiral trader and no external trader dependency;
 - native quest acceptance, completion, rewards, mail, unlocks and persistence;
 - progressive loyalty and quest-gated storefront access;
-- complete armored presets for every armored storefront offer;
+- 35 complete Natalya weapon presets, four early complete-weapon rewards and staged weapon rotation;
+- 20 native field-support rewards and 32 conditional B&A&HB equipment/container rewards;
+- native Admiral insurance with a 6–12 hour return window;
 - standalone and Economy Admiral exact-runtime coverage on SPT 4.1.5.
 
-## Next content milestone
+## Final acceptance
 
-The next authored campaign pass may expand story chains and create longer staged rotations for weapons, armor, rigs, headsets, helmets and backpacks. It should keep a small useful choice of concurrent loadouts, distribute activity across several suitable maps without binding each weapon to one map, and keep Admiral's concurrent quest load controlled alongside vanilla traders, Ref and Scorpion.
-
-Admiral's opening wave must participate in the normal early-game route through **Ground Zero / Эпицентр**. New players should receive useful Admiral work there alongside the opening quests from the retained vanilla traders. Ground Zero may be the primary location or one member of a small allowed-location pool; the whole early Admiral campaign must not be locked exclusively to one map.
-
-The storefront expansion must include a small, recognizable selection of **distinctive ready-to-use weapons**. Natalya's retired assortment is the first intake source. Candidates must be checked against the effective assortments of the retained vanilla traders, Ref and Scorpion after Andrudis is disabled. Prefer native weapons or authored presets that are otherwise unavailable as fixed purchases, serve a clear tactical role, remain finite, and unlock at an appropriate loyalty tier or campaign milestone. Cosmetic duplicate presets and rows that merely undercut another trader do not qualify as unique stock.
-
-Changes should be evaluated in batches for campaign pacing, repetition, map coverage, reward pressure and storefront progression. Existing persistent IDs remain stable unless a documented graph correction requires a new record.
+Use one real fresh profile to review the complete campaign alongside vanilla traders, Artem, Ref and Scorpion. Check simultaneous quest load, route variety, objective clarity, practical reward timing, storefront unlock pacing and insurance delivery. Preserve existing persistent IDs while correcting confirmed defects.
 
 ## Playtest notes
 

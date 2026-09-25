@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "ownerTraderId": "d5c27bb3169f8dfbc13f6b69",
+  "policy": "optional-content-providers-single-visible-admiral",
+  "preserveAdmiralContent": true,
+  "legacyTraderIds": {
+    "painter": "668aaff35fd574b6dcc4a686",
+    "artem": "66bf757f27d0b097db0acea5"
+  },
+  "sources": [
+    {
+      "name": "Painter",
+      "release": "3.0.0",
+      "asset": "Painter_3.0.0.7z",
+      "sha256": "4f4735329821ce71aa0720e8fe90a4f8c76d572f33f6154f36e5cdc111d2d3be",
+      "quests": 12,
+      "rootOffers": 7,
+      "questUnlocks": 3,
+      "customItemTemplates": 5
+    },
+    {
+      "name": "Tactical Gear Component",
+      "release": "3.0.0",
+      "asset": "TGC_3.0.0.7z",
+      "sha256": "932aaaa34d7e7f21770e7249e4f29227751938883e21a7151c684775359d2726",
+      "quests": 0,
+      "rootOffers": 114,
+      "itemTemplates": 117,
+      "suits": 4
+    },
+    {
+      "name": "WTT Artem",
+      "release": "3.0.2",
+      "asset": "WTT-Artem.7z",
+      "sha256": "11e5bf532e591f5dedab72f44bc5f7fab886216c10288fc0ed13b3327b36318d",
+      "validatedRuntimeProvider": "embedded Admiral Trader Artem content",
+      "quests": 23,
+      "rootOffers": 281,
+      "assortItemRows": 703,
+      "questUnlocks": 41,
+      "suits": 64,
+      "customItemFiles": 6,
+      "questZones": 21,
+      "bundles": 262,
+      "standaloneRuntimeRequired": false
+    }
+  ],
+  "combinedExternalRuntime": {
+    "quests": 35,
+    "rootOffers": 402,
+    "assortItemRows": 946,
+    "questUnlocks": 44,
+    "suits": 68
+  },
+  "profileMigration": {
+    "marker": "admiral-trader-legacy-consolidation-v1",
+    "standing": "maximum-of-admiral-and-legacy",
+    "salesSum": "maximum-of-admiral-and-legacy",
+    "loyaltyLevel": "maximum-of-admiral-and-legacy",
+    "purchaseHistory": "union-by-persistent-offer-id",
+    "dialogue": "merge-by-persistent-message-id-and-re-own-to-admiral",
+    "insurance": "re-own-to-admiral",
+    "repeatableQuests": "re-own-to-admiral",
+    "removeLegacyTraderRecords": "only-after-every-loaded-profile-saves-successfully"
+  },
+  "identityInventory": "external-content-identities.json",
+  "integrationAuthority": {
+    "tgcPr": 362,
+    "tgcHead": "bd1500b86c356f5e97fade75cf0c1df974ae9621",
+    "beltPr": 360,
+    "beltHead": "c48238023e0d1d0dc8fabcabafb79db66154b90b"
+  }
+}

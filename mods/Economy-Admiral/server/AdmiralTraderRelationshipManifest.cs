@@ -9,6 +9,7 @@ public sealed record AdmiralTraderRelationshipOfferContract
     public required int LoyaltyLevel { get; init; }
     public required double RequiredStanding { get; init; }
     public required int MinimumPlayerLevel { get; init; }
+    public required int MinimumSalesSum { get; init; }
     public required int StockPerReset { get; init; }
     public required int BuyRestrictionPerReset { get; init; }
 }
@@ -25,7 +26,7 @@ public static class AdmiralTraderRelationshipManifest
         Require(root.GetProperty("stockClass").GetString() == "Relationship", "stockClass must be Relationship.");
 
         var authority = root.GetProperty("authority");
-        Require(!authority.GetProperty("salesSumGateAllowed").GetBoolean(), "sales-sum gating is forbidden.");
+        Require(authority.GetProperty("salesSumGateAllowed").GetBoolean(), "vanilla-style sales-sum gating must remain enabled.");
         Require(!authority.GetProperty("questGateAllowed").GetBoolean(), "quest gating is forbidden for Relationship stock.");
         Require(!authority.GetProperty("capabilityAuthority").GetBoolean(), "Relationship stock cannot own capability authority.");
         Require(authority.GetProperty("finiteStockRequired").GetBoolean(), "Relationship stock must remain finite.");
@@ -61,7 +62,8 @@ public static class AdmiralTraderRelationshipManifest
             Require(!offer.TryGetProperty("questGate", out var questGate) || questGate.ValueKind == JsonValueKind.Null, $"Relationship offer '{offerId}' cannot declare a quest gate.");
 
             var tier = loyaltyLevels[loyaltyLevel - 1];
-            Require(tier.GetProperty("minSalesSum").GetInt32() == 0, $"LL{loyaltyLevel} sales-sum gate drifted.");
+            var minimumSalesSum = tier.GetProperty("minSalesSum").GetInt32();
+            Require(minimumSalesSum > 0, $"LL{loyaltyLevel} sales-sum gate is invalid.");
             var standing = tier.GetProperty("minStanding").GetDouble();
             var minimumLevel = tier.GetProperty("minLevel").GetInt32();
             Require(standing > 0 && minimumLevel > 0, $"LL{loyaltyLevel} Relationship progression gate is invalid.");
@@ -73,6 +75,7 @@ public static class AdmiralTraderRelationshipManifest
                 LoyaltyLevel = loyaltyLevel,
                 RequiredStanding = standing,
                 MinimumPlayerLevel = minimumLevel,
+                MinimumSalesSum = minimumSalesSum,
                 StockPerReset = stock,
                 BuyRestrictionPerReset = buy,
             });

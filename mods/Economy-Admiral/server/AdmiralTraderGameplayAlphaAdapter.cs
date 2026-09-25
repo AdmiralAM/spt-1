@@ -24,12 +24,12 @@ public static class AdmiralTraderGameplayAlphaAdapter
     public const int FrozenBaselineOfferCount = 4;
     public const int FrozenMilestoneOfferCount = 7;
     public const int FrozenTotalOfferCount = 11;
-    public const int ActiveQuestCount = 43;
+    public const int ActiveQuestCount = 172;
     public const int ActiveBaselineOfferCount = 4;
     public const int ActiveRelationshipOfferCount = 3;
-    public const int ActiveMilestoneOfferCount = 8;
+    public const int ActiveMilestoneOfferCount = 18;
     public const int ActiveCoreOfferCount = 22;
-    public const int ActiveTotalOfferCount = 37;
+    public const int ActiveTotalOfferCount = 47;
     public const string ExpectedProductName = "Admiral Trader";
     public const string ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69";
     public const string ExpectedModGuid = "com.admiralam.spt.admiraltrader";

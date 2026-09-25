@@ -1,12 +1,42 @@
 # Admiral Trader changelog
 
-## 0.3.0-rc — Natalya absorption
+## 0.3.0 — stable beta campaign and storefront
 
-- Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Scorpion and Ref remain separate traders and are only used to reject duplicates.
+- Complete imported storefront presentation: every sold Artem item has a verified packaged prefab and non-empty Russian copy, all Painter prefabs are registered in the bundle manifest, and all 117 optional TGC templates receive non-destructive Russian-locale fallbacks when present.
+- Correct Snacky-Z as a 2x1/5x5 compact pouch and move it to a finite maintenance-material barter; move Painter's 20-draw Special Delivery from unrestricted cash purchase to a one-per-reset themed barter while preserving every template and offer ID.
+- Embed the complete WTT Artem runtime content directly in Admiral Trader while preserving all distributed identities; migrate existing relation/purchase/dialogue ownership to Admiral and remove the compatibility trader record only after successful profile saves. No separate Artem DLL or active mod folder remains.
+- Preserve Painter/TGC consolidation and the combined 35 quests, 402 offer roots / 946 assort rows, 44 unlocks and 68 suits under Admiral.
+- Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
+- Integrates Natalya as an in-engine specialist across 18 story beats while preserving her 35 absorbed native weapon presets and avoiding a second trader/dependency.
+- Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 82 offers without external item dependencies.
+- Hardens story objectives so every recovery includes a native operation point, no quest repeats an MS2000 zone, and all item/unlock rewards are stated explicitly in EN/RU success text.
+- Shows every story operation's position inside its ten-part investigation and names the next operation in success mail; each finale explicitly closes its map investigation.
+- Corrects `Ключ диспетчера` and `Ключ мастера` to check ownership of a bounded common-key pool without FIR or handover, matching their authored instructions.
+- Guards the generated Russian story locale against replacement-character corruption and verifies substantial UTF-8 Cyrillic coverage.
+- Restores the individual Russian operational brief to all 100 story descriptions while keeping exact runtime requirements in a separate readable section.
+- Corrects seven story beats whose authored recovery was previously represented only by a visit, marker or extraction; each now requires the promised FIR recovery and handover, with `Камера хранения` retaining its survival requirement.
+- Gives `Запасной кабинет` a bounded four-key Health Resort access pool without FIR or key handover before its recovery objective.
+- Makes `Камера хранения` require the promised FIR surveillance-record recovery and removes unsupported same-raid/night claims from five operational briefs while retaining their exact native objectives.
+- Replaces cyclic placeholder recovery items with explicit per-operation native SPT items across all 53 story recovery/handover beats, and materializes the promised combat, marking and sensor work in three compound operations.
+- Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.
 - First runtime storefront intake adds complete M700, T-5000M, RPDN and Mk17 presets, bringing the active runtime to 41 finite offers.
+- Expands the campaign to 72 quests: 40 staged Arsenal assignments, 4 opening Ground Zero operations, and 6 progressive equipment assignments while preserving the 43-quest foundation.
+- Accepts 51 verified WTT Armory/Content Backport weapon templates as optional alternatives in matching Arsenal pools. Every quest keeps native SPT choices and the campaign remains fully playable without WTT.
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
+- Complete the M7 reward layer with 20 progressive native field-support items, four early complete weapons, ten Natalya signature presets and conditional B&A&HB equipment/container trades; every added item replaces a bounded share of roubles.
+- Add Admiral as a native SPT insurer with a 90% return chance, fast 6–12 hour delivery, 120-hour storage, relationship-scaled 25/22/19/16% pricing and complete EN/RU lifecycle mail.
+- Move the latter half of the opening story from Ground Zero into Customs, Woods, Factory and Interchange cadence while preserving all quest IDs and prerequisites.
+- Add eleven bounded native tactical rewards: two pistols, five optics and four weapon-support packages, each replacing part of the original rouble payout.
+- Replace the old repetitive distance ladder with a three-step 100 m / 200 m / 300 m marksman chain and weapon-specific pools.
+- Rebalance all 40 Arsenal assignments into two simultaneous 20-step lines with contrasting weapon roles, complete 143-model native family coverage, optional WTT analogues, persistent quest IDs and progressively rarer late-game platforms.
+- Give every Arsenal assignment a useful item reward while trading away part of its rouble payout: 30 staged field-support rewards and ten complete configured weapons, one at every fourth step in each line.
+- Complete the reward pass across all 172 quests: the remaining 40 cash-only records now award a useful native field item while retaining at least ₽10,000, XP and Admiral standing.
+- Add vanilla-style cumulative sales requirements to Admiral loyalty progression: ₽500,000 at LL2, ₽1,200,000 at LL3 and ₽2,200,000 at LL4, alongside the existing level and standing requirements.
+- Correct the campaign review so both complete 20-step Arsenal lanes are shown and add release-readiness checks for rewards, parallel story openings, loyalty attainability and all four store tiers.
+- Replace the cash price on six specialist offers with bounded multi-item barters while retaining their existing loyalty, quest, stock and purchase gates.
+- Add regressions proving globally unique quest-progress identities and requiring every non-key FindItem objective to have a matching HandoverItem objective; keys remain retained intentionally.
 
 ## 0.2.0 — stable campaign baseline
 

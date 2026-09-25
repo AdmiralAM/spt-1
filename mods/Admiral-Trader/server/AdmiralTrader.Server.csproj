@@ -9,7 +9,7 @@
     <Version>0.3.0</Version>
     <AssemblyVersion>0.3.0.0</AssemblyVersion>
     <FileVersion>0.3.0.0</FileVersion>
-    <InformationalVersion>0.3.0-rc</InformationalVersion>
+    <InformationalVersion>0.3.0</InformationalVersion>
     <SptRuntimeTarget>4.1.5</SptRuntimeTarget>
     <SptPublishedApiBaseline>4.1.5</SptPublishedApiBaseline>
     <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' != ''">true</UseExactSptRuntime>
@@ -21,6 +21,10 @@
     <PackageReference Include="SPTushonka.Common" Version="$(SptPublishedApiBaseline)" />
     <PackageReference Include="SPTushonka.DI" Version="$(SptPublishedApiBaseline)" />
     <PackageReference Include="SPTushonka.Server.Core" Version="$(SptPublishedApiBaseline)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WTT-ServerCommonLib" Version="3.0.6" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseExactSptRuntime)' == 'true'">
@@ -40,22 +44,37 @@
   </Target>
 
   <ItemGroup>
-    <Content Include="..\assets\d5c27bb3169f8dfbc13f6b69.jpg" Link="assets\d5c27bb3169f8dfbc13f6b69.jpg" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\reward-policy.json" Link="manifests\reward-policy.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\runtime-manifest.json" Link="manifests\runtime-manifest.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\baseline-stock.json" Link="manifests\baseline-stock.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\gameplay-policy.json" Link="manifests\gameplay-policy.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\m5-relationship-runtime.json" Link="manifests\m5-relationship-runtime.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\m5-spt415-item-evidence.json" Link="manifests\m5-spt415-item-evidence.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\storefront-core-expansion.json" Link="manifests\storefront-core-expansion.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\manifests\identity-assets.json" Link="manifests\identity-assets.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\natalya-signature-assort.json" Link="db\natalya-signature-assort.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\assets\d5c27bb3169f8dfbc13f6b69.jpg" Link="assets\d5c27bb3169f8dfbc13f6b69.jpg" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\runtime-manifest.json" Link="manifests\runtime-manifest.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\reward-bundle-policy.json" Link="manifests\reward-bundle-policy.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\story-campaign-runtime.json" Link="manifests\story-campaign-runtime.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\external-trader-consolidation.json" Link="manifests\external-trader-consolidation.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\external-content-identities.json" Link="manifests\external-content-identities.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\painter-special-delivery-pool.json" Link="manifests\painter-special-delivery-pool.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\artem-bundle-inventory.json" Link="manifests\artem-bundle-inventory.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\painter-bundle-inventory.json" Link="manifests\painter-bundle-inventory.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\belt-progression-policy.json" Link="manifests\belt-progression-policy.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\unique-container-economy-policy.json" Link="manifests\unique-container-economy-policy.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\dialogue.json" Link="db\dialogue.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\natalya-signature-assort.json" Link="db\natalya-signature-assort.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\optional\icebreaker\**\*.json" Link="db\optional\icebreaker\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\optional\storefront\*.json" Link="db\optional\storefront\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\optional\wtt-preset-catalog.json" Link="db\optional\wtt-preset-catalog.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\optional\wtt-reward-trades.json" Link="db\optional\wtt-reward-trades.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\rewards\*.json" Link="db\rewards\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomClothing\**\*.json" Link="db\CustomClothing\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomItems\**\*.json" Link="db\CustomItems\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomQuests\**\*.*" Link="db\CustomQuests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\CustomQuestZones\**\*.json" Link="db\CustomQuestZones\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\bundles.json" Link="bundles.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\external\artem\**\*.*" Link="external\artem\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\external\painter\**\*.*" Link="external\painter\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>

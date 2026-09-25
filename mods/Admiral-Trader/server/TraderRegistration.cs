@@ -20,6 +20,7 @@ public sealed class AdmiralTraderRegistration(
     ModHelper modHelper,
     ImageRouter imageRouter,
     TraderConfig traderConfig,
+    InsuranceConfig insuranceConfig,
     RagfairConfig ragfairConfig,
     TimeUtil timeUtil,
     TradersTable tradersTable,
@@ -53,9 +54,11 @@ public sealed class AdmiralTraderRegistration(
         TraderAssort natalyaSignatureAssort = modHelper.GetJsonDataFromFile<TraderAssort>(modPath, "db/natalya-signature-assort.json");
         Dictionary<string, Dictionary<MongoId, MongoId>> questAssort =
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
+        Dictionary<string, List<string>?> dialogue =
+            modHelper.GetJsonDataFromFile<Dictionary<string, List<string>?>>(modPath, "db/dialogue.json");
 
         MergeNatalyaSignatureStock(assort, natalyaSignatureAssort);
-        ValidateTraderData(traderBase, assort, questAssort);
+        ValidateTraderData(traderBase, assort, questAssort, dialogue);
         ValidateRelationshipStock(modPath, assort, questAssort);
 
         if (tradersTable.ContainsKey(traderBase.Id))
@@ -64,6 +67,8 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidOperationException($"Cannot register Admiral Trader: update-time entry {traderBase.Id} already exists");
         if (ragfairConfig.Traders.ContainsKey(traderBase.Id))
             throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair entry {traderBase.Id} already exists");
+        if (insuranceConfig.ReturnChancePercent.ContainsKey(traderBase.Id))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: insurance entry {traderBase.Id} already exists");
 
         UpdateTime updateTime = new()
         {
@@ -76,12 +81,13 @@ public sealed class AdmiralTraderRegistration(
             Base = traderBase,
             Assort = assort,
             QuestAssort = questAssort,
-            Dialogue = []
+            Dialogue = dialogue
         };
 
         bool traderAdded = false;
         bool updateTimeAdded = false;
         bool ragfairAdded = false;
+        bool insuranceAdded = false;
         try
         {
             traderAdded = tradersTable.TryAdd(traderBase.Id, trader);
@@ -92,11 +98,17 @@ public sealed class AdmiralTraderRegistration(
             ragfairAdded = ragfairConfig.Traders.TryAdd(traderBase.Id, true);
             if (!ragfairAdded)
                 throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair entry {traderBase.Id} already exists");
+            insuranceAdded = insuranceConfig.ReturnChancePercent.TryAdd(traderBase.Id, 90);
+            if (!insuranceAdded)
+                throw new InvalidOperationException($"Cannot register Admiral Trader: insurance entry {traderBase.Id} already exists");
             imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
             AddLocales(traderBase);
+            RegisterLegacyCompatibilityShells(traderBase);
         }
         catch
         {
+            if (insuranceAdded)
+                insuranceConfig.ReturnChancePercent.Remove(traderBase.Id);
             if (ragfairAdded)
                 ragfairConfig.Traders.Remove(traderBase.Id);
             if (updateTimeAdded)
@@ -105,13 +117,57 @@ public sealed class AdmiralTraderRegistration(
                 tradersTable.Remove(traderBase.Id);
             throw;
         }
-        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
+        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} core assort item records");
+    }
+
+    private void RegisterLegacyCompatibilityShells(TraderBase admiralBase)
+    {
+        foreach (string legacyIdText in LegacyTraderConsolidation.LegacyTraderIds)
+        {
+            MongoId legacyId = new(legacyIdText);
+            if (tradersTable.ContainsKey(legacyId))
+                continue;
+
+            TraderBase legacyBase = admiralBase with
+            {
+                Id = legacyId,
+                Name = $"Admiral compatibility {legacyIdText}",
+                Nickname = "Compatibility",
+                UnlockedByDefault = false,
+                Insurance = null,
+                Repair = null
+            };
+            tradersTable.Add(legacyId, new Trader
+            {
+                Base = legacyBase,
+                Assort = new TraderAssort
+                {
+                    Items = [],
+                    BarterScheme = [],
+                    LoyalLevelItems = []
+                },
+                QuestAssort = new Dictionary<string, Dictionary<MongoId, MongoId>>
+                {
+                    ["started"] = [],
+                    ["success"] = [],
+                    ["fail"] = []
+                },
+                Dialogue = []
+            });
+            if (!traderConfig.UpdateTime.Any(entry => entry.TraderId == legacyId))
+                traderConfig.UpdateTime.Add(new UpdateTime
+                {
+                    TraderId = legacyId,
+                    Seconds = new MinMax<int>(timeUtil.GetHoursAsSeconds(1), timeUtil.GetHoursAsSeconds(2))
+                });
+        }
     }
 
     private static void ValidateTraderData(
         TraderBase traderBase,
         TraderAssort assort,
-        Dictionary<string, Dictionary<MongoId, MongoId>> questAssort)
+        Dictionary<string, Dictionary<MongoId, MongoId>> questAssort,
+        Dictionary<string, List<string>?> dialogue)
     {
         if (traderBase.Id.ToString() != RuntimeIdentity.TraderId)
             throw new InvalidDataException($"base.json trader id mismatch: {traderBase.Id}");
@@ -121,6 +177,13 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException("base.json trader avatar route is missing");
         if (assort.Items is null || assort.BarterScheme is null || assort.LoyalLevelItems is null)
             throw new InvalidDataException("assort.json is missing a required native collection");
+        string[] insuranceDialogueKeys = ["insuranceStart", "insuranceFound", "insuranceExpired", "insuranceComplete", "insuranceFailed", "insuranceFailedLabs", "insuranceFailedLabyrinth"];
+        if (traderBase.Insurance?.Availability is not true
+            || traderBase.Insurance.MinReturnHour != 6
+            || traderBase.Insurance.MaxReturnHour != 12
+            || traderBase.Insurance.MaxStorageTime != 120
+            || insuranceDialogueKeys.Any(key => !dialogue.TryGetValue(key, out var messages) || messages is null || messages.Count == 0))
+            throw new InvalidDataException("Admiral native insurance contract is incomplete");
 
         string[] exactNativeKeys = ["started", "success", "fail"];
         if (questAssort.Count != exactNativeKeys.Length || exactNativeKeys.Any(key => !questAssort.ContainsKey(key)))
@@ -138,8 +201,8 @@ public sealed class AdmiralTraderRegistration(
         var signatureBarters = signatureAssort.BarterScheme!;
         var signatureLoyalty = signatureAssort.LoyalLevelItems!;
         Item[] roots = signatureItems.Where(item => item.ParentId?.ToString() == "hideout").ToArray();
-        if (roots.Length != 4)
-            throw new InvalidDataException($"Expected four Natalya signature offers, got {roots.Length}");
+        if (roots.Length != 35)
+            throw new InvalidDataException($"Expected 35 Natalya weapon offers, got {roots.Length}");
         if (roots.Any(root => root.Upd is null || root.Upd.UnlimitedCount is not false || root.Upd.StackObjectsCount is null or <= 0 || root.Upd.BuyRestrictionMax is not 1))
             throw new InvalidDataException("Natalya signature offers must remain finite one-per-reset presets");
 
@@ -201,6 +264,7 @@ public sealed class AdmiralTraderRegistration(
         }
     }
 
+
     private void AddLocales(TraderBase traderBase)
     {
         foreach (var (localeCode, localeKvP) in localesTable.Global)
@@ -219,6 +283,13 @@ public sealed class AdmiralTraderRegistration(
                 lazyLoadedLocaleData[$"{traderBase.Id} Nickname"] = localizedName;
                 lazyLoadedLocaleData[$"{traderBase.Id} Location"] = localizedLocation;
                 lazyLoadedLocaleData[$"{traderBase.Id} Description"] = localizedName;
+                lazyLoadedLocaleData["admiral_insurance_start"] = isRussian ? "Группу отправил. Если снаряжение осталось на месте — его подберут." : "Recovery team dispatched. If your equipment is still there, they will collect it.";
+                lazyLoadedLocaleData["admiral_insurance_found"] = isRussian ? "Часть снаряжения вернулась. Забери до истечения срока хранения." : "Some of your equipment has returned. Collect it before storage expires.";
+                lazyLoadedLocaleData["admiral_insurance_expired"] = isRussian ? "Срок хранения истёк. Освобождаю место под следующие возвраты." : "Storage time expired. I am clearing space for the next returns.";
+                lazyLoadedLocaleData["admiral_insurance_complete"] = isRussian ? "Возврат передан. Проверь комплектность." : "Recovery delivered. Check the contents.";
+                lazyLoadedLocaleData["admiral_insurance_failed"] = isRussian ? "Группа ничего не нашла. Район уже зачистили до нас." : "The team found nothing. Someone cleared the area before us.";
+                lazyLoadedLocaleData["admiral_insurance_failed_labs"] = isRussian ? "В Лабораторию группу не отправляю. Возврата не будет." : "I do not send recovery teams into the Lab. Nothing will return.";
+                lazyLoadedLocaleData["admiral_insurance_failed_labyrinth"] = isRussian ? "В Лабиринт группа не пойдёт. Снаряжение потеряно." : "No recovery team enters the Labyrinth. The equipment is lost.";
                 return lazyLoadedLocaleData;
             });
         }

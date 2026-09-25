@@ -6,7 +6,7 @@
   "targetSptVersion": "4.1.5",
   "purpose": "Finite specialist signalling stock and requester-local field-marker replenishment unlocked by Admiral loyalty.",
   "authority": {
-    "salesSumGateAllowed": false,
+    "salesSumGateAllowed": true,
     "questGateAllowed": false,
     "capabilityAuthority": false,
     "finiteStockRequired": true,
@@ -58,10 +58,10 @@
     "tpl": "5991b51486f77447b112d44f",
     "priceRub": 16500,
     "tiers": [
-      {"loyaltyLevel": 1, "minimumPlayerLevel": 1, "requiredStanding": 0.0, "stockPerReset": 12, "buyRestriction": 4},
-      {"loyaltyLevel": 2, "minimumPlayerLevel": 15, "requiredStanding": 0.1, "stockPerReset": 16, "buyRestriction": 6},
-      {"loyaltyLevel": 3, "minimumPlayerLevel": 25, "requiredStanding": 0.3, "stockPerReset": 20, "buyRestriction": 8},
-      {"loyaltyLevel": 4, "minimumPlayerLevel": 35, "requiredStanding": 0.55, "stockPerReset": 24, "buyRestriction": 10}
+      {"loyaltyLevel": 1, "minimumPlayerLevel": 1, "minimumSalesSum": 0, "requiredStanding": 0.0, "stockPerReset": 12, "buyRestriction": 4},
+      {"loyaltyLevel": 2, "minimumPlayerLevel": 15, "minimumSalesSum": 500000, "requiredStanding": 0.1, "stockPerReset": 16, "buyRestriction": 6},
+      {"loyaltyLevel": 3, "minimumPlayerLevel": 25, "minimumSalesSum": 1200000, "requiredStanding": 0.3, "stockPerReset": 20, "buyRestriction": 8},
+      {"loyaltyLevel": 4, "minimumPlayerLevel": 35, "minimumSalesSum": 2200000, "requiredStanding": 0.55, "stockPerReset": 24, "buyRestriction": 10}
     ]
   },
   "itemEvidence": {

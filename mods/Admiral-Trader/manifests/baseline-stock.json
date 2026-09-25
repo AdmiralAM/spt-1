@@ -31,13 +31,14 @@
     },
     {
       "offerId": "ad2000000000000000000003",
-      "tpl": "61605d88ffa6e502ac5e7eeb",
-      "role": "reconnaissance",
+      "tpl": "590c60fc86f77412b13fddcf",
+      "role": "document-storage",
       "priceRub": 68000,
-      "stockPerReset": 3,
+      "stockPerReset": 1,
       "buyRestriction": 1,
       "loyaltyLevel": 1,
-      "questGate": null
+      "questGate": null,
+      "productAdjustment": "Wilcox RAPTAR ES replaced by a Documents case while preserving the persistent offer ID and four-offer Baseline contract."
     },
     {
       "offerId": "ad2000000000000000000004",

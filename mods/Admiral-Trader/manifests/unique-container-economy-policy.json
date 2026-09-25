@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Authoritative audit catalogue for portable specialty containers normalized by Admiral Trader at runtime.",
+  "exclusions": ["ordinary backpacks", "ordinary tactical rigs", "armor", "static or world-loot containers"],
+  "runtimeRules": {
+    "fenceOffersAllowed": false,
+    "minimumLoyaltyLevel": 2,
+    "maximumStock": 2,
+    "cashOffersBelowFloorAllowed": false,
+    "existingNonCashBartersPreserved": true,
+    "missingOptionalTemplatesSkipped": true
+  },
+  "items": [
+    { "templateId": "9543bbe8083934dc3b1b1330", "name": "Small Tool Bag", "priceFloorRub": 350000, "loyaltyLevel": 2, "stock": 2 },
+    { "templateId": "c29f11b2e63a089916739c96", "name": "Small Leather Docket", "priceFloorRub": 400000, "loyaltyLevel": 3, "stock": 2 },
+    { "templateId": "12403f74773f49be6a2d84b7", "name": "Small Medical Pouch", "priceFloorRub": 350000, "loyaltyLevel": 2, "stock": 2 },
+    { "templateId": "440de5d056825485a0cf3a19", "name": "Small Magazine Pouch", "priceFloorRub": 600000, "loyaltyLevel": 3, "stock": 2 },
+    { "templateId": "ae9e418fd5d4c4eec4a0e6ea", "name": "Small Ammunition Pouch", "priceFloorRub": 450000, "loyaltyLevel": 2, "stock": 2 },
+    { "templateId": "672e2e758808bacbb9d5abc4", "name": "TGC Ammo Pouch", "priceFloorRub": 600000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "6925918065a41e6b1e02a7d7", "name": "Vintage Lunch Box", "priceFloorRub": 350000, "loyaltyLevel": 2, "stock": 2 },
+    { "templateId": "2eabd4da4ab194eb168e72d3", "name": "Small Key Ring", "priceFloorRub": 500000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "669c10fa06c00c483c58537a", "name": "Small Cash Box", "priceFloorRub": 400000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "669c1a420c8342338269dd86", "name": "Vintage Thermaster Cooler", "priceFloorRub": 900000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "681c17948a6e3fb72e221390", "name": "Vintage Fuel Container", "priceFloorRub": 750000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "681d117c2b345ac614614bf8", "name": "Mobile Food Cart", "priceFloorRub": 1200000, "loyaltyLevel": 4, "stock": 1 },
+    { "templateId": "681d124d70b2418646a80fa3", "name": "Violin Case", "priceFloorRub": 850000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "681d1395a5c2308fdcbcda92", "name": "Attachment Case", "priceFloorRub": 950000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "681d2b9736545ba7dfd0847a", "name": "Mil-Spec Tool Case", "priceFloorRub": 650000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "6761b213607f9a6f79017b65", "name": "Mobile Infirmary", "priceFloorRub": 1500000, "loyaltyLevel": 4, "stock": 1 },
+    { "templateId": "6761b213607f9a6f79017b67", "name": "HEX-Case", "priceFloorRub": 750000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "6a3c0e9643138b61c8739586", "name": "Small Ballistic Plate Case", "priceFloorRub": 800000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "66326bfd46817c660d015122", "name": "Abandoned Medical Box", "priceFloorRub": 2000000, "loyaltyLevel": 4, "stock": 1 },
+    { "templateId": "66326bfd46817c660d015150", "name": "Snacky-Z", "priceFloorRub": 900000, "loyaltyLevel": 3, "stock": 1 },
+    { "templateId": "6937ecc3dbdccab44605fcf0", "name": "Twitch Rare Dogtag Case", "priceFloorRub": 1500000, "loyaltyLevel": 4, "stock": 1 }
+  ]
+}

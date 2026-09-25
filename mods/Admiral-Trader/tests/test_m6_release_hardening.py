@@ -10,7 +10,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
     def test_release_metadata_and_scope_are_aligned(self):
         runtime = json.loads((ROOT / "manifests/runtime-manifest.json").read_text())
         m6 = json.loads((ROOT / "manifests/m6-stable-release.json").read_text())
-        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "release-candidate", "~4.1.0"))
+        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "stable-beta", "~4.1.0"))
         self.assertEqual(runtime["schemaVersion"], 2)
         self.assertTrue(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
@@ -23,11 +23,26 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertTrue(all(m6["physicalAcceptance"].values()))
 
     def test_runtime_sources_do_not_write_profiles_and_have_rollback(self):
-        sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "server").glob("*.cs"))
+        migration_path = ROOT / "server/LegacyTraderConsolidation.cs"
+        sources = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (ROOT / "server").glob("*.cs")
+            if path != migration_path
+        )
         for forbidden in ("user/profiles", "SetPmcProfile", "SaveProfile", "ProfileStore"):
             self.assertNotIn(forbidden, sources)
         self.assertIn("tradersTable.Remove(traderBase.Id)", sources)
         self.assertIn("templateTable.Quests.Remove(questId)", sources)
+
+        migration = migration_path.read_text(encoding="utf-8")
+        self.assertNotIn("user/profiles", migration)
+        self.assertNotIn("SetPmcProfile", migration)
+        self.assertNotIn("ProfileStore", migration)
+        self.assertIn("saveServer.GetProfiles()", migration)
+        self.assertLess(
+            migration.index("await saveServer.SaveProfileAsync"),
+            migration.index("tradersTable.Remove(legacyId)"),
+        )
 
     def test_install_and_build_contract_cover_aliases_and_inventory(self):
         install = (ROOT / "docs/INSTALL.md").read_text(encoding="utf-8")
@@ -38,21 +53,28 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
         self.assertIn("assets\\d5c27bb3169f8dfbc13f6b69.jpg", (ROOT / "server/AdmiralTrader.Server.csproj").read_text(encoding="utf-8"))
-        self.assertIn("publicationMode -NotePropertyValue 'release-candidate'", builder)
+        self.assertIn("publicationMode -NotePropertyValue 'stable-beta'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
         self.assertIn("d5c27bb3169f8dfbc13f6b69", install)
+        self.assertIn("milestoneOffers = 18", builder)
+        self.assertIn("natalyaSignatureOffers = 35", builder)
+        self.assertIn("sourceRegistrationEnabled = $true", builder)
+        self.assertNotIn("PR #328 active canonical head", builder)
 
     def test_combined_candidate_uses_active_campaign(self):
         builder = (REPO / "mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1").read_text(encoding="utf-8")
         workflow = (REPO / ".github/workflows/admiral-economy-combined-spt415-rc.yml").read_text(encoding="utf-8")
         self.assertNotIn("TraderWorktree", builder + workflow)
         self.assertNotIn("frozen-trader", builder + workflow)
-        self.assertIn("$quests.Count -ne 43", builder)
-        self.assertIn("Count -ne 37", builder)
-        self.assertIn("Count -ne 4", builder)
+        self.assertIn("$quests.Count -ne 172", builder)
+        self.assertIn("Count -ne 47", builder)
+        self.assertIn("Count -ne 35", builder)
         self.assertIn("workflow_dispatch:", workflow)
         self.assertNotIn("pull_request:", workflow)
+        self.assertIn("releaseChannel='stable-beta'", builder)
+        self.assertIn("releaseChannel='preview'", builder)
+        self.assertIn("Admiral-Suite-Trader-0.3.0-STABLE-BETA-Economy-0.1.0-PREVIEW", builder + workflow)
 
 
 if __name__ == "__main__":

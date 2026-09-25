@@ -4,199 +4,203 @@
   "questCount": 43,
   "quests": {
     "5d404ebd654de4efecef71d2": {
-      "questName": "Access Protocol: Fundamentals",
+      "questName": "Протокол доступа: Основы",
       "finishConditionIds": [
         "6f1312f5476c9a65eb582852"
       ]
     },
     "1b92e4cf212d895be4f70b2c": {
-      "questName": "Access Protocol: Factory",
+      "questName": "Протокол доступа: Завод",
       "finishConditionIds": [
         "686d8ecb6398102461164f35"
       ]
     },
     "cba3374f11375c4e7eea9efe": {
-      "questName": "Access Protocol: Customs",
+      "questName": "Протокол доступа: Таможня",
       "finishConditionIds": [
         "487eb052e8d42c0af1d6da22"
       ]
     },
     "80c11744c2310e1bfe160a8b": {
-      "questName": "Access Protocol: Woods",
+      "questName": "Протокол доступа: Лес",
       "finishConditionIds": [
         "a2b0e47fa77de4b540401d20"
       ]
     },
     "42ff30bc152b8212dc15b20a": {
-      "questName": "Access Protocol: Interchange",
+      "questName": "Протокол доступа: Развязка",
       "finishConditionIds": [
         "d81726267419b7468ca78184"
       ]
     },
     "d737e3b990c371708db369f0": {
-      "questName": "Access Protocol: Shoreline",
+      "questName": "Протокол доступа: Берег",
       "finishConditionIds": [
         "53e45250b01cd1b0e28cd476"
       ]
     },
     "9c438fa48f645044ddc75e8d": {
-      "questName": "Access Protocol: Reserve",
+      "questName": "Протокол доступа: Резерв",
       "finishConditionIds": [
         "fd78d0034ef438a50d57bde7"
       ]
     },
     "59a36c5ee68210f9154d94d0": {
-      "questName": "Access Protocol: Lighthouse",
+      "questName": "Протокол доступа: Маяк",
       "finishConditionIds": [
         "7a6e134edb720933c4beb7ad"
       ]
     },
     "a8b05eb5c5f0e67ee881df52": {
-      "questName": "Access Protocol: Laboratory",
+      "questName": "Протокол доступа: Лаборатория",
       "finishConditionIds": [
         "fd5539a38fc34100a0fba6b7"
       ]
     },
     "68a6527a3c73b2e85977d7a1": {
-      "questName": "Access Protocol: Clearance",
+      "questName": "Протокол доступа: Допуск",
       "finishConditionIds": [
         "5da6f0a37e5f24fed22d04f5"
       ]
     },
     "153839f368b80b6fbc36d29e": {
-      "questName": "Arsenal Protocol: Precision Rifles - Fieldwork",
+      "questName": "Ротация «Арсенал» B-14: Винтовки НАТО с продольно-скользящим затвором",
       "finishConditionIds": [
         "d30d20c597a522979a066460"
       ]
     },
     "2568ee0bfe2ee12f24d78f45": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Qualification",
+      "questName": "Ротация «Арсенал» B-11: Начальные марксманские винтовки",
       "finishConditionIds": [
         "fe8911621fabb421e6bce908"
       ]
     },
     "33810921ad5c893b866b3951": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Fieldwork",
+      "questName": "Ротация «Арсенал» B-12: Служебные марксманские винтовки",
       "finishConditionIds": [
         "a21d4a93c1baef8fe71bb113"
       ]
     },
     "43d9544a09d068476a1a18df": {
-      "questName": "Arsenal Protocol: SMG / PDW - Munitions",
+      "questName": "Ротация «Арсенал» A-12: Специальное оружие самообороны",
       "finishConditionIds": [
         "4aa61c5706270f44dcc264b2"
       ]
     },
     "4ada822d634041a721b346d5": {
-      "questName": "Arsenal Protocol: Assault Rifles - Qualification",
+      "questName": "Ротация «Арсенал» B-17: Тяжёлые специальные винтовки",
       "finishConditionIds": [
         "faa4624ecbb79343c8400c2a"
       ]
     },
     "570d250679328757614dcbcb": {
-      "questName": "Arsenal Protocol: Assault Rifles - Fieldwork",
+      "questName": "Ротация «Арсенал» B-18: Современные автоматы Калашникова",
       "finishConditionIds": [
-        "b556f68e6bd564065c405be8"
+        "b556f68e6bd564065c405be8",
+        "dfa3fb451180ff3bb78b0226"
       ]
     },
     "59ca4829e098dfafa03888d2": {
-      "questName": "Arsenal Protocol: Sidearms - Qualification",
+      "questName": "Ротация «Арсенал» A-15: Бесшумное короткоствольное оружие",
       "finishConditionIds": [
         "6b4875d80b04e43ce8aba265"
       ]
     },
     "5f62a924076e4b7c2320f2e8": {
-      "questName": "Arsenal Protocol: Shotguns - Qualification",
+      "questName": "Ротация «Арсенал» A-20: Мастерство оружия поддержки",
       "finishConditionIds": [
         "52dda51c6632938b46e0ba34"
       ]
     },
     "73febe7f3f61ca0913410ffc": {
-      "questName": "Arsenal Protocol: Special Weapons - Fieldwork",
+      "questName": "Ротация «Арсенал» A-17: Единые пулемёты",
       "finishConditionIds": [
         "da1541497f50cb43f92f7be8"
       ]
     },
     "7564e60e4c1c2f1b67a594a4": {
-      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Munitions",
+      "questName": "Ротация «Арсенал» B-10: Специальные системы 9×39",
       "finishConditionIds": [
         "5b3f863bbdc829d3988964f1"
       ]
     },
     "88118e994f26cab3bee1521d": {
-      "questName": "Arsenal Protocol: Shotguns - Fieldwork",
+      "questName": "Ротация «Арсенал» A-19: Мастерство ближнего боя",
       "finishConditionIds": [
         "01249763ca1a786874311b57"
       ]
     },
     "8cba3e2ec639a4aa2c26c4da": {
-      "questName": "Arsenal Protocol: Sidearms - Munitions",
+      "questName": "Ротация «Арсенал» A-14: Крупнокалиберное короткоствольное оружие",
       "finishConditionIds": [
         "bdf555e9736062fe9c9c265e"
       ]
     },
     "8d8d81032315f4fdc5a06798": {
-      "questName": "Arsenal Protocol: Shotguns - Munitions",
+      "questName": "Ротация «Арсенал» A-13: Специализированные дробовики",
       "finishConditionIds": [
-        "6bc5208b68a0dc2a41eefb80"
+        "6bc5208b68a0dc2a41eefb80",
+        "87358203f05f31f30221d3e6"
       ]
     },
     "a0d05e28971f1ba57639b97d": {
-      "questName": "Arsenal Protocol: Precision Rifles - Qualification",
+      "questName": "Ротация «Арсенал» B-13: Начальные винтовки с продольно-скользящим затвором",
       "finishConditionIds": [
         "007e6c3eb1b9cf83ab0e235e"
       ]
     },
     "ad9233f54a7132d905d6f29d": {
-      "questName": "Arsenal Protocol: SMG / PDW - Qualification",
+      "questName": "Ротация «Арсенал» B-20: Мастерство точной стрельбы",
       "finishConditionIds": [
         "cd22cfe6153adaeee7ae2d3a"
       ]
     },
     "b016df9d2bea4269cc59d531": {
-      "questName": "Arsenal Protocol: Sidearms - Fieldwork",
+      "questName": "Ротация «Арсенал» A-11: Высокоскоростные пистолеты",
       "finishConditionIds": [
         "ab61e9d13eea0b7f93d5c160"
       ]
     },
     "cb8a202d7107f39d860ccb38": {
-      "questName": "Arsenal Protocol: Special Weapons - Qualification",
+      "questName": "Ротация «Арсенал» A-16: Ручные пулемёты",
       "finishConditionIds": [
         "1d8adadb81df57f4a4be83eb"
       ]
     },
     "cd2641c70bede98dac3945d0": {
-      "questName": "Arsenal Protocol: Precision Rifles - Munitions",
+      "questName": "Ротация «Арсенал» B-15: Крупнокалиберные высокоточные винтовки",
       "finishConditionIds": [
         "1461e863a341fc8bce2b225e"
       ]
     },
     "f1368cb3b69c3a4917c4f206": {
-      "questName": "Arsenal Protocol: Special Weapons - Munitions",
+      "questName": "Ротация «Арсенал» A-18: Гранатомёты",
       "finishConditionIds": [
         "1d4ee68ca05784ae121e395e"
       ]
     },
     "f6e51dc4e50e47ee9af50a4d": {
-      "questName": "Arsenal Protocol: Assault Rifles - Munitions",
+      "questName": "Ротация «Арсенал» B-16: Современные автоматы промежуточного калибра",
       "finishConditionIds": [
         "7674b35b55e8d3c6df54202f"
       ]
     },
     "ffb63228a333c8b0755741ea": {
-      "questName": "Arsenal Protocol: SMG / PDW - Fieldwork",
+      "questName": "Ротация «Арсенал» B-19: Модульные винтовки и булл-папы",
       "finishConditionIds": [
         "54164d9db77aad7f7cb9ee9f"
       ]
     },
     "8dad0d354ac000b7bbf05b9a": {
-      "questName": "Acoustic Discipline",
+      "questName": "Акустическая дисциплина",
       "finishConditionIds": [
-        "4aad9529573642ec30c9105c"
+        "4aad9529573642ec30c9105c",
+        "e0e4fc81df436545de81aaab",
+        "9a648a530f20b3be24784b8c"
       ]
     },
     "56813681ae0690016376f163": {
-      "questName": "Forward Reserve",
+      "questName": "Полевой резерв",
       "finishConditionIds": [
         "d82d4ed891c929e0ba71488f",
         "00489f3d43ab4c05dce91e07",
@@ -204,73 +208,212 @@
       ]
     },
     "208db81b5ce195bf0c176852": {
-      "questName": "Low Profile",
+      "questName": "Низкий профиль",
       "finishConditionIds": [
-        "96d629538203984d6a1ee835"
+        "96d629538203984d6a1ee835",
+        "25781d0c6bfda0e12cd9dddd",
+        "1e697394af15421d80591d6e"
       ]
     },
     "6574a072f763d0b09a553401": {
-      "questName": "Mobility Doctrine",
+      "questName": "Манёвренная защита",
       "finishConditionIds": [
         "1f59a3743e20869842a50162",
         "53de6446495ed86a6c2adaa1"
       ]
     },
     "8b6f2b25ab2e91e0540761e3": {
-      "questName": "Borrowed Access",
+      "questName": "Чужой доступ",
       "finishConditionIds": [
         "9dd34c17ab503c7bd7ea89aa",
         "6137c94c3ff44cf3413856be"
       ]
     },
     "41a41cb262ea084c1e110513": {
-      "questName": "Acoustic Contact",
+      "questName": "Акустический контакт",
       "finishConditionIds": [
         "060c9e16949fdda830dd9339",
         "e7a1dd9b3a542cc6eef2d7d8"
       ]
     },
     "133aa723b4695a3d93de92f1": {
-      "questName": "Route Security",
+      "questName": "Безопасный маршрут",
       "finishConditionIds": [
         "d75e58abc206629b87f6dba9",
         "d4ee61abf4fb680435d98268"
       ]
     },
     "db220288bc8d5559a45feeb1": {
-      "questName": "Contractor Intercept",
+      "questName": "Перехват контрактников",
       "finishConditionIds": [
         "7450986a44d2a76b79bdbb72",
         "39bade34f34f14db7d5e7fea"
       ]
     },
     "4c2cc3f85d60170907642d9e": {
-      "questName": "Observation Window",
+      "questName": "Окно наблюдения",
       "finishConditionIds": [
         "bf98c6c0724a57ff24e02e03",
         "5a1b3bc77f42fa3f0bd3188f"
       ]
     },
     "b1b3d9e3a930a3eae47b2353": {
-      "questName": "Heavy Assault",
+      "questName": "Тяжёлый штурм",
       "finishConditionIds": [
         "5cf677a3bbdbcd83519fc3d8",
         "06066e04699d7b6946044fc6"
       ]
     },
     "f62d8e1285027e336767513c": {
-      "questName": "Break the Perimeter",
+      "questName": "Прорыв периметра",
       "finishConditionIds": [
         "d98b43cc7c2938a8233987c0",
         "be3636c5bae25c8a8c60c2cc"
       ]
     },
     "4072a5e458946a243b886ad8": {
-      "questName": "Internal Security",
+      "questName": "Внутренняя охрана",
       "finishConditionIds": [
         "7285e5a35357c79a8e84ef40",
         "df0727022013a5ad9aaea2ee"
       ]
     }
-  }
+  },
+  "equipmentObjectiveCount": 8,
+  "equipmentObjectives": [
+    {
+      "questId": "6574a072f763d0b09a553401",
+      "conditionId": "1f59a3743e20869842a50162",
+      "equipmentInclusive": [
+        [
+          "5df8a2ca86f7740bfe6df777",
+          "5c0e5edb86f77461f55ed1f7",
+          "5c0e57ba86f7747fa141986d",
+          "5b44d22286f774172b0c9de8"
+        ]
+      ],
+      "en": "Shoreline: wear one of the listed equipment sets; eliminate 3 Scavs.",
+      "ru": "Берег: надеть один из перечисленных комплектов; устранить 3 Диких.",
+      "detailsEn": "In one raid, wear one of [6B2 body armor (Flora), BNTI Zhuk body armor (Press), 6B23-2 body armor (Mountain Flora), BNTI Kirasa-N body armor]; eliminate 3 Scavs; on Shoreline. Found-in-raid status does not apply.",
+      "detailsRu": "За один рейд: использовать один предмет из списка [Бронежилет 6Б2 (Флора), Бронежилет БНТИ Жук (Пресса), Бронежилет 6Б23-2 (Горная Флора), Бронежилет БНТИ Кираса-N]; устранить 3 Диких; на локации Берег. Статус «Найдено в рейде» не применяется."
+    },
+    {
+      "questId": "41a41cb262ea084c1e110513",
+      "conditionId": "060c9e16949fdda830dd9339",
+      "equipmentInclusive": [
+        [
+          "5b432b965acfc47a8774094e",
+          "5c165d832e2216398b5a7e36",
+          "5e4d34ca86f774264f758330",
+          "6033fa48ffd42c541047f728",
+          "628e4e576d783146b124c64d"
+        ]
+      ],
+      "en": "Woods: wear one of the listed equipment sets; eliminate 2 Scavs.",
+      "ru": "Лес: надеть один из перечисленных комплектов; устранить 2 Диких.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Peltor Tactical Sport headset, Walker’s Razor Digital headset, OPSMEN Earmor M32 headset, Peltor ComTac IV Hybrid headset (Coyote Brown)]; eliminate 2 Scavs; on Woods. Found-in-raid status does not apply.",
+      "detailsRu": "За один рейд: использовать один предмет из списка [Активные наушники ГСШ-01, Активные наушники Peltor Tactical Sport, Активные наушники Walker’s Razor Digital, Активные наушники OPSMEN Earmor M32, Активные наушники Peltor ComTac IV Hybrid (Coyote Brown)]; устранить 2 Диких; на локации Лес. Статус «Найдено в рейде» не применяется."
+    },
+    {
+      "questId": "b1b3d9e3a930a3eae47b2353",
+      "conditionId": "5cf677a3bbdbcd83519fc3d8",
+      "equipmentInclusive": [
+        [
+          "5ca2151486f774244a3b8d30",
+          "5ca21c6986f77479963115a7",
+          "5e9dacf986f774054d6b89f4",
+          "5f5f41476bdad616ad46d631"
+        ],
+        [
+          "5aa7e276e5b5b000171d0647",
+          "5ca20ee186f774799474abc2",
+          "5f60c74e3b85f6263c145586"
+        ]
+      ],
+      "en": "Factory (day): wear one of the listed equipment sets; eliminate 4 Scavs.",
+      "ru": "Завод (день): надеть один из перечисленных комплектов; устранить 4 Диких.",
+      "detailsEn": "In one raid, wear one of [FORT Redut-M body armor, FORT Redut-T5 body armor (Smog), FORT Defender-2 body armor, NPP KlASS Korund-VM body armor (Black)] and one of [Altyn bulletproof helmet (Olive Drab), Vulkan-5 LShZ-5 bulletproof helmet (Black), Rys-T bulletproof helmet (Black)]; eliminate 4 Scavs; on Factory (day). Found-in-raid status does not apply.",
+      "detailsRu": "За один рейд: использовать один предмет из списка [Бронежилет ФОРТ Редут-М, Бронежилет ФОРТ Редут-Т5 (Смог), Бронежилет ФОРТ Дефендер-2, Бронежилет НПП КлАСС Корунд-ВМ (Черный)] и один предмет из списка [Бронешлем Алтын (Олива), Бронешлем ЛШЗ-5 Вулкан-5 (Черный), Бронешлем Рысь-Т (Черный)]; устранить 4 Диких; на локации Завод (день). Статус «Найдено в рейде» не применяется."
+    },
+    {
+      "questId": "4ab0b49478adb233ae900b33",
+      "conditionId": "c26e0b33a999feeec0746957",
+      "en": "Customs, Woods or Shoreline: wear one listed headset and eliminate 4 targets in one raid.",
+      "ru": "Таможня, Лес или Берег: надеть одну из указанных гарнитур и за один рейд устранить 4 цели.",
+      "detailsEn": "In one raid, wear one of [GSSh-01 active headset, Walker’s Razor Digital headset] and eliminate 4 targets on Customs/Woods/Shoreline. Separately survive and extract from one of those maps. Found-in-raid status does not apply.",
+      "detailsRu": "За один рейд: использовать одну из гарнитур [Активные наушники ГСШ-01, Активные наушники Walker’s Razor Digital]; устранить 4 цели на Таможне, Лесу или Берегу. Отдельно выжить и эвакуироваться с одной из этих карт. Статус «Найдено в рейде» не применяется.",
+      "equipmentInclusive": [
+        [
+          "5b432b965acfc47a8774094e"
+        ],
+        [
+          "5e4d34ca86f774264f758330"
+        ]
+      ]
+    },
+    {
+      "questId": "ca33fab8b9cc5f5f5ad322c0",
+      "conditionId": "a571722285bad3e786626d46",
+      "equipmentInclusive": [
+        [
+          "5c06c6a80db834001b735491"
+        ],
+        [
+          "5aa7cfc0e5b5b00015693143"
+        ]
+      ],
+      "en": "Woods, Shoreline or Interchange: eliminate 5 targets in one raid while wearing either listed helmet.",
+      "ru": "Лес, Берег или Развязка: за один рейд устранить 5 целей в одном из двух шлемов на выбор.",
+      "detailsEn": "In one raid, wear either the SSh-68 steel helmet (Olive Drab) or 6B47 Ratnik-BSh helmet (EMR cover); eliminate 5 targets on Woods/Shoreline/Interchange. Extraction is separate and may be completed on another allowed map without the helmet.",
+      "detailsRu": "За один рейд надеть либо шлем СШ-68 (Олива), либо шлем 6Б47 Ратник-БШ (чехол Флора Цифра) и устранить 5 целей на Лесу/Берегу/Развязке. Эвакуация — отдельная цель; её можно выполнить на другой разрешённой карте без шлема."
+    },
+    {
+      "questId": "9c35b3ac22ede1a5a79118bc",
+      "conditionId": "333dfb6d5b587650d29e8fd8",
+      "equipmentInclusive": [
+        [
+          "5c0e655586f774045612eeb2"
+        ],
+        [
+          "5c0e625a86f7742d77340f62"
+        ]
+      ],
+      "en": "Shoreline, Interchange or Streets of Tarkov: eliminate 2 PMCs in one raid while wearing either listed body armor.",
+      "ru": "Берег, Развязка или Улицы Таркова: за один рейд устранить 2 ЧВК в одном из двух бронежилетов на выбор.",
+      "detailsEn": "In one raid, wear either HighCom Trooper TFO body armor (MultiCam) or BNTI Zhuk body armor (EMR); eliminate 2 PMCs on Shoreline/Interchange/Streets of Tarkov. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо бронежилет HighCom Trooper TFO (MultiCam), либо БНТИ Жук (Флора Цифра) и устранить 2 ЧВК на Берегу/Развязке/Улицах Таркова. Эвакуация — отдельная цель."
+    },
+    {
+      "questId": "ee813142de655daf2dedfebc",
+      "conditionId": "c27c39f2695ffb7ff59edb89",
+      "equipmentInclusive": [
+        [
+          "5df8a42886f77412640e2e75"
+        ],
+        [
+          "5c0e9f2c86f77432297fe0a3"
+        ]
+      ],
+      "en": "Reserve, Lighthouse or Streets of Tarkov: eliminate 7 targets in one raid while wearing either listed rig.",
+      "ru": "Резерв, Маяк или Улицы Таркова: за один рейд устранить 7 целей в одной из двух разгрузок на выбор.",
+      "detailsEn": "In one raid, wear either the Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey) or BlackHawk! Commando chest harness (Black); eliminate 7 targets on Reserve/Lighthouse/Streets of Tarkov. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо разгрузочный жилет Velocity Systems MPPV Multi-Purpose Patrol Vest (Wolf Grey), либо систему BlackHawk! Commando (Черная) и устранить 7 целей на Резерве/Маяке/Улицах Таркова. Эвакуация — отдельная цель."
+    },
+    {
+      "questId": "47480d824cea0b80917cafa5",
+      "conditionId": "6e0ad34d0d8a35ef24a765f2",
+      "equipmentInclusive": [
+        [
+          "5ca2151486f774244a3b8d30"
+        ],
+        [
+          "5ca21c6986f77479963115a7"
+        ]
+      ],
+      "en": "Factory, Reserve or The Lab: eliminate 3 PMCs in one raid while wearing either listed body armor.",
+      "ru": "Завод, Резерв или Лаборатория: за один рейд устранить 3 ЧВК в одном из двух бронежилетов на выбор.",
+      "detailsEn": "In one raid, wear either FORT Redut-M body armor or FORT Redut-T5 body armor (Smog); eliminate 3 PMCs on Factory (day/night), Reserve, or The Lab. Extraction is separate.",
+      "detailsRu": "За один рейд надеть либо бронежилет ФОРТ Редут-М, либо ФОРТ Редут-Т5 (Смог) и устранить 3 ЧВК на Заводе (день/ночь), Резерве или в Лаборатории. Эвакуация — отдельная цель."
+    }
+  ]
 }

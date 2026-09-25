@@ -38,17 +38,20 @@ class M3RuntimeMaterializationTests(unittest.TestCase):
             self.assertEqual(actual, internal | external)
             self.assertTrue(all(c.get("status") == [4] for c in starts if c["conditionType"] == "Quest"))
 
-    def test_reward_envelope_and_no_item_faucets(self):
+    def test_reward_envelope_trades_cash_for_audited_items(self):
         totals = {"xp": 0, "rub": 0, "standing": 0.0}
         for quest in self.quests.values():
             rewards = quest["rewards"]["Success"]
-            self.assertEqual([r["type"] for r in rewards], ["Experience", "TraderStanding", "Item"])
+            self.assertEqual([r["type"] for r in rewards[:3]], ["Experience", "TraderStanding", "Item"])
+            self.assertTrue(all(r["type"] == "Item" for r in rewards[3:]))
             self.assertEqual(rewards[2]["items"][0]["_tpl"], "5449016a4bdc2d6f028b456f")
             totals["xp"] += rewards[0]["value"]
             totals["standing"] += rewards[1]["value"]
             totals["rub"] += rewards[2]["value"]
         self.assertEqual(totals["xp"], 133000)
-        self.assertEqual(totals["rub"], 752000)
+        polish = json.loads((ROOT / "manifests/campaign-polish-rewards.json").read_text(encoding="utf-8"))
+        reductions = sum(row["cashReductionRub"] for row in polish["rewards"] if row["questId"] in self.quests)
+        self.assertEqual(totals["rub"], 752000 - reductions)
         self.assertAlmostEqual(totals["standing"], 0.179)
 
     def test_native_lifecycle_and_objective_locales(self):

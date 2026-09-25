@@ -1,0 +1,9 @@
+{
+  "insuranceStart": ["admiral_insurance_start"],
+  "insuranceFound": ["admiral_insurance_found"],
+  "insuranceExpired": ["admiral_insurance_expired"],
+  "insuranceComplete": ["admiral_insurance_complete"],
+  "insuranceFailed": ["admiral_insurance_failed"],
+  "insuranceFailedLabs": ["admiral_insurance_failed_labs"],
+  "insuranceFailedLabyrinth": ["admiral_insurance_failed_labyrinth"]
+}
