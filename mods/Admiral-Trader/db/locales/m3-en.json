@@ -24,12 +24,12 @@
   "00489f3d43ab4c05dce91e07": "Deliver the complete maintenance package requested by Admiral.",
   "a11b1f15b70082a372abdea8": "Deliver the complete maintenance package requested by Admiral.",
   "208db81b5ce195bf0c176852 name": "Low Profile",
-  "208db81b5ce195bf0c176852 description": "On Interchange, visit the KOSTIN service area and first warehouse sector, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
+  "208db81b5ce195bf0c176852 description": "On Interchange, visit the KOSTIN service area and AVOKADO store, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
   "208db81b5ce195bf0c176852 note": "",
-  "208db81b5ce195bf0c176852 startedMessageText": "On Interchange, visit the KOSTIN service area and first warehouse sector, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
+  "208db81b5ce195bf0c176852 startedMessageText": "On Interchange, visit the KOSTIN service area and AVOKADO store, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
   "208db81b5ce195bf0c176852 successMessageText": "That is better. Sometimes the best loadout is the one nobody looks at twice.",
   "208db81b5ce195bf0c176852 failMessageText": "",
-  "208db81b5ce195bf0c176852 acceptPlayerMessage": "On Interchange, visit the KOSTIN service area and first warehouse sector, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
+  "208db81b5ce195bf0c176852 acceptPlayerMessage": "On Interchange, visit the KOSTIN service area and AVOKADO store, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
   "208db81b5ce195bf0c176852 declinePlayerMessage": "",
   "208db81b5ce195bf0c176852 completePlayerMessage": "That is better. Sometimes the best loadout is the one nobody looks at twice.",
   "208db81b5ce195bf0c176852 changeQuestMessageText": "",
@@ -145,5 +145,5 @@
   "e0e4fc81df436545de81aaab": "Visit the abandoned convoy.",
   "9a648a530f20b3be24784b8c": "Visit the USEC camp.",
   "25781d0c6bfda0e12cd9dddd": "Visit the KOSTIN service area.",
-  "1e697394af15421d80591d6e": "Visit the first warehouse sector."
+  "1e697394af15421d80591d6e": "Visit the AVOKADO store on Interchange."
 }

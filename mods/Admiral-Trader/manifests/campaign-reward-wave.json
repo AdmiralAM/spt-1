@@ -4,8 +4,8 @@
   "coreSignaturePresetRewards": 10,
   "earlyCompleteWeaponRewardTrades": 4,
   "nativeFieldSupportRewardTrades": 20,
-  "optionalBeltEquipmentRewardTrades": 31,
-  "directBeltProductRewardTrades": 15,
+  "optionalBeltEquipmentRewardTrades": 30,
+  "directBeltProductRewardTrades": 14,
   "additionalBeltPackCandidateRewardTrades": 16,
   "requiredDependencies": false,
   "policy": "Story operations progressively trade part of their rouble reward for practical native field-support equipment, complete weapons, optics and suppressors; early operations also use optional B&A&HB wrist, belt and head-band equipment while later contracts may award its small container catalogue; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
@@ -150,12 +150,6 @@
       "tpl": "68ac0000000000000000000c",
       "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 10000
-    },
-    {
-      "questId": "208db81b5ce195bf0c176852",
-      "tpl": "68ac00000000000000000006",
-      "name": "Наручный кошелёк B&A&HB",
-      "cashReductionRub": 12000
     },
     {
       "questId": "6574a072f763d0b09a553401",

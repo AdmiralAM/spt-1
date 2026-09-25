@@ -33,7 +33,7 @@ class AuditCandidatePolishTests(unittest.TestCase):
             {row["conditionType"] for row in nested},
         )
         self.assertEqual(
-            {"place_SALE_03_KOSTIN", "place_WARBLOOD_04_1"},
+            {"place_SALE_03_KOSTIN", "place_SALE_03_AVOKADO"},
             {row["target"] for row in nested if row["conditionType"] == "VisitPlace"},
         )
         self.assertEqual(1, sum(row["conditionType"] == "ExitStatus" for row in nested))
@@ -71,8 +71,11 @@ class AuditCandidatePolishTests(unittest.TestCase):
     def test_player_facing_objectives_state_every_new_constraint(self):
         m3 = json.loads((ROOT / "db/locales/m3-ru.json").read_text(encoding="utf-8-sig"))
         m8 = json.loads((ROOT / "db/locales/m8-ru.json").read_text(encoding="utf-8-sig"))
+        m3_en = json.loads((ROOT / "db/locales/m3-en.json").read_text(encoding="utf-8-sig"))
         self.assertIn("KOSTIN", m3["25781d0c6bfda0e12cd9dddd"])
-        self.assertIn("первый складской сектор", m3["1e697394af15421d80591d6e"])
+        self.assertIn("AVOKADO", m3["208db81b5ce195bf0c176852 description"])
+        self.assertIn("AVOKADO", m3["1e697394af15421d80591d6e"])
+        self.assertIn("AVOKADO", m3_en["1e697394af15421d80591d6e"])
         self.assertIn("30 метров", m8["0655c05e2745efd12e740c0d"])
         self.assertIn("станковым пулемётом", m8["0655c05e2745efd12e740c0d"])
         self.assertIn("эвакуироваться", m8["ceaae27bfcc1584b32c83936"])

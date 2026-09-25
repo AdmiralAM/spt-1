@@ -33,8 +33,7 @@ def add_condition(conditions: list[dict], condition: dict) -> None:
         conditions.append(condition)
 
 
-# Low Profile keeps its persistent ID and early equipment reward, but now tests
-# an actual quiet route through Interchange rather than entry and extraction alone.
+# Low Profile keeps its persistent ID and core armor reward, with two native Interchange store checkpoints.
 path, quest = load_quest("208db81b5ce195bf0c176852")
 conditions = counter(quest)["counter"]["conditions"]
 add_condition(conditions, {
@@ -48,7 +47,7 @@ add_condition(conditions, {
     "id": "709b87c0acd942d0ae664bde",
     "dynamicLocale": False,
     "conditionType": "VisitPlace",
-    "target": "place_WARBLOOD_04_1",
+    "target": "place_SALE_03_AVOKADO",
     "value": 1,
 })
 save(path, quest)
@@ -78,12 +77,12 @@ save(path, quest)
 
 locale_updates = {
     "db/locales/m3-ru.json": {
-        "208db81b5ce195bf0c176852 description": "На Развязке нужен маршрут, который не привлекает внимания дорогим снаряжением. Надень Жилет Дикого и Сумку-трансформер, проверь служебную зону KOSTIN и первый складской сектор, затем выйди живым в том же комплекте. Здесь оценивается не стоимость экипировки, а способность провести разведку без лишнего шума.",
-        "96d629538203984d6a1ee835": "Развязка, один рейд: Жилет Дикого + Сумка-трансформер; KOSTIN; первый складской сектор; выжить и эвакуироваться в том же комплекте."
+        "208db81b5ce195bf0c176852 description": "На Развязке осмотри служебную зону KOSTIN и магазин AVOKADO, затем успешно эвакуируйся. Каждая точка и эвакуация учитываются отдельно: их можно выполнить в разных рейдах. Разгрузку и рюкзак выбирай самостоятельно: конкретные модели не проверяются.",
+        "96d629538203984d6a1ee835": "Развязка: осмотреть KOSTIN и AVOKADO; успешно эвакуироваться. Точки и эвакуация засчитываются отдельно."
     },
     "db/locales/m3-en.json": {
-        "208db81b5ce195bf0c176852 description": "Run a low-profile Interchange route in a Scav Vest and Transformer Bag. Check the KOSTIN service area and the first warehouse sector, then survive and extract in the same equipment.",
-        "96d629538203984d6a1ee835": "Interchange, one raid: Scav Vest + Transformer Bag; KOSTIN; first warehouse sector; survive and extract in the same equipment."
+        "208db81b5ce195bf0c176852 description": "On Interchange, visit the KOSTIN service area and AVOKADO store, then extract successfully. The locations and extraction are tracked separately and may be completed in different raids. Choose your rig and backpack freely; specific models are not checked.",
+        "96d629538203984d6a1ee835": "Interchange: visit KOSTIN and AVOKADO; extract successfully. Locations and extraction are tracked separately."
     },
     "db/locales/m8-ru.json": {
         "3c6e085fc02f0597efdb5d5a description": "Проверь путь через Эпицентр. За один рейд устрани двух Диких с дистанции не менее 30 метров. Модель оружия не ограничена: используй своё оружие, станковый пулемёт или гранатомёт. Затем выживи и эвакуируйся с Эпицентра. Боевая цель и выход учитываются отдельно.",
@@ -107,17 +106,5 @@ for relative, updates in locale_updates.items():
         raise RuntimeError(f"Locale keys missing in {relative}: {sorted(missing)}")
     data.update(updates)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-quality_path = ROOT / "manifests/quest-quality-runtime.json"
-quality = json.loads(quality_path.read_text(encoding="utf-8-sig"))
-low_profile = next(
-    row for row in quality["equipmentObjectives"]
-    if row["questId"] == "208db81b5ce195bf0c176852"
-)
-low_profile["en"] = locale_updates["db/locales/m3-en.json"]["96d629538203984d6a1ee835"]
-low_profile["ru"] = locale_updates["db/locales/m3-ru.json"]["96d629538203984d6a1ee835"]
-low_profile["detailsEn"] = "In one raid, wear a Scav Vest and Transformer Bag; on Interchange; visit the KOSTIN service area; visit the first warehouse sector; survive and extract in the same equipment. Found-in-raid status does not apply."
-low_profile["detailsRu"] = "За один рейд: надеть Жилет Дикого и Сумку-трансформер; на локации Развязка; посетить служебную зону KOSTIN; посетить первый складской сектор; выжить и эвакуироваться в том же комплекте. Статус «Найдено в рейде» не применяется."
-quality_path.write_text(json.dumps(quality, ensure_ascii=True, indent=2) + "\n", encoding="utf-8")
 
 print("Polished Low Profile, Open Corridor and Exit Discipline; retained Acoustic Discipline and Contested Ground as distinct roles")
