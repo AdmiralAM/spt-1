@@ -31,6 +31,14 @@ foreign integration.
   adjustment. This component is inspired by the upstream BetterSuppressors
   balance approach; its implementation is independent and contains no copied
   upstream source or assets.
+- Healing Interrupt (separate client DLL, runtime candidate): End cancels the
+  current medical/consumable action using EFT's own cancellation and weapon
+  switch, then bypasses the default 600 ms consumable outro while retaining
+  its callback. Does not clear inventory events or force-reset hands. The
+  emergency HandsAreNotBusy reset must not share End; neither should Dynamic
+  Maps. The outro transition was informed by Manimal's Quick Cancel (MIT,
+  copyright 2026 danauraborealis), but unlike that mod it never throws the
+  medical item onto the ground. Physical in-raid acceptance remains required.
 
 They retain their existing GUIDs and runtime paths while being distributed and
 versioned as Suite components.

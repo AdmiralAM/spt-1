@@ -24,6 +24,13 @@
       "status": "implementation-awaiting-runtime-validation"
     },
     {
+      "id": "healing-interrupt",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/healing",
+      "target": "EFT medical hands controller",
+      "disposition": "suite-component",
+      "status": "implementation-awaiting-runtime-validation"
+    },
+    {
       "id": "belt-use-items-anywhere",
       "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
       "target": "com.cj.useFromAnywhere",

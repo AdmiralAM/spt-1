@@ -99,5 +99,16 @@ class SuiteContractTests(unittest.TestCase):
         self.assertIn('"TryClaimPackNStrap211"', server)
         self.assertIn("TgcBelts.All(templateTable.Items.ContainsKey)", server)
 
+    def test_healing_interrupt_keeps_native_item_and_weapon_transition(self):
+        plugin = (MODULE / "healing/Plugin.cs").read_text(encoding="utf-8")
+        drop = (MODULE / "healing/MedsDropPatch.cs").read_text(encoding="utf-8")
+        self.assertIn("Input.GetKeyDown(KeyCode.End)", plugin)
+        self.assertIn("meds.CurrentOperation.Remove()", plugin)
+        self.assertIn("player.TrySetLastEquippedWeapon(false, null)", plugin)
+        self.assertIn("__instance.CurrentOperation.HideWeapon(callback)", drop)
+        self.assertIn("__instance.FastForwardCurrentState()", drop)
+        self.assertNotIn("TryThrowItem", plugin + drop)
+        self.assertNotIn("RemoveActiveEvent", plugin + drop)
+
 if __name__ == "__main__":
     unittest.main()
