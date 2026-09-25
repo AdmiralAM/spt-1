@@ -269,9 +269,13 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         self.assertEqual(beacon["zoneId"], "ter_017_area_1")
         ru = self.ru
         description = ru[quest_id + " description"]
-        self.assertIn("ночн", description.lower())
+        self.assertIn("завод (ночь)", description.lower())
         self.assertIn("кабинет секретаря", description.lower())
         self.assertIn("пролом", description.lower())
+        self.assertIn("всю комнату", description.lower())
+        self.assertIn("dynamic maps", description.lower())
+        self.assertIn("комнату за проломом", ru[finish[0]["id"]].lower())
+        self.assertIn("кабинете секретаря", ru[beacon["id"]].lower())
         self.assertIn("MS2000", ru[beacon["id"]])
 
     def test_promised_field_actions_are_materialized(self):
