@@ -17,6 +17,13 @@
       "status": "implemented"
     },
     {
+      "id": "suppressor-balance",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/server/SuppressorBalance.cs",
+      "target": "SPT suppressor item templates",
+      "disposition": "suite-component",
+      "status": "implementation-awaiting-runtime-validation"
+    },
+    {
       "id": "belt-use-items-anywhere",
       "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
       "target": "com.cj.useFromAnywhere",
