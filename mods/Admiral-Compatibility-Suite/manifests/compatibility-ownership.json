@@ -31,6 +31,14 @@
       "status": "implementation-awaiting-runtime-validation"
     },
     {
+      "id": "season-rotator-raid-cycle",
+      "sourcePath": "mods/Admiral-Compatibility-Suite/season/SeasonRotatorRaidAdapter.cs",
+      "target": "com.turbodestroyer.seasonrotator",
+      "disposition": "suite-adapter",
+      "status": "implementation-awaiting-runtime-validation",
+      "ownershipRule": "Season Rotator 2.0.1 retains its DLL, initial season and config; the Suite counts completed raids and overrides only subsequent season selection."
+    },
+    {
       "id": "belt-use-items-anywhere",
       "sourcePath": "mods/SPT-Belt-Armband-Inventory/src/UseItemsAnywhereCompatibility.cs",
       "target": "com.cj.useFromAnywhere",

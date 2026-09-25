@@ -39,6 +39,15 @@ foreign integration.
   Maps. The outro transition was informed by Manimal's Quick Cancel (MIT,
   copyright 2026 danauraborealis), but unlike that mod it never throws the
   medical item onto the ground. Physical in-raid acceptance remains required.
+- Season Rotator raid adapter (optional server component): requires the original
+  Season Rotator 2.0.1 installed separately and its `UseCustomWeather=false`.
+  It keeps the upstream enabled-season order, skips seasons disabled by a zero
+  length, and switches to the next season after five successfully completed
+  raids. The counter survives server restarts in Suite-owned
+  `season-rotation-state.json`; no player profile is changed. If the upstream
+  DLL/config is missing or changes version, the adapter fails closed. The
+  original mod and its assets remain upstream-owned. In-raid visual acceptance
+  is still required; a server startup alone does not prove map rendering.
 
 They retain their existing GUIDs and runtime paths while being distributed and
 versioned as Suite components.
