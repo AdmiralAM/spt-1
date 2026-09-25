@@ -48,11 +48,12 @@ static class Phase40AmmoPenetrationTests
         Expect(runtime.Contains("ShotSharedMethods") && runtime.Contains("RealResistance") && runtime.Contains("GetPenetrationChance") &&
                runtime.Contains("EFT.InventoryLogic.AmmoTemplate") && runtime.Contains("PenetrationPower"),
             "the runtime reads the native EFT AmmoTemplate and BSG armor penetration calculation", ref assertions);
-        Expect(view.Contains("SPTItemIntelligenceAmmoPenetration") && view.Contains("UnityEngine.UI.Text") &&
-               view.Contains("TextAnchor.MiddleCenter") && view.Contains("fontStyle\", FontStyle.Bold") &&
-               view.Contains("IsValidClass(romanClass)") && view.Contains("GetShieldSprite") &&
-               view.Contains("ShieldColor(chance)") && !view.Contains("DrawNumeral"),
-            "the compact shield uses a real centered Roman numeral and selected-class chance color", ref assertions);
+        Expect(view.Contains("SPTItemIntelligenceAmmoPenetration") &&
+               view.Contains("EFT.Utilities.ResourcesCache") &&
+               view.Contains("Mod Types/icon_type_mod_armor_plate_") &&
+               view.Contains("ShieldColor(chance)") && !view.Contains("GetShieldSprite") &&
+               view.Contains("sprite != null") && view.Contains("badgeObject.activeSelf != visible"),
+            "the compact badge uses EFT's native class sprite and hides cleanly if it is unavailable", ref assertions);
         Expect(resolver.Contains("public static object ResolveItem(object itemViewOrItem)") &&
                map.Contains("`AmmoPenetrationClass.cs`") && map.Contains("`AmmoPenetrationBadgeView.cs`"),
             "visible pooled ItemViews can resolve their EFT item and the product map records both runtime units", ref assertions);
