@@ -306,6 +306,70 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 label = self.ru.get(row["id"], "")
                 self.assertLessEqual(len(label), 100, row["id"])
 
+    def test_revised_early_route_sites_replace_exact_vanilla_overlaps(self):
+        expected = {
+            "e81e5d79bfdf40efc87cdf99": {"Sandbox_5_Office_exploration"},
+            "e472a13c1478f7b9258522d3": {
+                "Sandbox_1_MedicalArea_exploration", "Sandbox_5_DeadGroup_exploration",
+                "Sandbox_5_Laborant_exploration", "nt2024_5_throtil_epicentr",
+            },
+            "4f3828ef74a66f154f6ac397": {"Sandbox_2_Kord_exploration"},
+            "52cbb69039f63f3cfbad321a": {
+                "Sandbox_5_Office_exploration", "Sandbox_5_Laborant_exploration",
+            },
+            "88c98ecb21d126970231b220": {"vremyan_case", "bomj_place", "exit777"},
+            "5fd9397fbc40a37c1abf3790": {"gazel"},
+            "3547b2765c993b58b04e6074": {"place_SADOVOD_03", "vremyan_case"},
+            "70a745d426d2ba09157eb734": {"fuel1", "TerragroupBOX_4"},
+            "743532fcd12b4a88ff7cd83f": {"dead_posylni"},
+            "e9de043a8379c87027f762b3": {"vaz_feld"},
+            "837bdd0ab80a2a1382caeedd": {"room206_water"},
+            "94dfbf0ec29ab7391528f217": {"room114"},
+            "bcf61611e9723c765e07a740": {"fuel3"},
+            "c28a9b8837dcf639ba524cc3": {"huntsman_001", "Lost_caravan"},
+            "1ca43f65c714ea7f9eec6e2a": {"Bunker_enter"},
+            "b61a1cd8d6a7a82e81033dbc": {"meh_45_radio_area_mark_1"},
+            "dcae6b2142ca93b7dd77df3e": {"Depo_Zone_1"},
+            "37475cbab1174e5619c16939": {"Lost_caravan"},
+            "9bf1b7ad200b0f5f59e9cbbd": {"Bunker_enter", "meh_45_radio_area_mark_2"},
+            "f0874dd26a7b1f76d86aad88": {"huntsman_001", "meh_45_radio_area_mark_3"},
+            "60df546a03bdc74ca45fb8ca": {"pr_scout_col"},
+        }
+        for quest_id, expected_zones in expected.items():
+            finish = self.by_id[quest_id]["conditions"]["AvailableForFinish"]
+            actual = set()
+            for row in finish:
+                if row["conditionType"] == "PlaceBeacon":
+                    actual.add(row["zoneId"])
+                elif row["conditionType"] == "CounterCreator":
+                    actual.update(c["target"] for c in row["counter"]["conditions"] if c["conditionType"] == "VisitPlace")
+            self.assertEqual(actual, expected_zones, quest_id)
+
+    def test_early_map_objective_text_names_the_target_in_russian(self):
+        targeted_ids = {
+            "e81e5d79bfdf40efc87cdf99", "e472a13c1478f7b9258522d3",
+            "4f3828ef74a66f154f6ac397", "52cbb69039f63f3cfbad321a",
+            "88c98ecb21d126970231b220", "5fd9397fbc40a37c1abf3790",
+            "3547b2765c993b58b04e6074", "70a745d426d2ba09157eb734",
+            "743532fcd12b4a88ff7cd83f", "e9de043a8379c87027f762b3",
+            "837bdd0ab80a2a1382caeedd", "94dfbf0ec29ab7391528f217",
+            "bcf61611e9723c765e07a740", "c28a9b8837dcf639ba524cc3",
+            "1ca43f65c714ea7f9eec6e2a", "b61a1cd8d6a7a82e81033dbc",
+            "dcae6b2142ca93b7dd77df3e", "37475cbab1174e5619c16939",
+            "9bf1b7ad200b0f5f59e9cbbd", "f0874dd26a7b1f76d86aad88",
+            "60df546a03bdc74ca45fb8ca",
+        }
+        for quest_id in targeted_ids:
+            for condition in self.by_id[quest_id]["conditions"]["AvailableForFinish"]:
+                has_location = condition["conditionType"] == "PlaceBeacon" or (
+                    condition["conditionType"] == "CounterCreator"
+                    and any(c["conditionType"] == "VisitPlace" for c in condition["counter"]["conditions"])
+                )
+                if has_location:
+                    label = self.ru[condition["id"]]
+                    self.assertNotIn("оперативную точку", label, f"{quest_id}: {label}")
+                    self.assertNotIn("назначенную точку", label, f"{quest_id}: {label}")
+
 
 def test_revised_early_route_sites_replace_exact_vanilla_overlaps(self):
         expected = {

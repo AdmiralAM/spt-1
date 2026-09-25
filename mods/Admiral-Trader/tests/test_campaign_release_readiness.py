@@ -30,6 +30,38 @@ class CampaignReleaseReadinessTests(unittest.TestCase):
             direct_item = any(row.get("type") == "Item" and row.get("items", [{}])[0].get("_tpl") != ROUBLES for row in rewards)
             self.assertTrue(direct_item, quest_id)
 
+    def test_story_rewards_include_authored_items_without_breaching_cash_floor(self):
+        authored = load("manifests/campaign-authored-100-review.json")
+        policy = load("manifests/reward-bundle-policy.json")
+        catalog = {row["templateId"]: row for row in policy["catalog"]}
+        layered_ids = set()
+        for path in (ROOT / "db/rewards").glob("*.json"):
+            if path.name == "natalya-signature-replacements.json":
+                continue
+            layered_ids.update(json.loads(path.read_text(encoding="utf-8")))
+        story_ids = set()
+        for chain in authored["chains"]:
+            for row in chain["quests"]:
+                story_ids.add(row["id"])
+                field_item = row["rewards"].get("fieldItem")
+                if row["order"] in (3, 6, 10):
+                    continue  # These stages already award their authored thematic item.
+                quest = self.quests[row["id"]]
+                items = [item for reward in quest["rewards"]["Success"] if reward.get("type") == "Item" for item in reward.get("items", [])]
+                if row["id"] in layered_ids:
+                    self.assertIsNone(field_item, row["id"])  # Avoid stacking independent campaign rewards.
+                    self.assertTrue(any(item.get("_tpl") != ROUBLES for item in items), row["id"])
+                else:
+                    self.assertIsNotNone(field_item, row["id"])
+                    self.assertIn(field_item["templateId"], catalog, row["id"])
+                    self.assertEqual("spt", catalog[field_item["templateId"]]["source"], row["id"])
+                    self.assertGreater(field_item["quantity"], 0, row["id"])
+                    self.assertGreater(field_item["valueRub"], 0, row["id"])
+                    self.assertTrue(any(item.get("_tpl") == field_item["templateId"] for item in items), row["id"])
+                cash = next(reward["value"] for reward in quest["rewards"]["Success"] if reward.get("items", [{}])[0].get("_tpl") == ROUBLES)
+                self.assertGreaterEqual(cash, 10000, row["id"])
+        self.assertEqual(100, len(story_ids))
+
     def test_loyalty_uses_level_reputation_and_vanilla_style_sales_gates(self):
         levels = load("db/base.json")["loyaltyLevels"]
         self.assertEqual([row["minLevel"] for row in levels], [1, 15, 25, 35])
