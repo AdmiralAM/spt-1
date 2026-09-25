@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace SPTItemIntelligence
@@ -19,6 +20,7 @@ namespace SPTItemIntelligence
         readonly HashSet<object> trackedSenseItems = new HashSet<object>(ReferenceEqualityComparer.Instance);
         readonly List<object> staleSenseItems = new List<object>();
         readonly Dictionary<object, SenseEvaluationCache> evaluationCache = new Dictionary<object, SenseEvaluationCache>(ReferenceEqualityComparer.Instance);
+        readonly ConditionalWeakTable<object, SenseTextBaseline> textBaselines = new ConditionalWeakTable<object, SenseTextBaseline>();
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
@@ -104,7 +106,8 @@ namespace SPTItemIntelligence
             bool wantsContainerValue = isContainer && settings.SenseContainerValues;
             if (!settings.SenseRequiredItems && !settings.SenseCategories && !wantsContainerValue)
             {
-                if (isContainer) ApplyContainerNameScale(senseItem);
+                ApplySenseTextScale(senseItem, isContainer);
+                if (isContainer) HideNativeLootLabel(senseItem);
                 return;
             }
             trackedSenseItems.Add(senseItem);
@@ -180,7 +183,8 @@ namespace SPTItemIntelligence
                 if (evaluationCache.Count >= 512) evaluationCache.Clear();
                 evaluationCache[senseItem] = new SenseEvaluationCache(index, ledger.Revision, settings.Revision, policy, isContainer, containerTotalValue);
             }
-            if (isContainer) ApplyContainerNameScale(senseItem);
+            ApplySenseTextScale(senseItem, isContainer);
+            if (isContainer) HideNativeLootLabel(senseItem);
             bool hasContainerValue = isContainer && containerTotalValue > 0;
             bool hasRequirementPolicy = policy.Stock != SenseStockState.None;
             bool preserveNative = HasProtectedSenseVisual(senseItem) && !hasRequirementPolicy && !hasContainerValue;
@@ -583,12 +587,43 @@ namespace SPTItemIntelligence
                    Number(status, -1) == 1;
         }
 
-        void ApplyContainerNameScale(object senseItem)
+        void ApplySenseTextScale(object senseItem, bool isContainer)
         {
             if (!settings.SenseIntegration) return;
-            object nameText = Member(senseItem, "nameText");
-            if (nameText == null) return;
-            SetMember(nameText, "fontSize", settings.SenseContainerNameScale);
+            float scale = settings.SenseTextScale;
+            ScaleSenseText(Member(senseItem, "nameText"), scale * (isContainer ? settings.SenseContainerNameScale : 1f));
+            ScaleSenseText(Member(senseItem, "typeText"), scale);
+            ScaleSenseText(Member(senseItem, "descriptionText"), scale);
+        }
+
+        void ScaleSenseText(object text, float scale)
+        {
+            if (text == null) return;
+            SenseTextBaseline baseline = textBaselines.GetValue(text, key =>
+            {
+                float size;
+                try { size = Convert.ToSingle(Member(key, "fontSize")); }
+                catch { size = 0f; }
+                return new SenseTextBaseline(size);
+            });
+            if (baseline.Size > 0f) SetMember(text, "fontSize", baseline.Size * scale);
+        }
+
+        static void HideNativeLootLabel(object senseItem)
+        {
+            object typeText = Member(senseItem, "typeText");
+            string text = Text(Member(typeText, "text")).TrimEnd(':', '：');
+            if (string.Equals(text, "LOOT", StringComparison.OrdinalIgnoreCase) ||
+                text.StartsWith("LOOT ", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(text, "ДОБЫЧА", StringComparison.OrdinalIgnoreCase) ||
+                text.StartsWith("ДОБЫЧА ", StringComparison.OrdinalIgnoreCase))
+                SetMember(typeText, "text", string.Empty);
+        }
+
+        sealed class SenseTextBaseline
+        {
+            internal SenseTextBaseline(float size) { Size = size; }
+            internal float Size { get; }
         }
 
         static object Member(object source, params string[] names)

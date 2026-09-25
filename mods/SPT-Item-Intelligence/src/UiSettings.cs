@@ -56,7 +56,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> partialColor;
         readonly ConfigEntry<Color> missingColor;
         readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseCategories, senseContainerValues, senseSecondaryOutline, senseRemainingText;
-        readonly ConfigEntry<float> senseContainerNameScale;
+        readonly ConfigEntry<float> senseContainerNameScale, senseTextScale;
         readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor, senseFoodColor;
         readonly ConfigEntry<Color> senseWaterColor, senseKeyColor, senseGrenadeColor, senseCurrencyColor;
         readonly ConfigEntry<Color> senseContainerNeutralColor, senseContainerBlueColor, senseContainerPaleYellowColor, senseContainerBrightYellowColor;
@@ -139,6 +139,8 @@ namespace SPTItemIntelligence
                 "Show the Item Intelligence requirement label and remaining count in Sense text mode.");
             senseContainerNameScale = config.Bind("Amands Sense", "Container Name Scale", 0.86f,
                 new ConfigDescription("Scale only the native Sense container or crate name line.", new AcceptableValueRange<float>(0.50f, 1.00f)));
+            senseTextScale = config.Bind("Amands Sense", "Text Scale", 1.00f,
+                new ConfigDescription("Scale remaining Sense text, including item names, category labels and the native container item count. Container names also retain their separate multiplier.", new AcceptableValueRange<float>(0.25f, 2.00f)));
             senseQuestColor = ColorEntry(config, "Amands Sense Colors", "Active Quest", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
             senseHideoutColor = ColorEntry(config, "Amands Sense Colors", "Hideout", new Color(0.20f, 0.78f, 1.00f), "Unmet hideout requirement.");
             senseFutureColor = ColorEntry(config, "Amands Sense Colors", "Future Quest", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
@@ -195,6 +197,7 @@ namespace SPTItemIntelligence
             senseSecondaryOutline.SettingChanged += delegate { Touch(); };
             senseRemainingText.SettingChanged += delegate { Touch(); };
             senseContainerNameScale.SettingChanged += delegate { Touch(); };
+            senseTextScale.SettingChanged += delegate { Touch(); };
             senseQuestColor.SettingChanged += delegate { Touch(); };
             senseHideoutColor.SettingChanged += delegate { Touch(); };
             senseFutureColor.SettingChanged += delegate { Touch(); };
@@ -251,6 +254,7 @@ namespace SPTItemIntelligence
         public bool SenseSecondaryOutline => senseSecondaryOutline.Value;
         public bool SenseRemainingText => senseRemainingText.Value;
         public float SenseContainerNameScale => Mathf.Clamp(senseContainerNameScale.Value, 0.50f, 1.00f);
+        public float SenseTextScale => Mathf.Clamp(senseTextScale.Value, 0.25f, 2.00f);
         public Color GetSenseColor(ItemNeedReason reason)
         {
             if (reason == ItemNeedReason.ActiveQuest) return senseQuestColor.Value;

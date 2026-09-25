@@ -27,10 +27,13 @@ static class Phase35AmandsSenseRuntimeAdapterTests
                adapter.Contains("FindMethod(senseClass, \"Clear\", 0)"),
             "bounded lifecycle hooks cover presentation, pickup/drop and raid reset", ref assertions);
         Expect(settings.Contains("config.Bind(\"Amands Sense\", \"Container Name Scale\", 0.86f") &&
+               settings.Contains("config.Bind(\"Amands Sense\", \"Text Scale\", 1.00f") &&
                adapter.Contains("ContainerUpdatePostfix") &&
-               adapter.Contains("ApplyContainerNameScale(senseItem)") &&
-               adapter.Contains("SetMember(nameText, \"fontSize\", settings.SenseContainerNameScale)"),
-            "only the native Sense container-name line receives the bounded smaller type size", ref assertions);
+               adapter.Contains("ApplySenseTextScale(senseItem, isContainer)") &&
+               adapter.Contains("HideNativeLootLabel(senseItem)") &&
+               adapter.Contains("ConditionalWeakTable<object, SenseTextBaseline>") &&
+               adapter.Contains("scale * (isContainer ? settings.SenseContainerNameScale : 1f)"),
+            "Sense omits the native loot caption and scales remaining text without compounding on refresh", ref assertions);
         Expect(adapter.Contains("!settings.SenseIntegration || senseItem == null") &&
                adapter.Contains("!settings.SenseRequiredItems && !settings.SenseCategories && !wantsContainerValue") &&
                plugin.Contains("senseIntegration.Dispose();"),
