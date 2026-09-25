@@ -40,6 +40,8 @@ public sealed class SuppressorBalance(
                 properties.Accuracy = accuracy + 1.5d;
             if (properties.Velocity is double velocity)
                 properties.Velocity = velocity + 2d;
+            if (properties.EffectiveDistance is double effectiveDistance)
+                properties.EffectiveDistance = effectiveDistance + 2d;
             adjusted++;
         }
 

@@ -24,8 +24,9 @@ foreign integration.
 - `SPT-Stackable-Armor-Plates`
 - Suppressor Balance (server-side): leaves the suppressor's existing ergonomics,
   recoil, loudness and thermal stats alone; halves only durability-burn penalty
-  above neutral `1.0`, and adds a small `+1.5` accuracy / `+2` velocity stat
-  points. Covers suppressors in the vanilla category and mod-added subcategories.
+  above neutral `1.0`, and adds small bonuses to accuracy (`+1.5`), muzzle
+  velocity (`+2`) and effective range (`+2`). Covers suppressors in the vanilla
+  category and mod-added subcategories.
   It disables itself if standalone BetterSuppressors is loaded, avoiding a double
   adjustment. This component is inspired by the upstream BetterSuppressors
   balance approach; its implementation is independent and contains no copied
