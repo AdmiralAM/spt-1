@@ -159,9 +159,9 @@ namespace SPTItemIntelligence
             sensePartialColor = ColorEntry(config, "Amands Sense Stock Colors", "Partial", new Color(1.00f, 0.58f, 0.12f), "Some useful stock, but the nearest requirement is not covered.");
             senseNextColor = ColorEntry(config, "Amands Sense Stock Colors", "Next Covered", new Color(0.62f, 1.00f, 0.38f), "Nearest requirement covered, later requirements remain.");
             senseCompleteColor = ColorEntry(config, "Amands Sense Stock Colors", "Complete", new Color(0.10f, 1.00f, 0.20f), "All tracked requirements are covered.");
-            senseCountOneColor = ColorEntry(config, "Amands Sense Count Colors", "One Item", Color.white, "Count color for one useful item in a container.");
-            senseCountFewColor = ColorEntry(config, "Amands Sense Count Colors", "Two to Three", new Color(1.00f, 0.91f, 0.45f), "Count color for two or three useful items in a container.");
-            senseCountManyColor = ColorEntry(config, "Amands Sense Count Colors", "Four Plus", new Color(1.00f, 0.62f, 0.22f), "Count color for four or more useful items in a container.");
+            senseCountOneColor = ColorEntry(config, "Amands Sense Count Colors", "One Item", Color.white, "Native Sense container counter color for one item.");
+            senseCountFewColor = ColorEntry(config, "Amands Sense Count Colors", "Two to Three", new Color(1.00f, 0.91f, 0.45f), "Native Sense container counter color for two or three items.");
+            senseCountManyColor = ColorEntry(config, "Amands Sense Count Colors", "Four Plus", new Color(1.00f, 0.62f, 0.22f), "Native Sense container counter color for four or more items.");
 
             tooltipMode.SettingChanged += delegate { Touch(); };
             valueMode.SettingChanged += delegate { Touch(); };
