@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Locales;
 using SPTarkov.Server.Core.Utils;
 using System.Text.Json;
 
@@ -21,7 +22,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("1.2.0");
+    public SemanticVersioning.Version Version { get; init; } = new("1.2.1");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -40,7 +41,8 @@ public sealed class RequirementDataService(
     HandbookHelper handbookHelper,
     ItemHelper itemHelper,
     PresetHelper presetHelper,
-    RagfairServerHelper ragfairServerHelper)
+    RagfairServerHelper ragfairServerHelper,
+    LocaleService localeService)
 {
     private static readonly MongoId[] TotalValueBaseClasses =
     [
@@ -52,7 +54,10 @@ public sealed class RequirementDataService(
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        object? profile = profileHelper.GetPmcProfile(sessionId);
+        // Freeze the mutable live profile before reading companion progress and calculating prices.
+        // Otherwise a hideout hand-in can mutate inventory while JsonUtil is still serializing the
+        // response, producing one envelope assembled from two different player states.
+        object? profile = FreezeProfile(profileHelper.GetPmcProfile(sessionId));
         var relevance = BuildRelevance(cancellationToken);
         List<ItemPriceSnapshotEntry> prices = BuildPrices(relevance.Craft, relevance.Barter, cancellationToken);
         RequirementDataEnvelope envelope = new(
@@ -61,9 +66,53 @@ public sealed class RequirementDataService(
             templateTable.Quests,
             hideoutTable,
             prices,
-            LoadHideoutProgress(sessionId));
+            LoadHideoutProgress(sessionId),
+            BuildLocales());
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private object? FreezeProfile(object? profile)
+    {
+        if (profile is null) return null;
+        string? json = jsonUtil.Serialize(profile);
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        return JsonSerializer.Deserialize<JsonElement>(json);
+    }
+
+    private Dictionary<string, object> BuildLocales()
+    {
+        Dictionary<string, string> english = localeService.GetLocaleDb("en");
+        Dictionary<string, string> russian = localeService.GetLocaleDb("ru");
+        Dictionary<string, string> selectedEnglish = new(StringComparer.Ordinal);
+        Dictionary<string, string> selectedRussian = new(StringComparer.Ordinal);
+
+        foreach (MongoId questId in templateTable.Quests.Keys)
+            AddLocalePair($"{questId} name", english, russian, selectedEnglish, selectedRussian);
+
+        foreach (string key in english.Keys)
+            if (key.StartsWith("hideout_area_", StringComparison.Ordinal) && key.EndsWith("_name", StringComparison.Ordinal))
+                AddLocalePair(key, english, russian, selectedEnglish, selectedRussian);
+        foreach (string key in russian.Keys)
+            if (key.StartsWith("hideout_area_", StringComparison.Ordinal) && key.EndsWith("_name", StringComparison.Ordinal))
+                AddLocalePair(key, english, russian, selectedEnglish, selectedRussian);
+
+        return new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["en"] = selectedEnglish,
+            ["ru"] = selectedRussian
+        };
+    }
+
+    private static void AddLocalePair(
+        string key,
+        Dictionary<string, string> english,
+        Dictionary<string, string> russian,
+        Dictionary<string, string> selectedEnglish,
+        Dictionary<string, string> selectedRussian)
+    {
+        if (english.TryGetValue(key, out string? en) && !string.IsNullOrWhiteSpace(en)) selectedEnglish[key] = en;
+        if (russian.TryGetValue(key, out string? ru) && !string.IsNullOrWhiteSpace(ru)) selectedRussian[key] = ru;
     }
 
     private static object LoadHideoutProgress(MongoId sessionId)
@@ -80,17 +129,26 @@ public sealed class RequirementDataService(
                 if (!File.Exists(path)) continue;
                 try
                 {
-                    return JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path)) ?? EmptyHideoutProgress();
+                    HideoutProgressSnapshot? snapshot = JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path));
+                    return ProgressEnvelope(snapshot?.areaProgresses);
                 }
-                catch (IOException) { return EmptyHideoutProgress(); }
-                catch (UnauthorizedAccessException) { return EmptyHideoutProgress(); }
-                catch (JsonException) { return EmptyHideoutProgress(); }
+                catch (IOException) { return ProgressEnvelope(null); }
+                catch (UnauthorizedAccessException) { return ProgressEnvelope(null); }
+                catch (JsonException) { return ProgressEnvelope(null); }
             }
         }
-        return EmptyHideoutProgress();
+        return ProgressEnvelope(null);
     }
 
-    private static HideoutProgressSnapshot EmptyHideoutProgress() => new();
+    // JsonUtil serializes the existing snapshot's dictionary contracts reliably.  Do not expose a
+    // private DTO here: contributions recorded by Hideout In Progress must survive the server/client boundary.
+    private static Dictionary<string, object> ProgressEnvelope(Dictionary<string, Dictionary<string, int>>? progresses)
+    {
+        return new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["areaProgresses"] = progresses ?? new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal)
+        };
+    }
 
     private sealed class HideoutProgressSnapshot
     {
@@ -261,7 +319,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("Item Intelligence Admiral Server v1.2.0 loaded; consolidated requirement, value, relevance and background snapshot ready");
+        logger.Success("Item Intelligence Admiral Server v1.2.1 loaded; consolidated requirement, value, relevance and background snapshot ready");
         return Task.CompletedTask;
     }
 }

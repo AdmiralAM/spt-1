@@ -39,10 +39,9 @@ static class Phase28RelevanceIntelligenceTests
         Expect(relevance.OnYouCount == 0, "one-shot snapshot does not expose stale on-you state", ref assertions);
 
         ItemHoverText text = new ItemHoverText("10,000 ₽ · Therapist", "Flea: 12,000 ₽", "", "rel", 12, 0, 0, 0, 0, perSlotLine: "Per slot: 12,000 ₽");
-        Expect(Contains(text, ItemTooltipMode.Full, "Craft ×2"), "Full exposes compact craft relevance", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Full, "Barter ×4"), "Full exposes compact barter relevance", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Craft ×2 · Barter ×4"), "Full combines craft and barter relevance", ref assertions);
         Expect(!ContainsFragment(text, ItemTooltipMode.Full, "On You"), "Full does not show stale on-you data", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Normal, "Craft ×2") && Contains(text, ItemTooltipMode.Detailed, "Barter ×4"),
+        Expect(Contains(text, ItemTooltipMode.Normal, "Craft ×2 · Barter ×4") && Contains(text, ItemTooltipMode.Detailed, "Craft ×2 · Barter ×4"),
             "craft and barter relevance remains visible during regular play", ref assertions);
         Expect(ItemMarkerPresentation.From(text, contextual: true).IsVisible,
             "craft/barter-only items receive a contextual intelligence marker", ref assertions);

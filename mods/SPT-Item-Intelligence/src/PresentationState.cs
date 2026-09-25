@@ -12,16 +12,23 @@ namespace SPTItemIntelligence
             ItemRequirementState.Empty,
             null);
 
-        internal ItemPresentationState(string templateId, ItemRequirementState requirement, ItemPriceState price)
+        internal ItemPresentationState(string templateId, ItemRequirementState requirement, ItemPriceState price,
+            int raidOwnedCount = 0, int raidFoundInRaidCount = 0, bool raidSessionActive = false)
         {
             TemplateId = templateId ?? string.Empty;
             Requirement = requirement ?? ItemRequirementState.Empty;
             Price = price;
+            RaidOwnedCount = Math.Max(0, raidOwnedCount);
+            RaidFoundInRaidCount = Math.Min(RaidOwnedCount, Math.Max(0, raidFoundInRaidCount));
+            RaidSessionActive = raidSessionActive;
         }
 
         public string TemplateId { get; }
         public ItemRequirementState Requirement { get; }
         public ItemPriceState Price { get; }
+        public int RaidOwnedCount { get; }
+        public int RaidFoundInRaidCount { get; }
+        public bool RaidSessionActive { get; }
         public bool HasRequirementData => Requirement != null && Requirement != ItemRequirementState.Empty;
         public bool HasPriceData => Price != null;
         public bool IsSafeToSell => Requirement != null && Requirement.IsSafeToSell;

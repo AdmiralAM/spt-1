@@ -31,13 +31,19 @@ namespace SPTItemIntelligence
         static readonly object cacheSync = new object();
         static readonly Dictionary<MemberCacheKey, MemberInfo> memberCache = new Dictionary<MemberCacheKey, MemberInfo>();
 
+        public static object ResolveItem(object itemViewOrItem)
+        {
+            if (itemViewOrItem == null) return null;
+            object item = ReadFirst(itemViewOrItem, itemMembers) ?? itemViewOrItem;
+            object nestedItem = ReadFirst(item, itemMembers);
+            return nestedItem ?? item;
+        }
+
         public static string Resolve(object itemViewOrItem)
         {
             if (itemViewOrItem == null) return string.Empty;
 
-            object item = ReadFirst(itemViewOrItem, itemMembers) ?? itemViewOrItem;
-            object nestedItem = ReadFirst(item, itemMembers);
-            if (nestedItem != null) item = nestedItem;
+            object item = ResolveItem(itemViewOrItem);
             string direct = ReadString(item, templateIdMembers);
             if (!string.IsNullOrWhiteSpace(direct)) return Normalize(direct);
 

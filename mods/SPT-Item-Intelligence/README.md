@@ -1,6 +1,6 @@
 # Item Intelligence Admiral
 
-Consolidated item-intelligence package for SPT 4.1.x. Stable release: **v1.2.0**.
+Consolidated item-intelligence package for SPT 4.1.x. Current development release: **v1.2.1**.
 
 ## Stable authority
 
@@ -61,18 +61,24 @@ Network requests, reflection discovery, requirement aggregation, valuation work,
 
 The marker uses original embedded raster artwork with selectable frame and symbol variants, a configurable inner fill, requirement-source color, and stock-coverage color. Fill color and 0–100% fill opacity are independent F12 controls. It does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
 
-In v1.2, optional Amands Sense integration carries the same cached unmet-requirement decision into loose world loot. Sense keeps ownership of its valuable/category/wishlist presentation; Item Intelligence changes only items that still need to be picked up for an active quest, current hideout upgrade, or future quest. The adapter reuses sprites already loaded by Sense at runtime, adds no required dependency, performs no world polling, and is independently switchable in F12.
+In v1.2, optional Amands Sense integration carries the same cached unmet-requirement decision into loose world loot. Active quest and hideout needs take visual priority, completed tracked items keep their green check, and native valuable/favorite marks remain ahead of fallback categories. Item Intelligence adds independently configurable key, grenade, currency, food and water categories using sprites already loaded by Sense; food uses the lightning icon and water the droplet. Currency-only containers use the separate money icon and denomination label. Container value comes from flea totals and adjusts the brightness of the selected category tint, preserving its hue; the four F12 brightness breakpoints rise from 50k to 500k+. Rescanning a Sense container refreshes its contents and reapplies the marker. The adapter adds no required dependency, performs no world polling, and is independently switchable in F12.
+
+In v1.2.1, successful pickups observed through that event-driven integration are folded into the same authoritative owned count during the raid, including full stack sizes and FIR state. Normal presentation stays concise with one combined total; Full adds the FIR/non-FIR split. Item-instance IDs make repeated Sense callbacks idempotent, and dropping an observed pickup removes it from the raid ledger.
+
+Exact-template quest demands are reserved separately from quests that accept a choice of item types. Other variants cannot satisfy a fixed requirement for the inspected item, and variants reserved by their own fixed requirements cannot also fill the shared choice. Mixed cards state both quotas. Sense identifies drinks from item type/hydration instead of names, so a water filter is not water; the category line omits its duplicate count and the original container item counter carries the configured count color.
 
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
 Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette through the same authoritative template `BackgroundColor` path that EFT renders natively. Ordinary items use value tiers and ammunition uses penetration tiers; values below the first threshold retain their original background. Keys remain under BetterKeys ownership and CompatibilityHighlighter/EFT keeps ownership of temporary compatibility outlines.
 
+The optional `Modules / Ammo Penetration Class` badge adds a compact Roman I–VI shield to ammunition cells. It shows the highest class with at least a 20% native EFT penetration chance, or class I for a smaller nonzero chance. Muted shield colors distinguish very low, low, medium, high and very high chance at the displayed class. The badge works for modded ammo templates and does not alter their background colors.
+
 ## Version and naming
 
-The official product name is **Item Intelligence Admiral**. The current stable release is **v1.2.0**.
+The official product name is **Item Intelligence Admiral**. The current development release is **v1.2.1**.
 
-- stable client: **Item Intelligence Admiral v1.2.0**;
-- stable server: **Item Intelligence Admiral Server v1.2.0**.
+- client: **Item Intelligence Admiral v1.2.1**;
+- server: **Item Intelligence Admiral Server v1.2.1**.
 
 The existing source directory, namespace, GUID, endpoint, and `runtime-item-intelligence` branch are retained as technical compatibility identifiers. They are not the product name and should not be renamed casually because doing so would create unnecessary migration risk.
 
@@ -90,6 +96,8 @@ The install-only `runtime-item-intelligence` channel contains the accepted stabl
 - `SPT_Runtime/user/mods/Item Intelligence Admiral Server/Item Intelligence Admiral Server.dll`
 
 The stable runtime channel is published from the accepted exact source commit and contains only the consolidated client and server package.
+
+The exhaustive [Stable Beta product map](docs/stable-beta-product-map.md) lists every compiled source unit, server registration, route, Harmony/runtime patch, scheduled path, F12 entry and dependency boundary. Its regression guard fails if a new compiled module, patch owner, dependency or configuration entry is added without updating that map.
 
 External AllQuestsCheckmarks and legacy Item Valuation are unnecessary with v1.1. `Background Coloring (Valuation)` remains independently switchable in F12 and restores each native cell color when disabled. Restore the v1.0 package and legacy Item Valuation configuration only when rolling back.
 

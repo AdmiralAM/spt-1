@@ -10,13 +10,21 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementDetail
     {
-        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false)
+        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false, int requiredCount = 0, int satisfiedCount = 0, bool alternative = false, int alternativeItemCount = 0)
         {
             Source = source; Label = NormalizeLabel(label); RemainingCount = Math.Max(0, remainingCount); FoundInRaidRequired = foundInRaidRequired;
+            RequiredCount = requiredCount > 0 ? requiredCount : RemainingCount;
+            SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
+            IsAlternative = alternative;
+            AlternativeItemCount = Math.Max(0, alternativeItemCount);
         }
         public RequirementSource Source { get; }
         public string Label { get; }
         public int RemainingCount { get; }
+        public int RequiredCount { get; }
+        public int SatisfiedCount { get; }
+        public bool IsAlternative { get; }
+        public int AlternativeItemCount { get; }
         public bool FoundInRaidRequired { get; }
         static string NormalizeLabel(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : string.Join(" ", value.Trim().Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
@@ -26,10 +34,12 @@ namespace SPTItemIntelligence
 
     public sealed class RequirementContribution
     {
-        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null)
+        public RequirementContribution(string templateId, RequirementSource source, int requiredCount, int satisfiedCount = 0, bool foundInRaidRequired = false, RequirementCombineMode combineMode = RequirementCombineMode.Additive, string alternativeGroup = null, string label = null, bool isCurrentHideoutStage = false, int alternativeItemCount = 0)
         {
             TemplateId = NormalizeId(templateId); Source = source; RequiredCount = Math.Max(0, requiredCount); SatisfiedCount = Math.Min(RequiredCount, Math.Max(0, satisfiedCount));
             FoundInRaidRequired = foundInRaidRequired; CombineMode = combineMode; AlternativeGroup = NormalizeGroup(alternativeGroup); Label = string.IsNullOrWhiteSpace(label) ? string.Empty : label.Trim();
+            IsCurrentHideoutStage = source == RequirementSource.Hideout && isCurrentHideoutStage;
+            AlternativeItemCount = Math.Max(0, alternativeItemCount);
             if (TemplateId.Length == 0) throw new ArgumentException("A contribution requires a template id.", nameof(templateId));
             if (CombineMode == RequirementCombineMode.AlternativeMaximum && AlternativeGroup.Length == 0) throw new ArgumentException("Alternative contributions require a stable group id.", nameof(alternativeGroup));
         }
@@ -42,16 +52,21 @@ namespace SPTItemIntelligence
         public RequirementCombineMode CombineMode { get; }
         public string AlternativeGroup { get; }
         public string Label { get; }
+        public bool IsCurrentHideoutStage { get; }
+        public int AlternativeItemCount { get; }
         static string NormalizeGroup(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         internal static string NormalizeId(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
     }
 
     public sealed class OwnedTemplateCount
     {
-        public OwnedTemplateCount(string templateId, int count, int foundInRaidCount = 0) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); FoundInRaidCount = Math.Min(Count, Math.Max(0, foundInRaidCount)); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
+        public OwnedTemplateCount(string templateId, int count, int foundInRaidCount = 0, int sharedCount = -1, int sharedFoundInRaidCount = -1) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); FoundInRaidCount = Math.Min(Count, Math.Max(0, foundInRaidCount)); SharedCount = sharedCount < 0 ? Count : Math.Max(Count, sharedCount); SharedFoundInRaidCount = sharedFoundInRaidCount < 0 ? FoundInRaidCount : Math.Min(SharedCount, Math.Max(FoundInRaidCount, sharedFoundInRaidCount)); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
         public string TemplateId { get; }
         public int Count { get; }
         public int FoundInRaidCount { get; }
+        public int SharedCount { get; }
+        public int SharedFoundInRaidCount { get; }
+        public bool HasSharedPool => SharedCount != Count || SharedFoundInRaidCount != FoundInRaidCount;
     }
 
     public sealed class RequirementProjection
@@ -77,7 +92,7 @@ namespace SPTItemIntelligence
         internal RequirementIndexEntry(string templateId, int questNeededNow, int questNeededLater, int hideoutNeeded, int keepCount, int ownedCount, int surplusCount, RequirementReasonFlags reasons, IEnumerable<RequirementDetail> details, ItemRequirementAllocation allocation = null)
         {
             Allocation = allocation ?? new ItemRequirementAllocation(ownedCount, 0, questNeededNow, questNeededLater, hideoutNeeded, 0, 0); TemplateId = templateId; QuestNeededNow = questNeededNow; QuestNeededLater = questNeededLater; HideoutNeeded = hideoutNeeded; KeepCount = keepCount; OwnedCount = ownedCount; SurplusCount = surplusCount; Reasons = reasons;
-            List<RequirementDetail> copied = new List<RequirementDetail>(); if (details != null) foreach (RequirementDetail detail in details) if (detail != null && detail.RemainingCount > 0 && detail.Label.Length > 0) copied.Add(detail); Details = copied.AsReadOnly();
+            List<RequirementDetail> copied = new List<RequirementDetail>(); if (details != null) foreach (RequirementDetail detail in details) if (detail != null && (detail.RemainingCount > 0 || detail.SatisfiedCount > 0) && detail.Label.Length > 0) copied.Add(detail); Details = copied.AsReadOnly();
         }
         public string TemplateId { get; }
         public int QuestNeededNow { get; }
@@ -112,8 +127,8 @@ namespace SPTItemIntelligence
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection)); options = options ?? new RequirementIndexOptions();
             Dictionary<string, EntryAccumulator> accumulators = new Dictionary<string, EntryAccumulator>(StringComparer.Ordinal);
-            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.OwnedCount = checked(accumulator.OwnedCount + owned.Count); accumulator.OwnedFir = checked(accumulator.OwnedFir + owned.FoundInRaidCount); }
-            for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (remaining <= 0 || !Included(contribution.Source, options)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
+            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.ExactOwned = checked(accumulator.ExactOwned + owned.Count); accumulator.ExactFir = checked(accumulator.ExactFir + owned.FoundInRaidCount); if (owned.HasSharedPool) { accumulator.AllocationOwned = Math.Max(accumulator.AllocationOwned, owned.SharedCount); accumulator.AllocationFir = Math.Max(accumulator.AllocationFir, owned.SharedFoundInRaidCount); } else { accumulator.AllocationOwned = checked(accumulator.AllocationOwned + owned.Count); accumulator.AllocationFir = checked(accumulator.AllocationFir + owned.FoundInRaidCount); } }
+            for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (!Included(contribution.Source, options) || (remaining <= 0 && !contribution.IsCurrentHideoutStage)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
             Dictionary<string, RequirementIndexEntry> published = new Dictionary<string, RequirementIndexEntry>(accumulators.Count, StringComparer.Ordinal);
             foreach (KeyValuePair<string, EntryAccumulator> pair in accumulators) { RequirementIndexEntry entry = pair.Value.Finish(pair.Key); if (entry.OwnedCount > 0 || entry.HasRequirement) published.Add(pair.Key, entry); }
             return new RequirementIndex(projection.GeneratedAtUnixSeconds, published);
@@ -125,11 +140,15 @@ namespace SPTItemIntelligence
         {
             readonly List<RequirementContribution> additive = new List<RequirementContribution>();
             readonly Dictionary<string, RequirementContribution> alternatives = new Dictionary<string, RequirementContribution>(StringComparer.Ordinal);
-            public int OwnedCount;
-            public int OwnedFir;
+            public int ExactOwned;
+            public int ExactFir;
+            public int AllocationOwned;
+            public int AllocationFir;
+            public bool HasAlternativePool;
 
             public void Add(RequirementContribution contribution, int remaining)
             {
+                if (contribution.AlternativeItemCount > 1) HasAlternativePool = true;
                 if (contribution.CombineMode == RequirementCombineMode.Additive) { additive.Add(contribution); return; }
                 // Explicit alternatives stay alternatives; unrelated future quests are additive.
                 string key = contribution.Source + "|" + contribution.AlternativeGroup;
@@ -144,7 +163,8 @@ namespace SPTItemIntelligence
                 List<RequirementContribution> selected = new List<RequirementContribution>(additive);
                 selected.AddRange(alternatives.Values);
                 selected.Sort((a, b) => { int source = a.Source.CompareTo(b.Source); return source != 0 ? source : StringComparer.Ordinal.Compare(a.Label, b.Label); });
-                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0;
+                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0, hideoutFir = 0, hideoutInstalled = 0, hideoutCurrentRequired = 0;
+                int fixedNow = 0, fixedLater = 0, fixedHideout = 0, fixedNowFir = 0, fixedLaterFir = 0, fixedHideoutFir = 0;
                 RequirementReasonFlags reasons = RequirementReasonFlags.None;
                 List<RequirementDetail> details = new List<RequirementDetail>();
                 checked
@@ -154,13 +174,23 @@ namespace SPTItemIntelligence
                         int n = c.RemainingCount;
                         if (c.Source == RequirementSource.CurrentQuest) { now += n; if (c.FoundInRaidRequired) nowFir += n; reasons |= RequirementReasonFlags.CurrentQuest; }
                         else if (c.Source == RequirementSource.FutureQuest) { later += n; if (c.FoundInRaidRequired) laterFir += n; reasons |= RequirementReasonFlags.FutureQuest; }
-                        else { hideout += n; reasons |= RequirementReasonFlags.Hideout; }
+                        else { hideout += n; if (c.FoundInRaidRequired) hideoutFir += n; reasons |= RequirementReasonFlags.Hideout; }
+                        if (c.IsCurrentHideoutStage) { hideoutInstalled += c.SatisfiedCount; hideoutCurrentRequired += c.RequiredCount; }
                         if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
-                        details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
+                        if (c.AlternativeItemCount <= 1)
+                        {
+                            if (c.Source == RequirementSource.CurrentQuest) { fixedNow += n; if (c.FoundInRaidRequired) fixedNowFir += n; }
+                            else if (c.Source == RequirementSource.FutureQuest) { fixedLater += n; if (c.FoundInRaidRequired) fixedLaterFir += n; }
+                            else { fixedHideout += n; if (c.FoundInRaidRequired) fixedHideoutFir += n; }
+                        }
+                        details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired, c.RequiredCount, c.SatisfiedCount,
+                            c.AlternativeItemCount > 1, c.AlternativeItemCount));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(OwnedCount, OwnedFir, now, later, hideout, nowFir, laterFir);
-                return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, OwnedCount, allocation.Surplus, reasons, details, allocation);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir, hideoutFir, hideoutInstalled, hideoutCurrentRequired, HasAlternativePool,
+                    fixedNow, fixedLater, fixedHideout, fixedNowFir, fixedLaterFir, fixedHideoutFir);
+                int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
+                return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }
         }
     }

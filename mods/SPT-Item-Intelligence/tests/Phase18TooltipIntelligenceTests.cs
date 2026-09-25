@@ -65,13 +65,34 @@ static class Phase18TooltipIntelligenceTests
             }
         };
 
-        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, new object[0]);
+        Dictionary<string, object> locales = new Dictionary<string, object>
+        {
+            ["en"] = new Dictionary<string, object>
+            {
+                ["q-now name"] = "Signal - Part 1",
+                ["hideout_area_10_name"] = "Workbench"
+            },
+            ["ru"] = new Dictionary<string, object>
+            {
+                ["q-now name"] = "Сигнал. Часть 1",
+                ["hideout_area_10_name"] = "Верстак"
+            }
+        };
+        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, new object[0], new object[0], locales);
         RequirementIndex index = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(envelope));
         RequirementIndexEntry entry = index.Get("value");
         Expect(index.Get("ignored") == RequirementIndexEntry.Empty, "completed quest condition is excluded", ref assertions);
         Expect(entry.Details.Count == 2, "quest and hideout details are retained", ref assertions);
         Expect(entry.Details[0].Label == "Signal - Part 1" && entry.Details[0].FoundInRaidRequired, "quest name and FIR are retained", ref assertions);
         Expect(entry.Details[1].Label == "Workbench L1 (current)", "hideout area and target level are concrete", ref assertions);
+        try
+        {
+            GameUiText.SetRussian(true);
+            RequirementIndex russianIndex = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(envelope));
+            Expect(russianIndex.Get("value").Details[0].Label == "Сигнал. Часть 1", "quest name follows Russian game language", ref assertions);
+            Expect(russianIndex.Get("value").Details[1].Label == "Верстак ур. 1 (текущий)", "hideout station follows Russian game language", ref assertions);
+        }
+        finally { GameUiText.SetRussian(false); }
 
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateBuilder.Build(index), ItemPriceIndexBuilder.Build(new[]
@@ -82,9 +103,9 @@ static class Phase18TooltipIntelligenceTests
         Expect(text.Primary == "42,000 ₽ · Therapist", "vendor mode exposes named highest trader value", ref assertions);
         Expect(text.Secondary == "Flea: 12,000 ₽", "vendor mode retains alternate flea value for Full", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 21,000 ₽"), "full mode exposes value per slot", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Detailed, "Now: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
-        Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current) ×3"), "detailed mode stops after the single nearest target", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) ×3"), "full mode retains the hideout target", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Detailed, "Active quest: Signal - Part 1 · 0/2 · FIR"), "detailed mode names and counts the active quest", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current)"), "detailed mode stops after the single nearest target", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) · 1/3"), "full mode counts the concrete hideout target", ref assertions);
 
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
         {
@@ -151,7 +172,7 @@ static class Phase18TooltipIntelligenceTests
         ItemPresentationStore bulbexStore = new ItemPresentationStore();
         bulbexStore.Refresh(ItemRequirementStateBuilder.Build(bulbexIndex), ItemPriceIndex.Empty);
         ItemHoverText bulbexText = new ItemHoverTextFormatter().Format(new ItemHoverState(bulbexStore.Get(bulbexId)));
-        Expect(bulbexText.HideoutLine == "Hideout: 1/1 ✓", "fulfilled Bulbex hideout quantity remains visible", ref assertions);
+        Expect(bulbexText.HideoutLine == "For hideout after quests: 1/1 ✓", "fulfilled Bulbex hideout quantity remains visible", ref assertions);
         Expect(ItemMarkerPresentation.From(bulbexText).Kind == ItemMarkerKind.Default, "fulfilled Bulbex requirement uses default color", ref assertions);
         Expect(bulbexIndex.Get("area_only") == RequirementIndexEntry.Empty, "numeric Area requirements are not projected as items", ref assertions);
         Expect(bulbexIndex.Get("custom").HideoutNeeded == 2, "custom hideout areas are projected", ref assertions);
@@ -163,7 +184,7 @@ static class Phase18TooltipIntelligenceTests
         ItemPresentationStore missingStore = new ItemPresentationStore();
         missingStore.Refresh(ItemRequirementStateBuilder.Build(missingIndex), ItemPriceIndex.Empty);
         ItemHoverText missingBulbex = new ItemHoverTextFormatter().Format(new ItemHoverState(missingStore.Get(bulbexId)));
-        Expect(missingBulbex.HideoutLine == "Hideout: 0/1" && ItemMarkerPresentation.From(missingBulbex).Kind == ItemMarkerKind.Hideout,
+        Expect(missingBulbex.HideoutLine == "For hideout after quests: 0/1" && ItemMarkerPresentation.From(missingBulbex).Kind == ItemMarkerKind.Hideout,
             "missing Bulbex uses the hideout marker", ref assertions);
 
         Dictionary<string, object> constructingProfile = ProfileWithHideout(
