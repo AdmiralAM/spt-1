@@ -53,7 +53,11 @@ class SuiteContractTests(unittest.TestCase):
         self.assertIn("list.Add(belt)", source)
         self.assertIn("if (eligible == 0)", source)
         self.assertNotIn("File.Write", source)
-        self.assertNotIn("Harmony", source)
+        self.assertIn("new Harmony(HarmonyOwner)", source)
+        self.assertIn("nameof(InventoryController.IsAtBindablePlace)", source)
+        self.assertIn("nameof(InventoryController.IsAtReachablePlace)", source)
+        self.assertIn("enumerateBeltSources.Invoke", source)
+        self.assertIn("harmony?.UnpatchSelf()", source)
         self.assertIn("BepInDependency(UseItemsAnywhereAdapter.UpstreamPluginGuid", plugin)
 
     def test_posters_use_foldables_compound_item_size_path(self):
@@ -65,8 +69,9 @@ class SuiteContractTests(unittest.TestCase):
         source = (ROOT / "mods/SPT-Stackable-Armor-Plates/client/Plugin.cs").read_text(encoding="utf-8")
         signature = "new[] { typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool) }"
         self.assertGreaterEqual(source.count(signature), 2)
-        self.assertIn("Harmony.GetPatchInfo(plateDropTarget)", source)
-        self.assertIn("Armor plate item-on-item action patch was not installed", source)
+        self.assertIn("Harmony.GetPatchInfo(target)?.Owners.Contains(harmonyId)", source)
+        self.assertIn("Armor plate field-repair action patch was not installed", source)
+        self.assertIn("ItemManipulator.Remove(consumed", source)
 
     def test_ui_fixes_adapter_consumes_versioned_belt_api_and_fails_closed(self):
         source = (MODULE / "client/UiFixesBeltAdapter.cs").read_text(encoding="utf-8")
